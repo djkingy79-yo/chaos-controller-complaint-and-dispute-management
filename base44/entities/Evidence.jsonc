@@ -1,0 +1,47 @@
+{
+  "name": "Evidence",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "ID of the associated case"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL of the uploaded file"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original file name"
+    },
+    "file_type": {
+      "type": "string",
+      "enum": [
+        "email",
+        "photo",
+        "contract",
+        "statement",
+        "notice",
+        "receipt",
+        "report",
+        "correspondence",
+        "other"
+      ],
+      "description": "Type of evidence"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the evidence"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the evidence relates to"
+    }
+  },
+  "required": [
+    "case_id",
+    "file_url",
+    "file_name"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "TimelineEvent",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "ID of the associated case"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the event"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short title of the event"
+    },
+    "description": {
+      "type": "string",
+      "description": "Details of what happened"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "incident",
+        "complaint",
+        "response",
+        "deadline",
+        "escalation",
+        "evidence",
+        "resolution",
+        "action_required"
+      ],
+      "description": "Type of event"
+    },
+    "is_action_required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user action is needed"
+    }
+  },
+  "required": [
+    "case_id",
+    "title",
+    "event_type"
+  ]
+}

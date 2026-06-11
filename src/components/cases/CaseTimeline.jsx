@@ -1,0 +1,145 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Plus,
+  AlertCircle,
+  MessageSquare,
+  Clock,
+  ArrowUpRight,
+  FileText,
+  CheckCircle2,
+  Zap,
+  Circle,
+  Loader2,
+} from "lucide-react";
+import { format } from "date-fns";
+
+const eventTypeConfig = {
+  incident: { icon: AlertCircle, color: "text-destructive", bg: "bg-destructive/10" },
+  complaint: { icon: MessageSquare, color: "text-primary", bg: "bg-primary/10" },
+  response: { icon: MessageSquare, color: "text-accent", bg: "bg-accent/10" },
+  deadline: { icon: Clock, color: "text-warning", bg: "bg-warning/10" },
+  escalation: { icon: ArrowUpRight, color: "text-destructive", bg: "bg-destructive/10" },
+  evidence: { icon: FileText, color: "text-success", bg: "bg-success/10" },
+  resolution: { icon: CheckCircle2, color: "text-success", bg: "bg-success/10" },
+  action_required: { icon: Zap, color: "text-warning", bg: "bg-warning/10" },
+};
+
+export default function CaseTimeline({ caseId, events }) {
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ title: "", description: "", event_type: "incident", event_date: new Date().toISOString().split("T")[0] });
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.TimelineEvent.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
+      setShowAdd(false);
+      setForm({ title: "", description: "", event_type: "incident", event_date: new Date().toISOString().split("T")[0] });
+    },
+  });
+
+  const sorted = [...events].sort((a, b) => {
+    const da = a.event_date || a.created_date;
+    const db = b.event_date || b.created_date;
+    return new Date(da) - new Date(db);
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-heading font-semibold text-foreground">Timeline</h3>
+        <Dialog open={showAdd} onOpenChange={setShowAdd}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="gap-1.5 text-xs">
+              <Plus className="w-3.5 h-3.5" /> Add Event
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Timeline Event</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>Event Type</Label>
+                <Select value={form.event_type} onValueChange={(v) => setForm({ ...form, event_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="incident">Incident</SelectItem>
+                    <SelectItem value="complaint">Complaint</SelectItem>
+                    <SelectItem value="response">Response</SelectItem>
+                    <SelectItem value="deadline">Deadline</SelectItem>
+                    <SelectItem value="escalation">Escalation</SelectItem>
+                    <SelectItem value="evidence">Evidence</SelectItem>
+                    <SelectItem value="resolution">Resolution</SelectItem>
+                    <SelectItem value="action_required">Action Required</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Title</Label>
+                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="What happened?" />
+              </div>
+              <div className="space-y-2">
+                <Label>Details (optional)</Label>
+                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="More details..." rows={3} />
+              </div>
+              <Button
+                onClick={() => createMutation.mutate({ ...form, case_id: caseId })}
+                disabled={!form.title || createMutation.isPending}
+                className="w-full gap-2"
+              >
+                {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Add Event
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {sorted.length === 0 ? (
+        <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-8 text-center">
+          <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No timeline events yet.</p>
+        </div>
+      ) : (
+        <div className="relative pl-6">
+          <div className="absolute left-2.5 top-2 bottom-2 w-px bg-border" />
+          {sorted.map((ev, i) => {
+            const cfg = eventTypeConfig[ev.event_type] || eventTypeConfig.incident;
+            const EvIcon = cfg.icon;
+            return (
+              <div key={ev.id} className="relative pb-5 last:pb-0">
+                <div className={`absolute -left-3.5 top-1 w-6 h-6 rounded-full ${cfg.bg} flex items-center justify-center`}>
+                  <EvIcon className={`w-3.5 h-3.5 ${cfg.color}`} />
+                </div>
+                <div className="ml-5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : format(new Date(ev.created_date), "d MMM yyyy")}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-foreground mt-0.5">{ev.title}</p>
+                  {ev.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{ev.description}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

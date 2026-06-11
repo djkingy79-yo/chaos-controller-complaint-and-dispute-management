@@ -1,0 +1,84 @@
+{
+  "name": "Case",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short title for the case"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "banking",
+        "insurance",
+        "tenancy",
+        "telco",
+        "utilities",
+        "other"
+      ],
+      "description": "Industry category of the dispute"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "complaint_sent",
+        "awaiting_response",
+        "response_received",
+        "escalation_ready",
+        "escalated",
+        "resolved",
+        "closed"
+      ],
+      "default": "draft",
+      "description": "Current status of the case"
+    },
+    "organisation_name": {
+      "type": "string",
+      "description": "Name of the organisation the complaint is against"
+    },
+    "issue_summary": {
+      "type": "string",
+      "description": "Brief summary of the issue"
+    },
+    "issue_details": {
+      "type": "string",
+      "description": "Full details of the issue from guided questions"
+    },
+    "desired_outcome": {
+      "type": "string",
+      "description": "What the user wants to achieve"
+    },
+    "complaint_letter": {
+      "type": "string",
+      "description": "AI-generated complaint letter content"
+    },
+    "response_deadline": {
+      "type": "string",
+      "format": "date",
+      "description": "Deadline for the organisation to respond"
+    },
+    "escalation_body": {
+      "type": "string",
+      "description": "Name of the relevant escalation body"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ]
+}
