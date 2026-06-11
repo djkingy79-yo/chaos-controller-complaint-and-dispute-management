@@ -33,10 +33,12 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary-foreground" />
-              </div>
+            <Link to="/" className="flex items-center gap-2 group">
+              <img
+                src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
+                alt="Chaos Controller"
+                className="w-10 h-10 object-contain rounded-lg"
+              />
               <div className="hidden sm:block">
                 <span className="font-display text-lg font-bold tracking-tight text-foreground">
                   CHAOS
