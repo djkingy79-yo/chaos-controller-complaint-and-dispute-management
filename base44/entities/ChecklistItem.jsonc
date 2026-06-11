@@ -1,0 +1,52 @@
+{
+  "name": "ChecklistItem",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "Associated case ID"
+    },
+    "label": {
+      "type": "string",
+      "description": "What needs to be done"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "complaint",
+        "evidence",
+        "response",
+        "deadline",
+        "escalation",
+        "document"
+      ],
+      "description": "Category of checklist item"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "needs_review",
+        "missing",
+        "locked"
+      ],
+      "default": "missing"
+    },
+    "proof_url": {
+      "type": "string",
+      "description": "URL of proof document"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "requires_proof": {
+      "type": "boolean",
+      "default": true,
+      "description": "No proof = no tick"
+    }
+  },
+  "required": [
+    "case_id",
+    "label"
+  ]
+}

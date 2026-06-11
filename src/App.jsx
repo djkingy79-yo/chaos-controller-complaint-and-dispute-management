@@ -17,6 +17,11 @@ import Dashboard from '@/pages/Dashboard';
 import CaseList from '@/pages/CaseList';
 import NewCase from '@/pages/NewCase';
 import CaseDetail from '@/pages/CaseDetail';
+import DeadlineWarRoom from '@/pages/DeadlineWarRoom';
+import SmartChecklist from '@/pages/SmartChecklist';
+import Directories from '@/pages/Directories';
+import Payments from '@/pages/Payments';
+import AdminDashboard from '@/pages/AdminDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -50,6 +55,11 @@ const AuthenticatedApp = () => {
           <Route path="/cases" element={<CaseList />} />
           <Route path="/new-case" element={<NewCase />} />
           <Route path="/case/:id" element={<CaseDetail />} />
+          <Route path="/deadlines" element={<DeadlineWarRoom />} />
+          <Route path="/checklist" element={<SmartChecklist />} />
+          <Route path="/directories" element={<Directories />} />
+          <Route path="/payments" element={<Payments />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

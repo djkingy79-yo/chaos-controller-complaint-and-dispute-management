@@ -1,0 +1,64 @@
+{
+  "name": "Deadline",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "Associated case ID"
+    },
+    "title": {
+      "type": "string",
+      "description": "What this deadline is for"
+    },
+    "deadline_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The deadline date"
+    },
+    "deadline_type": {
+      "type": "string",
+      "enum": [
+        "response_due",
+        "submission",
+        "tribunal_date",
+        "escalation_window",
+        "review_period",
+        "other"
+      ],
+      "description": "Type of deadline"
+    },
+    "responsibility": {
+      "type": "string",
+      "enum": [
+        "user",
+        "provider",
+        "tribunal",
+        "other"
+      ],
+      "default": "user",
+      "description": "Who is responsible for this deadline"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "missed",
+        "extended"
+      ],
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "proof_url": {
+      "type": "string",
+      "description": "URL of proof of compliance"
+    }
+  },
+  "required": [
+    "case_id",
+    "title",
+    "deadline_date"
+  ]
+}

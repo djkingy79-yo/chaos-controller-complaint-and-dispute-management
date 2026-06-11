@@ -9,7 +9,12 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Siren,
+  ClipboardList,
+  Building2,
+  CreditCard,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -18,6 +23,9 @@ import { motion, AnimatePresence } from "framer-motion";
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/cases", label: "My Cases", icon: FolderOpen },
+  { path: "/deadlines", label: "Deadlines", icon: Siren },
+  { path: "/checklist", label: "Checklist", icon: ClipboardList },
+  { path: "/directories", label: "Directories", icon: Building2 },
   { path: "/new-case", label: "New Case", icon: Plus },
 ];
 
@@ -81,6 +89,18 @@ export default function Layout() {
                 </div>
                 <span className="text-muted-foreground font-medium">{user?.full_name || "User"}</span>
               </div>
+              <Link to="/payments" className="hidden sm:block">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" title="Plans">
+                  <CreditCard className="w-4 h-4" />
+                </Button>
+              </Link>
+              {user?.role === "admin" && (
+                <Link to="/admin" className="hidden sm:block">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" title="Admin">
+                    <Activity className="w-4 h-4" />
+                  </Button>
+                </Link>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -112,7 +132,7 @@ export default function Layout() {
             className="md:hidden fixed inset-x-0 top-16 z-40 bg-card border-b border-border shadow-xl"
           >
             <nav className="p-4 space-y-1">
-              {navItems.map((item) => {
+              {[...navItems, { path: "/payments", label: "Plans & Pricing", icon: CreditCard }, ...(user?.role === "admin" ? [{ path: "/admin", label: "Admin", icon: Activity }] : [])].map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
                   <Link

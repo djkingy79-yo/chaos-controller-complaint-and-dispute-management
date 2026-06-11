@@ -1,0 +1,49 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "deadline",
+        "missing_evidence",
+        "document_uploaded",
+        "action_required",
+        "response_received",
+        "escalation_ready"
+      ],
+      "default": "action_required"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    }
+  },
+  "required": [
+    "user_id",
+    "title",
+    "message"
+  ]
+}
