@@ -5,11 +5,13 @@ import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Clock, FolderOpen, Loader2 } from "lucide-react";
+import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer } from "lucide-react";
 import CaseStatusControl from "@/components/cases/CaseStatusControl";
 import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
 import ComplaintLetter from "@/components/cases/ComplaintLetter";
+import ChaosScore from "@/components/cases/ChaosScore";
+import PrintBundle from "@/components/cases/PrintBundle";
 
 export default function CaseDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -80,6 +82,7 @@ export default function CaseDetail() {
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-4">
           <CaseStatusControl caseItem={caseItem} />
+          <ChaosScore caseItem={caseItem} evidence={evidence} events={timelineEvents} />
 
           {/* Quick stats */}
           <div className="bg-card rounded-xl border border-border p-4 space-y-3">
@@ -101,15 +104,18 @@ export default function CaseDetail() {
         {/* Main Content */}
         <div className="lg:col-span-2">
           <Tabs defaultValue="letter" className="w-full">
-            <TabsList className="w-full grid grid-cols-3 mb-4">
-              <TabsTrigger value="letter" className="gap-1.5 text-xs sm:text-sm">
+            <TabsList className="w-full grid grid-cols-4 mb-4">
+              <TabsTrigger value="letter" className="gap-1 text-xs sm:text-sm">
                 <FileText className="w-3.5 h-3.5 hidden sm:block" /> Letter
               </TabsTrigger>
-              <TabsTrigger value="evidence" className="gap-1.5 text-xs sm:text-sm">
+              <TabsTrigger value="evidence" className="gap-1 text-xs sm:text-sm">
                 <FolderOpen className="w-3.5 h-3.5 hidden sm:block" /> Evidence
               </TabsTrigger>
-              <TabsTrigger value="timeline" className="gap-1.5 text-xs sm:text-sm">
+              <TabsTrigger value="timeline" className="gap-1 text-xs sm:text-sm">
                 <Clock className="w-3.5 h-3.5 hidden sm:block" /> Timeline
+              </TabsTrigger>
+              <TabsTrigger value="print" className="gap-1 text-xs sm:text-sm">
+                <Printer className="w-3.5 h-3.5 hidden sm:block" /> Print
               </TabsTrigger>
             </TabsList>
             <TabsContent value="letter">
@@ -120,6 +126,9 @@ export default function CaseDetail() {
             </TabsContent>
             <TabsContent value="timeline">
               <CaseTimeline caseId={caseId} events={timelineEvents} />
+            </TabsContent>
+            <TabsContent value="print">
+              <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
           </Tabs>
         </div>

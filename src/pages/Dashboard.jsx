@@ -4,10 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderOpen, AlertTriangle, CheckCircle2, Clock, Shield } from "lucide-react";
+import { Plus, FolderOpen, AlertTriangle, CheckCircle2, Clock, Shield, Flame } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import CaseCard from "@/components/dashboard/CaseCard";
 import ActionItems from "@/components/dashboard/ActionItems";
+import CommandCentre from "@/components/dashboard/CommandCentre";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -28,16 +29,20 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
-            Welcome back{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
+            {cases.length === 0
+              ? "Who's causing the chaos?"
+              : `Welcome back${user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}`}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Control starts here. Here's your dispute overview.
+            {cases.length === 0
+              ? "Come in furious. Leave organised. Let's build your perfect paper trail."
+              : "Control starts here. Here's your dispute command centre."}
           </p>
         </div>
         <Link to="/new-case">
           <Button className="gap-2 font-medium">
             <Plus className="w-4 h-4" />
-            New Case
+            {cases.length === 0 ? "Start a Case" : "New Case"}
           </Button>
         </Link>
       </div>
@@ -70,6 +75,9 @@ export default function Dashboard() {
           color="bg-success/10 text-success"
         />
       </div>
+
+      {/* Command Centre */}
+      {cases.length > 0 && <CommandCentre cases={cases} />}
 
       {/* Action Items & Recent Cases */}
       <div className="grid lg:grid-cols-5 gap-6">

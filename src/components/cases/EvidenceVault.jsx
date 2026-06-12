@@ -82,12 +82,12 @@ export default function EvidenceVault({ caseId, evidence }) {
         <Dialog open={showUpload} onOpenChange={setShowUpload}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-1.5 text-xs">
-              <Plus className="w-3.5 h-3.5" /> Add Evidence
+              <Plus className="w-3.5 h-3.5" /> Drop the Evidence
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Upload Evidence</DialogTitle>
+              <DialogTitle>Drop the Evidence</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
@@ -138,10 +138,11 @@ export default function EvidenceVault({ caseId, evidence }) {
       </div>
 
       {sorted.length === 0 ? (
-        <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-8 text-center">
-          <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No evidence uploaded yet.</p>
-          <p className="text-xs text-muted-foreground mt-1">Add emails, photos, contracts and more.</p>
+        <div className="bg-secondary/30 rounded-lg border-2 border-dashed border-border p-8 text-center">
+          <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm font-semibold text-foreground mb-1">DROP THE EVIDENCE</p>
+          <p className="text-xs text-muted-foreground">Screenshots, emails, letters, contracts.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Throw the mess here — AI will sort it out.</p>
         </div>
       ) : (
         <div className="space-y-2">

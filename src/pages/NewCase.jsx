@@ -84,12 +84,14 @@ Do NOT include placeholder brackets. Write it ready to send. Address it to the C
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-display font-bold text-foreground">New Case</h1>
+        <h1 className="text-2xl font-display font-bold text-foreground">
+          {step === 0 ? "Who are we holding accountable?" : "New Case"}
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {step === 0 && "Select the type of dispute you're dealing with."}
-          {step === 1 && "Answer a few questions so we can prepare your case."}
-          {step === 2 && "Review your complaint letter and create your case."}
-          {step === 3 && "Generating your professional complaint letter..."}
+          {step === 0 && "Select your battle. The right pathway opens automatically."}
+          {step === 1 && "Answer a few questions. We'll build the paper trail."}
+          {step === 2 && "Review your complaint letter and activate your case."}
+          {step === 3 && "AI is drafting your professional complaint letter..."}
         </p>
       </div>
 
