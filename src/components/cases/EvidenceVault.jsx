@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   Upload, FileText, Image, Mail, FileCheck, Loader2,
-  Trash2, ExternalLink, Plus, ScanLine,
+  Trash2, ExternalLink, Plus, ScanLine, Camera,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import DocumentScanResult from "./DocumentScanResult";
+import DocumentScanner from "./DocumentScanner";
 
 const typeConfig = {
   email:         { icon: Mail,      label: "Email",           color: "bg-primary/10 text-primary" },
@@ -31,9 +32,6 @@ const typeConfig = {
 };
 
 async function scanDocument(fileUrl, fileName, fileType) {
-  const isImage = /\.(png|jpg|jpeg|webp|gif|bmp)$/i.test(fileName);
-  const isPdf = /\.pdf$/i.test(fileName);
-
   const prompt = `You are an AI document analysis assistant for an Australian consumer advocacy platform.
 Analyse this document (${fileType}: "${fileName}") and extract all relevant information.
 
@@ -73,28 +71,27 @@ Return as JSON only.`;
           properties: {
             date: { type: "string" },
             description: { type: "string" },
-            event_type: { type: "string" }
-          }
-        }
-      }
-    }
+            event_type: { type: "string" },
+          },
+        },
+      },
+    },
   };
 
-  const result = await base44.integrations.Core.InvokeLLM({
+  return await base44.integrations.Core.InvokeLLM({
     prompt,
     file_urls: [fileUrl],
     response_json_schema: schema,
   });
-
-  return result;
 }
 
 export default function EvidenceVault({ caseId, evidence, caseItem }) {
   const [showUpload, setShowUpload] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [newEvidence, setNewEvidence] = useState({ file_type: "other", description: "", event_date: "" });
-  const [pendingScan, setPendingScan] = useState(null); // { evidenceId, fileUrl, fileName, fileType }
+  const [pendingScan, setPendingScan] = useState(null);
   const [scanResult, setScanResult] = useState(null);
   const [appliedIds, setAppliedIds] = useState(new Set());
   const fileRef = useRef(null);
@@ -104,13 +101,11 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     mutationFn: (data) => base44.entities.Evidence.create(data),
     onSuccess: async (created) => {
       queryClient.invalidateQueries({ queryKey: ["evidence", caseId] });
-      // Start scanning the uploaded doc
-      setPendingScan({ evidenceId: created.id, fileUrl: created.file_url, fileName: created.file_name, fileType: created.file_type });
+      setPendingScan({ evidenceId: created.id });
       setScanResult(null);
       setScanning(true);
       const extracted = await scanDocument(created.file_url, created.file_name, created.file_type);
       setScanResult({ evidenceId: created.id, data: extracted });
-      // Update evidence record with extracted data
       await base44.entities.Evidence.update(created.id, { extracted_data: extracted, scan_status: "complete" });
       queryClient.invalidateQueries({ queryKey: ["evidence", caseId] });
       setScanning(false);
@@ -122,16 +117,14 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["evidence", caseId] }),
   });
 
-  const handleUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const uploadAndProcess = async (file, overrideType) => {
     setUploading(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     createMutation.mutate({
       case_id: caseId,
       file_url,
       file_name: file.name,
-      file_type: newEvidence.file_type,
+      file_type: overrideType || newEvidence.file_type,
       description: newEvidence.description,
       event_date: newEvidence.event_date || undefined,
       scan_status: "pending",
@@ -141,19 +134,25 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     setNewEvidence({ file_type: "other", description: "", event_date: "" });
   };
 
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadAndProcess(file);
+  };
+
+  const handleScanCapture = async (file) => {
+    await uploadAndProcess(file, "photo");
+  };
+
   const applyExtractedData = async (extracted) => {
-    // Update case with extracted complainant / org data
     const caseUpdates = {};
     if (extracted.merchant_name && !caseItem?.organisation_name) {
       caseUpdates.organisation_name = extracted.merchant_name;
     }
-
     if (Object.keys(caseUpdates).length > 0) {
       await base44.entities.Case.update(caseId, caseUpdates);
       queryClient.invalidateQueries({ queryKey: ["case", caseId] });
     }
-
-    // Create timeline events from extracted dates
     if (extracted.timeline_events?.length > 0) {
       for (const ev of extracted.timeline_events) {
         if (!ev.date || !ev.description) continue;
@@ -168,7 +167,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       }
       queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
     }
-
     setAppliedIds((prev) => new Set([...prev, scanResult?.evidenceId]));
   };
 
@@ -179,71 +177,82 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
 
   return (
     <div className="space-y-4">
+      <DocumentScanner
+        open={showScanner}
+        onClose={() => setShowScanner(false)}
+        onCapture={handleScanCapture}
+      />
+
       <div className="flex items-center justify-between">
         <h3 className="font-heading font-semibold text-foreground">Evidence Vault</h3>
-        <Dialog open={showUpload} onOpenChange={setShowUpload}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1.5 text-xs">
-              <Plus className="w-3.5 h-3.5" /> Drop the Evidence
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Drop the Evidence</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <p className="text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-3">
-                <ScanLine className="w-3.5 h-3.5 text-primary inline mr-1.5" />
-                AI will automatically scan your document and extract key details — names, account numbers, dates, amounts — and build your case timeline.
-              </p>
-              <div className="space-y-2">
-                <Label>Document Type</Label>
-                <Select value={newEvidence.file_type} onValueChange={(v) => setNewEvidence({ ...newEvidence, file_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(typeConfig).map(([key, cfg]) => (
-                      <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowScanner(true)}>
+            <Camera className="w-3.5 h-3.5" /> Scan Doc
+          </Button>
+
+          <Dialog open={showUpload} onOpenChange={setShowUpload}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1.5 text-xs">
+                <Plus className="w-3.5 h-3.5" /> Upload File
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Drop the Evidence</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <p className="text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-3">
+                  <ScanLine className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                  AI will automatically scan your document and extract key details — names, account numbers, dates, amounts — and build your case timeline.
+                </p>
+                <div className="space-y-2">
+                  <Label>Document Type</Label>
+                  <Select value={newEvidence.file_type} onValueChange={(v) => setNewEvidence({ ...newEvidence, file_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(typeConfig).map(([key, cfg]) => (
+                        <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Description (optional)</Label>
+                  <Input
+                    value={newEvidence.description}
+                    onChange={(e) => setNewEvidence({ ...newEvidence, description: e.target.value })}
+                    placeholder="e.g. Email from bank rejecting claim"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Event Date (optional)</Label>
+                  <Input
+                    type="date"
+                    value={newEvidence.event_date}
+                    onChange={(e) => setNewEvidence({ ...newEvidence, event_date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <input ref={fileRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.csv,.eml" onChange={handleUpload} />
+                  <Button
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading || createMutation.isPending}
+                    className="w-full gap-2"
+                  >
+                    {uploading || createMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {uploading ? "Uploading..." : createMutation.isPending ? "Saving..." : "Choose File & Upload"}
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Description (optional)</Label>
-                <Input
-                  value={newEvidence.description}
-                  onChange={(e) => setNewEvidence({ ...newEvidence, description: e.target.value })}
-                  placeholder="e.g. Email from bank rejecting claim"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Event Date (optional)</Label>
-                <Input
-                  type="date"
-                  value={newEvidence.event_date}
-                  onChange={(e) => setNewEvidence({ ...newEvidence, event_date: e.target.value })}
-                />
-              </div>
-              <div>
-                <input ref={fileRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.csv,.eml" onChange={handleUpload} />
-                <Button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading || createMutation.isPending}
-                  className="w-full gap-2"
-                >
-                  {uploading || createMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Upload className="w-4 h-4" />
-                  )}
-                  {uploading ? "Uploading..." : createMutation.isPending ? "Saving..." : "Choose File & Upload"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Active scan banner */}
       {scanning && (
         <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 text-sm text-primary">
           <ScanLine className="w-4 h-4 animate-pulse" />
@@ -252,7 +261,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         </div>
       )}
 
-      {/* Scan result for the most recently uploaded doc */}
       {scanResult && !scanning && (
         <DocumentScanResult
           extracted={scanResult.data}
@@ -275,7 +283,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
             const TypeIcon = cfg.icon;
             const isScanning = pendingScan?.evidenceId === ev.id && scanning;
             const thisScanResult = scanResult?.evidenceId === ev.id ? scanResult.data : ev.extracted_data;
-            const isApplied = appliedIds.has(ev.id);
 
             return (
               <div key={ev.id} className="bg-card border border-border rounded-lg p-3 hover:border-primary/20 transition-colors">
@@ -324,7 +331,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                   </div>
                 </div>
 
-                {/* Show scan results inline on already-scanned docs */}
                 {thisScanResult && ev.scan_status === "complete" && scanResult?.evidenceId !== ev.id && (
                   <DocumentScanResult
                     extracted={thisScanResult}
