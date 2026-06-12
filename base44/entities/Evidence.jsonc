@@ -25,6 +25,10 @@
         "receipt",
         "report",
         "correspondence",
+        "lease",
+        "bank_statement",
+        "invoice",
+        "id_document",
         "other"
       ],
       "description": "Type of evidence"
@@ -37,6 +41,82 @@
       "type": "string",
       "format": "date",
       "description": "Date the evidence relates to"
+    },
+    "extracted_data": {
+      "type": "object",
+      "description": "AI-extracted structured data from the document",
+      "properties": {
+        "complainant_name": {
+          "type": "string"
+        },
+        "complainant_address": {
+          "type": "string"
+        },
+        "complainant_email": {
+          "type": "string"
+        },
+        "complainant_phone": {
+          "type": "string"
+        },
+        "account_numbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policy_numbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "merchant_name": {
+          "type": "string"
+        },
+        "dates_mentioned": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key_amounts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "document_summary": {
+          "type": "string"
+        },
+        "timeline_events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "event_type": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scan_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "scanning",
+        "complete",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Status of AI scan"
     }
   },
   "required": [

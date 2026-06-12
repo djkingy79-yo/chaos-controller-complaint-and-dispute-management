@@ -7,45 +7,113 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
-  Upload,
-  FileText,
-  Image,
-  Mail,
-  FileCheck,
-  Loader2,
-  Trash2,
-  ExternalLink,
-  Plus,
-  X,
+  Upload, FileText, Image, Mail, FileCheck, Loader2,
+  Trash2, ExternalLink, Plus, ScanLine,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import DocumentScanResult from "./DocumentScanResult";
 
 const typeConfig = {
-  email: { icon: Mail, label: "Email", color: "bg-primary/10 text-primary" },
-  photo: { icon: Image, label: "Photo", color: "bg-accent/10 text-accent" },
-  contract: { icon: FileCheck, label: "Contract", color: "bg-warning/10 text-warning" },
-  statement: { icon: FileText, label: "Statement", color: "bg-success/10 text-success" },
-  notice: { icon: FileText, label: "Notice", color: "bg-destructive/10 text-destructive" },
-  receipt: { icon: FileText, label: "Receipt", color: "bg-secondary text-secondary-foreground" },
-  report: { icon: FileText, label: "Report", color: "bg-muted text-muted-foreground" },
-  correspondence: { icon: Mail, label: "Correspondence", color: "bg-primary/10 text-primary" },
-  other: { icon: FileText, label: "Other", color: "bg-muted text-muted-foreground" },
+  email:         { icon: Mail,      label: "Email",           color: "bg-primary/10 text-primary" },
+  photo:         { icon: Image,     label: "Photo",           color: "bg-accent/10 text-accent" },
+  contract:      { icon: FileCheck, label: "Contract",        color: "bg-warning/10 text-warning" },
+  statement:     { icon: FileText,  label: "Statement",       color: "bg-success/10 text-success" },
+  bank_statement:{ icon: FileText,  label: "Bank Statement",  color: "bg-success/10 text-success" },
+  lease:         { icon: FileCheck, label: "Lease",           color: "bg-warning/10 text-warning" },
+  notice:        { icon: FileText,  label: "Notice",          color: "bg-destructive/10 text-destructive" },
+  receipt:       { icon: FileText,  label: "Receipt",         color: "bg-secondary text-secondary-foreground" },
+  report:        { icon: FileText,  label: "Report",          color: "bg-muted text-muted-foreground" },
+  invoice:       { icon: FileText,  label: "Invoice",         color: "bg-warning/10 text-warning" },
+  correspondence:{ icon: Mail,      label: "Correspondence",  color: "bg-primary/10 text-primary" },
+  id_document:   { icon: FileCheck, label: "ID Document",     color: "bg-accent/10 text-accent" },
+  other:         { icon: FileText,  label: "Other",           color: "bg-muted text-muted-foreground" },
 };
 
-export default function EvidenceVault({ caseId, evidence }) {
+async function scanDocument(fileUrl, fileName, fileType) {
+  const isImage = /\.(png|jpg|jpeg|webp|gif|bmp)$/i.test(fileName);
+  const isPdf = /\.pdf$/i.test(fileName);
+
+  const prompt = `You are an AI document analysis assistant for an Australian consumer advocacy platform.
+Analyse this document (${fileType}: "${fileName}") and extract all relevant information.
+
+Extract the following if present:
+- complainant_name: Full name of the person making the complaint / the account holder
+- complainant_address: Full postal address of the complainant
+- complainant_email: Email address of the complainant
+- complainant_phone: Phone number of the complainant
+- account_numbers: Array of any account numbers, reference numbers, loan numbers, card numbers (last 4 digits ok)
+- policy_numbers: Array of any policy, claim, or membership numbers
+- merchant_name: Name of the company, bank, landlord, telco, insurer, etc. being complained about
+- dates_mentioned: Array of key dates found (format as "DD MMM YYYY - context" e.g. "15 Jan 2024 - Transaction date")
+- key_amounts: Array of dollar amounts with context e.g. "$1,200 - Disputed charge"
+- document_summary: 1-2 sentence plain English summary of what this document is and what it shows
+- timeline_events: Array of objects {date: "YYYY-MM-DD", description: "what happened", event_type: "incident|complaint|response|evidence|deadline"}
+
+Be thorough. Extract all dates, all account numbers, all amounts. If something is not present, omit the field.
+Return as JSON only.`;
+
+  const schema = {
+    type: "object",
+    properties: {
+      complainant_name: { type: "string" },
+      complainant_address: { type: "string" },
+      complainant_email: { type: "string" },
+      complainant_phone: { type: "string" },
+      account_numbers: { type: "array", items: { type: "string" } },
+      policy_numbers: { type: "array", items: { type: "string" } },
+      merchant_name: { type: "string" },
+      dates_mentioned: { type: "array", items: { type: "string" } },
+      key_amounts: { type: "array", items: { type: "string" } },
+      document_summary: { type: "string" },
+      timeline_events: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            date: { type: "string" },
+            description: { type: "string" },
+            event_type: { type: "string" }
+          }
+        }
+      }
+    }
+  };
+
+  const result = await base44.integrations.Core.InvokeLLM({
+    prompt,
+    file_urls: [fileUrl],
+    response_json_schema: schema,
+  });
+
+  return result;
+}
+
+export default function EvidenceVault({ caseId, evidence, caseItem }) {
   const [showUpload, setShowUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [newEvidence, setNewEvidence] = useState({ file_type: "other", description: "", event_date: "" });
+  const [pendingScan, setPendingScan] = useState(null); // { evidenceId, fileUrl, fileName, fileType }
+  const [scanResult, setScanResult] = useState(null);
+  const [appliedIds, setAppliedIds] = useState(new Set());
   const fileRef = useRef(null);
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Evidence.create(data),
-    onSuccess: () => {
+    onSuccess: async (created) => {
       queryClient.invalidateQueries({ queryKey: ["evidence", caseId] });
-      setShowUpload(false);
-      setNewEvidence({ file_type: "other", description: "", event_date: "" });
+      // Start scanning the uploaded doc
+      setPendingScan({ evidenceId: created.id, fileUrl: created.file_url, fileName: created.file_name, fileType: created.file_type });
+      setScanResult(null);
+      setScanning(true);
+      const extracted = await scanDocument(created.file_url, created.file_name, created.file_type);
+      setScanResult({ evidenceId: created.id, data: extracted });
+      // Update evidence record with extracted data
+      await base44.entities.Evidence.update(created.id, { extracted_data: extracted, scan_status: "complete" });
+      queryClient.invalidateQueries({ queryKey: ["evidence", caseId] });
+      setScanning(false);
     },
   });
 
@@ -66,8 +134,42 @@ export default function EvidenceVault({ caseId, evidence }) {
       file_type: newEvidence.file_type,
       description: newEvidence.description,
       event_date: newEvidence.event_date || undefined,
+      scan_status: "pending",
     });
     setUploading(false);
+    setShowUpload(false);
+    setNewEvidence({ file_type: "other", description: "", event_date: "" });
+  };
+
+  const applyExtractedData = async (extracted) => {
+    // Update case with extracted complainant / org data
+    const caseUpdates = {};
+    if (extracted.merchant_name && !caseItem?.organisation_name) {
+      caseUpdates.organisation_name = extracted.merchant_name;
+    }
+
+    if (Object.keys(caseUpdates).length > 0) {
+      await base44.entities.Case.update(caseId, caseUpdates);
+      queryClient.invalidateQueries({ queryKey: ["case", caseId] });
+    }
+
+    // Create timeline events from extracted dates
+    if (extracted.timeline_events?.length > 0) {
+      for (const ev of extracted.timeline_events) {
+        if (!ev.date || !ev.description) continue;
+        await base44.entities.TimelineEvent.create({
+          case_id: caseId,
+          title: ev.description.slice(0, 80),
+          description: ev.description,
+          event_date: ev.date,
+          event_type: ev.event_type || "incident",
+          is_action_required: false,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
+    }
+
+    setAppliedIds((prev) => new Set([...prev, scanResult?.evidenceId]));
   };
 
   const sorted = [...evidence].sort((a, b) => {
@@ -90,6 +192,10 @@ export default function EvidenceVault({ caseId, evidence }) {
               <DialogTitle>Drop the Evidence</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
+              <p className="text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-3">
+                <ScanLine className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                AI will automatically scan your document and extract key details — names, account numbers, dates, amounts — and build your case timeline.
+              </p>
               <div className="space-y-2">
                 <Label>Document Type</Label>
                 <Select value={newEvidence.file_type} onValueChange={(v) => setNewEvidence({ ...newEvidence, file_type: v })}>
@@ -118,7 +224,7 @@ export default function EvidenceVault({ caseId, evidence }) {
                 />
               </div>
               <div>
-                <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} />
+                <input ref={fileRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.csv,.eml" onChange={handleUpload} />
                 <Button
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading || createMutation.isPending}
@@ -129,7 +235,7 @@ export default function EvidenceVault({ caseId, evidence }) {
                   ) : (
                     <Upload className="w-4 h-4" />
                   )}
-                  {uploading ? "Uploading..." : "Choose File & Upload"}
+                  {uploading ? "Uploading..." : createMutation.isPending ? "Saving..." : "Choose File & Upload"}
                 </Button>
               </div>
             </div>
@@ -137,55 +243,95 @@ export default function EvidenceVault({ caseId, evidence }) {
         </Dialog>
       </div>
 
-      {sorted.length === 0 ? (
+      {/* Active scan banner */}
+      {scanning && (
+        <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 text-sm text-primary">
+          <ScanLine className="w-4 h-4 animate-pulse" />
+          <span className="font-medium">AI is scanning your document...</span>
+          <span className="text-xs text-primary/70">Extracting names, dates, account numbers &amp; building timeline</span>
+        </div>
+      )}
+
+      {/* Scan result for the most recently uploaded doc */}
+      {scanResult && !scanning && (
+        <DocumentScanResult
+          extracted={scanResult.data}
+          confirmed={appliedIds.has(scanResult.evidenceId)}
+          onConfirm={() => applyExtractedData(scanResult.data)}
+        />
+      )}
+
+      {sorted.length === 0 && !scanning ? (
         <div className="bg-secondary/30 rounded-lg border-2 border-dashed border-border p-8 text-center">
           <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground mb-1">DROP THE EVIDENCE</p>
-          <p className="text-xs text-muted-foreground">Screenshots, emails, letters, contracts.</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Throw the mess here — AI will sort it out.</p>
+          <p className="text-xs text-muted-foreground">Leases, bank statements, emails, letters, photos.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">AI scans every document and builds your timeline automatically.</p>
         </div>
       ) : (
         <div className="space-y-2">
           {sorted.map((ev) => {
             const cfg = typeConfig[ev.file_type] || typeConfig.other;
             const TypeIcon = cfg.icon;
+            const isScanning = pendingScan?.evidenceId === ev.id && scanning;
+            const thisScanResult = scanResult?.evidenceId === ev.id ? scanResult.data : ev.extracted_data;
+            const isApplied = appliedIds.has(ev.id);
+
             return (
-              <div
-                key={ev.id}
-                className="flex items-center gap-3 bg-card border border-border rounded-lg p-3 group hover:border-primary/20 transition-colors"
-              >
-                <div className={`p-2 rounded-lg ${cfg.color}`}>
-                  <TypeIcon className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{ev.file_name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <Badge variant="secondary" className="text-[10px]">{cfg.label}</Badge>
-                    {ev.event_date && (
-                      <span className="text-[10px] text-muted-foreground">
-                        {format(new Date(ev.event_date), "d MMM yyyy")}
-                      </span>
+              <div key={ev.id} className="bg-card border border-border rounded-lg p-3 hover:border-primary/20 transition-colors">
+                <div className="flex items-center gap-3 group">
+                  <div className={`p-2 rounded-lg ${cfg.color}`}>
+                    <TypeIcon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{ev.file_name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Badge variant="secondary" className="text-[10px]">{cfg.label}</Badge>
+                      {ev.event_date && (
+                        <span className="text-[10px] text-muted-foreground">
+                          {format(new Date(ev.event_date), "d MMM yyyy")}
+                        </span>
+                      )}
+                      {isScanning && (
+                        <span className="text-[10px] text-primary flex items-center gap-1">
+                          <Loader2 className="w-2.5 h-2.5 animate-spin" /> Scanning...
+                        </span>
+                      )}
+                      {ev.scan_status === "complete" && (
+                        <span className="text-[10px] text-success flex items-center gap-1">
+                          <ScanLine className="w-2.5 h-2.5" /> Scanned
+                        </span>
+                      )}
+                    </div>
+                    {ev.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{ev.description}</p>
                     )}
                   </div>
-                  {ev.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{ev.description}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <a href={ev.file_url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <ExternalLink className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a href={ev.file_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
+                    </a>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive"
+                      onClick={() => deleteMutation.mutate(ev.id)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
-                  </a>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => deleteMutation.mutate(ev.id)}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
+                  </div>
                 </div>
+
+                {/* Show scan results inline on already-scanned docs */}
+                {thisScanResult && ev.scan_status === "complete" && scanResult?.evidenceId !== ev.id && (
+                  <DocumentScanResult
+                    extracted={thisScanResult}
+                    confirmed={true}
+                    onConfirm={null}
+                  />
+                )}
               </div>
             );
           })}

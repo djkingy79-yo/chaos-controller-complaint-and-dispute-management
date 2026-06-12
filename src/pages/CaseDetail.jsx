@@ -122,7 +122,7 @@ export default function CaseDetail() {
               <ComplaintLetter caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="evidence">
-              <EvidenceVault caseId={caseId} evidence={evidence} />
+              <EvidenceVault caseId={caseId} evidence={evidence} caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="timeline">
               <CaseTimeline caseId={caseId} events={timelineEvents} />
