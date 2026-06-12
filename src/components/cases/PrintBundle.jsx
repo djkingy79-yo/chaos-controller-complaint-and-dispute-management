@@ -54,12 +54,55 @@ function disclaimer() {
   </p>`;
 }
 
-function printLetter(caseItem) {
+function letterhead(caseItem, client, today) {
+  const clientRows = [
+    client?.name    ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">From:</td><td style="font-weight:bold;font-size:11pt;">${client.name}</td></tr>` : "",
+    client?.address ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Address:</td><td style="font-size:11pt;">${client.address}</td></tr>` : "",
+    client?.email   ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Email:</td><td style="font-size:11pt;">${client.email}</td></tr>` : "",
+    client?.phone   ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Phone:</td><td style="font-size:11pt;">${client.phone}</td></tr>` : "",
+    client?.accounts?.length ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Account(s):</td><td style="font-size:11pt;">${client.accounts.join(", ")}</td></tr>` : "",
+    client?.policies?.length ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Reference(s):</td><td style="font-size:11pt;">${client.policies.join(", ")}</td></tr>` : "",
+  ].filter(Boolean).join("");
+
+  return `
+  <table style="width:100%;border-collapse:collapse;margin-bottom:0;">
+    <tr>
+      <td style="padding:10pt 0;">
+        <div style="font-size:17pt;font-weight:bold;letter-spacing:1pt;color:#0f172a;font-family:'Times New Roman',Times,serif;">⬛ CHAOS CONTROLLER™</div>
+        <div style="font-size:9pt;color:#64748b;margin-top:2pt;font-family:'Times New Roman',Times,serif;">AI-Powered Consumer Advocacy Platform</div>
+      </td>
+      <td style="text-align:right;vertical-align:top;padding-top:10pt;">
+        <div style="font-size:10pt;color:#555;">${today}</div>
+        <div style="font-size:9pt;color:#999;margin-top:2pt;">chaoscontroller.com.au</div>
+      </td>
+    </tr>
+  </table>
+  ${clientRows ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;padding:8pt 12pt;margin-bottom:0;"><table style="border-collapse:collapse;">${clientRows}</table></div>` : ""}
+  <hr style="border:none;border-top:2.5px solid #1d4ed8;margin:12pt 0 16pt 0;"/>`;
+}
+
+function buildClientContext(evidence) {
+  const merged = {};
+  for (const ev of (evidence || [])) {
+    const d = ev.extracted_data;
+    if (!d) continue;
+    if (d.complainant_name && !merged.name)       merged.name    = d.complainant_name;
+    if (d.complainant_address && !merged.address) merged.address = d.complainant_address;
+    if (d.complainant_email && !merged.email)     merged.email   = d.complainant_email;
+    if (d.complainant_phone && !merged.phone)     merged.phone   = d.complainant_phone;
+    if (d.account_numbers?.length)  merged.accounts  = [...(merged.accounts  || []), ...d.account_numbers];
+    if (d.policy_numbers?.length)   merged.policies  = [...(merged.policies  || []), ...d.policy_numbers];
+  }
+  for (const k of ["accounts","policies"]) { if (merged[k]) merged[k] = [...new Set(merged[k])]; }
+  return merged;
+}
+
+function printLetter(caseItem, evidence) {
+  const today = format(new Date(), "d MMMM yyyy");
+  const client = buildClientContext(evidence);
   const html = `<div style="${baseStyles()}">
-    ${h1("Formal Complaint Letter")}
-    ${h2(caseItem.organisation_name || "Organisation")}
-    <hr style="margin:12pt 0;"/>
-    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.7;">${caseItem.complaint_letter || "No letter generated."}</pre>
+    ${letterhead(caseItem, client, today)}
+    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;">${caseItem.complaint_letter || "No letter generated."}</pre>
     ${footer(caseItem.title)}
     ${disclaimer()}
   </div>`;
@@ -197,12 +240,15 @@ function printBundle(caseItem, evidence, events) {
 
   const html = `<div style="${baseStyles()}">
     <!-- COVER PAGE -->
-    <div style="text-align:center;padding-top:80pt;">
-      <p style="font-size:11pt;text-transform:uppercase;letter-spacing:2pt;color:#555;">CHAOS CONTROLLER™</p>
-      <div style="font-size:24pt;font-weight:bold;margin:16pt 0;">${caseItem.title}</div>
-      <div style="font-size:14pt;font-style:italic;margin-bottom:8pt;">vs. ${caseItem.organisation_name || "Organisation"}</div>
-      <div style="font-size:12pt;color:#555;">Case Bundle — ${format(new Date(), "d MMMM yyyy")}</div>
-      <div style="font-size:11pt;color:#555;margin-top:8pt;text-transform:capitalize;">Category: ${caseItem.category} | Status: ${(caseItem.status || "").replace(/_/g, " ")}</div>
+    <div style="text-align:center;padding-top:60pt;">
+      <div style="font-size:22pt;font-weight:bold;letter-spacing:2pt;color:#0f172a;margin-bottom:4pt;">CHAOS CONTROLLER™</div>
+      <div style="font-size:10pt;color:#64748b;letter-spacing:1pt;margin-bottom:32pt;">AI-POWERED CONSUMER ADVOCACY PLATFORM</div>
+      <hr style="border:none;border-top:2.5px solid #1d4ed8;width:60%;margin:0 auto 32pt auto;"/>
+      <div style="font-size:20pt;font-weight:bold;margin-bottom:8pt;">${caseItem.title}</div>
+      <div style="font-size:14pt;font-style:italic;margin-bottom:8pt;color:#444;">vs. ${caseItem.organisation_name || "Organisation"}</div>
+      <div style="font-size:12pt;color:#555;margin-bottom:4pt;">Case Bundle — ${format(new Date(), "d MMMM yyyy")}</div>
+      <div style="font-size:11pt;color:#555;text-transform:capitalize;">Category: ${caseItem.category} | Status: ${(caseItem.status || "").replace(/_/g, " ")}</div>
+      ${(() => { const c = buildClientContext(evSorted); return c.name ? `<div style="margin-top:24pt;font-size:11pt;color:#333;">Prepared for: <strong>${c.name}</strong></div>` : ""; })()}
     </div>
 
     ${pageBreak}
@@ -267,7 +313,8 @@ function printBundle(caseItem, evidence, events) {
 
     <!-- SECTION 4: COMPLAINT LETTER -->
     ${h1("Section 4 — Complaint Letter")}
-    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.7;margin-top:12pt;">${caseItem.complaint_letter || "No complaint letter generated yet."}</pre>
+    ${letterhead(caseItem, buildClientContext(evSorted), format(new Date(), "d MMMM yyyy"))}
+    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin-top:0;">${caseItem.complaint_letter || "No complaint letter generated yet."}</pre>
 
     ${footer(caseItem.title)}
     ${disclaimer()}
@@ -286,7 +333,7 @@ export default function PrintBundle({ caseItem, evidence, events }) {
 
       <div className="grid sm:grid-cols-2 gap-3">
         <button
-          onClick={() => printLetter(caseItem)}
+          onClick={() => printLetter(caseItem, evidence)}
           className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
         >
           <div className="flex items-center gap-3 mb-2">
