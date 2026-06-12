@@ -161,14 +161,12 @@ INSTRUCTIONS:
       {/* Letterhead preview */}
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-white text-sm font-display">CC</div>
-            <div>
-              <p className="text-white font-display font-bold text-sm tracking-wide">CHAOS CONTROLLER™</p>
-              <p className="text-slate-400 text-[10px]">AI-Powered Consumer Advocacy Platform</p>
-            </div>
-          </div>
+        <div className="bg-black px-6 py-3 flex items-center justify-between">
+          <img
+            src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
+            alt="Chaos Controller"
+            className="h-14 w-auto object-contain"
+          />
           <p className="text-slate-400 text-[10px] text-right">Generated {format(new Date(), "d MMMM yyyy")}</p>
         </div>
 
@@ -229,13 +227,7 @@ function buildLetterHTML(caseItem, letter, client) {
     <table style="width:100%;border-collapse:collapse;margin-bottom:0;">
       <tr>
         <td style="padding:14pt 0 10pt 0;">
-          <div style="display:flex;align-items:center;gap:12pt;">
-            <div style="width:36pt;height:36pt;background:#1d4ed8;border-radius:6pt;display:flex;align-items:center;justify-content:center;font-weight:bold;color:white;font-size:14pt;text-align:center;line-height:36pt;">CC</div>
-            <div>
-              <div style="font-size:16pt;font-weight:bold;letter-spacing:1pt;color:#0f172a;">CHAOS CONTROLLER™</div>
-              <div style="font-size:9pt;color:#64748b;margin-top:1pt;">AI-Powered Consumer Advocacy Platform</div>
-            </div>
-          </div>
+          <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" style="height:60pt;width:auto;" />
         </td>
         <td style="text-align:right;vertical-align:top;padding-top:14pt;">
           <div style="font-size:10pt;color:#64748b;">${today}</div>

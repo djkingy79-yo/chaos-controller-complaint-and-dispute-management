@@ -68,8 +68,7 @@ function letterhead(caseItem, client, today) {
   <table style="width:100%;border-collapse:collapse;margin-bottom:0;">
     <tr>
       <td style="padding:10pt 0;">
-        <div style="font-size:17pt;font-weight:bold;letter-spacing:1pt;color:#0f172a;font-family:'Times New Roman',Times,serif;">⬛ CHAOS CONTROLLER™</div>
-        <div style="font-size:9pt;color:#64748b;margin-top:2pt;font-family:'Times New Roman',Times,serif;">AI-Powered Consumer Advocacy Platform</div>
+        <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" style="height:55pt;width:auto;" />
       </td>
       <td style="text-align:right;vertical-align:top;padding-top:10pt;">
         <div style="font-size:10pt;color:#555;">${today}</div>
@@ -241,8 +240,7 @@ function printBundle(caseItem, evidence, events) {
   const html = `<div style="${baseStyles()}">
     <!-- COVER PAGE -->
     <div style="text-align:center;padding-top:60pt;">
-      <div style="font-size:22pt;font-weight:bold;letter-spacing:2pt;color:#0f172a;margin-bottom:4pt;">CHAOS CONTROLLER™</div>
-      <div style="font-size:10pt;color:#64748b;letter-spacing:1pt;margin-bottom:32pt;">AI-POWERED CONSUMER ADVOCACY PLATFORM</div>
+      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" style="height:80pt;width:auto;margin-bottom:24pt;" />
       <hr style="border:none;border-top:2.5px solid #1d4ed8;width:60%;margin:0 auto 32pt auto;"/>
       <div style="font-size:20pt;font-weight:bold;margin-bottom:8pt;">${caseItem.title}</div>
       <div style="font-size:14pt;font-style:italic;margin-bottom:8pt;color:#444;">vs. ${caseItem.organisation_name || "Organisation"}</div>
