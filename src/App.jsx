@@ -22,6 +22,7 @@ import SmartChecklist from '@/pages/SmartChecklist';
 import Directories from '@/pages/Directories';
 import Payments from '@/pages/Payments';
 import AdminDashboard from '@/pages/AdminDashboard';
+import CalendarView from '@/pages/CalendarView';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -60,6 +61,7 @@ const AuthenticatedApp = () => {
           <Route path="/directories" element={<Directories />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/calendar" element={<CalendarView />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

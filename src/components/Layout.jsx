@@ -14,7 +14,8 @@ import {
   ClipboardList,
   Building2,
   CreditCard,
-  Activity
+  Activity,
+  CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -23,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/cases", label: "My Cases", icon: FolderOpen },
+  { path: "/calendar", label: "Calendar", icon: CalendarDays },
   { path: "/deadlines", label: "Deadlines", icon: Siren },
   { path: "/checklist", label: "Checklist", icon: ClipboardList },
   { path: "/directories", label: "Directories", icon: Building2 },
