@@ -37,8 +37,9 @@ export default function NewCase() {
   const generateComplaint = async () => {
     setIsGenerating(true);
     setStep(3);
-    const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal internal complaint letter for the following dispute:
+    const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
 
+CASE DETAILS:
 Category: ${category}
 Organisation: ${formData.organisation_name || "Unknown"}
 Issue Summary: ${formData.issue_summary || ""}
@@ -46,15 +47,13 @@ Full Details: ${formData.issue_details || ""}
 Desired Outcome: ${formData.desired_outcome || ""}
 Issue Type: ${formData.issue_type || ""}
 
-Write a professional, firm but polite complaint letter that:
-1. Clearly states the complaint
-2. References specific dates and events mentioned
-3. States the desired outcome
-4. Mentions the relevant escalation body (${escalationBodies[category]}) if unresolved
-5. Requests a response within 21 days
-6. Uses formal business letter format
-
-Do NOT include placeholder brackets. Write it ready to send. Address it to the Complaints Department of ${formData.organisation_name || "the organisation"}.`;
+INSTRUCTIONS:
+- Write a professional, firm but polite complaint letter in formal business letter format.
+- Address it to: Complaints Department, ${formData.organisation_name || "the organisation"}.
+- Include a 21-day response deadline and mention ${escalationBodies[category]} as the next escalation step if unresolved.
+- Incorporate any specific dates, amounts, or reference numbers mentioned in the issue details directly into the letter text.
+- Do NOT use placeholder brackets like [DATE] or [AMOUNT] — if specific details are in the issue text above, use them. If a detail is genuinely unknown, write a natural sentence acknowledging it rather than a bracket.
+- The letter should be ready to send with the details provided.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setComplaintLetter(result);
