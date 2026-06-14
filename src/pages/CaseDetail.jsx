@@ -5,13 +5,14 @@ import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer } from "lucide-react";
+import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download } from "lucide-react";
 import CaseStatusControl from "@/components/cases/CaseStatusControl";
 import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
 import ComplaintLetter from "@/components/cases/ComplaintLetter";
 import ChaosScore from "@/components/cases/ChaosScore";
 import PrintBundle from "@/components/cases/PrintBundle";
+import EscalationBundle from "@/components/cases/EscalationBundle";
 
 export default function CaseDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -104,7 +105,7 @@ export default function CaseDetail() {
         {/* Main Content */}
         <div className="lg:col-span-2">
           <Tabs defaultValue="letter" className="w-full">
-            <TabsList className="w-full grid grid-cols-4 mb-4">
+            <TabsList className="w-full grid grid-cols-5 mb-4">
               <TabsTrigger value="letter" className="gap-1 text-xs sm:text-sm">
                 <FileText className="w-3.5 h-3.5 hidden sm:block" /> Letter
               </TabsTrigger>
@@ -116,6 +117,9 @@ export default function CaseDetail() {
               </TabsTrigger>
               <TabsTrigger value="print" className="gap-1 text-xs sm:text-sm">
                 <Printer className="w-3.5 h-3.5 hidden sm:block" /> Print
+              </TabsTrigger>
+              <TabsTrigger value="bundle" className="gap-1 text-xs sm:text-sm">
+                <Download className="w-3.5 h-3.5 hidden sm:block" /> Bundle
               </TabsTrigger>
             </TabsList>
             <TabsContent value="letter">
@@ -129,6 +133,9 @@ export default function CaseDetail() {
             </TabsContent>
             <TabsContent value="print">
               <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+            </TabsContent>
+            <TabsContent value="bundle">
+              <EscalationBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
           </Tabs>
         </div>
