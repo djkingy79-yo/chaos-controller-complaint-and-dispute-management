@@ -37,6 +37,43 @@
       "type": "string",
       "description": "Name of the organisation the complaint is against"
     },
+    "organisation_complaints_address": {
+      "type": "string",
+      "description": "Postal address of the organisation's complaints department"
+    },
+    "organisation_complaints_email": {
+      "type": "string",
+      "description": "Email address of the organisation's complaints department"
+    },
+    "complaint_handler_name": {
+      "type": "string",
+      "description": "Name of the person handling the complaint at the organisation"
+    },
+    "complainant_name": {
+      "type": "string",
+      "description": "Full name of the complainant"
+    },
+    "complainant_address": {
+      "type": "string",
+      "description": "Postal address of the complainant"
+    },
+    "complainant_email": {
+      "type": "string",
+      "description": "Email address of the complainant"
+    },
+    "complainant_phone": {
+      "type": "string",
+      "description": "Mobile/phone number of the complainant"
+    },
+    "account_number": {
+      "type": "string",
+      "description": "Account or policy number"
+    },
+    "incident_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the incident"
+    },
     "issue_summary": {
       "type": "string",
       "description": "Brief summary of the issue"

@@ -7,22 +7,34 @@ import { Copy, RefreshCw, Pencil, Check, Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-function buildClientContext(evidenceList) {
-  const merged = {};
+const LOGO = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png";
+
+// Merge extracted evidence data with case-level complainant fields
+function buildClientContext(caseItem, evidenceList) {
+  const merged = {
+    name: caseItem.complainant_name || "",
+    address: caseItem.complainant_address || "",
+    email: caseItem.complainant_email || "",
+    phone: caseItem.complainant_phone || "",
+    accounts: caseItem.account_number ? [caseItem.account_number] : [],
+    policies: [],
+    amounts: [],
+    dates: caseItem.incident_date ? [format(new Date(caseItem.incident_date), "d MMMM yyyy")] : [],
+  };
+  // Fill gaps from scanned evidence
   for (const ev of (evidenceList || [])) {
     const d = ev.extracted_data;
     if (!d) continue;
-    if (d.complainant_name && !merged.name)       merged.name    = d.complainant_name;
-    if (d.complainant_address && !merged.address) merged.address = d.complainant_address;
-    if (d.complainant_email && !merged.email)     merged.email   = d.complainant_email;
-    if (d.complainant_phone && !merged.phone)     merged.phone   = d.complainant_phone;
-    if (d.account_numbers?.length)  merged.accounts  = [...(merged.accounts  || []), ...d.account_numbers];
-    if (d.policy_numbers?.length)   merged.policies  = [...(merged.policies  || []), ...d.policy_numbers];
-    if (d.key_amounts?.length)      merged.amounts   = [...(merged.amounts   || []), ...d.key_amounts];
-    if (d.dates_mentioned?.length)  merged.dates     = [...(merged.dates     || []), ...d.dates_mentioned];
+    if (!merged.name && d.complainant_name) merged.name = d.complainant_name;
+    if (!merged.address && d.complainant_address) merged.address = d.complainant_address;
+    if (!merged.email && d.complainant_email) merged.email = d.complainant_email;
+    if (!merged.phone && d.complainant_phone) merged.phone = d.complainant_phone;
+    if (d.account_numbers?.length) merged.accounts = [...merged.accounts, ...d.account_numbers];
+    if (d.policy_numbers?.length) merged.policies = [...(merged.policies || []), ...d.policy_numbers];
+    if (d.key_amounts?.length) merged.amounts = [...(merged.amounts || []), ...d.key_amounts];
+    if (d.dates_mentioned?.length) merged.dates = [...(merged.dates || []), ...d.dates_mentioned];
   }
-  // dedupe arrays
-  for (const k of ["accounts","policies","amounts","dates"]) {
+  for (const k of ["accounts", "policies", "amounts", "dates"]) {
     if (merged[k]) merged[k] = [...new Set(merged[k])];
   }
   return merged;
@@ -54,39 +66,43 @@ export default function ComplaintLetter({ caseItem }) {
 
   const handleRegenerate = async () => {
     setRegenerating(true);
-    const client = buildClientContext(evidence);
-
-    const clientBlock = `
-CLIENT DETAILS (extracted from their documents — use these directly in the letter, no placeholders):
-- Name: ${client.name || "Not yet extracted — use [CLIENT NAME]"}
-- Address: ${client.address || "Not yet extracted — use [CLIENT ADDRESS]"}
-- Email: ${client.email || "Not yet extracted — use [CLIENT EMAIL]"}
-- Phone: ${client.phone || "Not yet extracted — use [CLIENT PHONE]"}
-${client.accounts?.length  ? `- Account Number(s): ${client.accounts.join(", ")}`  : ""}
-${client.policies?.length  ? `- Policy/Reference Number(s): ${client.policies.join(", ")}` : ""}
-${client.amounts?.length   ? `- Key Amounts Referenced: ${client.amounts.join(", ")}` : ""}
-${client.dates?.length     ? `- Key Dates Referenced: ${client.dates.join(" | ")}` : ""}
-`.trim();
+    const client = buildClientContext(caseItem, evidence);
 
     const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
 
-${clientBlock}
+COMPLAINANT DETAILS (use all provided fields directly — no placeholder brackets):
+- Name: ${client.name || "[COMPLAINANT NAME]"}
+- Address: ${client.address || "[COMPLAINANT ADDRESS]"}
+- Email: ${client.email || "[COMPLAINANT EMAIL]"}
+- Phone/Mobile: ${client.phone || "[COMPLAINANT PHONE]"}
+- Account/Reference Number: ${client.accounts?.join(", ") || caseItem.account_number || "not provided"}
+- Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : client.dates?.join(", ") || "not provided"}
+${client.policies?.length ? `- Policy/Reference Numbers: ${client.policies.join(", ")}` : ""}
+${client.amounts?.length ? `- Key Amounts: ${client.amounts.join(", ")}` : ""}
+
+ORGANISATION DETAILS:
+- Organisation: ${caseItem.organisation_name || "[ORGANISATION NAME]"}
+- Complaints Address: ${caseItem.organisation_complaints_address || "Complaints Department, " + (caseItem.organisation_name || "[Organisation]")}
+- Complaints Email: ${caseItem.organisation_complaints_email || "not provided"}
+- Complaint Handler: ${caseItem.complaint_handler_name || "The Complaints Manager"}
 
 CASE DETAILS:
-Category: ${caseItem.category}
-Organisation: ${caseItem.organisation_name}
-Issue: ${caseItem.issue_summary}
-Details: ${caseItem.issue_details}
-Desired Outcome: ${caseItem.desired_outcome}
-Escalation Body: ${caseItem.escalation_body}
+- Category: ${caseItem.category}
+- Issue Summary: ${caseItem.issue_summary}
+- Full Details: ${caseItem.issue_details}
+- Desired Outcome: ${caseItem.desired_outcome}
+- Escalation Body: ${caseItem.escalation_body}
 
-INSTRUCTIONS:
-- Use the client's real name, address, account numbers, and dates throughout the letter — do NOT use placeholder brackets for any detail that has been provided above.
-- Only use a placeholder like [X] if a specific field above says "Not yet extracted".
-- Write a professional, firm but polite letter in formal business letter format.
-- Address it to: Complaints Department, ${caseItem.organisation_name || "the organisation"}.
-- Include a 21-day response deadline and mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step.
-- Reference specific dates and amounts from the client details above.`;
+LETTER FORMAT INSTRUCTIONS:
+1. Top right: complainant's full address block, then the date (${format(new Date(), "d MMMM yyyy")}).
+2. Below that, left-aligned: complaint handler name/title, organisation name, organisation complaints address.
+3. Re: line with the subject e.g. "Re: Formal Complaint — Account ${client.accounts?.[0] || caseItem.account_number || "[account]"}"
+4. Salutation: "Dear ${caseItem.complaint_handler_name ? caseItem.complaint_handler_name : "Sir/Madam"},"
+5. Body: reference account number and incident date prominently in the opening paragraph.
+6. Firm but professional tone. Include a 21-day response deadline.
+7. Mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step.
+8. Close with "Yours faithfully," then the complainant's full name.
+9. Do NOT use any placeholder brackets for any detail that has been provided above.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);
@@ -95,20 +111,16 @@ INSTRUCTIONS:
   };
 
   const handlePrint = () => {
-    const client = buildClientContext(evidence);
-    const printStyles = `
-      <style>
-        @media print { body * { visibility: hidden !important; } #cc-letter-print, #cc-letter-print * { visibility: visible !important; } #cc-letter-print { position: fixed; left: 0; top: 0; width: 100%; } @page { margin: 2cm; } }
-      </style>`;
-    if (!document.getElementById("cc-letter-print-styles")) {
+    const client = buildClientContext(caseItem, evidence);
+    if (!document.getElementById("cc-print-style")) {
       const s = document.createElement("style");
-      s.id = "cc-letter-print-styles";
+      s.id = "cc-print-style";
       s.innerHTML = `@media print { body * { visibility: hidden !important; } #cc-letter-print, #cc-letter-print * { visibility: visible !important; } #cc-letter-print { position: fixed; left: 0; top: 0; width: 100%; } @page { margin: 2cm; } }`;
       document.head.appendChild(s);
     }
     let area = document.getElementById("cc-letter-print");
     if (!area) { area = document.createElement("div"); area.id = "cc-letter-print"; document.body.appendChild(area); }
-    area.innerHTML = buildLetterHTML(caseItem, letter, client);
+    area.innerHTML = buildPrintHTML(caseItem, letter, client);
     window.print();
   };
 
@@ -120,36 +132,29 @@ INSTRUCTIONS:
     );
   }
 
-  const client = buildClientContext(evidence);
+  const client = buildClientContext(caseItem, evidence);
+  const today = format(new Date(), "d MMMM yyyy");
+  const footerText = buildFooterText(caseItem, client);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-heading font-semibold text-foreground">Complaint Letter</h3>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5 text-xs">
             <Copy className="w-3.5 h-3.5" /> Copy
           </Button>
           <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 text-xs">
             <Printer className="w-3.5 h-3.5" /> Print
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRegenerate}
-            disabled={regenerating}
-            className="gap-1.5 text-xs"
-          >
+          <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={regenerating} className="gap-1.5 text-xs">
             {regenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
             Regenerate
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              if (editing) updateMutation.mutate({ complaint_letter: letter });
-              setEditing(!editing);
-            }}
+            onClick={() => { if (editing) updateMutation.mutate({ complaint_letter: letter }); setEditing(!editing); }}
             className="gap-1.5 text-xs"
           >
             {editing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
@@ -158,99 +163,114 @@ INSTRUCTIONS:
         </div>
       </div>
 
-      {/* Letterhead preview */}
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
-        {/* Header */}
-        <div className="bg-black px-6 py-3 flex items-center justify-between">
-          <img
-            src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
-            alt="Chaos Controller"
-            className="h-14 w-auto object-contain"
-          />
-          <p className="text-slate-400 text-[10px] text-right">Generated {format(new Date(), "d MMMM yyyy")}</p>
+      {/* Letterhead Preview — clean white, professional */}
+      <div className="bg-white border border-border rounded-lg overflow-hidden shadow-sm">
+
+        {/* Header — white background, logo left, date + domain right */}
+        <div className="px-8 pt-6 pb-4 flex items-start justify-between border-b border-slate-200">
+          <img src={LOGO} alt="Chaos Controller" className="h-16 w-auto object-contain" />
+          <div className="text-right">
+            <p className="text-xs text-slate-500">{today}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">chaoscontroller.com.au</p>
+          </div>
         </div>
 
-        {/* Client info block */}
-        {(client.name || client.address || client.email || client.phone || client.accounts?.length) && (
-          <div className="px-6 py-3 bg-secondary/30 border-b border-border grid grid-cols-2 gap-x-6 gap-y-1">
-            {client.name    && <p className="text-xs"><span className="text-muted-foreground">From: </span><span className="font-medium text-foreground">{client.name}</span></p>}
-            {client.address && <p className="text-xs"><span className="text-muted-foreground">Address: </span><span className="font-medium text-foreground">{client.address}</span></p>}
-            {client.email   && <p className="text-xs"><span className="text-muted-foreground">Email: </span><span className="font-medium text-foreground">{client.email}</span></p>}
-            {client.phone   && <p className="text-xs"><span className="text-muted-foreground">Phone: </span><span className="font-medium text-foreground">{client.phone}</span></p>}
-            {client.accounts?.length > 0 && <p className="text-xs col-span-2"><span className="text-muted-foreground">Account(s): </span><span className="font-medium text-foreground">{client.accounts.join(", ")}</span></p>}
-            {client.policies?.length > 0 && <p className="text-xs col-span-2"><span className="text-muted-foreground">Reference(s): </span><span className="font-medium text-foreground">{client.policies.join(", ")}</span></p>}
+        {/* Blue rule */}
+        <div className="h-0.5 bg-primary mx-8" />
+
+        {/* Complainant details block */}
+        {(client.name || client.address || client.email || client.phone) && (
+          <div className="px-8 py-3 bg-slate-50 border-b border-slate-100 grid grid-cols-2 gap-x-8 gap-y-1">
+            {client.name    && <p className="text-xs"><span className="text-slate-500">From: </span><span className="font-semibold text-slate-800">{client.name}</span></p>}
+            {client.address && <p className="text-xs"><span className="text-slate-500">Address: </span><span className="font-medium text-slate-700">{client.address}</span></p>}
+            {client.email   && <p className="text-xs"><span className="text-slate-500">Email: </span><span className="font-medium text-slate-700">{client.email}</span></p>}
+            {client.phone   && <p className="text-xs"><span className="text-slate-500">Mobile: </span><span className="font-medium text-slate-700">{client.phone}</span></p>}
+            {client.accounts?.length > 0 && <p className="text-xs col-span-2"><span className="text-slate-500">Account: </span><span className="font-semibold text-slate-800">{client.accounts.join(", ")}</span></p>}
+            {client.policies?.length > 0 && <p className="text-xs col-span-2"><span className="text-slate-500">Reference: </span><span className="font-medium text-slate-700">{client.policies.join(", ")}</span></p>}
+            {caseItem.incident_date && <p className="text-xs"><span className="text-slate-500">Incident Date: </span><span className="font-semibold text-red-600">{format(new Date(caseItem.incident_date), "d MMMM yyyy")}</span></p>}
+            {caseItem.complaint_handler_name && <p className="text-xs"><span className="text-slate-500">Attn: </span><span className="font-medium text-slate-700">{caseItem.complaint_handler_name}</span></p>}
+            {caseItem.organisation_name && <p className="text-xs col-span-2"><span className="text-slate-500">To: </span><span className="font-semibold text-slate-800">{caseItem.organisation_name}</span>{caseItem.organisation_complaints_email ? <span className="text-slate-400 ml-2">({caseItem.organisation_complaints_email})</span> : ""}</p>}
           </div>
         )}
 
-        {/* Separator */}
-        <div className="h-px bg-primary/20 mx-6" />
-
         {/* Letter body */}
-        <div className="p-6">
+        <div className="px-8 py-6 bg-white">
           {editing ? (
             <Textarea
               value={letter}
               onChange={(e) => setLetter(e.target.value)}
-              rows={20}
-              className="font-body text-sm leading-relaxed"
+              rows={22}
+              className="font-body text-sm leading-relaxed bg-white text-slate-900"
             />
           ) : (
-            <pre className="whitespace-pre-wrap text-sm font-body leading-relaxed text-foreground">
+            <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
               {letter}
             </pre>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-border bg-secondary/20">
-          <p className="text-[10px] text-muted-foreground italic">Chaos Controller™ — {caseItem.title} — This document is for organisational purposes only. Not legal advice.</p>
+        {/* Footer — italic, 9pt style, matches spec */}
+        <div className="px-8 py-3 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+          <p className="text-[9pt] italic text-slate-400">{footerText}</p>
+          <p className="text-[9pt] text-slate-400 ml-4 shrink-0">p. 1</p>
         </div>
       </div>
     </div>
   );
 }
 
-function buildLetterHTML(caseItem, letter, client) {
+function buildFooterText(caseItem, client) {
+  const year = new Date().getFullYear();
+  const complainantName = client.name || caseItem.complainant_name || "";
+  const org = caseItem.organisation_name || "";
+  const title = caseItem.title || "";
+  return `Chaos Controller by Deb King ${year}${complainantName ? ` — ${complainantName} vs ${org}` : ""} ${year} — ${title}`;
+}
+
+function buildPrintHTML(caseItem, letter, client) {
   const today = format(new Date(), "d MMMM yyyy");
+  const year = new Date().getFullYear();
+  const footerText = buildFooterText(caseItem, client);
+
   const clientRows = [
-    client.name    ? `<tr><td style="color:#666;padding:2pt 12pt 2pt 0;font-size:11pt;">From:</td><td style="font-weight:bold;font-size:11pt;">${client.name}</td></tr>` : "",
-    client.address ? `<tr><td style="color:#666;padding:2pt 12pt 2pt 0;font-size:11pt;">Address:</td><td style="font-size:11pt;">${client.address}</td></tr>` : "",
-    client.email   ? `<tr><td style="color:#666;padding:2pt 12pt 2pt 0;font-size:11pt;">Email:</td><td style="font-size:11pt;">${client.email}</td></tr>` : "",
-    client.phone   ? `<tr><td style="color:#666;padding:2pt 12pt 2pt 0;font-size:11pt;">Phone:</td><td style="font-size:11pt;">${client.phone}</td></tr>` : "",
-    client.accounts?.length ? `<tr><td style="color:#666;padding:2pt 12pt 2pt 0;font-size:11pt;">Account(s):</td><td style="font-size:11pt;">${client.accounts.join(", ")}</td></tr>` : "",
-    client.policies?.length ? `<tr><td style="color:#666;padding:2pt 12pt 2pt 0;font-size:11pt;">Reference(s):</td><td style="font-size:11pt;">${client.policies.join(", ")}</td></tr>` : "",
+    client.name    ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">From:</td><td style="font-weight:bold;">${client.name}</td></tr>` : "",
+    client.address ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">Address:</td><td>${client.address}</td></tr>` : "",
+    client.email   ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">Email:</td><td>${client.email}</td></tr>` : "",
+    client.phone   ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">Mobile:</td><td>${client.phone}</td></tr>` : "",
+    client.accounts?.length ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">Account:</td><td style="font-weight:bold;">${client.accounts.join(", ")}</td></tr>` : "",
+    client.policies?.length ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">Reference:</td><td>${client.policies.join(", ")}</td></tr>` : "",
+    caseItem.incident_date ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">Incident Date:</td><td style="font-weight:bold;color:#cc0000;">${format(new Date(caseItem.incident_date), "d MMMM yyyy")}</td></tr>` : "",
+    caseItem.complaint_handler_name ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">Attn:</td><td>${caseItem.complaint_handler_name}</td></tr>` : "",
+    caseItem.organisation_name ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;">To:</td><td style="font-weight:bold;">${caseItem.organisation_name}${caseItem.organisation_complaints_email ? ` (${caseItem.organisation_complaints_email})` : ""}</td></tr>` : "",
+    caseItem.organisation_complaints_address ? `<tr><td style="color:#555;padding:2pt 16pt 2pt 0;white-space:nowrap;"></td><td style="color:#555;">${caseItem.organisation_complaints_address}</td></tr>` : "",
   ].filter(Boolean).join("");
 
-  return `
-  <div style="font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;line-height:1.6;">
-    <!-- LETTERHEAD -->
-    <table style="width:100%;border-collapse:collapse;margin-bottom:0;">
+  return `<div style="font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;line-height:1.65;">
+    <!-- LETTERHEAD: no dark background -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:0;padding-bottom:10pt;border-bottom:1pt solid #e2e8f0;">
       <tr>
-        <td style="padding:14pt 0 10pt 0;">
-          <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" style="height:60pt;width:auto;" />
+        <td style="padding:10pt 0 8pt 0;">
+          <img src="${LOGO}" alt="Chaos Controller" style="height:55pt;width:auto;" />
         </td>
-        <td style="text-align:right;vertical-align:top;padding-top:14pt;">
+        <td style="text-align:right;vertical-align:top;padding-top:10pt;">
           <div style="font-size:10pt;color:#64748b;">${today}</div>
           <div style="font-size:9pt;color:#94a3b8;margin-top:2pt;">chaoscontroller.com.au</div>
         </td>
       </tr>
     </table>
 
-    ${clientRows ? `
-    <!-- CLIENT INFO -->
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6pt;padding:10pt 14pt;margin-bottom:0;">
-      <table style="border-collapse:collapse;">${clientRows}</table>
+    <div style="border-bottom:2pt solid #1d4ed8;margin:0 0 12pt 0;"></div>
+
+    ${clientRows ? `<div style="background:#f8fafc;border:1pt solid #e2e8f0;padding:8pt 14pt;margin-bottom:14pt;">
+      <table style="border-collapse:collapse;font-size:11pt;">${clientRows}</table>
     </div>` : ""}
 
-    <!-- SEPARATOR -->
-    <hr style="border:none;border-top:2px solid #1d4ed8;margin:14pt 0 16pt 0;"/>
-
-    <!-- LETTER BODY -->
     <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin:0;">${letter}</pre>
 
-    <!-- FOOTER -->
-    <div style="font-size:10pt;font-style:italic;border-top:1px solid #ccc;margin-top:28pt;padding-top:8pt;color:#666;">
-      Prepared by Chaos Controller™ — ${caseItem.title} — ${today} | This document is for organisational purposes only. Not legal advice.
+    <!-- FOOTER: starts page 2+ in print, shown here on screen for preview -->
+    <div style="font-size:9pt;font-style:italic;color:#888;border-top:1pt solid #ddd;margin-top:32pt;padding-top:8pt;display:flex;justify-content:space-between;">
+      <span>${footerText}</span>
+      <span>p. 2</span>
     </div>
   </div>`;
 }

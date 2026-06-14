@@ -39,21 +39,37 @@ export default function NewCase() {
     setStep(3);
     const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
 
+COMPLAINANT DETAILS (use these directly — no placeholders for any provided field):
+- Name: ${formData.complainant_name || "[COMPLAINANT NAME]"}
+- Address: ${formData.complainant_address || "[COMPLAINANT ADDRESS]"}
+- Email: ${formData.complainant_email || "[COMPLAINANT EMAIL]"}
+- Phone: ${formData.complainant_phone || "[COMPLAINANT PHONE]"}
+- Account/Reference Number: ${formData.account_number || "not provided"}
+- Date of Incident: ${formData.incident_date || "not provided"}
+
+ORGANISATION DETAILS:
+- Name: ${formData.organisation_name || "Unknown"}
+- Complaints Address: ${formData.organisation_complaints_address || "Complaints Department, [Organisation Address]"}
+- Complaints Email: ${formData.organisation_complaints_email || ""}
+- Complaint Handler: ${formData.complaint_handler_name || "The Complaints Manager"}
+
 CASE DETAILS:
 Category: ${category}
-Organisation: ${formData.organisation_name || "Unknown"}
 Issue Summary: ${formData.issue_summary || ""}
 Full Details: ${formData.issue_details || ""}
 Desired Outcome: ${formData.desired_outcome || ""}
 Issue Type: ${formData.issue_type || ""}
 
 INSTRUCTIONS:
+- Open with the complainant's full address block (right-aligned) and the date.
+- Address to: ${formData.complaint_handler_name ? formData.complaint_handler_name + "," : "The Complaints Manager,"} ${formData.organisation_name || "the organisation"}.
+- If an organisation complaints address was provided, include it as the recipient address block before the salutation.
+- Include the account/reference number in the opening paragraph.
+- Reference the exact incident date prominently.
 - Write a professional, firm but polite complaint letter in formal business letter format.
-- Address it to: Complaints Department, ${formData.organisation_name || "the organisation"}.
 - Include a 21-day response deadline and mention ${escalationBodies[category]} as the next escalation step if unresolved.
-- Incorporate any specific dates, amounts, or reference numbers mentioned in the issue details directly into the letter text.
-- Do NOT use placeholder brackets like [DATE] or [AMOUNT] — if specific details are in the issue text above, use them. If a detail is genuinely unknown, write a natural sentence acknowledging it rather than a bracket.
-- The letter should be ready to send with the details provided.`;
+- Use real details — no placeholder brackets for any field provided above.
+- Close with the complainant's full name.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setComplaintLetter(result);
@@ -70,6 +86,15 @@ INSTRUCTIONS:
       category,
       status: "draft",
       organisation_name: formData.organisation_name || "",
+      organisation_complaints_address: formData.organisation_complaints_address || "",
+      organisation_complaints_email: formData.organisation_complaints_email || "",
+      complaint_handler_name: formData.complaint_handler_name || "",
+      complainant_name: formData.complainant_name || "",
+      complainant_address: formData.complainant_address || "",
+      complainant_email: formData.complainant_email || "",
+      complainant_phone: formData.complainant_phone || "",
+      account_number: formData.account_number || "",
+      incident_date: formData.incident_date || "",
       issue_summary: formData.issue_summary || "",
       issue_details: formData.issue_details || "",
       desired_outcome: formData.desired_outcome || "",
