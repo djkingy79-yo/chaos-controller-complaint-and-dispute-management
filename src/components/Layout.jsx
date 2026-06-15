@@ -15,7 +15,8 @@ import {
   Building2,
   CreditCard,
   Activity,
-  CalendarDays
+  CalendarDays,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -28,6 +29,7 @@ const navItems = [
   { path: "/deadlines", label: "Deadlines", icon: Siren },
   { path: "/checklist", label: "Checklist", icon: ClipboardList },
   { path: "/directories", label: "Directories", icon: Building2 },
+  { path: "/help", label: "Help & Guide", icon: BookOpen },
   { path: "/new-case", label: "New Case", icon: Plus },
 ];
 

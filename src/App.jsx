@@ -23,6 +23,7 @@ import Directories from '@/pages/Directories';
 import Payments from '@/pages/Payments';
 import AdminDashboard from '@/pages/AdminDashboard';
 import CalendarView from '@/pages/CalendarView';
+import HelpGuide from '@/pages/HelpGuide';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
           <Route path="/payments" element={<Payments />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/calendar" element={<CalendarView />} />
+          <Route path="/help" element={<HelpGuide />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
