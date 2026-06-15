@@ -359,8 +359,8 @@ export default function Welcome() {
                 <div className={`${feature.bgColor} w-14 h-14 rounded-lg flex items-center justify-center mb-4`}>
                   <Icon className="w-8 h-8" style={{ color: feature.color }} />
                 </div>
-                <h3 className="font-heading font-black text-lg mb-3 text-white tracking-wide">{feature.title}</h3>
-                <p className="text-base text-white font-bold leading-relaxed">{feature.description}</p>
+                <h3 className="font-heading font-black text-lg mb-3 text-white tracking-wide text-shadow">{feature.title}</h3>
+                <p className="text-base text-gray-300 font-bold leading-relaxed">{feature.description}</p>
               </motion.div>
             );
           })}
@@ -383,12 +383,12 @@ export default function Welcome() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 * idx, duration: 0.5 }}
-                className="flex items-center gap-3 bg-gradient-to-r from-gray-900 to-black border-2 border-[#FFD700] px-6 py-4 rounded-lg hover:border-[#C0392B] transition-all"
+                className="flex items-center gap-3 bg-gradient-to-r from-black to-gray-900 border-2 border-[#FFD700] px-6 py-4 rounded-lg hover:border-[#C0392B] transition-all"
               >
                 <div className="w-10 h-10 rounded flex items-center justify-center" style={{ backgroundColor: `${type.color}20` }}>
                   <Icon className="w-6 h-6" style={{ color: type.color }} />
                 </div>
-                <span className="font-heading font-black text-white tracking-wide text-lg">{type.label}</span>
+                <span className="font-heading font-black text-white tracking-wide text-lg text-shadow">{type.label}</span>
               </motion.div>
             );
           })}
