@@ -20,7 +20,8 @@ import {
   Scale,
   Lock,
   Calendar,
-  FileText
+  FileText,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -36,6 +37,7 @@ const navItems = [
   { path: "/directories", label: "Directories", icon: Building2 },
   { path: "/sample-reports", label: "Sample Reports", icon: FileText },
   { path: "/help", label: "Help & Guide", icon: BookOpen },
+  { path: "/qna", label: "Q&A", icon: HelpCircle },
   { path: "/new-case", label: "New Case", icon: Plus },
 ];
 

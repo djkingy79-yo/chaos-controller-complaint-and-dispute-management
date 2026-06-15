@@ -341,7 +341,7 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0, duration: 0.8 }}
-            className="max-w-4xl mx-auto px-4 mb-16"
+            className="max-w-4xl mx-auto px-4 mb-0"
           >
             <img
               src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/fc5838d1b_IMG_6994.jpeg"
