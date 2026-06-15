@@ -29,37 +29,36 @@ const CATEGORY_ICONS = [
 /** React on-screen letterhead header */
 export function LetterheadHeader({ today }) {
   return (
-    <div>
-      {/* Full logo image — no crop */}
-      <img src={CARD_FRONT} alt="Chaos Controller" style={{ width: "100%", display: "block" }} />
+    <div style={{ background: "#0d0d0d" }}>
+      {/* Full fist/logo image — full width, no crop, no object-fit */}
+      <img src={CARD_FRONT} alt="Chaos Controller" style={{ width: "100%", display: "block", objectFit: "unset" }} />
 
-      {/* Tagline bar — dark background, large bold text */}
-      <div style={{ background: "#1a1a1a", padding: "10px 20px", textAlign: "center", borderTop: "1px solid #2a2a2a" }}>
-        <span style={{ fontSize: "12px", fontWeight: "900", letterSpacing: "2px", color: "#ffffff", fontFamily: "Arial Black, Arial, sans-serif" }}>UPLOAD THE CHAOS.&nbsp;&nbsp;&nbsp;WE BUILD THE CASE.&nbsp;&nbsp;&nbsp;</span>
-        <span style={{ fontSize: "12px", fontWeight: "900", letterSpacing: "2px", color: "#d4a017", fontFamily: "Arial Black, Arial, sans-serif" }}>TAKE BACK CONTROL.</span>
+      {/* Tagline bar */}
+      <div style={{ background: "#0d0d0d", padding: "8px 20px", textAlign: "center", borderTop: "2px solid #333" }}>
+        <span style={{ fontSize: "13px", fontWeight: "900", letterSpacing: "2.5px", color: "#ffffff", fontFamily: "Arial Black, Arial, sans-serif" }}>UPLOAD THE CHAOS.&nbsp;&nbsp;&nbsp;WE BUILD THE CASE.&nbsp;&nbsp;&nbsp;</span>
+        <span style={{ fontSize: "13px", fontWeight: "900", letterSpacing: "2.5px", color: "#d4a017", fontFamily: "Arial Black, Arial, sans-serif" }}>TAKE BACK CONTROL.</span>
       </div>
 
-      {/* 3-column icon grid — dark background with coloured circles */}
-      <div style={{ background: "#1a1a1a", padding: "12px 16px 8px 16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px 8px" }}>
+      {/* 3-column icon grid — dark background */}
+      <div style={{ background: "#0d0d0d", padding: "10px 16px 10px 16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px 6px" }}>
           {CATEGORY_ICONS.map((cat, i) => (
             cat.label ? (
-              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: cat.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "14px" }}>
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "7px" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: cat.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "13px" }}>
                   {cat.emoji}
                 </div>
                 <div>
-                  <p style={{ fontSize: "8px", fontWeight: "800", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.4px", margin: 0, lineHeight: "1.3", fontFamily: "Arial, sans-serif" }}>{cat.label}</p>
-                  <p style={{ fontSize: "7px", color: "#aaaaaa", margin: "2px 0 0 0", lineHeight: "1.3", fontFamily: "Arial, sans-serif" }}>{cat.sub}</p>
+                  <p style={{ fontSize: "7.5px", fontWeight: "900", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.3px", margin: 0, lineHeight: "1.2", fontFamily: "Arial, sans-serif" }}>{cat.label}</p>
+                  <p style={{ fontSize: "6.5px", color: "#999999", margin: "2px 0 0 0", lineHeight: "1.3", fontFamily: "Arial, sans-serif" }}>{cat.sub}</p>
                 </div>
               </div>
             ) : <div key={i} />
           ))}
         </div>
-        <div style={{ textAlign: "right", fontSize: "7px", fontStyle: "italic", color: "#666", marginTop: "6px", fontFamily: "Arial, sans-serif" }}>{today}</div>
       </div>
 
-      {/* Gold separator */}
+      {/* Gold bottom line */}
       <div style={{ height: "3px", background: "#d4a017" }} />
     </div>
   );
