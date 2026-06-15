@@ -4,7 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, Building2 } from "lucide-react";
+import OrgPicker from "@/components/directories/OrgPicker";
 
 // Complainant personal details — collected for every category
 const complainantFields = [
@@ -92,10 +93,22 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
   const specificFields = caseFields[category] || caseFields.other;
   const allQuestions = [...complainantFields, ...specificFields];
   const [step, setStep] = useState(0);
+  const [showOrgPicker, setShowOrgPicker] = useState(false);
   const current = allQuestions[step];
 
   const handleChange = (value) => {
     onChange({ ...data, [current.key]: value });
+  };
+
+  const handleOrgSelect = (org) => {
+    onChange({
+      ...data,
+      organisation_name: org.name || data.organisation_name,
+      organisation_complaints_address: org.complaints_address || data.organisation_complaints_address,
+      organisation_complaints_email: org.complaints_email || data.organisation_complaints_email,
+      complaint_handler_name: org.complaint_handler_name || data.complaint_handler_name,
+    });
+    setShowOrgPicker(false);
   };
 
   const canProceed = current.required ? !!data[current.key]?.trim() : true;
@@ -141,10 +154,24 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
       </div>
 
       <div className="space-y-3">
-        <Label className="text-base font-heading font-semibold">
-          {current.label}
-          {current.required && <span className="text-destructive ml-1">*</span>}
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label className="text-base font-heading font-semibold">
+            {current.label}
+            {current.required && <span className="text-destructive ml-1">*</span>}
+          </Label>
+          {current.key === "organisation_name" && (
+            <button
+              type="button"
+              onClick={() => setShowOrgPicker((v) => !v)}
+              className="flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              <Building2 className="w-3.5 h-3.5" /> Use saved org
+            </button>
+          )}
+        </div>
+        {current.key === "organisation_name" && showOrgPicker && (
+          <OrgPicker category={category} onSelect={handleOrgSelect} onClose={() => setShowOrgPicker(false)} />
+        )}
         {current.type === "text" && (
           <Input
             value={data[current.key] || ""}

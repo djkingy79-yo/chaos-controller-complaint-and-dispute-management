@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ExternalLink, Search, Building2, Scale, Home, Zap, Phone, Shield, Landmark, Mail, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { escalationBodies, contactDirectory } from "@/lib/directoriesData";
+import MyOrganisations from "@/components/directories/MyOrganisations";
 
 const iconMap = { Landmark, Shield, Home, Phone, Zap, Scale, Building2 };
 
@@ -115,6 +116,12 @@ export default function Directories() {
         >
           Contact Directory
         </button>
+        <button
+          onClick={() => setActiveTab("my-orgs")}
+          className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "my-orgs" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          My Organisations
+        </button>
       </div>
 
       {/* Search */}
@@ -133,6 +140,9 @@ export default function Directories() {
       )}
       {activeTab === "contacts" && (
         <DirectorySection data={contactDirectory} search={search} />
+      )}
+      {activeTab === "my-orgs" && (
+        <MyOrganisations search={search} />
       )}
 
       {/* Footer Links */}

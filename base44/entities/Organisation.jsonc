@@ -1,0 +1,45 @@
+{
+  "name": "Organisation",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Organisation name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "banking",
+        "insurance",
+        "tenancy",
+        "telco",
+        "utilities",
+        "other"
+      ],
+      "description": "Industry category"
+    },
+    "complaints_address": {
+      "type": "string",
+      "description": "Complaints postal address"
+    },
+    "complaints_email": {
+      "type": "string",
+      "description": "Complaints email address"
+    },
+    "complaints_phone": {
+      "type": "string",
+      "description": "Complaints phone number"
+    },
+    "complaint_handler_name": {
+      "type": "string",
+      "description": "Name of complaint handler / department"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Any additional notes"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
