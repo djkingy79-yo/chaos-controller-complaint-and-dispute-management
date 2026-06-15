@@ -124,8 +124,8 @@ export default function Welcome() {
             className="text-center mb-6"
           >
             <h1 className="text-4xl sm:text-6xl font-display font-bold tracking-tighter">
-              <span className="text-white drop-shadow-lg">CHAOS</span>
-              <span className="text-[#FFD700] ml-3 drop-shadow-lg" style={{ textShadow: "0 0 30px rgba(255, 215, 0, 0.5)" }}>CONTROLLER</span>
+              <span className="text-white drop-shadow-lg">Welcome to</span>
+              <span className="text-[#FFD700] ml-3 drop-shadow-lg" style={{ textShadow: "0 0 30px rgba(255, 215, 0, 0.5)" }}>Chaos!</span>
             </h1>
           </motion.div>
 
