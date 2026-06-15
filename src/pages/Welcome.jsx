@@ -148,13 +148,29 @@ export default function Welcome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="text-center mb-16"
+            className="text-center mb-8"
           >
             <p className="text-lg sm:text-xl text-white max-w-3xl mx-auto leading-relaxed font-black">
               <span className="text-[#FFD700] font-black">THEY HAD YOUR LOYALTY.</span>
               {" "}NOW YOU DESERVE THEIR{" "}
               <span className="text-[#FFD700] font-black">ACCOUNTABILITY.</span>
             </p>
+          </motion.div>
+
+          {/* Start Your Case CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75, duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <Button
+              size="lg"
+              className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black px-10 py-6 text-xl font-black gap-2 border-2 border-[#FFD700] shadow-lg shadow-yellow-500/30"
+              onClick={() => navigate("/register")}
+            >
+              START YOUR CASE <ArrowRight className="w-6 h-6" />
+            </Button>
           </motion.div>
 
           {/* App Purpose Section */}
