@@ -216,23 +216,73 @@ function printBundle(caseItem, evidence, events) {
 
   const pageBreak = `<div style="page-break-before:always;"></div>`;
 
+  const today = format(new Date(), "d MMMM yyyy");
+  const docDate = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  // Build case summary rows — only show fields that have data
+  const summaryRows = [
+    { label: "Complainant Name", value: client.name },
+    { label: "Complainant Address", value: client.address },
+    { label: "Complainant Email", value: client.email },
+    { label: "Complainant Phone", value: client.phone },
+    { label: "Organisation", value: caseItem.organisation_name },
+    { label: "Complaints Address", value: caseItem.organisation_complaints_address },
+    { label: "Complaints Email", value: caseItem.organisation_complaints_email },
+    { label: "Complaint Handler", value: caseItem.complaint_handler_name },
+    { label: "Account / Reference No.", value: caseItem.account_number || (client.accounts?.length ? client.accounts.join(", ") : null) },
+    { label: "Industry / Category", value: caseItem.category ? caseItem.category.charAt(0).toUpperCase() + caseItem.category.slice(1) : null },
+    { label: "Incident Date", value: caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : null },
+    { label: "Case Status", value: (caseItem.status || "").replace(/_/g, " ") },
+    { label: "Priority", value: caseItem.priority },
+    { label: "Response Deadline", value: caseItem.response_deadline ? format(new Date(caseItem.response_deadline), "d MMMM yyyy") : null },
+    { label: "Escalation Body", value: caseItem.escalation_body },
+  ].filter(r => r.value);
+
+  const summaryTableRows = summaryRows.map(r => `
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:5pt 8pt;font-size:11pt;color:#555;width:35%;font-style:italic;">${r.label}</td>
+      <td style="padding:5pt 8pt;font-size:12pt;font-weight:bold;">${r.value}</td>
+    </tr>
+  `).join("");
+
   const html = `<div style="${baseStyles()}">
-    <!-- COVER PAGE: no footer on cover -->
-    <div style="margin:-2cm -2cm 0 -2cm;">
-      <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;max-height:110pt;object-fit:cover;object-position:top;display:block;" />
-      <div style="background:#111;padding:6pt 16pt;">
-        <span style="font-size:9pt;color:#facc15;font-family:Arial,sans-serif;">🌐 ${CONTACT.website} &nbsp;|&nbsp; ✉ ${CONTACT.email} &nbsp;|&nbsp; 📞 ${CONTACT.phone} &nbsp;|&nbsp; 📍 ${CONTACT.location}</span>
-      </div>
-      <div style="height:2pt;background:#eab308;"></div>
+    <!-- COVER PAGE -->
+    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:calc(100% + 4cm);margin:-2cm -2cm 0 -2cm;display:block;" />
+
+    <div style="padding-top:32pt;">
+      <hr style="border:none;border-top:2.5px solid #1d4ed8;margin-bottom:20pt;"/>
+      <div style="font-size:22pt;font-weight:bold;margin-bottom:6pt;font-family:'Times New Roman',Times,serif;">${caseItem.title}</div>
+      <div style="font-size:14pt;font-style:italic;margin-bottom:6pt;color:#444;font-family:'Times New Roman',Times,serif;">vs. ${caseItem.organisation_name || "Organisation"}</div>
+      <div style="font-size:11pt;color:#555;margin-bottom:20pt;font-family:'Times New Roman',Times,serif;">Case Bundle — ${today}</div>
+      <hr style="border:none;border-top:1px solid #ccc;margin-bottom:20pt;"/>
+
+      <div style="font-size:14pt;font-weight:bold;margin-bottom:12pt;font-family:'Times New Roman',Times,serif;">Case Summary</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:24pt;">
+        <tbody>${summaryTableRows}</tbody>
+      </table>
+
+      ${caseItem.issue_summary ? `
+        <div style="margin-bottom:12pt;">
+          <div style="font-size:12pt;font-weight:bold;margin-bottom:4pt;font-family:'Times New Roman',Times,serif;">Issue Summary</div>
+          <div style="font-size:12pt;color:#333;">${caseItem.issue_summary}</div>
+        </div>` : ""}
+      ${caseItem.desired_outcome ? `
+        <div style="margin-bottom:20pt;">
+          <div style="font-size:12pt;font-weight:bold;margin-bottom:4pt;font-family:'Times New Roman',Times,serif;">Desired Outcome</div>
+          <div style="font-size:12pt;color:#333;">${caseItem.desired_outcome}</div>
+        </div>` : ""}
+
+      <hr style="border:none;border-top:1px solid #ccc;margin-bottom:12pt;"/>
+      <div style="font-size:11pt;font-style:italic;color:#555;margin-bottom:6pt;font-family:'Times New Roman',Times,serif;"><strong>Bundle Contents:</strong></div>
+      <ul style="font-size:11pt;color:#333;margin:0;padding-left:20pt;font-family:'Times New Roman',Times,serif;">
+        <li style="margin-bottom:4pt;">Section 1 — Escalation Readiness Checklist</li>
+        <li style="margin-bottom:4pt;">Section 2 — Chronological Timeline</li>
+        <li style="margin-bottom:4pt;">Section 3 — Evidence Index</li>
+        <li style="margin-bottom:4pt;">Section 4 — Complaint Letter</li>
+      </ul>
     </div>
-    <div style="text-align:center;padding-top:48pt;">
-      <hr style="border:none;border-top:2.5px solid #1d4ed8;width:60%;margin:0 auto 32pt auto;"/>
-      <div style="font-size:20pt;font-weight:bold;margin-bottom:8pt;font-family:'Times New Roman',Times,serif;">${caseItem.title}</div>
-      <div style="font-size:14pt;font-style:italic;margin-bottom:8pt;color:#444;font-family:'Times New Roman',Times,serif;">vs. ${caseItem.organisation_name || "Organisation"}</div>
-      <div style="font-size:12pt;color:#555;margin-bottom:4pt;font-family:'Times New Roman',Times,serif;">Case Bundle — ${format(new Date(), "d MMMM yyyy")}</div>
-      <div style="font-size:11pt;color:#555;text-transform:capitalize;font-family:'Times New Roman',Times,serif;">Category: ${caseItem.category} | Status: ${(caseItem.status || "").replace(/_/g, " ")}</div>
-      ${client.name ? `<div style="margin-top:24pt;font-size:11pt;color:#333;font-family:'Times New Roman',Times,serif;">Prepared for: <strong>${client.name}</strong></div>` : ""}
-    </div>
+
+    ${buildFooterHTML(caseItem, client, "", "")}
 
     ${pageBreak}
 
@@ -250,7 +300,7 @@ function printBundle(caseItem, evidence, events) {
         <td style="padding:6pt 8pt;font-weight:bold;${c.done ? "color:green;" : "color:#c00;"}">${c.done ? "COMPLETE" : "MISSING"}</td>
       </tr>`).join("")}</tbody>
     </table>
-    ${footer(caseItem, client, 2)}
+    ${buildFooterHTML(caseItem, client, 2, 5)}
 
     ${pageBreak}
 
@@ -270,7 +320,7 @@ function printBundle(caseItem, evidence, events) {
         <td style="padding:6pt 8pt;color:#444;">${ev.description || ""}</td>
       </tr>`).join("")}</tbody>
     </table>
-    ${footer(caseItem, client, 3)}
+    ${buildFooterHTML(caseItem, client, 3, 5)}
 
     ${pageBreak}
 
@@ -293,16 +343,16 @@ function printBundle(caseItem, evidence, events) {
         <td style="padding:6pt 8pt;color:#444;">${ev.description || ""}</td>
       </tr>`).join("")}</tbody>
     </table>
-    ${footer(caseItem, client, 4)}
+    ${buildFooterHTML(caseItem, client, 4, 5)}
 
     ${pageBreak}
 
     <!-- SECTION 4: COMPLAINT LETTER -->
+    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:calc(100% + 4cm);margin:-2cm -2cm 12pt -2cm;display:block;" />
     ${h1("Section 4 — Complaint Letter")}
-    ${letterhead(caseItem, client, format(new Date(), "d MMMM yyyy"))}
-    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin-top:0;">${caseItem.complaint_letter || "No complaint letter generated yet."}</pre>
+    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin-top:12pt;">${caseItem.complaint_letter || "No complaint letter generated yet."}</pre>
 
-    ${footer(caseItem, client, 5)}
+    ${buildFooterHTML(caseItem, client, 5, 5)}
   </div>`;
   setPrintArea(html);
   window.print();
