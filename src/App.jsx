@@ -24,6 +24,8 @@ import Payments from '@/pages/Payments';
 import AdminDashboard from '@/pages/AdminDashboard';
 import CalendarView from '@/pages/CalendarView';
 import HelpGuide from '@/pages/HelpGuide';
+import Terms from '@/pages/Terms';
+import Privacy from '@/pages/Privacy';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -64,6 +66,8 @@ const AuthenticatedApp = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/calendar" element={<CalendarView />} />
           <Route path="/help" element={<HelpGuide />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
