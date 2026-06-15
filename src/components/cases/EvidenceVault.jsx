@@ -117,27 +117,29 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["evidence", caseId] }),
   });
 
-  const uploadAndProcess = async (file, overrideType) => {
+  const uploadAndProcess = async (files) => {
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    createMutation.mutate({
-      case_id: caseId,
-      file_url,
-      file_name: file.name,
-      file_type: overrideType || newEvidence.file_type,
-      description: newEvidence.description,
-      event_date: newEvidence.event_date || undefined,
-      scan_status: "pending",
-    });
+    for (const file of files) {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      createMutation.mutate({
+        case_id: caseId,
+        file_url,
+        file_name: file.name,
+        file_type: newEvidence.file_type,
+        description: newEvidence.description,
+        event_date: newEvidence.event_date || undefined,
+        scan_status: "pending",
+      });
+    }
     setUploading(false);
     setShowUpload(false);
     setNewEvidence({ file_type: "other", description: "", event_date: "" });
   };
 
   const handleUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    await uploadAndProcess(file);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    await uploadAndProcess(files);
   };
 
   const handleScanCapture = async (file) => {
@@ -233,7 +235,7 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                   />
                 </div>
                 <div>
-                  <input ref={fileRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.csv,.eml" onChange={handleUpload} />
+                  <input ref={fileRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.csv,.eml" onChange={handleUpload} />
                   <Button
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading || createMutation.isPending}
@@ -244,8 +246,9 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                     ) : (
                       <Upload className="w-4 h-4" />
                     )}
-                    {uploading ? "Uploading..." : createMutation.isPending ? "Saving..." : "Choose File & Upload"}
+                    {uploading ? "Uploading..." : createMutation.isPending ? "Saving..." : "Choose Files & Upload"}
                   </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-2">Select multiple files at once</p>
                 </div>
               </div>
             </DialogContent>

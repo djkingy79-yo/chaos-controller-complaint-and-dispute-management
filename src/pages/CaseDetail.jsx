@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download } from "lucide-react";
@@ -16,9 +16,29 @@ import EscalationBundle from "@/components/cases/EscalationBundle";
 import CaseSummary from "@/components/cases/CaseSummary";
 
 export default function CaseDetail() {
-  const urlParams = new URLSearchParams(window.location.search);
+  const navigate = useNavigate();
   const caseId = window.location.pathname.split("/case/")[1];
   const { user } = useAuth();
+
+  // Preserve tab state in URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const [activeTab, setActiveTab] = useState(urlParams.get("tab") || "summary");
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab") || "summary";
+      setActiveTab(tab);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const handleTabChange = (tab) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", tab);
+    navigate(`/case/${caseId}?${params.toString()}`, { replace: true });
+  };
 
   const { data: caseItem, isLoading: caseLoading } = useQuery({
     queryKey: ["case", caseId],
@@ -105,7 +125,7 @@ export default function CaseDetail() {
 
         {/* Main Content */}
         <div className="lg:col-span-2">
-          <Tabs defaultValue="summary" className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="w-full grid grid-cols-6 mb-4">
               <TabsTrigger value="summary" className="gap-1 text-xs sm:text-sm">
                 <FileText className="w-3.5 h-3.5 hidden sm:block" /> Summary
