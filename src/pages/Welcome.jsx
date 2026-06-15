@@ -318,7 +318,7 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
           >
             <Button 
               size="lg" 
@@ -334,6 +334,20 @@ export default function Welcome() {
             >
               Sign In
             </Button>
+          </motion.div>
+
+          {/* Banner Image */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.8 }}
+            className="max-w-4xl mx-auto px-4 mb-16"
+          >
+            <img
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/fc5838d1b_IMG_6994.jpeg"
+              alt="Chaos Controller - They Had Your Loyalty. Now You Deserve Their Accountability."
+              className="w-full rounded-2xl shadow-2xl border-2 border-[#FFD700]/30"
+            />
           </motion.div>
         </div>
       </div>
