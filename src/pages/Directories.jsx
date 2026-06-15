@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Search, Building2, Scale, Home, Zap, Phone, Shield, Landmark, Mail } from "lucide-react";
+import { ExternalLink, Search, Building2, Scale, Home, Zap, Phone, Shield, Landmark, Mail, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { escalationBodies, contactDirectory } from "@/lib/directoriesData";
 
@@ -135,9 +135,24 @@ export default function Directories() {
         <DirectorySection data={contactDirectory} search={search} />
       )}
 
-      {/* Disclaimer */}
-      <div className="bg-secondary/40 rounded-xl border border-border p-4 text-xs text-muted-foreground italic">
-        <strong className="not-italic text-foreground">Disclaimer:</strong> Chaos Controller provides educational, organisational and document management assistance only. It does not provide legal advice. The creator is not a lawyer or legal practitioner. Contact details may change — always verify current information on the provider's official website. Users should seek assistance from a qualified legal professional.
+      {/* Footer Links */}
+      <div className="border-t border-border pt-6 mt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-secondary/40 rounded-xl border border-border p-4 text-xs text-muted-foreground italic">
+            <strong className="not-italic text-foreground">Disclaimer:</strong> Chaos Controller provides educational, organisational and document management assistance only. It does not provide legal advice. The creator is not a lawyer or legal practitioner. Contact details may change — always verify current information on the provider's official website. Users should seek assistance from a qualified legal professional.
+          </div>
+          <div className="flex items-center gap-4 shrink-0">
+            <a href="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              <Scale className="w-3 h-3" /> Terms
+            </a>
+            <a href="/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              <Shield className="w-3 h-3" /> Privacy
+            </a>
+            <a href="/help" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              <BookOpen className="w-3 h-3" /> Help
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
