@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderOpen, AlertTriangle, CheckCircle2, Clock, Shield, Flame } from "lucide-react";
+import { Plus, FolderOpen, AlertTriangle, CheckCircle2, Clock, Shield, Flame, Trophy, TrendingUp, Scale } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import CaseCard from "@/components/dashboard/CaseCard";
 import ActionItems from "@/components/dashboard/ActionItems";
@@ -22,8 +22,10 @@ export default function Dashboard() {
 
   const activeCases = cases.filter((c) => !["resolved", "closed"].includes(c.status));
   const resolvedCases = cases.filter((c) => c.status === "resolved");
+  const escalatedCases = cases.filter((c) => c.status === "escalated");
   const urgentCases = cases.filter((c) => c.priority === "urgent" || c.priority === "high");
   const awaitingResponse = cases.filter((c) => c.status === "awaiting_response");
+  const winRate = cases.length > 0 ? Math.round((resolvedCases.length / cases.length) * 100) : 0;
 
   return (
     <div className="space-y-8">
@@ -78,6 +80,49 @@ export default function Dashboard() {
               color="bg-success/10 text-success"
             />
           </div>
+
+          {/* Victory Summary */}
+          {(resolvedCases.length > 0 || escalatedCases.length > 0) && (
+            <div className="bg-gradient-to-r from-green-500/10 via-card to-primary/10 border border-green-500/30 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-green-500/15 rounded-lg">
+                  <Trophy className="w-5 h-5 text-green-500" />
+                </div>
+                <div>
+                  <h2 className="font-heading font-bold text-foreground text-base">Your Dispute Record</h2>
+                  <p className="text-xs text-muted-foreground">Successful resolutions and escalations</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <p className="text-3xl font-display font-black text-green-500">{resolvedCases.length}</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-medium">Cases Won</p>
+                </div>
+                <div className="text-center border-x border-border">
+                  <p className="text-3xl font-display font-black text-primary">{winRate}%</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-medium">Win Rate</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-display font-black text-warning">{escalatedCases.length}</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-medium">Escalated</p>
+                </div>
+              </div>
+              {resolvedCases.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border space-y-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Recent Wins</p>
+                  {resolvedCases.slice(0, 3).map((c) => (
+                    <div key={c.id} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                      <span className="text-foreground font-medium truncate">{c.title}</span>
+                      {c.organisation_name && (
+                        <span className="text-muted-foreground text-xs shrink-0">vs {c.organisation_name}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Command Centre */}
           <CommandCentre cases={cases} />
