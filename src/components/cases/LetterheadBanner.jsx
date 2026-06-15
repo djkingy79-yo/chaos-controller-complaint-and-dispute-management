@@ -11,39 +11,68 @@ export const CONTACT = {
 };
 
 // Category icons shown in the letterhead (matches business card grid)
+// Column layout: col1 = Banking, Insurance, NCAT, Utilities | col2 = Evidence Vault, Timeline, Progress | col3 = AI Assistant, Tutorials
 const CATEGORY_ICONS = [
-  { emoji: "🏛️", label: "Banking Disputes" },
-  { emoji: "🗂️", label: "Evidence Vault" },
-  { emoji: "🤖", label: "AI Case Assistant" },
-  { emoji: "🛡️", label: "Insurance Claims" },
-  { emoji: "🕐", label: "Timeline Builder" },
-  { emoji: "🎓", label: "Tutorials & Guides" },
-  { emoji: "🏠", label: "NCAT & Residential" },
-  { emoji: "📊", label: "Progress Analysis" },
-  { emoji: "⚡", label: "Services & Utilities" },
+  // col 1
+  { emoji: "🏛️", label: "Banking Disputes",     sub: "Transaction issues, fraud, fees, hardship & more." },
+  // col 2
+  { emoji: "🗂️", label: "Evidence Vault",        sub: "Securely store, organise & tag all your documents." },
+  // col 3
+  { emoji: "🤖", label: "AI Case Assistant",     sub: "Smart guidance, letter generation & analysis." },
+  // col 1
+  { emoji: "🛡️", label: "Insurance Claims",      sub: "Denied claims, delays, payout disputes & more." },
+  // col 2
+  { emoji: "🕐", label: "Timeline Builder",      sub: "AI-powered chronological timelines & event tracking." },
+  // col 3
+  { emoji: "🎓", label: "Tutorials & Guides",    sub: "Step-by-step video guides & helpful resources." },
+  // col 1
+  { emoji: "🏠", label: "NCAT & Residential",    sub: "Repairs, bonds, eviction notices, rent disputes." },
+  // col 2
+  { emoji: "📊", label: "Progress Analysis",     sub: "Track responses, deadlines & case strength." },
+  // col 3 — empty placeholder to keep grid shape
+  { emoji: "",   label: "",                       sub: "" },
+  // col 1
+  { emoji: "⚡", label: "Services & Utilities",  sub: "Energy, water, telco disputes & more." },
+  // col 2 & 3 — empty
+  { emoji: "",   label: "",                       sub: "" },
+  { emoji: "",   label: "",                       sub: "" },
 ];
 
 /** React on-screen letterhead header */
 export function LetterheadHeader({ today }) {
   return (
-    <div className="border-b border-slate-200" style={{ background: "#0d1117" }}>
-      {/* Full image — no crop, no cutoff */}
+    <div className="border-b border-slate-200" style={{ background: "#111" }}>
+      {/* Full logo image — no crop */}
       <div className="w-full">
-        <img src={CARD_FRONT} alt="Chaos Controller" className="w-full block" style={{ display: "block" }} />
+        <img src={CARD_FRONT} alt="Chaos Controller" className="w-full block" />
       </div>
 
-      {/* 3-column icon grid — same dark background as logo image */}
-      <div className="px-4 py-2 grid grid-cols-3 gap-x-4 gap-y-1.5" style={{ background: "#0d1117" }}>
-        {CATEGORY_ICONS.map((cat) => (
-          <span key={cat.label} className="flex items-center gap-1.5 text-[9px] text-slate-300 font-medium">
-            <span className="text-sm">{cat.emoji}</span>
-            {cat.label}
-          </span>
+      {/* Tagline bar */}
+      <div className="text-center py-2 px-4" style={{ background: "#1a1a1a", borderTop: "1px solid #333" }}>
+        <span className="text-[9px] font-bold tracking-widest text-white">UPLOAD THE CHAOS.&nbsp;&nbsp;</span>
+        <span className="text-[9px] font-bold tracking-widest text-white">WE BUILD THE CASE.&nbsp;&nbsp;</span>
+        <span className="text-[9px] font-bold tracking-widest" style={{ color: "#facc15" }}>TAKE BACK CONTROL.</span>
+      </div>
+
+      {/* 3-column icon grid matching reference image */}
+      <div className="grid grid-cols-3 gap-x-2 px-3 py-2" style={{ background: "#111" }}>
+        {CATEGORY_ICONS.map((cat, i) => (
+          cat.label ? (
+            <div key={i} className="flex items-start gap-1.5 py-1">
+              <span className="text-base leading-none mt-0.5 shrink-0">{cat.emoji}</span>
+              <div>
+                <p className="text-[8px] font-bold text-white leading-tight uppercase tracking-wide">{cat.label}</p>
+                <p className="text-[7px] text-slate-400 leading-tight mt-0.5">{cat.sub}</p>
+              </div>
+            </div>
+          ) : <div key={i} />
         ))}
-        <span className="col-span-3 text-right text-[8px] italic text-slate-500 mt-0.5">{today}</span>
       </div>
 
-      {/* Gold separator */}
+      {/* Date + gold separator */}
+      <div className="flex justify-end px-3 pb-1" style={{ background: "#111" }}>
+        <span className="text-[7px] italic text-slate-500">{today}</span>
+      </div>
       <div className="h-0.5 bg-yellow-500" />
     </div>
   );
@@ -51,12 +80,18 @@ export function LetterheadHeader({ today }) {
 
 /** HTML letterhead for print/PDF — returns an HTML string */
 export function buildLetterheadHTML(caseItem, client, today) {
-  // 3-column grid: 3 icons per row
+  const visibleIcons = CATEGORY_ICONS.filter(c => c.label);
   const rows = [];
-  for (let i = 0; i < CATEGORY_ICONS.length; i += 3) {
-    const chunk = CATEGORY_ICONS.slice(i, i + 3);
-    const cells = chunk.map(
-      (c) => `<td style="width:33%;padding:3pt 6pt;font-size:8pt;color:#ccc;font-family:Arial,sans-serif;">${c.emoji} <strong style="color:#fff;">${c.label}</strong></td>`
+  for (let i = 0; i < visibleIcons.length; i += 3) {
+    const chunk = visibleIcons.slice(i, i + 3);
+    // pad to 3 columns
+    while (chunk.length < 3) chunk.push({ emoji: "", label: "", sub: "" });
+    const cells = chunk.map(c =>
+      `<td style="width:33%;padding:3pt 6pt;vertical-align:top;font-family:Arial,sans-serif;">
+        ${c.emoji ? `<span style="font-size:11pt;">${c.emoji}</span>&nbsp;` : ""}
+        <strong style="font-size:7pt;color:#fff;text-transform:uppercase;letter-spacing:0.5pt;">${c.label}</strong>
+        ${c.sub ? `<br/><span style="font-size:6pt;color:#aaa;">${c.sub}</span>` : ""}
+      </td>`
     ).join("");
     rows.push(`<tr>${cells}</tr>`);
   }
@@ -68,9 +103,13 @@ export function buildLetterheadHTML(caseItem, client, today) {
     <div style="width:100%;">
       <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;" />
     </div>
-    <div style="padding:6pt 16pt 4pt 16pt;background:#0d1117;">
+    <div style="padding:4pt 12pt;background:#1a1a1a;text-align:center;border-top:1px solid #333;">
+      <span style="font-size:7pt;font-weight:bold;color:#fff;letter-spacing:1pt;font-family:Arial,sans-serif;">UPLOAD THE CHAOS.&nbsp;&nbsp;WE BUILD THE CASE.&nbsp;&nbsp;</span>
+      <span style="font-size:7pt;font-weight:bold;color:#facc15;letter-spacing:1pt;font-family:Arial,sans-serif;">TAKE BACK CONTROL.</span>
+    </div>
+    <div style="padding:6pt 12pt 4pt 12pt;background:#111;">
       ${iconGrid}
-      <div style="text-align:right;font-size:8pt;font-style:italic;color:#666;font-family:Arial,sans-serif;margin-top:2pt;">${today}</div>
+      <div style="text-align:right;font-size:6pt;font-style:italic;color:#666;font-family:Arial,sans-serif;margin-top:2pt;">${today}</div>
     </div>
     <div style="height:2pt;background:#eab308;"></div>
   </div>`;
