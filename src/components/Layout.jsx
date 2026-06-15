@@ -18,7 +18,8 @@ import {
   CalendarDays,
   BookOpen,
   Scale,
-  Lock
+  Lock,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -148,7 +149,7 @@ export default function Layout() {
             className="md:hidden fixed inset-x-0 top-16 z-40 bg-card border-b border-border shadow-xl"
           >
             <nav className="p-4 space-y-1">
-              {[...navItems, { path: "/terms", label: "Terms & Conditions", icon: Scale }, { path: "/privacy", label: "Privacy Policy", icon: Lock }, { path: "/payments", label: "Plans & Pricing", icon: CreditCard }, ...(user?.role === "admin" ? [{ path: "/admin", label: "Admin", icon: Activity }] : [])].map((item) => {
+              {[...navItems, { path: "/calendar-sync", label: "Calendar Sync", icon: Calendar }, { path: "/terms", label: "Terms & Conditions", icon: Scale }, { path: "/privacy", label: "Privacy Policy", icon: Lock }, { path: "/payments", label: "Plans & Pricing", icon: CreditCard }, ...(user?.role === "admin" ? [{ path: "/admin", label: "Admin", icon: Activity }] : [])].map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
                   <Link

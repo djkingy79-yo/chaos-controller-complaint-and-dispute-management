@@ -23,6 +23,7 @@ import Directories from '@/pages/Directories';
 import Payments from '@/pages/Payments';
 import AdminDashboard from '@/pages/AdminDashboard';
 import CalendarView from '@/pages/CalendarView';
+import CalendarSync from '@/pages/CalendarSync';
 import HelpGuide from '@/pages/HelpGuide';
 import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
           <Route path="/payments" element={<Payments />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/calendar" element={<CalendarView />} />
+          <Route path="/calendar-sync" element={<CalendarSync />} />
           <Route path="/help" element={<HelpGuide />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
