@@ -188,15 +188,15 @@ LETTER FORMAT INSTRUCTIONS:
       )}
 
       {/* Letterhead Preview */}
-      <div className="bg-white border border-border rounded-lg overflow-hidden shadow-sm">
+      <div className="border border-border rounded-lg overflow-hidden shadow-sm" style={{ background: "#111" }}>
 
         {/* Header: business card banner + contact strip */}
-        <LetterheadHeader today={today} />
+      <LetterheadHeader today={today} />
 
 
 
         {/* Letter body */}
-        <div className="px-8 py-6 bg-white">
+        <div className="px-8 py-6" style={{ background: "#fff" }}>
           {editing ? (
             <Textarea
               value={letter}
