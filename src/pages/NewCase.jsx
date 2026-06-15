@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Shield, Loader2, CheckCircle2, ArrowLeft, Upload } from "lucide-react";
+import { Shield, Loader2, CheckCircle2, ArrowLeft, Upload, DollarSign, Wallet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CategorySelector from "@/components/cases/CategorySelector";
 import GuidedQuestions from "@/components/cases/GuidedQuestions";
 import DocumentUploadStep from "@/components/cases/DocumentUploadStep";
+
+const PAYID_EMAIL = "djkingy79@gmail.com";
 
 const escalationBodies = {
   banking: "Australian Financial Complaints Authority (AFCA)",
@@ -21,7 +23,7 @@ const escalationBodies = {
 export default function NewCase() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState(0); // 0=upload, 1=category, 2=questions, 3=review, 4=generating
+  const [step, setStep] = useState(0); // 0=upload, 1=payment, 2=category, 3=questions, 4=generating, 5=review
   const [category, setCategory] = useState("");
   const [formData, setFormData] = useState({});
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -51,6 +53,10 @@ export default function NewCase() {
   const handleUploadComplete = (files) => {
     setUploadedFiles(files);
     setStep(1);
+  };
+
+  const handlePaymentConfirm = () => {
+    setStep(2);
   };
 
   const generateComplaint = async () => {
@@ -107,7 +113,7 @@ LETTER INSTRUCTIONS:
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setComplaintLetter(result);
     setIsGenerating(false);
-    setStep(3);
+    setStep(5);
   };
 
   const handleCreate = () => {
@@ -148,27 +154,44 @@ LETTER INSTRUCTIONS:
         </Button>
         <div>
           <h1 className="font-heading font-bold text-2xl text-foreground">New Case</h1>
-          <p className="text-sm text-muted-foreground mt-1">Upload evidence first, AI builds your case</p>
+          <p className="text-sm text-muted-foreground mt-1">Upload → Pay → AI builds your case</p>
         </div>
       </div>
 
       {/* Progress Indicator */}
       <div className="flex items-center gap-2">
-        {["Upload", "Category", "Details", "Review"].map((label, idx) => (
-          <React.Fragment key={label}>
-            <div className="flex items-center gap-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                idx <= step ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-              }`}>
-                {idx < step ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
+        {["Upload", "Payment", "Category", "Details", "Review"].map((label, idx) => {
+          const actualIdx = idx === 1 ? 1 : idx === 2 ? 2 : idx === 3 ? 3 : idx === 4 ? 5 : 0;
+          return (
+            <React.Fragment key={label}>
+              <div className="flex items-center gap-2">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                  (idx === 0 && step >= 0) || (idx === 1 && step >= 1) || (idx === 2 && step >= 2) || (idx === 3 && step >= 3) || (idx === 4 && step >= 5)
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground"
+                }`}>
+                  {((idx === 0 && step > 0) || (idx === 1 && step > 1) || (idx === 2 && step > 2) || (idx === 3 && step > 3) || (idx === 4 && step > 5)) ? (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  ) : (
+                    idx + 1
+                  )}
+                </div>
+                <span className={`text-xs font-medium ${
+                  (idx === 0 && step >= 0) || (idx === 1 && step >= 1) || (idx === 2 && step >= 2) || (idx === 3 && step >= 3) || (idx === 4 && step >= 5)
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+                }`}>
+                  {label}
+                </span>
               </div>
-              <span className={`text-xs font-medium ${idx <= step ? "text-foreground" : "text-muted-foreground"}`}>
-                {label}
-              </span>
-            </div>
-            {idx < 3 && <div className={`w-8 h-0.5 ${idx < step ? "bg-primary" : "bg-secondary"}`} />}
-          </React.Fragment>
-        ))}
+              {idx < 4 && <div className={`w-8 h-0.5 ${
+                (idx === 0 && step > 0) || (idx === 1 && step > 1) || (idx === 2 && step > 2) || (idx === 3 && step > 3)
+                  ? "bg-primary"
+                  : "bg-secondary"
+              }`} />}
+            </React.Fragment>
+          );
+        })}
       </div>
 
       <AnimatePresence mode="wait">
@@ -182,19 +205,81 @@ LETTER INSTRUCTIONS:
         )}
 
         {step === 1 && (
-          <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <CategorySelector selected={category} onSelect={(val) => { setCategory(val); setStep(2); }} />
+          <motion.div key="payment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <Wallet className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-heading font-bold text-lg text-foreground">Payment Required</h2>
+                  <p className="text-sm text-muted-foreground">Activate your case with a subscription</p>
+                </div>
+              </div>
+
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <h3 className="font-semibold text-foreground mb-3">Select Your Plan</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border-2 border-primary bg-primary/5 rounded-lg">
+                    <div>
+                      <p className="font-semibold text-foreground">Pro Plan</p>
+                      <p className="text-xs text-muted-foreground">Unlimited cases & features</p>
+                    </div>
+                    <p className="text-lg font-bold text-primary">$24.99/mo</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-secondary/50 border border-border rounded-lg p-4 space-y-3">
+                <h3 className="font-semibold text-foreground mb-2">Pay via PayID</h3>
+                <div className="flex items-center gap-3 text-sm">
+                  <DollarSign className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">Send to:</span>
+                  <code className="flex-1 bg-black/20 px-3 py-2 rounded font-mono text-foreground">{PAYID_EMAIL}</code>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <span className="text-muted-foreground">Amount:</span>
+                  <span className="font-semibold text-foreground">$24.99</span>
+                </div>
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  ⚠️ You must complete payment before proceeding. Your case will be activated instantly after payment confirmation.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={() => navigate("/payments")} className="gap-2 flex-1">
+                  View Payment Details
+                </Button>
+                <Button 
+                  onClick={handlePaymentConfirm}
+                  className="flex-1 gap-2 bg-primary hover:bg-primary/90"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  I've Made Payment
+                </Button>
+              </div>
+            </div>
           </motion.div>
         )}
 
         {step === 2 && (
+          <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <CategorySelector selected={category} onSelect={(val) => { setCategory(val); setStep(3); }} />
+          </motion.div>
+        )}
+
+        {step === 3 && (
           <motion.div key="questions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <GuidedQuestions
               category={category}
               data={formData}
               onChange={setFormData}
               onNext={generateComplaint}
-              onBack={() => setStep(1)}
+              onBack={() => setStep(2)}
             />
           </motion.div>
         )}
@@ -207,7 +292,7 @@ LETTER INSTRUCTIONS:
           </motion.div>
         )}
 
-        {step === 3 && (
+        {step === 5 && (
           <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
             <div className="bg-card rounded-xl border border-border p-6 space-y-4">
               <div className="flex items-center justify-between">
@@ -267,7 +352,7 @@ LETTER INSTRUCTIONS:
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(1)} className="gap-2">
+              <Button variant="outline" onClick={() => setStep(3)} className="gap-2">
                 <ArrowLeft className="w-4 h-4" /> Edit Answers
               </Button>
               <Button

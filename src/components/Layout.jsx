@@ -19,7 +19,8 @@ import {
   BookOpen,
   Scale,
   Lock,
-  Calendar
+  Calendar,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -32,6 +33,7 @@ const navItems = [
   { path: "/deadlines", label: "Deadlines", icon: Siren },
   { path: "/checklist", label: "Checklist", icon: ClipboardList },
   { path: "/directories", label: "Directories", icon: Building2 },
+  { path: "/sample-reports", label: "Sample Reports", icon: FileText },
   { path: "/help", label: "Help & Guide", icon: BookOpen },
   { path: "/new-case", label: "New Case", icon: Plus },
 ];
