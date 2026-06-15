@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Shield, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Shield, Loader2, CheckCircle2, ArrowLeft, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CategorySelector from "@/components/cases/CategorySelector";
 import GuidedQuestions from "@/components/cases/GuidedQuestions";
+import DocumentUploadStep from "@/components/cases/DocumentUploadStep";
 
 const escalationBodies = {
   banking: "Australian Financial Complaints Authority (AFCA)",
@@ -20,23 +21,41 @@ const escalationBodies = {
 export default function NewCase() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState(0); // 0=category, 1=questions, 2=review, 3=generating
+  const [step, setStep] = useState(0); // 0=upload, 1=category, 2=questions, 3=review, 4=generating
   const [category, setCategory] = useState("");
   const [formData, setFormData] = useState({});
+  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [complaintLetter, setComplaintLetter] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const createCaseMutation = useMutation({
-    mutationFn: (data) => base44.entities.Case.create(data),
+    mutationFn: async (data) => {
+      const newCase = await base44.entities.Case.create(data);
+      if (uploadedFiles.length > 0) {
+        await base44.entities.Evidence.bulkCreate(
+          uploadedFiles.map((file) => ({
+            ...file,
+            case_id: newCase.id,
+            scan_status: "pending",
+          }))
+        );
+      }
+      return newCase;
+    },
     onSuccess: (newCase) => {
       queryClient.invalidateQueries({ queryKey: ["cases"] });
-      navigate(`/case/${newCase.id}`);
+      navigate(`/case/${newCase.id}?tab=evidence`);
     },
   });
 
+  const handleUploadComplete = (files) => {
+    setUploadedFiles(files);
+    setStep(1);
+  };
+
   const generateComplaint = async () => {
     setIsGenerating(true);
-    setStep(3);
+    setStep(4);
     const f = formData;
     const today = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
 
@@ -88,7 +107,7 @@ LETTER INSTRUCTIONS:
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setComplaintLetter(result);
     setIsGenerating(false);
-    setStep(2);
+    setStep(3);
   };
 
   const handleCreate = () => {
@@ -116,43 +135,71 @@ LETTER INSTRUCTIONS:
       response_deadline: deadline.toISOString().split("T")[0],
       escalation_body: escalationBodies[category] || "",
       priority: "medium",
+      notes: `${uploadedFiles.length} document${uploadedFiles.length !== 1 ? "s" : ""} uploaded for AI extraction`,
     });
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-display font-bold text-foreground">
-          {step === 0 ? "Who are we holding accountable?" : "New Case"}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {step === 0 && "Select your battle. The right pathway opens automatically."}
-          {step === 1 && "Answer a few questions. We'll build the paper trail."}
-          {step === 2 && "Review your complaint letter and activate your case."}
-          {step === 3 && "AI is drafting your professional complaint letter..."}
-        </p>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+        <div>
+          <h1 className="font-heading font-bold text-2xl text-foreground">New Case</h1>
+          <p className="text-sm text-muted-foreground mt-1">Upload evidence first, AI builds your case</p>
+        </div>
+      </div>
+
+      {/* Progress Indicator */}
+      <div className="flex items-center gap-2">
+        {["Upload", "Category", "Details", "Review"].map((label, idx) => (
+          <React.Fragment key={label}>
+            <div className="flex items-center gap-2">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                idx <= step ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+              }`}>
+                {idx < step ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
+              </div>
+              <span className={`text-xs font-medium ${idx <= step ? "text-foreground" : "text-muted-foreground"}`}>
+                {label}
+              </span>
+            </div>
+            {idx < 3 && <div className={`w-8 h-0.5 ${idx < step ? "bg-primary" : "bg-secondary"}`} />}
+          </React.Fragment>
+        ))}
       </div>
 
       <AnimatePresence mode="wait">
         {step === 0 && (
-          <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <CategorySelector selected={category} onSelect={(val) => { setCategory(val); setStep(1); }} />
+          <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <DocumentUploadStep
+              onContinue={handleUploadComplete}
+              onBack={() => navigate(-1)}
+            />
           </motion.div>
         )}
 
         {step === 1 && (
+          <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <CategorySelector selected={category} onSelect={(val) => { setCategory(val); setStep(2); }} />
+          </motion.div>
+        )}
+
+        {step === 2 && (
           <motion.div key="questions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <GuidedQuestions
               category={category}
               data={formData}
               onChange={setFormData}
               onNext={generateComplaint}
-              onBack={() => setStep(0)}
+              onBack={() => setStep(1)}
             />
           </motion.div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-16">
             <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
             <h3 className="font-heading font-semibold text-foreground">Preparing Your Complaint</h3>
@@ -160,12 +207,20 @@ LETTER INSTRUCTIONS:
           </motion.div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
             <div className="bg-card rounded-xl border border-border p-6 space-y-4">
-              <div className="flex items-center gap-2 text-success">
-                <CheckCircle2 className="w-5 h-5" />
-                <span className="font-heading font-semibold text-sm">Complaint Letter Generated</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-success">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="font-heading font-semibold text-sm">Complaint Letter Generated</span>
+                </div>
+                {uploadedFiles.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Upload className="w-3.5 h-3.5" />
+                    {uploadedFiles.length} document{uploadedFiles.length !== 1 ? "s" : ""} ready for AI scan
+                  </div>
+                )}
               </div>
               <div className="prose prose-sm max-w-none text-foreground">
                 <pre className="whitespace-pre-wrap text-sm font-body bg-secondary/50 rounded-lg p-4 leading-relaxed">

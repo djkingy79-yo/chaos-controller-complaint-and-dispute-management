@@ -10,7 +10,7 @@ import CaseCard from "@/components/dashboard/CaseCard";
 import ActionItems from "@/components/dashboard/ActionItems";
 import CommandCentre from "@/components/dashboard/CommandCentre";
 import LetterPreview from "@/components/dashboard/LetterPreview";
-import WelcomeGuide from "@/components/dashboard/WelcomeGuide";
+import OnboardingDashboard from "@/components/dashboard/OnboardingDashboard";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -27,9 +27,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Guide for new users */}
+      {/* Onboarding for new users */}
       {cases.length === 0 ? (
-        <WelcomeGuide cases={cases} />
+        <OnboardingDashboard />
       ) : (
         <>
           {/* Header */}

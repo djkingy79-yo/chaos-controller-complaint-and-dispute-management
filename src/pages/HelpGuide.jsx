@@ -18,83 +18,9 @@ import {
   Upload,
   Send,
   Shield,
-  PlayCircle,
   Scale,
   Lock
 } from "lucide-react";
-
-const videoTutorials = [
-  {
-    title: "Creating Your First Case - Complete Walkthrough",
-    duration: "5:30",
-    steps: [
-      "Navigate to 'New Case' from the main menu",
-      "Select your dispute category (Banking, Insurance, Tenancy, Telco, Utilities)",
-      "Enter your personal details in the guided form",
-      "Answer category-specific questions about your dispute",
-      "Review the AI-generated complaint letter",
-      "Save your case and access it from 'My Cases'"
-    ],
-    thumbnail: "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/video-case-setup.png",
-    videoUrl: null // Placeholder for actual video URL
-  },
-  {
-    title: "Evidence Vault - Upload & AI Scan Documents",
-    duration: "4:15",
-    steps: [
-      "Open your case and navigate to the 'Evidence' tab",
-      "Click 'Upload Documents' and select files from your device",
-      "Choose document type and add descriptions",
-      "Tap 'Scan with AI' to extract key information",
-      "Review extracted data and timeline events",
-      "Use extracted data to populate case details"
-    ],
-    thumbnail: "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/video-evidence.png",
-    videoUrl: null
-  },
-  {
-    title: "Building Your Timeline & Tracking Deadlines",
-    duration: "3:45",
-    steps: [
-      "Access the 'Timeline' tab in your case",
-      "Add events manually or let AI create them from documents",
-      "Set event dates, types, and descriptions",
-      "Mark events as 'Action Required' when needed",
-      "View all deadlines in the 'Deadline War Room'",
-      "Set response deadlines and track compliance"
-    ],
-    thumbnail: "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/video-timeline.png",
-    videoUrl: null
-  },
-  {
-    title: "Generating & Sending Complaint Letters",
-    duration: "4:00",
-    steps: [
-      "Complete your case details and upload evidence",
-      "Navigate to the 'Letters' tab",
-      "Click 'Generate Letter' for AI-drafted complaint",
-      "Review and edit the letter as needed",
-      "Print or copy the letter for sending",
-      "Update case status to 'Complaint Sent'"
-    ],
-    thumbnail: "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/video-letters.png",
-    videoUrl: null
-  },
-  {
-    title: "Creating Escalation Bundles for Tribunals",
-    duration: "6:20",
-    steps: [
-      "Ensure all case details are complete",
-      "Check your Matter Strength score (aim for 80%+)",
-      "Navigate to the 'Bundle' tab",
-      "Review the 4-section escalation bundle",
-      "Print the complete bundle with cover page",
-      "Submit to the appropriate ombudsman with your bundle attached"
-    ],
-    thumbnail: "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/video-escalation.png",
-    videoUrl: null
-  }
-];
 
 const guides = [
   {
@@ -559,57 +485,7 @@ export default function HelpGuide() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Video Tutorials Section */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <PlayCircle className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="font-heading font-bold text-xl text-foreground">Video Tutorials</h2>
-              <p className="text-sm text-muted-foreground">Step-by-step video guides for every feature</p>
-            </div>
-          </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            {videoTutorials.map((video, idx) => (
-              <div key={idx} className="bg-secondary/30 border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group">
-                <div className="aspect-video bg-muted flex items-center justify-center relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <PlayCircle className="w-12 h-12 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
-                  <span className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
-                    {video.duration}
-                  </span>
-                </div>
-                <div className="p-4">
-                  <h4 className="font-semibold text-foreground text-sm mb-2">{video.title}</h4>
-                  <div className="space-y-1">
-                    {video.steps.slice(0, 3).map((step, stepIdx) => (
-                      <div key={stepIdx} className="flex items-start gap-2">
-                        <span className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <span className="text-[10px] font-semibold text-primary">{stepIdx + 1}</span>
-                        </span>
-                        <p className="text-xs text-muted-foreground">{step}</p>
-                      </div>
-                    ))}
-                    {video.steps.length > 3 && (
-                      <p className="text-xs text-muted-foreground pl-6">+{video.steps.length - 3} more steps</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-            <div className="flex items-start gap-2">
-              <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-700 dark:text-amber-400">
-                Video tutorials are being produced. Coming soon! In the meantime, use the written guides below for detailed instructions.
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Quick Start Card */}
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
