@@ -37,39 +37,53 @@ export default function NewCase() {
   const generateComplaint = async () => {
     setIsGenerating(true);
     setStep(3);
+    const f = formData;
+    const today = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    const complainantBlock = [
+      f.complainant_name,
+      f.complainant_address,
+      f.complainant_email ? `Email: ${f.complainant_email}` : null,
+      f.complainant_phone ? `Mobile: ${f.complainant_phone}` : null,
+      today,
+    ].filter(Boolean).join("\n");
+
+    const recipientBlock = [
+      f.complaint_handler_name || "The Complaints Manager",
+      f.organisation_name,
+      f.organisation_complaints_address || null,
+      f.organisation_complaints_email ? `Email: ${f.organisation_complaints_email}` : null,
+    ].filter(Boolean).join("\n");
+
     const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
 
-COMPLAINANT DETAILS (use these directly — no placeholders for any provided field):
-- Name: ${formData.complainant_name || "[COMPLAINANT NAME]"}
-- Address: ${formData.complainant_address || "[COMPLAINANT ADDRESS]"}
-- Email: ${formData.complainant_email || "[COMPLAINANT EMAIL]"}
-- Phone: ${formData.complainant_phone || "[COMPLAINANT PHONE]"}
-- Account/Reference Number: ${formData.account_number || "not provided"}
-- Date of Incident: ${formData.incident_date || "not provided"}
+CRITICAL RULE: NEVER use bracket placeholders like [Name], [Address], [Date] or similar. If a detail is not provided, omit that line entirely and write naturally without it.
 
-ORGANISATION DETAILS:
-- Name: ${formData.organisation_name || "Unknown"}
-- Complaints Address: ${formData.organisation_complaints_address || "Complaints Department, [Organisation Address]"}
-- Complaints Email: ${formData.organisation_complaints_email || ""}
-- Complaint Handler: ${formData.complaint_handler_name || "The Complaints Manager"}
+COMPLAINANT BLOCK (top-right of letter):
+${complainantBlock}
+
+RECIPIENT BLOCK (left side, below complainant block):
+${recipientBlock}
 
 CASE DETAILS:
-Category: ${category}
-Issue Summary: ${formData.issue_summary || ""}
-Full Details: ${formData.issue_details || ""}
-Desired Outcome: ${formData.desired_outcome || ""}
-Issue Type: ${formData.issue_type || ""}
+- Industry: ${category}
+- Issue Type: ${f.issue_type || ""}
+- Account/Reference Number: ${f.account_number || "not provided — omit from letter"}
+- Incident Date: ${f.incident_date || "not provided — omit specific date reference"}
+- Issue Summary: ${f.issue_summary || ""}
+- Full Details: ${f.issue_details || ""}
+- Desired Outcome: ${f.desired_outcome || ""}
 
-INSTRUCTIONS:
-- Open with the complainant's full address block (right-aligned) and the date.
-- Address to: ${formData.complaint_handler_name ? formData.complaint_handler_name + "," : "The Complaints Manager,"} ${formData.organisation_name || "the organisation"}.
-- If an organisation complaints address was provided, include it as the recipient address block before the salutation.
-- Include the account/reference number in the opening paragraph.
-- Reference the exact incident date prominently.
-- Write a professional, firm but polite complaint letter in formal business letter format.
-- Include a 21-day response deadline and mention ${escalationBodies[category]} as the next escalation step if unresolved.
-- Use real details — no placeholder brackets for any field provided above.
-- Close with the complainant's full name.`;
+LETTER INSTRUCTIONS:
+1. Format as a formal business letter with complainant block top-right, date below it, then recipient block on the left.
+2. Re: line — e.g. "Re: Formal Complaint — ${f.account_number ? "Account " + f.account_number : f.issue_summary || f.issue_type || category}"
+3. Salutation: "Dear ${f.complaint_handler_name || "Sir/Madam"},"
+4. Opening paragraph: state the nature of the complaint, include account number and incident date ONLY if provided above.
+5. Middle paragraphs: detail the issue using the full details provided. Be specific and firm.
+6. Demand paragraph: state the desired outcome clearly and give a 21-day deadline from today (${today}).
+7. Escalation: mention ${escalationBodies[category]} as the next step if not resolved.
+8. Close: "Yours faithfully," then ${f.complainant_name || "the complainant's name"}.
+9. NEVER write any bracket placeholder — omit the line if data is missing.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setComplaintLetter(result);
@@ -163,22 +177,37 @@ INSTRUCTIONS:
             <div className="bg-card rounded-xl border border-border p-5 space-y-3">
               <h3 className="font-heading font-semibold text-sm text-foreground">Case Summary</h3>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Category</span>
-                  <p className="font-medium capitalize">{category}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Organisation</span>
-                  <p className="font-medium">{formData.organisation_name}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Escalation Body</span>
-                  <p className="font-medium">{escalationBodies[category]}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Response Deadline</span>
-                  <p className="font-medium">21 days from send date</p>
-                </div>
+                {[
+                  { label: "Complainant Name", value: formData.complainant_name },
+                  { label: "Address", value: formData.complainant_address },
+                  { label: "Email", value: formData.complainant_email },
+                  { label: "Phone", value: formData.complainant_phone },
+                  { label: "Industry", value: category },
+                  { label: "Organisation", value: formData.organisation_name },
+                  { label: "Account / Policy No.", value: formData.account_number },
+                  { label: "Incident Date", value: formData.incident_date },
+                  { label: "Issue Type", value: formData.issue_type },
+                  { label: "Complaint Handler", value: formData.complaint_handler_name },
+                  { label: "Escalation Body", value: escalationBodies[category] },
+                  { label: "Response Deadline", value: "21 days from send date" },
+                ].filter(item => item.value).map(({ label, value }) => (
+                  <div key={label}>
+                    <span className="text-muted-foreground text-xs">{label}</span>
+                    <p className="font-medium capitalize">{value}</p>
+                  </div>
+                ))}
+                {formData.issue_summary && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground text-xs">Issue Summary</span>
+                    <p className="font-medium">{formData.issue_summary}</p>
+                  </div>
+                )}
+                {formData.desired_outcome && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground text-xs">Desired Outcome</span>
+                    <p className="font-medium">{formData.desired_outcome}</p>
+                  </div>
+                )}
               </div>
             </div>
 
