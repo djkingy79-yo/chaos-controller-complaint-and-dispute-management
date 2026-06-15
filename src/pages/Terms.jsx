@@ -160,7 +160,7 @@ export default function Terms() {
           </p>
           <div className="bg-secondary/30 border border-border rounded-lg p-4 mt-4">
             <p className="text-foreground font-medium">Chaos Controller</p>
-            <p className="text-foreground">Email: info@chaoscontroller.com.au</p>
+            <p className="text-foreground">Email: chaoscontrollerapp@gmail.com</p>
             <p className="text-foreground">Website: www.chaoscontroller.com.au</p>
             <p className="text-foreground">Phone: 1300 4 CHAOS (1300 424 267)</p>
           </div>

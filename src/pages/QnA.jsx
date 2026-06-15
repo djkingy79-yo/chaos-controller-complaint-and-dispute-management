@@ -216,7 +216,7 @@ export default function QnA() {
                 Our support team is ready to help with any questions about your cases or the platform.
               </p>
               <a 
-                href="mailto:info@chaoscontroller.com.au"
+                href="mailto:chaoscontrollerapp@gmail.com"
                 className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
               >
                 Contact Support →

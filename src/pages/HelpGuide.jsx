@@ -729,7 +729,7 @@ export default function HelpGuide() {
             Our support team is here to assist you with any questions about your cases or the platform.
           </p>
           <a 
-            href="mailto:info@chaoscontroller.com.au"
+            href="mailto:chaoscontrollerapp@gmail.com"
             className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
           >
             <Send className="w-4 h-4" />

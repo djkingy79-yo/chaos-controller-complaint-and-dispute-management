@@ -2,7 +2,7 @@ export const CARD_FRONT = "https://media.base44.com/images/public/6a2ac3b012e456
 
 export const CONTACT = {
   website: "www.chaoscontroller.com.au",
-  email: "info@chaoscontroller.com.au",
+  email: "chaoscontrollerapp@gmail.com",
   phone: "1300 4 CHAOS (1300 424 267)",
   location: "Australia Wide",
 };
