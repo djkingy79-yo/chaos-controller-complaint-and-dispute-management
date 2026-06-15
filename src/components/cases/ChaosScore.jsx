@@ -74,7 +74,17 @@ export default function ChaosScore({ caseItem, evidence, events }) {
   const readyToEscalate = score >= 80 && caseItem.status !== "escalated" && caseItem.status !== "resolved";
 
   const handleEscalate = () => {
-    navigate(`/case/${caseItem.id}?tab=bundle`);
+    // Open AFCA website for banking/insurance disputes
+    if (caseItem.category === "banking" || caseItem.category === "insurance") {
+      window.open("https://www.afca.org.au/make-a-complaint", "_blank");
+    } else if (caseItem.category === "telco" || caseItem.category === "utilities") {
+      window.open("https://www.tio.com.au/complaints", "_blank");
+    } else if (caseItem.category === "tenancy") {
+      window.open("https://www.ncat.nsw.gov.au/", "_blank");
+    } else {
+      // Default to bundle for review first
+      navigate(`/case/${caseItem.id}?tab=bundle`);
+    }
   };
 
   return (
