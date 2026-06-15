@@ -295,10 +295,10 @@ const guides = [
         steps: [
           "Tap 'Escalate Now' when ready",
           "You'll be directed to the appropriate ombudsman website",
-          "Banking/Insurance → AFCA (afca.org.au)",
-          "Telco → TIO (tio.com.au)",
-          "Utilities → EWON (ewon.com.au)",
-          "Tenancy → NCAT (ncat.nsw.gov.au)",
+          "Banking/Insurance → AFCA (afca.org.au/make-a-complaint)",
+          "Telco → TIO (tio.com.au/make-a-complaint)",
+          "Utilities → EWON (ewon.com.au/make-a-complaint)",
+          "Tenancy → NCAT (ncat.nsw.gov.au/apply)",
           "Complete their online complaint form",
           "Attach your printed bundle as supporting documentation"
         ],

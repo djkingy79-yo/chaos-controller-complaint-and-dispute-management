@@ -76,13 +76,13 @@ export default function ChaosScore({ caseItem, evidence, events }) {
   const handleEscalate = () => {
     // Open direct complaint registration pages
     if (caseItem.category === "banking" || caseItem.category === "insurance") {
-      window.open("https://www.afca.org.au/start-complaint", "_blank");
+      window.open("https://www.afca.org.au/make-a-complaint/", "_blank");
     } else if (caseItem.category === "telco") {
-      window.open("https://www.tio.com.au/make-a-complaint/start-your-complaint", "_blank");
+      window.open("https://www.tio.com.au/make-a-complaint", "_blank");
     } else if (caseItem.category === "utilities") {
-      window.open("https://www.ewon.com.au/make-a-complaint/start-complaint", "_blank");
+      window.open("https://www.ewon.com.au/make-a-complaint", "_blank");
     } else if (caseItem.category === "tenancy") {
-      window.open("https://www.ncat.nsw.gov.au/apply-for-internal-review", "_blank");
+      window.open("https://www.ncat.nsw.gov.au/apply", "_blank");
     } else {
       // Default to bundle for review first
       navigate(`/case/${caseItem.id}?tab=bundle`);
