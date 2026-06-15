@@ -21,8 +21,9 @@ import CaseDetail from '@/pages/CaseDetail';
 import DeadlineWarRoom from '@/pages/DeadlineWarRoom';
 import SmartChecklist from '@/pages/SmartChecklist';
 import Directories from '@/pages/Directories';
-import Payments from '@/pages/Payments';
+
 import AdminDashboard from '@/pages/AdminDashboard';
+import Payments from '@/pages/Payments';
 import CalendarView from '@/pages/CalendarView';
 import CalendarSync from '@/pages/CalendarSync';
 import HelpGuide from '@/pages/HelpGuide';
