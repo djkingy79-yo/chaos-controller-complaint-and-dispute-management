@@ -10,49 +10,32 @@ export const CONTACT = {
   tagline: "CONFIDENTIAL. SECURE. YOUR INFORMATION STAYS YOURS.",
 };
 
-// Category icons shown in the letterhead
+// Category icons shown in the letterhead (matches business card left column)
 const CATEGORY_ICONS = [
-  { emoji: "🏦", label: "Banking Dispute" },
-  { emoji: "🛡️", label: "Insurance Dispute" },
-  { emoji: "🏠", label: "Tenancy Dispute" },
-  { emoji: "📡", label: "Telco Dispute" },
-  { emoji: "⚡", label: "Utilities Dispute" },
-  { emoji: "⚖️", label: "Other Dispute" },
+  { emoji: "🏛️", label: "Banking Disputes" },
+  { emoji: "🛡️", label: "Insurance Claims" },
+  { emoji: "🏠", label: "NCAT & Residential" },
+  { emoji: "⚖️", label: "Court Preparation" },
 ];
 
 /** React on-screen letterhead header */
 export function LetterheadHeader({ today }) {
   return (
     <div className="bg-white border-b border-slate-200">
-      {/* Top banner — cropped to logo/fist area only */}
-      <div className="w-full overflow-hidden" style={{ height: "120px" }}>
+      {/* Top banner — full business card front image (includes logo + dark strip) */}
+      <div className="w-full overflow-hidden" style={{ height: "160px" }}>
         <img
           src={CARD_FRONT}
           alt="Chaos Controller"
           className="w-full object-cover object-top"
-          style={{ objectPosition: "top center" }}
         />
       </div>
 
-      {/* Contact strip — card back details */}
-      <div className="px-6 py-2 bg-slate-900 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-          <span className="text-[10px] text-yellow-400">🌐 {CONTACT.website}</span>
-          <span className="text-[10px] text-slate-300">✉ {CONTACT.email}</span>
-          <span className="text-[10px] text-slate-300">📞 {CONTACT.phone}</span>
-          <span className="text-[10px] text-slate-400">📍 {CONTACT.location}</span>
-        </div>
-        <span className="text-[9px] font-bold text-yellow-500 uppercase tracking-wide">{CONTACT.tagline}</span>
-      </div>
-
-      {/* Gold rule */}
-      <div className="h-0.5 bg-yellow-500" />
-
       {/* Category icons row */}
-      <div className="px-6 py-2 bg-slate-50 flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-slate-100">
+      <div className="px-6 py-2 bg-white flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-slate-100">
         {CATEGORY_ICONS.map((cat) => (
-          <span key={cat.label} className="flex items-center gap-1 text-[10px] text-slate-500">
-            <span className="text-sm">{cat.emoji}</span>
+          <span key={cat.label} className="flex items-center gap-1.5 text-[10px] text-slate-600 font-medium">
+            <span className="text-base">{cat.emoji}</span>
             {cat.label}
           </span>
         ))}
@@ -60,7 +43,7 @@ export function LetterheadHeader({ today }) {
       </div>
 
       {/* Blue separator */}
-      <div className="h-0.5 bg-primary mx-6 mt-1" />
+      <div className="h-0.5 bg-blue-600 mx-6" />
     </div>
   );
 }
@@ -68,24 +51,21 @@ export function LetterheadHeader({ today }) {
 /** HTML letterhead for print/PDF — returns an HTML string */
 export function buildLetterheadHTML(caseItem, client, today) {
   const iconRow = CATEGORY_ICONS.map(
-    (c) => `<span style="font-size:10pt;margin-right:14pt;">${c.emoji} <span style="font-size:8pt;color:#555;">${c.label}</span></span>`
+    (c) => `<span style="font-size:10pt;margin-right:18pt;">${c.emoji} <span style="font-size:9pt;color:#444;font-weight:600;">${c.label}</span></span>`
   ).join("");
 
   return `
   <!-- LETTERHEAD BANNER -->
   <div style="margin:-2cm -2cm 0 -2cm;">
-    <div style="width:100%;height:90pt;overflow:hidden;"><img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;object-fit:cover;object-position:top center;" /></div>
-    <div style="background:#111;padding:6pt 16pt;display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:9pt;color:#facc15;font-family:Arial,sans-serif;">🌐 ${CONTACT.website} &nbsp;|&nbsp; ✉ ${CONTACT.email} &nbsp;|&nbsp; 📞 ${CONTACT.phone} &nbsp;|&nbsp; 📍 ${CONTACT.location}</span>
-      <span style="font-size:8pt;font-weight:bold;color:#facc15;font-family:Arial,sans-serif;text-transform:uppercase;">${CONTACT.tagline}</span>
+    <div style="width:100%;height:110pt;overflow:hidden;">
+      <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;object-fit:cover;object-position:top center;" />
     </div>
-    <div style="height:2pt;background:#eab308;"></div>
-    <div style="padding:6pt 16pt;background:#f8fafc;border-bottom:1pt solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+    <div style="padding:6pt 16pt;background:#fff;border-bottom:1pt solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
       <div>${iconRow}</div>
       <span style="font-size:9pt;font-style:italic;color:#888;font-family:Arial,sans-serif;">${today}</span>
     </div>
-  </div>
-  <hr style="border:none;border-top:2pt solid #1d4ed8;margin:14pt 0 12pt 0;" />`;
+    <div style="height:2pt;background:#1d4ed8;margin:0 16pt;"></div>
+  </div>`;
 }
 
 /** Footer HTML string for print documents */

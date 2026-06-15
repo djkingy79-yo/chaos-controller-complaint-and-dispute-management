@@ -137,6 +137,8 @@ LETTER FORMAT INSTRUCTIONS:
     window.print();
   };
 
+  const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[NRMA Address\]|\[.*?\]/.test(letter);
+
   if (!caseItem.complaint_letter && !letter) {
     return (
       <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-8 text-center">
@@ -174,6 +176,16 @@ LETTER FORMAT INSTRUCTIONS:
           </Button>
         </div>
       </div>
+
+      {/* Placeholder warning */}
+      {hasPlaceholders && !regenerating && (
+        <div className="flex items-center justify-between gap-3 bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3">
+          <p className="text-xs text-destructive font-medium">⚠️ This letter still has placeholder text. Hit Regenerate to replace them with your real case details.</p>
+          <Button size="sm" onClick={handleRegenerate} className="gap-1.5 text-xs shrink-0">
+            <RefreshCw className="w-3 h-3" /> Regenerate Now
+          </Button>
+        </div>
+      )}
 
       {/* Letterhead Preview */}
       <div className="bg-white border border-border rounded-lg overflow-hidden shadow-sm">
