@@ -241,7 +241,7 @@ function printBundle(caseItem, evidence, events) {
   const summaryTableRows = summaryRows.map(r => `
     <tr style="border-bottom:1px solid #eee;">
       <td style="padding:5pt 8pt;font-size:11pt;color:#555;width:35%;font-style:italic;">${r.label}</td>
-      <td style="padding:5pt 8pt;font-size:12pt;font-weight:bold;">${r.value}</td>
+      <td style="padding:5pt 8pt;font-size:12pt;font-weight:bold;word-break:break-word;">${r.value}</td>
     </tr>
   `).join("");
 
@@ -249,11 +249,17 @@ function printBundle(caseItem, evidence, events) {
     <!-- COVER PAGE -->
     <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:calc(100% + 4cm);margin:-2cm -2cm 0 -2cm;display:block;" />
 
-    <div style="padding-top:32pt;">
+    <!-- Blue header bar with case info -->
+    <div style="background:#1d4ed8;color:white;padding:20pt 2cm;margin:0 -2cm;margin-top:12pt;">
+      <div style="font-size:24pt;font-weight:bold;margin-bottom:8pt;font-family:'Times New Roman',Times,serif;">ESCALATION BUNDLE</div>
+      <div style="font-size:12pt;margin-bottom:4pt;font-family:'Times New Roman',Times,serif;">${today}</div>
+      <div style="font-size:12pt;font-family:'Times New Roman',Times,serif;">chaoscontroller.com.au</div>
+    </div>
+
+    <div style="padding:32pt 2cm 0 2cm;">
       <hr style="border:none;border-top:2.5px solid #1d4ed8;margin-bottom:20pt;"/>
       <div style="font-size:22pt;font-weight:bold;margin-bottom:6pt;font-family:'Times New Roman',Times,serif;">${caseItem.title}</div>
-      <div style="font-size:14pt;font-style:italic;margin-bottom:6pt;color:#444;font-family:'Times New Roman',Times,serif;">vs. ${caseItem.organisation_name || "Organisation"}</div>
-      <div style="font-size:11pt;color:#555;margin-bottom:20pt;font-family:'Times New Roman',Times,serif;">Case Bundle — ${today}</div>
+      <div style="font-size:14pt;font-style:italic;margin-bottom:20pt;color:#444;font-family:'Times New Roman',Times,serif;">vs. ${caseItem.organisation_name || "Organisation"}</div>
       <hr style="border:none;border-top:1px solid #ccc;margin-bottom:20pt;"/>
 
       <div style="font-size:14pt;font-weight:bold;margin-bottom:12pt;font-family:'Times New Roman',Times,serif;">Case Summary</div>
@@ -287,7 +293,9 @@ function printBundle(caseItem, evidence, events) {
     ${pageBreak}
 
     <!-- SECTION 1: CHECKLIST -->
-    ${h1("Section 1 — Case Checklist")}
+    <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0 -2cm;margin-bottom:20pt;">
+      <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section 1 — Escalation Readiness Checklist</div>
+    </div>
     <table style="width:100%;border-collapse:collapse;margin-top:12pt;">
       <thead><tr style="background:#f0f0f0;">
         <th style="padding:6pt 8pt;font-size:11pt;"></th>
@@ -305,7 +313,9 @@ function printBundle(caseItem, evidence, events) {
     ${pageBreak}
 
     <!-- SECTION 2: TIMELINE -->
-    ${h1("Section 2 — Chronological Timeline")}
+    <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0 -2cm;margin-bottom:20pt;">
+      <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section 2 — Chronological Timeline</div>
+    </div>
     <table style="width:100%;border-collapse:collapse;margin-top:12pt;">
       <thead><tr style="background:#f0f0f0;">
         <th style="text-align:left;padding:6pt 8pt;">Date</th>
@@ -325,7 +335,9 @@ function printBundle(caseItem, evidence, events) {
     ${pageBreak}
 
     <!-- SECTION 3: EVIDENCE INDEX -->
-    ${h1("Section 3 — Evidence Index")}
+    <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0 -2cm;margin-bottom:20pt;">
+      <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section 3 — Evidence Index</div>
+    </div>
     <p style="margin-bottom:12pt;">Total items: <strong>${evidence.length}</strong></p>
     <table style="width:100%;border-collapse:collapse;">
       <thead><tr style="background:#f0f0f0;">
@@ -348,8 +360,10 @@ function printBundle(caseItem, evidence, events) {
     ${pageBreak}
 
     <!-- SECTION 4: COMPLAINT LETTER -->
-    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:calc(100% + 4cm);margin:-2cm -2cm 12pt -2cm;display:block;" />
-    ${h1("Section 4 — Complaint Letter")}
+    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:calc(100% + 4cm);margin:-2cm -2cm 0 -2cm;display:block;" />
+    <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0 -2cm;margin-bottom:20pt;">
+      <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section 4 — Complaint Letter</div>
+    </div>
     <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin-top:12pt;">${caseItem.complaint_letter || "No complaint letter generated yet."}</pre>
 
     ${buildFooterHTML(caseItem, client, 5, 5)}
