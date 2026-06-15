@@ -27,6 +27,7 @@ import Payments from '@/pages/Payments';
 import CalendarView from '@/pages/CalendarView';
 import CalendarSync from '@/pages/CalendarSync';
 import HelpGuide from '@/pages/HelpGuide';
+import SampleReports from '@/pages/SampleReports';
 import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 
@@ -73,6 +74,7 @@ const AuthenticatedApp = () => {
           <Route path="/calendar" element={<CalendarView />} />
           <Route path="/calendar-sync" element={<CalendarSync />} />
           <Route path="/help" element={<HelpGuide />} />
+          <Route path="/sample-reports" element={<SampleReports />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
         </Route>
