@@ -13,6 +13,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 
 import Layout from '@/components/Layout';
+import Welcome from '@/pages/Welcome';
 import Dashboard from '@/pages/Dashboard';
 import CaseList from '@/pages/CaseList';
 import NewCase from '@/pages/NewCase';
@@ -54,9 +55,12 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      {/* Public landing page */}
+      <Route path="/" element={<Welcome />} />
+      
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/cases" element={<CaseList />} />
           <Route path="/new-case" element={<NewCase />} />
           <Route path="/case/:id" element={<CaseDetail />} />
