@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LetterheadHeader, buildLetterheadHTML, buildFooterHTML, CONTACT } from "./LetterheadBanner";
+import { LetterheadHeader, buildLetterheadHTML, buildFooterHTML, CARD_FRONT } from "./LetterheadBanner";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -113,28 +113,33 @@ LETTER FORMAT INSTRUCTIONS:
   const handlePrint = () => {
     const client = buildClientContext(caseItem, evidence);
     const today = format(new Date(), "d MMMM yyyy");
-    const printStyles = `
-      @media print {
-        body * { visibility: hidden !important; }
-        #cc-letter-print, #cc-letter-print * { visibility: visible !important; }
-        #cc-letter-print { position: fixed; left: 0; top: 0; width: 100%; }
-        @page { margin: 2cm; }
+    const win = window.open("", "_blank");
+    win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
+    <style>
+      @page { margin: 0; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; }
+      .page-header {
+        position: running(header);
+        width: 100%;
       }
-    `;
-    if (!document.getElementById("cc-print-style")) {
-      const s = document.createElement("style");
-      s.id = "cc-print-style";
-      s.innerHTML = printStyles;
-      document.head.appendChild(s);
-    }
-    let area = document.getElementById("cc-letter-print");
-    if (!area) { area = document.createElement("div"); area.id = "cc-letter-print"; document.body.appendChild(area); }
-    area.innerHTML = `<div style="font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;line-height:1.65;">
-      ${buildLetterheadHTML(caseItem, client, today)}
-      <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin:0;">${letter}</pre>
-      ${buildFooterHTML(caseItem, client, 1)}
-    </div>`;
-    window.print();
+      @page { @top-center { content: element(header); } }
+      .letter-header { width: 100%; display: block; margin-bottom: 0; }
+      .letter-header img { width: 100%; display: block; }
+      .letter-body { padding: 1.5cm 2cm 2cm 2cm; }
+      .footer { font-size: 9pt; font-style: italic; border-top: 1pt solid #ccc; margin-top: 24pt; padding-top: 6pt; color: #888; display: flex; justify-content: space-between; }
+      pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; }
+    </style>
+    </head><body>
+      <div class="letter-header"><img src="${CARD_FRONT}" alt="Chaos Controller" /></div>
+      <div class="letter-body">
+        <pre>${letter}</pre>
+        ${buildFooterHTML(caseItem, client, null)}
+      </div>
+    </body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); win.close(); }, 500);
   };
 
   const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[NRMA Address\]|\[.*?\]/.test(letter);
