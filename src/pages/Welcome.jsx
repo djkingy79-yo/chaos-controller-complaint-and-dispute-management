@@ -354,9 +354,10 @@ export default function Welcome() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * idx, duration: 0.6 }}
-                className={`bg-gradient-to-br from-black to-gray-900 border-2 ${feature.borderColor} p-6 rounded-xl hover:border-[#C0392B] transition-all`}
+                className="bg-gradient-to-br from-black to-gray-900 p-6 rounded-xl hover:border-[#C0392B] transition-all"
+                style={{ borderColor: feature.color }}
               >
-                <div className={`${feature.bgColor} w-14 h-14 rounded-lg flex items-center justify-center mb-4`}>
+                <div className="w-14 h-14 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: `${feature.color}1a` }}>
                   <Icon className="w-8 h-8" style={{ color: feature.color }} />
                 </div>
                 <h3 className="font-heading font-black text-lg mb-3 text-white tracking-wide text-shadow">{feature.title}</h3>
@@ -385,7 +386,7 @@ export default function Welcome() {
                 transition={{ delay: 0.1 * idx, duration: 0.5 }}
                 className="flex items-center gap-3 bg-gradient-to-r from-black to-gray-900 border-2 border-[#FFD700] px-6 py-4 rounded-lg hover:border-[#C0392B] transition-all"
               >
-                <div className="w-10 h-10 rounded flex items-center justify-center" style={{ backgroundColor: `${type.color}20` }}>
+                <div className="w-10 h-10 rounded flex items-center justify-center" style={{ backgroundColor: `${type.color}1a` }}>
                   <Icon className="w-6 h-6" style={{ color: type.color }} />
                 </div>
                 <span className="font-heading font-black text-white tracking-wide text-lg text-shadow">{type.label}</span>
