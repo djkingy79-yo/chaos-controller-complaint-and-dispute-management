@@ -9,6 +9,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import CaseCard from "@/components/dashboard/CaseCard";
 import ActionItems from "@/components/dashboard/ActionItems";
 import CommandCentre from "@/components/dashboard/CommandCentre";
+import LetterPreview from "@/components/dashboard/LetterPreview";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -78,6 +79,11 @@ export default function Dashboard() {
 
       {/* Command Centre */}
       {cases.length > 0 && <CommandCentre cases={cases} />}
+
+      {/* Letter Preview */}
+      {cases.some((c) => c.complaint_letter) && (
+        <LetterPreview cases={cases} />
+      )}
 
       {/* Action Items & Recent Cases */}
       <div className="grid lg:grid-cols-5 gap-6">

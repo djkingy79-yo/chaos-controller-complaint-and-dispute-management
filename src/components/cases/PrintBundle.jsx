@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package } from "lucide-react";
 import { format } from "date-fns";
+import { buildLetterheadHTML, buildFooterHTML, CARD_FRONT, CONTACT } from "./LetterheadBanner";
 
 // Times New Roman print styles injected once
 const PRINT_STYLES = `
@@ -38,46 +39,17 @@ function baseStyles() {
 }
 
 function h1(text) {
-  return `<h1 style="font-size:17pt;font-weight:bold;margin-bottom:6pt;">${text}</h1>`;
+  return `<h1 style="font-size:17pt;font-weight:bold;margin-bottom:6pt;font-family:'Times New Roman',Times,serif;">${text}</h1>`;
 }
 function h2(text) {
-  return `<h2 style="font-size:14pt;font-style:italic;margin-bottom:4pt;">${text}</h2>`;
+  return `<h2 style="font-size:14pt;font-style:italic;margin-bottom:4pt;font-family:'Times New Roman',Times,serif;">${text}</h2>`;
 }
-function footer(caseItem, client) {
-  const year = new Date().getFullYear();
-  const name = client?.name || caseItem?.complainant_name || "";
-  const org = caseItem?.organisation_name || "";
-  const title = caseItem?.title || "";
-  const text = `Chaos Controller by Deb King ${year}${name ? ` — ${name} vs ${org}` : ""} ${year} — ${title}`;
-  return `<div style="font-size:9pt;font-style:italic;border-top:1pt solid #ccc;margin-top:24pt;padding-top:8pt;color:#888;display:flex;justify-content:space-between;">
-    <span>${text}</span>
-  </div>`;
+// Use shared footer and letterhead from LetterheadBanner
+function footer(caseItem, client, pageNum) {
+  return buildFooterHTML(caseItem, client, pageNum);
 }
-
 function letterhead(caseItem, client, today) {
-  const clientRows = [
-    client?.name    ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">From:</td><td style="font-weight:bold;font-size:11pt;">${client.name}</td></tr>` : "",
-    client?.address ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Address:</td><td style="font-size:11pt;">${client.address}</td></tr>` : "",
-    client?.email   ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Email:</td><td style="font-size:11pt;">${client.email}</td></tr>` : "",
-    client?.phone   ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Phone:</td><td style="font-size:11pt;">${client.phone}</td></tr>` : "",
-    client?.accounts?.length ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Account(s):</td><td style="font-size:11pt;">${client.accounts.join(", ")}</td></tr>` : "",
-    client?.policies?.length ? `<tr><td style="color:#555;padding:2pt 12pt 2pt 0;font-size:11pt;white-space:nowrap;">Reference(s):</td><td style="font-size:11pt;">${client.policies.join(", ")}</td></tr>` : "",
-  ].filter(Boolean).join("");
-
-  return `
-  <table style="width:100%;border-collapse:collapse;margin-bottom:0;">
-    <tr>
-      <td style="padding:10pt 0;">
-        <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" style="height:55pt;width:auto;" />
-      </td>
-      <td style="text-align:right;vertical-align:top;padding-top:10pt;">
-        <div style="font-size:10pt;color:#555;">${today}</div>
-        <div style="font-size:9pt;color:#999;margin-top:2pt;">chaoscontroller.com.au</div>
-      </td>
-    </tr>
-  </table>
-  ${clientRows ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;padding:8pt 12pt;margin-bottom:0;"><table style="border-collapse:collapse;">${clientRows}</table></div>` : ""}
-  <hr style="border:none;border-top:2.5px solid #1d4ed8;margin:12pt 0 16pt 0;"/>`;
+  return buildLetterheadHTML(caseItem, client, today);
 }
 
 function buildClientContext(caseItem, evidence) {
@@ -141,7 +113,7 @@ function printTimeline(caseItem, events) {
       </thead>
       <tbody>${rows}</tbody>
     </table>
-    ${footer(caseItem, client)}
+    ${footer(caseItem, client, 1)}
   </div>`;
   setPrintArea(html);
   window.print();
@@ -176,7 +148,7 @@ function printEvidence(caseItem, evidence) {
       </thead>
       <tbody>${rows}</tbody>
     </table>
-    ${footer(caseItem, client)}
+    ${footer(caseItem, client, 1)}
   </div>`;
   setPrintArea(html);
   window.print();
@@ -218,7 +190,7 @@ function printChecklist(caseItem, evidence, events) {
       </thead>
       <tbody>${rows}</tbody>
     </table>
-    ${footer(caseItem, client)}
+    ${footer(caseItem, client, 1)}
   </div>`;
   setPrintArea(html);
   window.print();
@@ -246,14 +218,20 @@ function printBundle(caseItem, evidence, events) {
 
   const html = `<div style="${baseStyles()}">
     <!-- COVER PAGE: no footer on cover -->
-    <div style="text-align:center;padding-top:60pt;">
-      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" style="height:80pt;width:auto;margin-bottom:24pt;" />
+    <div style="margin:-2cm -2cm 0 -2cm;">
+      <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;max-height:110pt;object-fit:cover;object-position:top;display:block;" />
+      <div style="background:#111;padding:6pt 16pt;">
+        <span style="font-size:9pt;color:#facc15;font-family:Arial,sans-serif;">🌐 ${CONTACT.website} &nbsp;|&nbsp; ✉ ${CONTACT.email} &nbsp;|&nbsp; 📞 ${CONTACT.phone} &nbsp;|&nbsp; 📍 ${CONTACT.location}</span>
+      </div>
+      <div style="height:2pt;background:#eab308;"></div>
+    </div>
+    <div style="text-align:center;padding-top:48pt;">
       <hr style="border:none;border-top:2.5px solid #1d4ed8;width:60%;margin:0 auto 32pt auto;"/>
-      <div style="font-size:20pt;font-weight:bold;margin-bottom:8pt;">${caseItem.title}</div>
-      <div style="font-size:14pt;font-style:italic;margin-bottom:8pt;color:#444;">vs. ${caseItem.organisation_name || "Organisation"}</div>
-      <div style="font-size:12pt;color:#555;margin-bottom:4pt;">Case Bundle — ${format(new Date(), "d MMMM yyyy")}</div>
-      <div style="font-size:11pt;color:#555;text-transform:capitalize;">Category: ${caseItem.category} | Status: ${(caseItem.status || "").replace(/_/g, " ")}</div>
-      ${client.name ? `<div style="margin-top:24pt;font-size:11pt;color:#333;">Prepared for: <strong>${client.name}</strong></div>` : ""}
+      <div style="font-size:20pt;font-weight:bold;margin-bottom:8pt;font-family:'Times New Roman',Times,serif;">${caseItem.title}</div>
+      <div style="font-size:14pt;font-style:italic;margin-bottom:8pt;color:#444;font-family:'Times New Roman',Times,serif;">vs. ${caseItem.organisation_name || "Organisation"}</div>
+      <div style="font-size:12pt;color:#555;margin-bottom:4pt;font-family:'Times New Roman',Times,serif;">Case Bundle — ${format(new Date(), "d MMMM yyyy")}</div>
+      <div style="font-size:11pt;color:#555;text-transform:capitalize;font-family:'Times New Roman',Times,serif;">Category: ${caseItem.category} | Status: ${(caseItem.status || "").replace(/_/g, " ")}</div>
+      ${client.name ? `<div style="margin-top:24pt;font-size:11pt;color:#333;font-family:'Times New Roman',Times,serif;">Prepared for: <strong>${client.name}</strong></div>` : ""}
     </div>
 
     ${pageBreak}
@@ -272,7 +250,7 @@ function printBundle(caseItem, evidence, events) {
         <td style="padding:6pt 8pt;font-weight:bold;${c.done ? "color:green;" : "color:#c00;"}">${c.done ? "COMPLETE" : "MISSING"}</td>
       </tr>`).join("")}</tbody>
     </table>
-    ${footer(caseItem, client)}
+    ${footer(caseItem, client, 2)}
 
     ${pageBreak}
 
@@ -292,7 +270,7 @@ function printBundle(caseItem, evidence, events) {
         <td style="padding:6pt 8pt;color:#444;">${ev.description || ""}</td>
       </tr>`).join("")}</tbody>
     </table>
-    ${footer(caseItem, client)}
+    ${footer(caseItem, client, 3)}
 
     ${pageBreak}
 
@@ -315,7 +293,7 @@ function printBundle(caseItem, evidence, events) {
         <td style="padding:6pt 8pt;color:#444;">${ev.description || ""}</td>
       </tr>`).join("")}</tbody>
     </table>
-    ${footer(caseItem, client)}
+    ${footer(caseItem, client, 4)}
 
     ${pageBreak}
 
@@ -324,7 +302,7 @@ function printBundle(caseItem, evidence, events) {
     ${letterhead(caseItem, client, format(new Date(), "d MMMM yyyy"))}
     <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin-top:0;">${caseItem.complaint_letter || "No complaint letter generated yet."}</pre>
 
-    ${footer(caseItem, client)}
+    ${footer(caseItem, client, 5)}
   </div>`;
   setPrintArea(html);
   window.print();
