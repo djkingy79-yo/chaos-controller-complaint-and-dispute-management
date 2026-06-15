@@ -13,6 +13,7 @@ import ComplaintLetter from "@/components/cases/ComplaintLetter";
 import ChaosScore from "@/components/cases/ChaosScore";
 import PrintBundle from "@/components/cases/PrintBundle";
 import EscalationBundle from "@/components/cases/EscalationBundle";
+import CaseSummary from "@/components/cases/CaseSummary";
 
 export default function CaseDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -104,8 +105,11 @@ export default function CaseDetail() {
 
         {/* Main Content */}
         <div className="lg:col-span-2">
-          <Tabs defaultValue="letter" className="w-full">
-            <TabsList className="w-full grid grid-cols-5 mb-4">
+          <Tabs defaultValue="summary" className="w-full">
+            <TabsList className="w-full grid grid-cols-6 mb-4">
+              <TabsTrigger value="summary" className="gap-1 text-xs sm:text-sm">
+                <FileText className="w-3.5 h-3.5 hidden sm:block" /> Summary
+              </TabsTrigger>
               <TabsTrigger value="letter" className="gap-1 text-xs sm:text-sm">
                 <FileText className="w-3.5 h-3.5 hidden sm:block" /> Letter
               </TabsTrigger>
@@ -122,6 +126,9 @@ export default function CaseDetail() {
                 <Download className="w-3.5 h-3.5 hidden sm:block" /> Bundle
               </TabsTrigger>
             </TabsList>
+            <TabsContent value="summary">
+              <CaseSummary caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+            </TabsContent>
             <TabsContent value="letter">
               <ComplaintLetter caseItem={caseItem} />
             </TabsContent>
