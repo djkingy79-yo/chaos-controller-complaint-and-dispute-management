@@ -15,6 +15,7 @@ import PrintBundle from "@/components/cases/PrintBundle";
 import EscalationBundle from "@/components/cases/EscalationBundle";
 import CaseSummary from "@/components/cases/CaseSummary";
 import DisputeProgressTracker from "@/components/cases/DisputeProgressTracker";
+import ExportCaseZip from "@/components/cases/ExportCaseZip";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
@@ -98,6 +99,7 @@ export default function CaseDetail() {
             <p className="text-sm text-muted-foreground mt-1">{caseItem.issue_summary}</p>
           )}
         </div>
+        <ExportCaseZip caseItem={caseItem} evidence={evidence} events={timelineEvents} />
       </div>
 
       {/* Layout */}
