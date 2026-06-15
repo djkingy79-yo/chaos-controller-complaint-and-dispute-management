@@ -62,69 +62,75 @@ export default function DeadlineWarRoom() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-3">
             <Siren className="w-7 h-7 text-destructive" /> Deadline War Room
           </h1>
           <p className="text-muted-foreground text-sm mt-1">Track every critical date. Miss nothing.</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="w-4 h-4" /> Add Deadline</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Add Deadline</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div>
-                <Label>Title</Label>
-                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Provider response due" className="mt-1" />
-              </div>
-              <div>
-                <Label>Deadline Date</Label>
-                <Input type="date" value={form.deadline_date} onChange={(e) => setForm({ ...form, deadline_date: e.target.value })} className="mt-1" />
-              </div>
-              <div>
-                <Label>Case</Label>
-                <Select value={form.case_id} onValueChange={(v) => setForm({ ...form, case_id: v })}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select case" /></SelectTrigger>
-                  <SelectContent>
-                    {cases.map((c) => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => window.location.href = '/calendar-sync'}>
+            <Calendar className="w-4 h-4" />
+            <span className="hidden sm:inline">Sync to Calendar</span>
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2"><Plus className="w-4 h-4" /> Add Deadline</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Add Deadline</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-2">
                 <div>
-                  <Label>Type</Label>
-                  <Select value={form.deadline_type} onValueChange={(v) => setForm({ ...form, deadline_type: v })}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <Label>Title</Label>
+                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Provider response due" className="mt-1" />
+                </div>
+                <div>
+                  <Label>Deadline Date</Label>
+                  <Input type="date" value={form.deadline_date} onChange={(e) => setForm({ ...form, deadline_date: e.target.value })} className="mt-1" />
+                </div>
+                <div>
+                  <Label>Case</Label>
+                  <Select value={form.case_id} onValueChange={(v) => setForm({ ...form, case_id: v })}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select case" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="response_due">Response Due</SelectItem>
-                      <SelectItem value="submission">Submission</SelectItem>
-                      <SelectItem value="tribunal_date">Tribunal Date</SelectItem>
-                      <SelectItem value="escalation_window">Escalation Window</SelectItem>
-                      <SelectItem value="review_period">Review Period</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {cases.map((c) => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Responsibility</Label>
-                  <Select value={form.responsibility} onValueChange={(v) => setForm({ ...form, responsibility: v })}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">You</SelectItem>
-                      <SelectItem value="provider">Provider</SelectItem>
-                      <SelectItem value="tribunal">Tribunal</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Type</Label>
+                    <Select value={form.deadline_type} onValueChange={(v) => setForm({ ...form, deadline_type: v })}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="response_due">Response Due</SelectItem>
+                        <SelectItem value="submission">Submission</SelectItem>
+                        <SelectItem value="tribunal_date">Tribunal Date</SelectItem>
+                        <SelectItem value="escalation_window">Escalation Window</SelectItem>
+                        <SelectItem value="review_period">Review Period</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Responsibility</Label>
+                    <Select value={form.responsibility} onValueChange={(v) => setForm({ ...form, responsibility: v })}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">You</SelectItem>
+                        <SelectItem value="provider">Provider</SelectItem>
+                        <SelectItem value="tribunal">Tribunal</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+                <Button className="w-full" onClick={() => createMutation.mutate(form)} disabled={!form.title || !form.deadline_date}>Save Deadline</Button>
               </div>
-              <Button className="w-full" onClick={() => createMutation.mutate(form)} disabled={!form.title || !form.deadline_date}>Save Deadline</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Active Deadlines */}

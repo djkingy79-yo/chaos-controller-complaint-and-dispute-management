@@ -31,6 +31,7 @@ const navItems = [
   { path: "/cases", label: "My Cases", icon: FolderOpen },
   { path: "/calendar", label: "Calendar", icon: CalendarDays },
   { path: "/deadlines", label: "Deadlines", icon: Siren },
+  { path: "/calendar-sync", label: "Calendar Sync", icon: Calendar },
   { path: "/checklist", label: "Checklist", icon: ClipboardList },
   { path: "/directories", label: "Directories", icon: Building2 },
   { path: "/sample-reports", label: "Sample Reports", icon: FileText },

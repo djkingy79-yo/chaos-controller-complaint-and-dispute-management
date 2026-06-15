@@ -18,27 +18,27 @@ Deno.serve(async (req) => {
       const cases = await base44.entities.Case.list();
       const userCases = cases.filter(c => c.created_by_id === user.id);
       const deadlines = await base44.entities.Deadline.list();
-      const userDeadlines = deadlines.filter(d => userCases.some(c => c.id === d.case_id));
+      const userDeadlines = deadlines.filter(d => userCases.some(c => c.id === d.case_id) && d.status === 'pending');
 
       // Get existing sync state
       const existingSync = await base44.asServiceRole.entities.SyncState.filter({ user_id: user.id });
       const syncRecord = existingSync.length > 0 ? existingSync[0] : null;
 
       // Fetch calendar events with sync token
-      let url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=100';
+      let url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=250';
       if (syncRecord?.sync_token) {
         url += `&syncToken=${syncRecord.sync_token}`;
       } else {
-        // First sync - get events from last 7 days
-        url += '&timeMin=' + new Date(Date.now() - 7*24*60*60*1000).toISOString();
+        // First sync - get events from last 30 days and future
+        url += '&timeMin=' + new Date(Date.now() - 30*24*60*60*1000).toISOString();
       }
 
       let res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
       
       if (res.status === 410) {
         // Sync token expired - do fresh sync
-        url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=100'
-          + '&timeMin=' + new Date(Date.now() - 7*24*60*60*1000).toISOString();
+        url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=250'
+          + '&timeMin=' + new Date(Date.now() - 30*24*60*60*1000).toISOString();
         res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
       }
 
@@ -69,6 +69,62 @@ Deno.serve(async (req) => {
         (e.description && e.description.includes('Chaos Controller'))
       );
 
+      // Create calendar events for deadlines that don't have events yet
+      const existingCaseIds = new Set(chaosEvents.map(e => e.extendedProperties?.private?.caseId));
+      const eventsToCreate = [];
+
+      for (const deadline of userDeadlines) {
+        const caseInfo = userCases.find(c => c.id === deadline.case_id);
+        if (caseInfo && !existingCaseIds.has(deadline.id)) {
+          eventsToCreate.push({
+            caseId: deadline.id,
+            caseTitle: caseInfo.title,
+            deadlineTitle: deadline.title,
+            deadlineDate: deadline.deadline_date,
+            deadlineType: deadline.deadline_type
+          });
+        }
+      }
+
+      // Create missing events
+      for (const eventData of eventsToCreate) {
+        const event = {
+          summary: `⚖️ Chaos Controller: ${eventData.deadlineTitle}`,
+          description: `Case: ${eventData.caseTitle}\nDeadline Type: ${eventData.deadlineType}\nResponsibility: ${userDeadlines.find(d => d.id === eventData.caseId)?.responsibility || 'user'}\n\nThis deadline was created by Chaos Controller - Consumer Dispute Management`,
+          start: {
+            date: eventData.deadlineDate,
+            timeZone: 'Australia/Sydney'
+          },
+          end: {
+            date: eventData.deadlineDate,
+            timeZone: 'Australia/Sydney'
+          },
+          extendedProperties: {
+            private: {
+              caseId: eventData.caseId,
+              deadlineType: eventData.deadlineType
+            }
+          },
+          reminders: {
+            useDefault: false,
+            overrides: [
+              { method: 'popup', minutes: 2880 }, // 2 days before
+              { method: 'popup', minutes: 1440 }, // 1 day before
+              { method: 'popup', minutes: 60 }    // 1 hour before
+            ]
+          }
+        };
+
+        await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(event)
+        });
+      }
+
       // Update or create sync state
       if (newSyncToken) {
         if (syncRecord) {
@@ -88,6 +144,7 @@ Deno.serve(async (req) => {
       return Response.json({ 
         success: true, 
         events: chaosEvents,
+        syncedCount: eventsToCreate.length,
         syncToken: newSyncToken
       });
     }
