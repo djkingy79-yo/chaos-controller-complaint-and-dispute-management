@@ -13,10 +13,8 @@ export const CONTACT = {
 // Category icons shown in the letterhead
 const CATEGORY_ICONS = [
   { emoji: "🏦", label: "Bank Dispute" },
-  { emoji: "🛡️", label: "Insurance Dispute" },
   { emoji: "🏠", label: "Tenancy Dispute" },
   { emoji: "📡", label: "Telco Dispute" },
-  { emoji: "⚡", label: "Utilities Dispute" },
   { emoji: "⚖️", label: "Other Dispute" },
 ];
 
