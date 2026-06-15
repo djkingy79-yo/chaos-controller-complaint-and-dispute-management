@@ -1,17 +1,27 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FileText, ExternalLink } from "lucide-react";
-import { CARD_FRONT } from "@/components/cases/LetterheadBanner";
+import { FileText, ExternalLink, Printer } from "lucide-react";
+import { CARD_FRONT, buildFooterHTML } from "@/components/cases/LetterheadBanner";
 import { format } from "date-fns";
 
+function buildClientContext(caseItem) {
+  return {
+    name: caseItem?.complainant_name || "",
+    address: caseItem?.complainant_address || "",
+    email: caseItem?.complainant_email || "",
+    phone: caseItem?.complainant_phone || "",
+    accounts: caseItem?.account_number ? [caseItem.account_number] : [],
+  };
+}
+
 export default function LetterPreview({ cases }) {
-  // Find the most recent case with a generated complaint letter
   const caseWithLetter = cases.find((c) => c.complaint_letter);
   if (!caseWithLetter) return null;
 
   const today = format(new Date(), "d MMMM yyyy");
   const letter = caseWithLetter.complaint_letter || "";
   const preview = letter.slice(0, 500) + (letter.length > 500 ? "…" : "");
+  const client = buildClientContext(caseWithLetter);
 
   return (
     <div className="space-y-3">
@@ -28,55 +38,49 @@ export default function LetterPreview({ cases }) {
         </Link>
       </div>
 
-      {/* Letter preview card mimicking the letterhead layout */}
-      <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm">
-        {/* Banner — full image, no crop */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
         <img src={CARD_FRONT} alt="Chaos Controller" className="w-full block" />
 
-        {/* Date + blue rule */}
         <div className="px-5 pt-2 pb-1 flex justify-between items-center">
           <div>
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{caseWithLetter.title}</p>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{caseWithLetter.title}</p>
             {caseWithLetter.organisation_name && (
-              <p className="text-[10px] text-slate-400">vs. {caseWithLetter.organisation_name}</p>
+              <p className="text-[10px] text-muted-foreground">vs. {caseWithLetter.organisation_name}</p>
             )}
           </div>
-          <p className="text-[10px] italic text-slate-400">{today}</p>
+          <p className="text-[10px] italic text-muted-foreground">{today}</p>
         </div>
         <div className="h-px bg-primary mx-5" />
 
-        {/* Complainant summary strip */}
         {(caseWithLetter.complainant_name || caseWithLetter.account_number) && (
-          <div className="px-5 py-2 bg-slate-50 border-b border-slate-100 flex flex-wrap gap-x-5 gap-y-0.5">
+          <div className="px-5 py-2 bg-secondary/30 border-b border-border flex flex-wrap gap-x-5 gap-y-0.5">
             {caseWithLetter.complainant_name && (
-              <span className="text-[10px]"><span className="text-slate-400">From: </span><span className="font-semibold text-slate-700">{caseWithLetter.complainant_name}</span></span>
+              <span className="text-[10px]"><span className="text-muted-foreground">From: </span><span className="font-semibold">{caseWithLetter.complainant_name}</span></span>
             )}
             {caseWithLetter.account_number && (
-              <span className="text-[10px]"><span className="text-slate-400">Account: </span><span className="font-semibold text-slate-700">{caseWithLetter.account_number}</span></span>
+              <span className="text-[10px]"><span className="text-muted-foreground">Account: </span><span className="font-semibold">{caseWithLetter.account_number}</span></span>
             )}
             {caseWithLetter.incident_date && (
-              <span className="text-[10px]"><span className="text-slate-400">Incident: </span><span className="font-semibold text-red-500">{format(new Date(caseWithLetter.incident_date), "d MMM yyyy")}</span></span>
+              <span className="text-[10px]"><span className="text-muted-foreground">Incident: </span><span className="font-semibold text-destructive">{format(new Date(caseWithLetter.incident_date), "d MMM yyyy")}</span></span>
             )}
           </div>
         )}
 
-        {/* Letter body preview */}
-        <div className="px-5 py-4 bg-white">
-          <pre className="whitespace-pre-wrap text-[10px] leading-relaxed text-slate-700 line-clamp-6 overflow-hidden" style={{ fontFamily: "'Times New Roman', Times, serif", maxHeight: 100, overflow: "hidden" }}>
+        <div className="px-5 py-4">
+          <pre className="whitespace-pre-wrap text-[10px] leading-relaxed line-clamp-6 overflow-hidden" style={{ fontFamily: "'Times New Roman', Times, serif", maxHeight: 100, overflow: "hidden" }}>
             {preview}
           </pre>
-          <div className="mt-2 pt-2 border-t border-slate-100">
+          <div className="mt-2 pt-2 border-t border-border flex items-center justify-between">
             <Link to={`/case/${caseWithLetter.id}`} className="text-[10px] text-primary font-medium hover:underline">
               View & print full letter →
+            </Link>
+            <Link to={`/case/${caseWithLetter.id}?tab=print`} className="text-[10px] text-primary font-medium hover:underline flex items-center gap-1">
+              <Printer className="w-3 h-3" /> Print
             </Link>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-2 bg-slate-50 border-t border-slate-100 flex justify-between">
-          <p className="text-[8px] italic text-slate-300">Chaos Controller by Deb King {new Date().getFullYear()} — {caseWithLetter.complainant_name || ""}{caseWithLetter.organisation_name ? ` vs ${caseWithLetter.organisation_name}` : ""}</p>
-          <p className="text-[8px] text-slate-300">p. 1</p>
-        </div>
+        <div className="px-5 py-2 bg-secondary/30 border-t border-border" dangerouslySetInnerHTML={{ __html: buildFooterHTML(caseWithLetter, client, 1, "") }} />
       </div>
     </div>
   );
