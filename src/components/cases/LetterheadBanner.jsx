@@ -10,61 +10,69 @@ export const CONTACT = {
   tagline: "CONFIDENTIAL. SECURE. YOUR INFORMATION STAYS YOURS.",
 };
 
-// Category icons shown in the letterhead (matches business card left column)
+// Category icons shown in the letterhead (matches business card grid)
 const CATEGORY_ICONS = [
   { emoji: "🏛️", label: "Banking Disputes" },
+  { emoji: "🗂️", label: "Evidence Vault" },
+  { emoji: "🤖", label: "AI Case Assistant" },
   { emoji: "🛡️", label: "Insurance Claims" },
+  { emoji: "🕐", label: "Timeline Builder" },
+  { emoji: "🎓", label: "Tutorials & Guides" },
   { emoji: "🏠", label: "NCAT & Residential" },
-  { emoji: "⚖️", label: "Court Preparation" },
+  { emoji: "📊", label: "Progress Analysis" },
+  { emoji: "⚡", label: "Services & Utilities" },
 ];
 
 /** React on-screen letterhead header */
 export function LetterheadHeader({ today }) {
   return (
     <div className="bg-white border-b border-slate-200">
-      {/* Top banner — full business card front image (includes logo + dark strip) */}
-      <div className="w-full overflow-hidden" style={{ height: "160px" }}>
-        <img
-          src={CARD_FRONT}
-          alt="Chaos Controller"
-          className="w-full object-cover object-top"
-        />
+      {/* Top banner image */}
+      <div className="w-full overflow-hidden" style={{ height: "110px" }}>
+        <img src={CARD_FRONT} alt="Chaos Controller" className="w-full object-cover object-top" />
       </div>
 
-      {/* Category icons row */}
-      <div className="px-6 py-2 bg-white flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-slate-100">
+      {/* 3-column icon grid matching the business card */}
+      <div className="px-4 py-2 bg-slate-950 grid grid-cols-3 gap-x-4 gap-y-1.5">
         {CATEGORY_ICONS.map((cat) => (
-          <span key={cat.label} className="flex items-center gap-1.5 text-[10px] text-slate-600 font-medium">
-            <span className="text-base">{cat.emoji}</span>
+          <span key={cat.label} className="flex items-center gap-1.5 text-[9px] text-slate-300 font-medium">
+            <span className="text-sm">{cat.emoji}</span>
             {cat.label}
           </span>
         ))}
-        <span className="ml-auto text-[10px] italic text-slate-400">{today}</span>
+        <span className="col-span-3 text-right text-[8px] italic text-slate-500 mt-0.5">{today}</span>
       </div>
 
-      {/* Blue separator */}
-      <div className="h-0.5 bg-blue-600 mx-6" />
+      {/* Gold separator */}
+      <div className="h-0.5 bg-yellow-500" />
     </div>
   );
 }
 
 /** HTML letterhead for print/PDF — returns an HTML string */
 export function buildLetterheadHTML(caseItem, client, today) {
-  const iconRow = CATEGORY_ICONS.map(
-    (c) => `<span style="font-size:10pt;margin-right:18pt;">${c.emoji} <span style="font-size:9pt;color:#444;font-weight:600;">${c.label}</span></span>`
-  ).join("");
+  // 3-column grid: 3 icons per row
+  const rows = [];
+  for (let i = 0; i < CATEGORY_ICONS.length; i += 3) {
+    const chunk = CATEGORY_ICONS.slice(i, i + 3);
+    const cells = chunk.map(
+      (c) => `<td style="width:33%;padding:3pt 6pt;font-size:8pt;color:#ccc;font-family:Arial,sans-serif;">${c.emoji} <strong style="color:#fff;">${c.label}</strong></td>`
+    ).join("");
+    rows.push(`<tr>${cells}</tr>`);
+  }
+  const iconGrid = `<table style="width:100%;border-collapse:collapse;">${rows.join("")}</table>`;
 
   return `
   <!-- LETTERHEAD BANNER -->
   <div style="margin:-2cm -2cm 0 -2cm;">
-    <div style="width:100%;height:110pt;overflow:hidden;">
+    <div style="width:100%;height:90pt;overflow:hidden;">
       <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;object-fit:cover;object-position:top center;" />
     </div>
-    <div style="padding:6pt 16pt;background:#fff;border-bottom:1pt solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
-      <div>${iconRow}</div>
-      <span style="font-size:9pt;font-style:italic;color:#888;font-family:Arial,sans-serif;">${today}</span>
+    <div style="padding:6pt 16pt 4pt 16pt;background:#0a0f1e;">
+      ${iconGrid}
+      <div style="text-align:right;font-size:8pt;font-style:italic;color:#666;font-family:Arial,sans-serif;margin-top:2pt;">${today}</div>
     </div>
-    <div style="height:2pt;background:#1d4ed8;margin:0 16pt;"></div>
+    <div style="height:2pt;background:#eab308;"></div>
   </div>`;
 }
 
