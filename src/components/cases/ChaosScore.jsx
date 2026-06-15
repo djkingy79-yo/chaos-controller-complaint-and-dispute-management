@@ -1,7 +1,8 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertTriangle, XCircle, ArrowUpRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function scoreFromCase(caseItem, evidence, events) {
   let score = 0;
@@ -68,8 +69,13 @@ const barColor = (score) => {
 };
 
 export default function ChaosScore({ caseItem, evidence, events }) {
+  const navigate = useNavigate();
   const { score, items } = scoreFromCase(caseItem, evidence, events);
   const readyToEscalate = score >= 80 && caseItem.status !== "escalated" && caseItem.status !== "resolved";
+
+  const handleEscalate = () => {
+    navigate(`/case/${caseItem.id}?tab=bundle`);
+  };
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 space-y-4">
@@ -105,9 +111,9 @@ export default function ChaosScore({ caseItem, evidence, events }) {
             {caseItem.escalation_body && (
               <p className="text-xs font-medium text-foreground mb-2">→ {caseItem.escalation_body}</p>
             )}
-            <Badge className="bg-success text-success-foreground text-xs px-3 py-1 cursor-default">
-              <ArrowUpRight className="w-3 h-3 mr-1" /> Green Light — Escalate Now
-            </Badge>
+            <Button onClick={handleEscalate} className="bg-success text-success-foreground hover:bg-success/90 text-xs px-4 py-2 h-auto gap-1.5">
+              <ArrowUpRight className="w-3 h-3" /> Green Light — Escalate Now
+            </Button>
           </div>
         </div>
       ) : score < 80 ? (
