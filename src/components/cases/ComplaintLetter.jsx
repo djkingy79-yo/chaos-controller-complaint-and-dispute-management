@@ -134,7 +134,7 @@ LETTER FORMAT INSTRUCTIONS:
       <div class="letter-header"><img src="${CARD_FRONT}" alt="Chaos Controller" /></div>
       <div class="letter-body">
         <pre>${letter}</pre>
-        ${buildFooterHTML(caseItem, client, null)}
+        ${buildFooterHTML(caseItem, client, 1, "")}
       </div>
     </body></html>`);
     win.document.close();
@@ -217,17 +217,17 @@ LETTER FORMAT INSTRUCTIONS:
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50">
-          <div className="flex justify-between items-start">
+        <div className="px-6 py-3 border-t border-slate-200 bg-white">
+          <div className="flex justify-between items-end">
             <div>
-              <p className="text-[9pt] italic text-slate-400">
-                Chaos Controller by Deb King {new Date().getFullYear()}{client.name ? ` — ${client.name} vs ${caseItem.organisation_name || ""}` : ""} — {caseItem.title}
+              <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555", margin: 0 }}>
+                This App Chaos Controller was designed and developed by Deb King {new Date().getFullYear()}
               </p>
-              <p className="text-[8pt] text-slate-300 mt-0.5">
-                Chaos Controller™ provides organisational and document management assistance only. Not legal advice.
+              <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555", margin: "2px 0 0 0" }}>
+                {client.name ? `${client.name} vs ${caseItem.organisation_name || ""}` : caseItem.organisation_name || ""}{caseItem.title ? ` — ${caseItem.title}` : ""} {new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" })}
               </p>
             </div>
-            <p className="text-[9pt] text-slate-400 ml-4 shrink-0">p. 1</p>
+            <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555", margin: 0, paddingLeft: "12pt", whiteSpace: "nowrap" }}>Page 1</p>
           </div>
         </div>
       </div>

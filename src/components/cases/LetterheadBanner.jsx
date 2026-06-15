@@ -19,21 +19,21 @@ export function buildLetterheadHTML() {
   </div>`;
 }
 
-export function buildFooterHTML(caseItem, client, pageNum) {
+export function buildFooterHTML(caseItem, client, pageNum, totalPages) {
   const year = new Date().getFullYear();
   const name = client?.name || caseItem?.complainant_name || "";
   const org = caseItem?.organisation_name || "";
   const title = caseItem?.title || "";
-  const text = `Chaos Controller by Deb King ${year}${name ? ` — ${name} vs ${org}` : ""} — ${title}`;
-  const disclaimer = "Chaos Controller™ provides organisational and document management assistance only. It does not constitute legal advice.";
+  const docDate = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const pageText = pageNum && totalPages ? `Page ${pageNum} of ${totalPages}` : pageNum ? `Page ${pageNum}` : "";
+  const line1 = `This App Chaos Controller was designed and developed by Deb King ${year}`;
+  const line2 = `${name ? `${name} vs ${org}` : org}${title ? ` — ${title}` : ""} ${docDate}`;
   return `
-  <div style="font-size:9pt;font-style:italic;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#888;font-family:Arial,sans-serif;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-      <div>
-        <div>${text}</div>
-        <div style="font-size:8pt;margin-top:2pt;color:#aaa;">${disclaimer}</div>
-      </div>
-      ${pageNum ? `<div style="font-size:9pt;color:#888;white-space:nowrap;padding-left:12pt;">p. ${pageNum}</div>` : ""}
+  <div style="font-size:9pt;font-style:italic;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#555;font-family:'Times New Roman',Times,serif;display:flex;justify-content:space-between;align-items:flex-end;">
+    <div>
+      <div>${line1}</div>
+      <div>${line2}</div>
     </div>
+    ${pageText ? `<div style="white-space:nowrap;padding-left:12pt;">${pageText}</div>` : ""}
   </div>`;
 }
