@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FileText, ExternalLink } from "lucide-react";
-import { CARD_FRONT, CONTACT } from "@/components/cases/LetterheadBanner";
+import { CARD_FRONT } from "@/components/cases/LetterheadBanner";
 import { format } from "date-fns";
 
 export default function LetterPreview({ cases }) {
@@ -30,24 +30,8 @@ export default function LetterPreview({ cases }) {
 
       {/* Letter preview card mimicking the letterhead layout */}
       <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm">
-        {/* Banner */}
-        <div className="w-full overflow-hidden" style={{ maxHeight: 80 }}>
-          <img
-            src={CARD_FRONT}
-            alt="Chaos Controller"
-            className="w-full object-cover object-top"
-            style={{ maxHeight: 80 }}
-          />
-        </div>
-
-        {/* Contact strip */}
-        <div className="px-4 py-1.5 bg-slate-900 flex flex-wrap items-center gap-x-4 gap-y-0.5">
-          <span className="text-[9px] text-yellow-400">🌐 {CONTACT.website}</span>
-          <span className="text-[9px] text-slate-300">✉ {CONTACT.email}</span>
-          <span className="text-[9px] text-slate-300">📞 {CONTACT.phone}</span>
-          <span className="text-[9px] font-bold text-yellow-500 ml-auto uppercase">{CONTACT.tagline}</span>
-        </div>
-        <div className="h-0.5 bg-yellow-500" />
+        {/* Banner — full image, no crop */}
+        <img src={CARD_FRONT} alt="Chaos Controller" className="w-full block" />
 
         {/* Date + blue rule */}
         <div className="px-5 pt-2 pb-1 flex justify-between items-center">
