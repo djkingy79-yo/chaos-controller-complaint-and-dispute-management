@@ -150,10 +150,10 @@ export default function Welcome() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="text-center mb-16"
           >
-            <p className="text-lg sm:text-xl text-white max-w-3xl mx-auto leading-relaxed">
-              <span className="text-[#FFD700] font-bold">THEY HAD YOUR LOYALTY.</span>
+            <p className="text-lg sm:text-xl text-white max-w-3xl mx-auto leading-relaxed font-black">
+              <span className="text-[#FFD700] font-black">THEY HAD YOUR LOYALTY.</span>
               {" "}NOW YOU DESERVE THEIR{" "}
-              <span className="text-[#FFD700] font-bold">ACCOUNTABILITY.</span>
+              <span className="text-[#FFD700] font-black">ACCOUNTABILITY.</span>
             </p>
           </motion.div>
 
@@ -165,17 +165,17 @@ export default function Welcome() {
             className="max-w-5xl mx-auto mb-16"
           >
             {/* Main Value Proposition */}
-            <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-black border border-gray-700 rounded-2xl p-6 sm:p-10 mb-8">
-              <h2 className="text-2xl sm:text-3xl font-display font-bold text-white mb-6 text-center">
+            <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-[#FFD700] rounded-2xl p-6 sm:p-10 mb-8">
+              <h2 className="text-2xl sm:text-3xl font-display font-black text-white mb-6 text-center">
                 THE COMPLETE COMPLAINT HANDLING SYSTEM
               </h2>
               
-              <div className="space-y-6 text-gray-300">
+              <div className="space-y-6 text-white">
                 <p className="text-base sm:text-lg leading-relaxed text-center max-w-3xl mx-auto">
-                  <span className="text-white font-bold text-xl">Chaos Controller is your complete dispute resolution partner—from first complaint to final resolution.</span>
+                  <span className="text-white font-black text-xl">Chaos Controller is your complete dispute resolution partner—from first complaint to final resolution.</span>
                 </p>
                 
-                <p className="text-base sm:text-lg leading-relaxed">
+                <p className="text-base sm:text-lg leading-relaxed font-bold">
                   Whether your bank's charging unfair fees, your insurer rejected your claim, your landlord's refusing maintenance, or your energy provider's tripled your bill—this app gives you the complete toolkit to fight back and win.
                 </p>
 
@@ -322,14 +322,14 @@ export default function Welcome() {
           >
             <Button 
               size="lg" 
-              className="bg-[#1E73E8] hover:bg-[#1E73E8]/90 text-white px-8 py-6 text-lg font-semibold gap-2 border-0"
+              className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black px-8 py-6 text-lg font-black gap-2 border-2 border-[#FFD700]"
               onClick={() => navigate("/register")}
             >
               Start Free Trial <ArrowRight className="w-5 h-5" />
             </Button>
             <Button 
               size="lg" 
-              className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold"
+              className="bg-[#C0392B] border-2 border-[#C0392B] text-white hover:bg-[#C0392B]/90 px-8 py-6 text-lg font-black"
               onClick={() => navigate("/login")}
             >
               Sign In
@@ -340,10 +340,10 @@ export default function Welcome() {
 
       {/* Features Section */}
       <div className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-3xl sm:text-4xl font-display font-bold text-center mb-4 text-white">
+        <h2 className="text-3xl sm:text-4xl font-display font-black text-center mb-4 text-white">
           TAKE BACK CONTROL
         </h2>
-        <div className="w-24 h-1 bg-[#C0392B] mx-auto mb-12" />
+        <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-12" />
         
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, idx) => {
@@ -354,13 +354,13 @@ export default function Welcome() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * idx, duration: 0.6 }}
-                className={`bg-black border ${feature.borderColor} p-6 rounded-xl hover:border-opacity-60 transition-all`}
+                className="bg-gradient-to-br from-black to-gray-900 border-2 border-[#FFD700] p-6 rounded-xl hover:border-[#C0392B] transition-all"
               >
-                <div className={`${feature.bgColor} w-14 h-14 rounded-lg flex items-center justify-center mb-4`}>
-                  <Icon className="w-8 h-8" style={{ color: feature.color }} />
+                <div className="bg-[#FFD700] w-14 h-14 rounded-lg flex items-center justify-center mb-4">
+                  <Icon className="w-8 h-8 text-black" />
                 </div>
-                <h3 className="font-heading font-bold text-base mb-2 text-white tracking-wide">{feature.title}</h3>
-                <p className="text-sm text-gray-400">{feature.description}</p>
+                <h3 className="font-heading font-black text-lg mb-3 text-white tracking-wide">{feature.title}</h3>
+                <p className="text-base text-white font-bold leading-relaxed">{feature.description}</p>
               </motion.div>
             );
           })}
@@ -369,10 +369,10 @@ export default function Welcome() {
 
       {/* Dispute Types */}
       <div className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-3xl sm:text-4xl font-display font-bold text-center mb-4 text-white">
+        <h2 className="text-3xl sm:text-4xl font-display font-black text-center mb-4 text-white">
           BUILT FOR EVERY DISPUTE
         </h2>
-        <div className="w-24 h-1 bg-[#C0392B] mx-auto mb-12" />
+        <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-12" />
         
         <div className="flex flex-wrap justify-center gap-6">
           {disputeTypes.map((type, idx) => {
@@ -383,12 +383,12 @@ export default function Welcome() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 * idx, duration: 0.5 }}
-                className="flex items-center gap-3 bg-black border border-gray-800 px-6 py-4 rounded-lg hover:border-opacity-50 transition-all"
+                className="flex items-center gap-3 bg-gradient-to-r from-gray-900 to-black border-2 border-[#FFD700] px-6 py-4 rounded-lg hover:border-[#C0392B] transition-all"
               >
-                <div className="w-10 h-10 rounded flex items-center justify-center" style={{ backgroundColor: `${type.color}20` }}>
-                  <Icon className="w-6 h-6" style={{ color: type.color }} />
+                <div className="w-10 h-10 bg-[#FFD700] rounded flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-black" />
                 </div>
-                <span className="font-heading font-bold text-white tracking-wide">{type.label}</span>
+                <span className="font-heading font-black text-white tracking-wide text-lg">{type.label}</span>
               </motion.div>
             );
           })}
@@ -397,11 +397,11 @@ export default function Welcome() {
 
       {/* Pricing Section */}
       <div className="max-w-7xl mx-auto px-4 py-20">
-        <h2 className="text-3xl sm:text-4xl font-display font-bold text-center mb-4 text-white">
+        <h2 className="text-3xl sm:text-4xl font-display font-black text-center mb-4 text-white">
           CHOOSE YOUR PLAN
         </h2>
-        <div className="w-24 h-1 bg-[#C0392B] mx-auto mb-4" />
-        <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+        <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-4" />
+        <p className="text-center text-white font-bold mb-12 max-w-2xl mx-auto text-lg">
           Start with a 7-day free trial. Cancel anytime. No hidden fees.
         </p>
         
@@ -412,34 +412,34 @@ export default function Welcome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * idx, duration: 0.6 }}
-              className={`relative bg-black border ${plan.popular ? 'border-[#FFD700]' : 'border-gray-800'} rounded-2xl p-8 ${plan.popular ? 'ring-2 ring-[#FFD700]/50' : ''}`}
+              className={`relative bg-gradient-to-br from-black to-gray-900 border-2 ${plan.popular ? 'border-[#FFD700]' : 'border-[#C0392B]'} rounded-2xl p-8 ${plan.popular ? 'ring-2 ring-[#FFD700]/50' : ''}`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FFD700] text-black px-4 py-1 rounded-full text-xs font-bold">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#FFD700] text-black px-4 py-1 rounded-full text-xs font-black">
                   MOST POPULAR
                 </div>
               )}
               
               <div className="text-center mb-6">
-                <h3 className="font-heading font-bold text-2xl mb-2 text-white">{plan.name}</h3>
-                <p className="text-sm text-gray-400 mb-4">{plan.description}</p>
+                <h3 className="font-heading font-black text-2xl mb-2 text-white">{plan.name}</h3>
+                <p className="text-base text-white font-bold mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center">
-                  <span className="text-4xl font-display font-bold text-[#FFD700]">{plan.price}</span>
-                  <span className="text-gray-400 ml-1">{plan.period}</span>
+                  <span className="text-4xl font-display font-black text-[#FFD700]">{plan.price}</span>
+                  <span className="text-white font-bold ml-1">{plan.period}</span>
                 </div>
               </div>
               
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#2ECC71] shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-300">{feature}</span>
+                    <Check className="w-5 h-5 text-[#FFD700] shrink-0 mt-0.5" />
+                    <span className="text-base text-white font-bold">{feature}</span>
                   </li>
                 ))}
               </ul>
               
               <Button 
-                className={`w-full ${plan.popular ? 'bg-[#FFD700] hover:bg-[#FFD700]/90 text-black' : 'bg-gray-800 hover:bg-gray-700 text-white'}`}
+                className={`w-full border-2 ${plan.popular ? 'bg-[#FFD700] hover:bg-[#FFD700]/90 text-black border-[#FFD700]' : 'bg-[#C0392B] hover:bg-[#C0392B]/90 text-white border-[#C0392B]'}`}
                 size="lg"
                 onClick={() => navigate("/register")}
               >
@@ -466,14 +466,16 @@ export default function Welcome() {
         </div>
       </div>
 
-      {/* Legal Links */}
-      <div className="max-w-7xl mx-auto px-4 py-8 bg-black">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} Chaos Controller. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <a href="/terms" className="hover:text-[#FFD700] transition-colors">Terms & Conditions</a>
-            <a href="/privacy" className="hover:text-[#FFD700] transition-colors">Privacy Policy</a>
-            <a href="mailto:chaoscontrollerapp@gmail.com" className="hover:text-[#FFD700] transition-colors">Contact</a>
+      {/* Footer Branding */}
+      <div className="bg-gradient-to-r from-[#C0392B] via-black to-[#C0392B] py-12 border-t-2 border-[#FFD700]">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-display font-black text-white mb-2">CHAOS CONTROLLER</h2>
+          <p className="text-[#FFD700] font-bold text-lg mb-6">Designed & Developed by Deb King</p>
+          <p className="text-white font-bold text-base mb-6">Glenmore Park 2025</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-base font-bold">
+            <a href="/terms" className="text-white hover:text-[#FFD700] transition-colors">Terms & Conditions</a>
+            <a href="/privacy" className="text-white hover:text-[#FFD700] transition-colors">Privacy Policy</a>
+            <a href="mailto:chaoscontrollerapp@gmail.com" className="text-white hover:text-[#FFD700] transition-colors">Contact</a>
           </div>
         </div>
       </div>
