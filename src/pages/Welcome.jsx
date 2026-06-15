@@ -10,7 +10,12 @@ import {
   FileText,
   AlertTriangle,
   ArrowRight,
-  Check
+  Check,
+  Home,
+  Building2,
+  Phone,
+  Zap,
+  Briefcase
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -157,63 +162,115 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.8 }}
-            className="max-w-4xl mx-auto mb-16"
+            className="max-w-5xl mx-auto mb-16"
           >
-            <div className="bg-gradient-to-b from-gray-900/80 to-black border border-gray-800 rounded-2xl p-6 sm:p-8">
-              <h2 className="text-2xl sm:text-3xl font-display font-bold text-[#FFD700] mb-6 text-center">
-                WHY CHAOS CONTROLLER EXISTS
+            {/* Main Value Proposition */}
+            <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-black border border-gray-700 rounded-2xl p-6 sm:p-10 mb-8">
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-white mb-6 text-center">
+                THE COMPLETE COMPLAINT HANDLING SYSTEM
               </h2>
               
               <div className="space-y-6 text-gray-300">
-                <p className="text-base sm:text-lg leading-relaxed">
-                  <span className="text-white font-bold">You've been ignored. Dismissed. Told to wait.</span> Banks, insurers, landlords, telcos—they count on you giving up. They have entire departments designed to wear you down until you walk away.
+                <p className="text-base sm:text-lg leading-relaxed text-center max-w-3xl mx-auto">
+                  <span className="text-white font-bold text-xl">Chaos Controller is your complete dispute resolution partner—from first complaint to final resolution.</span>
                 </p>
                 
                 <p className="text-base sm:text-lg leading-relaxed">
-                  <span className="text-white font-bold">But here's the truth:</span> They don't take you seriously because you haven't gotten serious yet. Not because you're wrong. Not because you don't have a case. But because you lacked the tools, the structure, and the evidence to make them listen.
+                  Whether your bank's charging unfair fees, your insurer rejected your claim, your landlord's refusing maintenance, or your energy provider's tripled your bill—this app gives you the complete toolkit to fight back and win.
                 </p>
-                
-                <p className="text-base sm:text-lg leading-relaxed">
-                  <span className="text-white font-bold">Chaos Controller changes that.</span> This app was built for one reason: to give you the same firepower they have. To organize your evidence like a lawyer would. To track every deadline, every response, every broken promise. To generate professional complaint letters that demand attention. To build tribunal-ready bundles that make them think twice.
-                </p>
-                
-                <div className="bg-[#C0392B]/20 border border-[#C0392B]/30 rounded-xl p-5 mt-6">
-                  <p className="text-white font-bold text-center text-lg">
+
+                <div className="bg-gradient-to-r from-[#FFD700]/10 via-[#FFD700]/5 to-[#FFD700]/10 border border-[#FFD700]/30 rounded-xl p-6 my-8">
+                  <p className="text-white font-bold text-center text-xl mb-2">
                     NO ONE TAKES YOU SERIOUS TILL YOU GET SERIOUS.
                   </p>
-                  <p className="text-gray-400 text-center mt-2 text-sm">
+                  <p className="text-gray-400 text-center">
                     This is how you get serious.
                   </p>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-4 mt-6">
-                  <div className="bg-black/50 border border-gray-800 rounded-lg p-4">
-                    <h3 className="text-white font-bold mb-2 flex items-center gap-2">
-                      <Check className="w-5 h-5 text-[#2ECC71]" />
-                      WHAT THIS APP DOES
-                    </h3>
-                    <ul className="text-sm space-y-2 text-gray-400">
-                      <li>• Organizes all your evidence in one secure vault</li>
-                      <li>• AI scans documents and extracts key details automatically</li>
-                      <li>• Builds a chronological timeline of every interaction</li>
-                      <li>• Generates professional complaint letters</li>
-                      <li>• Tracks response deadlines and sends reminders</li>
-                      <li>• Creates tribunal-ready escalation bundles</li>
-                    </ul>
+                <div className="grid sm:grid-cols-3 gap-4 mt-8">
+                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#3B82F6]/20 rounded-lg flex items-center justify-center mb-3">
+                      <Shield className="w-6 h-6 text-[#3B82F6]" />
+                    </div>
+                    <h3 className="text-white font-bold mb-2">BANKING DISPUTES</h3>
+                    <p className="text-sm text-gray-400">Unauthorized charges, failed transfers, account fees, loan disputes—escalate to AFCA with confidence.</p>
                   </div>
-                  <div className="bg-black/50 border border-gray-800 rounded-lg p-4">
-                    <h3 className="text-white font-bold mb-2 flex items-center gap-2">
-                      <Check className="w-5 h-5 text-[#2ECC71]" />
-                      HOW IT HELPS YOU WIN
-                    </h3>
-                    <ul className="text-sm space-y-2 text-gray-400">
-                      <li>• Shows them you're organized and prepared</li>
-                      <li>• Documents everything they can't dispute</li>
-                      <li>• Forces accountability with clear deadlines</li>
-                      <li>• Escalates to AFCA, TIO, NCAT with one click</li>
-                      <li>• Gives you confidence in every interaction</li>
-                      <li>• Turns chaos into control</li>
-                    </ul>
+                  
+                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#C0392B]/20 rounded-lg flex items-center justify-center mb-3">
+                      <Home className="w-6 h-6 text-[#C0392B]" />
+                    </div>
+                    <h3 className="text-white font-bold mb-2">INSURANCE CLAIMS</h3>
+                    <p className="text-sm text-gray-400">Rejected claims, delayed payouts, undervalued assessments—force accountability with documented evidence.</p>
+                  </div>
+                  
+                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#27AE60]/20 rounded-lg flex items-center justify-center mb-3">
+                      <Building2 className="w-6 h-6 text-[#27AE60]" />
+                    </div>
+                    <h3 className="text-white font-bold mb-2">TENANCY ISSUES</h3>
+                    <p className="text-sm text-gray-400">Unfair bonds, neglected maintenance, illegal evictions—build NCAT-ready cases with complete documentation.</p>
+                  </div>
+                  
+                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#9B59B6]/20 rounded-lg flex items-center justify-center mb-3">
+                      <Phone className="w-6 h-6 text-[#9B59B6]" />
+                    </div>
+                    <h3 className="text-white font-bold mb-2">TELCO PROBLEMS</h3>
+                    <p className="text-sm text-gray-400">Billing errors, service failures, contract disputes—escalate to TIO with professional complaint bundles.</p>
+                  </div>
+                  
+                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#F39C12]/20 rounded-lg flex items-center justify-center mb-3">
+                      <Zap className="w-6 h-6 text-[#F39C12]" />
+                    </div>
+                    <h3 className="text-white font-bold mb-2">UTILITIES</h3>
+                    <p className="text-sm text-gray-400">Power, water, gas—incorrect billing, service interruptions, disconnection threats—fight back organized.</p>
+                  </div>
+                  
+                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#1ABC9C]/20 rounded-lg flex items-center justify-center mb-3">
+                      <Briefcase className="w-6 h-6 text-[#1ABC9C]" />
+                    </div>
+                    <h3 className="text-white font-bold mb-2">AND MORE</h3>
+                    <p className="text-sm text-gray-400">Any consumer dispute—this system works for all industries. One platform, complete control.</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-700 pt-8 mt-8">
+                  <h3 className="text-xl font-display font-bold text-white mb-4 text-center">
+                    EVERYTHING YOU NEED IN ONE PLACE
+                  </h3>
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-[#FFD700] font-bold mb-3 flex items-center gap-2">
+                        <Check className="w-5 h-5" />
+                        WHAT YOU GET
+                      </h4>
+                      <ul className="text-sm space-y-2 text-gray-400">
+                        <li>• Secure evidence vault with AI document scanning</li>
+                        <li>• Automatic timeline builder tracking every interaction</li>
+                        <li>• Professional complaint letter generator</li>
+                        <li>• Deadline tracking with smart reminders</li>
+                        <li>• Tribunal-ready escalation bundles</li>
+                        <li>• Direct links to AFCA, TIO, NCAT, Energy & Water Ombudsman</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-[#FFD700] font-bold mb-3 flex items-center gap-2">
+                        <Check className="w-5 h-5" />
+                        HOW IT WORKS
+                      </h4>
+                      <ul className="text-sm space-y-2 text-gray-400">
+                        <li>1. Upload your documents and evidence</li>
+                        <li>2. AI extracts key details automatically</li>
+                        <li>3. Answer guided questions about your dispute</li>
+                        <li>4. Generate professional complaint letters</li>
+                        <li>5. Track responses and deadlines</li>
+                        <li>6. Escalate with complete tribunal bundles if needed</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
