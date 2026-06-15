@@ -10,33 +10,38 @@ export const CONTACT = {
   tagline: "CONFIDENTIAL. SECURE. YOUR INFORMATION STAYS YOURS.",
 };
 
-// Category icons shown in the letterhead (matches business card grid)
-// Column layout: col1 = Banking, Insurance, NCAT, Utilities | col2 = Evidence Vault, Timeline, Progress | col3 = AI Assistant, Tutorials
-const CATEGORY_ICONS = [
-  // col 1
-  { emoji: "🏛️", label: "Banking Disputes",     sub: "Transaction issues, fraud, fees, hardship & more." },
-  // col 2
-  { emoji: "🗂️", label: "Evidence Vault",        sub: "Securely store, organise & tag all your documents." },
-  // col 3
-  { emoji: "🤖", label: "AI Case Assistant",     sub: "Smart guidance, letter generation & analysis." },
-  // col 1
-  { emoji: "🛡️", label: "Insurance Claims",      sub: "Denied claims, delays, payout disputes & more." },
-  // col 2
-  { emoji: "🕐", label: "Timeline Builder",      sub: "AI-powered chronological timelines & event tracking." },
-  // col 3
-  { emoji: "🎓", label: "Tutorials & Guides",    sub: "Step-by-step video guides & helpful resources." },
-  // col 1
-  { emoji: "🏠", label: "NCAT & Residential",    sub: "Repairs, bonds, eviction notices, rent disputes." },
-  // col 2
-  { emoji: "📊", label: "Progress Analysis",     sub: "Track responses, deadlines & case strength." },
-  // col 3 — empty placeholder to keep grid shape
-  { emoji: "",   label: "",                       sub: "" },
-  // col 1
-  { emoji: "⚡", label: "Services & Utilities",  sub: "Energy, water, telco disputes & more." },
-  // col 2 & 3 — empty
-  { emoji: "",   label: "",                       sub: "" },
-  { emoji: "",   label: "",                       sub: "" },
+// Column 1: Banking, Insurance, NCAT, Utilities
+// Column 2: Evidence Vault, Timeline, Progress
+// Column 3: AI Assistant, Tutorials
+// Grid flows left-to-right per row, so we interleave columns manually:
+// Row 1: col1[0], col2[0], col3[0]
+// Row 2: col1[1], col2[1], col3[1]
+// Row 3: col1[2], col2[2], col3[2] (col3 empty)
+// Row 4: col1[3], col2 empty, col3 empty
+const COL1 = [
+  { emoji: "🏛️", label: "Banking Disputes",    sub: "Transaction issues, fraud, fees, hardship & more." },
+  { emoji: "🛡️", label: "Insurance Claims",     sub: "Denied claims, delays, payout disputes & more." },
+  { emoji: "🏠", label: "NCAT & Residential",   sub: "Repairs, bonds, eviction notices, rent disputes." },
+  { emoji: "⚡", label: "Services & Utilities", sub: "Energy, water, telco disputes & more." },
 ];
+const COL2 = [
+  { emoji: "🗂️", label: "Evidence Vault",      sub: "Securely store, organise & tag all your documents." },
+  { emoji: "🕐", label: "Timeline Builder",    sub: "AI-powered chronological timelines & event tracking." },
+  { emoji: "📊", label: "Progress Analysis",   sub: "Track responses, deadlines & case strength." },
+];
+const COL3 = [
+  { emoji: "🤖", label: "AI Case Assistant",   sub: "Smart guidance, letter generation & analysis." },
+  { emoji: "🎓", label: "Tutorials & Guides",  sub: "Step-by-step video guides & helpful resources." },
+];
+
+const EMPTY = { emoji: "", label: "", sub: "" };
+const numRows = Math.max(COL1.length, COL2.length, COL3.length);
+const CATEGORY_ICONS = [];
+for (let i = 0; i < numRows; i++) {
+  CATEGORY_ICONS.push(COL1[i] || EMPTY);
+  CATEGORY_ICONS.push(COL2[i] || EMPTY);
+  CATEGORY_ICONS.push(COL3[i] || EMPTY);
+}
 
 /** React on-screen letterhead header */
 export function LetterheadHeader({ today }) {
