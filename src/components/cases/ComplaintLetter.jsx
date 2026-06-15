@@ -179,21 +179,7 @@ LETTER FORMAT INSTRUCTIONS:
         {/* Header: business card banner + contact strip */}
         <LetterheadHeader today={today} />
 
-        {/* Complainant & recipient details block */}
-        {(client.name || client.address || client.email || client.phone || caseItem.organisation_name) && (
-          <div className="px-6 py-3 bg-slate-50 border-b border-slate-100 grid grid-cols-2 gap-x-6 gap-y-1">
-            {client.name    && <p className="text-xs"><span className="text-slate-500">From: </span><span className="font-semibold text-slate-800">{client.name}</span></p>}
-            {client.address && <p className="text-xs"><span className="text-slate-500">Address: </span><span className="font-medium text-slate-700">{client.address}</span></p>}
-            {client.email   && <p className="text-xs"><span className="text-slate-500">Email: </span><span className="font-medium text-slate-700">{client.email}</span></p>}
-            {client.phone   && <p className="text-xs"><span className="text-slate-500">Mobile: </span><span className="font-medium text-slate-700">{client.phone}</span></p>}
-            {client.accounts?.length > 0 && <p className="text-xs col-span-2"><span className="text-slate-500">Account: </span><span className="font-semibold text-slate-800">{client.accounts.join(", ")}</span></p>}
-            {client.policies?.length > 0 && <p className="text-xs col-span-2"><span className="text-slate-500">Reference: </span><span className="font-medium text-slate-700">{client.policies.join(", ")}</span></p>}
-            {caseItem.incident_date && <p className="text-xs"><span className="text-slate-500">Incident Date: </span><span className="font-semibold text-red-600">{format(new Date(caseItem.incident_date), "d MMMM yyyy")}</span></p>}
-            {caseItem.complaint_handler_name && <p className="text-xs"><span className="text-slate-500">Attn: </span><span className="font-medium text-slate-700">{caseItem.complaint_handler_name}</span></p>}
-            {caseItem.organisation_name && <p className="text-xs col-span-2"><span className="text-slate-500">To: </span><span className="font-semibold text-slate-800">{caseItem.organisation_name}</span>{caseItem.organisation_complaints_email ? <span className="text-slate-400 ml-2">({caseItem.organisation_complaints_email})</span> : ""}</p>}
-            {caseItem.organisation_complaints_address && <p className="text-xs col-span-2 text-slate-500">{caseItem.organisation_complaints_address}</p>}
-          </div>
-        )}
+
 
         {/* Letter body */}
         <div className="px-8 py-6 bg-white">

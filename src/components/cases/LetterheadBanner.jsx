@@ -10,19 +10,29 @@ export const CONTACT = {
   tagline: "CONFIDENTIAL. SECURE. YOUR INFORMATION STAYS YOURS.",
 };
 
+// Category icons shown in the letterhead
+const CATEGORY_ICONS = [
+  { emoji: "🏦", label: "Bank Dispute" },
+  { emoji: "🛡️", label: "Insurance Dispute" },
+  { emoji: "🏠", label: "Tenancy Dispute" },
+  { emoji: "📡", label: "Telco Dispute" },
+  { emoji: "⚡", label: "Utilities Dispute" },
+  { emoji: "⚖️", label: "Other Dispute" },
+];
+
 /** React on-screen letterhead header */
 export function LetterheadHeader({ today }) {
   return (
     <div className="bg-white border-b border-slate-200">
-      {/* Top banner — business card front image */}
-      <div className="w-full overflow-hidden" style={{ maxHeight: 110 }}>
+      {/* Top banner — business card front image, no fixed height */}
+      <div className="w-full overflow-hidden">
         <img
           src={CARD_FRONT}
           alt="Chaos Controller"
           className="w-full object-cover object-top"
-          style={{ maxHeight: 110 }}
         />
       </div>
+
       {/* Contact strip — card back details */}
       <div className="px-6 py-2 bg-slate-900 flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
@@ -33,46 +43,48 @@ export function LetterheadHeader({ today }) {
         </div>
         <span className="text-[9px] font-bold text-yellow-500 uppercase tracking-wide">{CONTACT.tagline}</span>
       </div>
+
       {/* Gold rule */}
       <div className="h-0.5 bg-yellow-500" />
-      {/* Date line */}
-      <div className="px-6 py-1.5 bg-white flex justify-end">
-        <span className="text-xs text-slate-500 italic">{today}</span>
+
+      {/* Category icons row */}
+      <div className="px-6 py-2 bg-slate-50 flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-slate-100">
+        {CATEGORY_ICONS.map((cat) => (
+          <span key={cat.label} className="flex items-center gap-1 text-[10px] text-slate-500">
+            <span className="text-sm">{cat.emoji}</span>
+            {cat.label}
+          </span>
+        ))}
+        <span className="ml-auto text-[10px] italic text-slate-400">{today}</span>
       </div>
+
       {/* Blue separator */}
-      <div className="h-0.5 bg-primary mx-6" />
+      <div className="h-0.5 bg-primary mx-6 mt-1" />
     </div>
   );
 }
 
 /** HTML letterhead for print/PDF — returns an HTML string */
 export function buildLetterheadHTML(caseItem, client, today) {
-  const clientRows = [
-    client?.name    ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">From:</td><td style="font-weight:bold;font-size:11pt;">${client.name}</td></tr>` : "",
-    client?.address ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">Address:</td><td style="font-size:11pt;">${client.address}</td></tr>` : "",
-    client?.email   ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">Email:</td><td style="font-size:11pt;">${client.email}</td></tr>` : "",
-    client?.phone   ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">Mobile:</td><td style="font-size:11pt;">${client.phone}</td></tr>` : "",
-    client?.accounts?.length ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">Account(s):</td><td style="font-weight:bold;font-size:11pt;">${client.accounts.join(", ")}</td></tr>` : "",
-    client?.policies?.length ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">Reference(s):</td><td style="font-size:11pt;">${client.policies.join(", ")}</td></tr>` : "",
-    caseItem?.incident_date ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">Incident Date:</td><td style="font-weight:bold;color:#cc0000;font-size:11pt;">${caseItem.incident_date}</td></tr>` : "",
-    caseItem?.complaint_handler_name ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">Attn:</td><td style="font-size:11pt;">${caseItem.complaint_handler_name}</td></tr>` : "",
-    caseItem?.organisation_name ? `<tr><td style="color:#555;padding:2pt 14pt 2pt 0;font-size:11pt;white-space:nowrap;">To:</td><td style="font-weight:bold;font-size:11pt;">${caseItem.organisation_name}${caseItem.organisation_complaints_email ? ` (${caseItem.organisation_complaints_email})` : ""}</td></tr>` : "",
-    caseItem?.organisation_complaints_address ? `<tr><td></td><td style="color:#555;font-size:10pt;">${caseItem.organisation_complaints_address}</td></tr>` : "",
-  ].filter(Boolean).join("");
+  const iconRow = CATEGORY_ICONS.map(
+    (c) => `<span style="font-size:10pt;margin-right:14pt;">${c.emoji} <span style="font-size:8pt;color:#555;">${c.label}</span></span>`
+  ).join("");
 
   return `
   <!-- LETTERHEAD BANNER -->
   <div style="margin:-2cm -2cm 0 -2cm;">
-    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;max-height:90pt;object-fit:cover;object-position:top;display:block;" />
+    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;" />
     <div style="background:#111;padding:6pt 16pt;display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:9pt;color:#facc15;font-family:Arial,sans-serif;">🌐 ${CONTACT.website} &nbsp;|&nbsp; ✉ ${CONTACT.email} &nbsp;|&nbsp; 📞 ${CONTACT.phone} &nbsp;|&nbsp; 📍 ${CONTACT.location}</span>
       <span style="font-size:8pt;font-weight:bold;color:#facc15;font-family:Arial,sans-serif;text-transform:uppercase;">${CONTACT.tagline}</span>
     </div>
     <div style="height:2pt;background:#eab308;"></div>
+    <div style="padding:6pt 16pt;background:#f8fafc;border-bottom:1pt solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+      <div>${iconRow}</div>
+      <span style="font-size:9pt;font-style:italic;color:#888;font-family:Arial,sans-serif;">${today}</span>
+    </div>
   </div>
-  <div style="margin-top:12pt;text-align:right;font-size:10pt;color:#555;font-style:italic;font-family:Arial,sans-serif;">${today}</div>
-  <hr style="border:none;border-top:2pt solid #1d4ed8;margin:8pt 0 12pt 0;" />
-  ${clientRows ? `<div style="background:#f8fafc;border:1pt solid #e2e8f0;padding:8pt 14pt;margin-bottom:14pt;"><table style="border-collapse:collapse;">${clientRows}</table></div>` : ""}`;
+  <hr style="border:none;border-top:2pt solid #1d4ed8;margin:14pt 0 12pt 0;" />`;
 }
 
 /** Footer HTML string for print documents */
