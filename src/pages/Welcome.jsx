@@ -102,12 +102,12 @@ export default function Welcome() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-8"
+            className="text-center mb-12"
           >
             <img
               src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
               alt="Chaos Controller Logo"
-              className="w-32 h-32 sm:w-40 sm:h-40 mx-auto object-contain drop-shadow-2xl"
+              className="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 mx-auto object-contain drop-shadow-2xl"
             />
           </motion.div>
 
@@ -118,7 +118,7 @@ export default function Welcome() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-center mb-6"
           >
-            <h1 className="text-6xl sm:text-8xl font-display font-bold tracking-tighter">
+            <h1 className="text-4xl sm:text-6xl font-display font-bold tracking-tighter">
               <span className="text-white drop-shadow-lg">CHAOS</span>
               <span className="text-[#FFD700] ml-3 drop-shadow-lg" style={{ textShadow: "0 0 30px rgba(255, 215, 0, 0.5)" }}>CONTROLLER</span>
             </h1>
@@ -150,6 +150,74 @@ export default function Welcome() {
               {" "}NOW YOU DESERVE THEIR{" "}
               <span className="text-[#FFD700] font-bold">ACCOUNTABILITY.</span>
             </p>
+          </motion.div>
+
+          {/* App Purpose Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
+            className="max-w-4xl mx-auto mb-16"
+          >
+            <div className="bg-gradient-to-b from-gray-900/80 to-black border border-gray-800 rounded-2xl p-6 sm:p-8">
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-[#FFD700] mb-6 text-center">
+                WHY CHAOS CONTROLLER EXISTS
+              </h2>
+              
+              <div className="space-y-6 text-gray-300">
+                <p className="text-base sm:text-lg leading-relaxed">
+                  <span className="text-white font-bold">You've been ignored. Dismissed. Told to wait.</span> Banks, insurers, landlords, telcos—they count on you giving up. They have entire departments designed to wear you down until you walk away.
+                </p>
+                
+                <p className="text-base sm:text-lg leading-relaxed">
+                  <span className="text-white font-bold">But here's the truth:</span> They don't take you seriously because you haven't gotten serious yet. Not because you're wrong. Not because you don't have a case. But because you lacked the tools, the structure, and the evidence to make them listen.
+                </p>
+                
+                <p className="text-base sm:text-lg leading-relaxed">
+                  <span className="text-white font-bold">Chaos Controller changes that.</span> This app was built for one reason: to give you the same firepower they have. To organize your evidence like a lawyer would. To track every deadline, every response, every broken promise. To generate professional complaint letters that demand attention. To build tribunal-ready bundles that make them think twice.
+                </p>
+                
+                <div className="bg-[#C0392B]/20 border border-[#C0392B]/30 rounded-xl p-5 mt-6">
+                  <p className="text-white font-bold text-center text-lg">
+                    NO ONE TAKES YOU SERIOUS TILL YOU GET SERIOUS.
+                  </p>
+                  <p className="text-gray-400 text-center mt-2 text-sm">
+                    This is how you get serious.
+                  </p>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4 mt-6">
+                  <div className="bg-black/50 border border-gray-800 rounded-lg p-4">
+                    <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                      <Check className="w-5 h-5 text-[#2ECC71]" />
+                      WHAT THIS APP DOES
+                    </h3>
+                    <ul className="text-sm space-y-2 text-gray-400">
+                      <li>• Organizes all your evidence in one secure vault</li>
+                      <li>• AI scans documents and extracts key details automatically</li>
+                      <li>• Builds a chronological timeline of every interaction</li>
+                      <li>• Generates professional complaint letters</li>
+                      <li>• Tracks response deadlines and sends reminders</li>
+                      <li>• Creates tribunal-ready escalation bundles</li>
+                    </ul>
+                  </div>
+                  <div className="bg-black/50 border border-gray-800 rounded-lg p-4">
+                    <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                      <Check className="w-5 h-5 text-[#2ECC71]" />
+                      HOW IT HELPS YOU WIN
+                    </h3>
+                    <ul className="text-sm space-y-2 text-gray-400">
+                      <li>• Shows them you're organized and prepared</li>
+                      <li>• Documents everything they can't dispute</li>
+                      <li>• Forces accountability with clear deadlines</li>
+                      <li>• Escalates to AFCA, TIO, NCAT with one click</li>
+                      <li>• Gives you confidence in every interaction</li>
+                      <li>• Turns chaos into control</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
           {/* CTA Buttons */}
