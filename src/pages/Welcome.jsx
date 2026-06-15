@@ -358,7 +358,7 @@ export default function Welcome() {
                 style={{ borderColor: feature.color }}
               >
                 <div className="w-14 h-14 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: `${feature.color}1a` }}>
-                  <Icon className="w-8 h-8" style={{ color: feature.color }} />
+                  <Icon className="w-8 h-8" color={feature.color} />
                 </div>
                 <h3 className="font-heading font-black text-lg mb-3 text-white tracking-wide text-shadow">{feature.title}</h3>
                 <p className="text-base text-gray-300 font-bold leading-relaxed">{feature.description}</p>
@@ -387,7 +387,7 @@ export default function Welcome() {
                 className="flex items-center gap-3 bg-gradient-to-r from-black to-gray-900 border-2 border-[#FFD700] px-6 py-4 rounded-lg hover:border-[#C0392B] transition-all"
               >
                 <div className="w-10 h-10 rounded flex items-center justify-center" style={{ backgroundColor: `${type.color}1a` }}>
-                  <Icon className="w-6 h-6" style={{ color: type.color }} />
+                  <Icon className="w-6 h-6" color={type.color} />
                 </div>
                 <span className="font-heading font-black text-white tracking-wide text-lg text-shadow">{type.label}</span>
               </motion.div>
