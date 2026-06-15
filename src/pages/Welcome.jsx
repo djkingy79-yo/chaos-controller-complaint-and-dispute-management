@@ -179,62 +179,62 @@ export default function Welcome() {
                   Whether your bank's charging unfair fees, your insurer rejected your claim, your landlord's refusing maintenance, or your energy provider's tripled your bill—this app gives you the complete toolkit to fight back and win.
                 </p>
 
-                <div className="bg-gradient-to-r from-[#FFD700]/10 via-[#FFD700]/5 to-[#FFD700]/10 border border-[#FFD700]/30 rounded-xl p-6 my-8">
-                  <p className="text-white font-bold text-center text-xl mb-2">
+                <div className="bg-gradient-to-r from-[#FFD700]/20 via-[#C0392B]/20 to-[#FFD700]/20 border-2 border-[#FFD700] rounded-xl p-6 my-8">
+                  <p className="text-white font-black text-center text-2xl mb-2 tracking-tight">
                     NO ONE TAKES YOU SERIOUS TILL YOU GET SERIOUS.
                   </p>
-                  <p className="text-gray-400 text-center">
+                  <p className="text-[#FFD700] text-center font-bold text-lg">
                     This is how you get serious.
                   </p>
                 </div>
 
                 <div className="grid sm:grid-cols-3 gap-4 mt-8">
-                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
-                    <div className="w-12 h-12 bg-[#3B82F6]/20 rounded-lg flex items-center justify-center mb-3">
-                      <Shield className="w-6 h-6 text-[#3B82F6]" />
+                  <div className="bg-gradient-to-br from-[#C0392B]/30 to-black border-2 border-[#C0392B] rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#C0392B] rounded-lg flex items-center justify-center mb-3">
+                      <Shield className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-white font-bold mb-2">BANKING DISPUTES</h3>
-                    <p className="text-sm text-gray-400">Unauthorized charges, failed transfers, account fees, loan disputes—escalate to AFCA with confidence.</p>
+                    <h3 className="text-white font-black mb-2 text-lg">BANKING DISPUTES</h3>
+                    <p className="text-white font-bold text-sm">Unauthorized charges, failed transfers, account fees, loan disputes—escalate to AFCA with confidence.</p>
                   </div>
                   
-                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
-                    <div className="w-12 h-12 bg-[#C0392B]/20 rounded-lg flex items-center justify-center mb-3">
-                      <Home className="w-6 h-6 text-[#C0392B]" />
+                  <div className="bg-gradient-to-br from-[#FFD700]/30 to-black border-2 border-[#FFD700] rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#FFD700] rounded-lg flex items-center justify-center mb-3">
+                      <Home className="w-6 h-6 text-black" />
                     </div>
-                    <h3 className="text-white font-bold mb-2">INSURANCE CLAIMS</h3>
-                    <p className="text-sm text-gray-400">Rejected claims, delayed payouts, undervalued assessments—force accountability with documented evidence.</p>
+                    <h3 className="text-white font-black mb-2 text-lg">INSURANCE CLAIMS</h3>
+                    <p className="text-white font-bold text-sm">Rejected claims, delayed payouts, undervalued assessments—force accountability with documented evidence.</p>
                   </div>
                   
-                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
-                    <div className="w-12 h-12 bg-[#27AE60]/20 rounded-lg flex items-center justify-center mb-3">
-                      <Building2 className="w-6 h-6 text-[#27AE60]" />
+                  <div className="bg-gradient-to-br from-[#27AE60]/30 to-black border-2 border-[#27AE60] rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#27AE60] rounded-lg flex items-center justify-center mb-3">
+                      <Building2 className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-white font-bold mb-2">TENANCY ISSUES</h3>
-                    <p className="text-sm text-gray-400">Unfair bonds, neglected maintenance, illegal evictions—build NCAT-ready cases with complete documentation.</p>
+                    <h3 className="text-white font-black mb-2 text-lg">TENANCY ISSUES</h3>
+                    <p className="text-white font-bold text-sm">Unfair bonds, neglected maintenance, illegal evictions—build NCAT-ready cases with complete documentation.</p>
                   </div>
                   
-                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
-                    <div className="w-12 h-12 bg-[#9B59B6]/20 rounded-lg flex items-center justify-center mb-3">
-                      <Phone className="w-6 h-6 text-[#9B59B6]" />
+                  <div className="bg-gradient-to-br from-[#9B59B6]/30 to-black border-2 border-[#9B59B6] rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#9B59B6] rounded-lg flex items-center justify-center mb-3">
+                      <Phone className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-white font-bold mb-2">TELCO PROBLEMS</h3>
-                    <p className="text-sm text-gray-400">Billing errors, service failures, contract disputes—escalate to TIO with professional complaint bundles.</p>
+                    <h3 className="text-white font-black mb-2 text-lg">TELCO PROBLEMS</h3>
+                    <p className="text-white font-bold text-sm">Billing errors, service failures, contract disputes—escalate to TIO with professional complaint bundles.</p>
                   </div>
                   
-                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
-                    <div className="w-12 h-12 bg-[#F39C12]/20 rounded-lg flex items-center justify-center mb-3">
-                      <Zap className="w-6 h-6 text-[#F39C12]" />
+                  <div className="bg-gradient-to-br from-[#F39C12]/30 to-black border-2 border-[#F39C12] rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#F39C12] rounded-lg flex items-center justify-center mb-3">
+                      <Zap className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-white font-bold mb-2">UTILITIES</h3>
-                    <p className="text-sm text-gray-400">Power, water, gas—incorrect billing, service interruptions, disconnection threats—fight back organized.</p>
+                    <h3 className="text-white font-black mb-2 text-lg">UTILITIES</h3>
+                    <p className="text-white font-bold text-sm">Power, water, gas—incorrect billing, service interruptions, disconnection threats—fight back organized.</p>
                   </div>
                   
-                  <div className="bg-black/60 border border-gray-700 rounded-xl p-5">
-                    <div className="w-12 h-12 bg-[#1ABC9C]/20 rounded-lg flex items-center justify-center mb-3">
-                      <Briefcase className="w-6 h-6 text-[#1ABC9C]" />
+                  <div className="bg-gradient-to-br from-[#3498DB]/30 to-black border-2 border-[#3498DB] rounded-xl p-5">
+                    <div className="w-12 h-12 bg-[#3498DB] rounded-lg flex items-center justify-center mb-3">
+                      <Briefcase className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-white font-bold mb-2">AND MORE</h3>
-                    <p className="text-sm text-gray-400">Any consumer dispute—this system works for all industries. One platform, complete control.</p>
+                    <h3 className="text-white font-black mb-2 text-lg">AND MORE</h3>
+                    <p className="text-white font-bold text-sm">Any consumer dispute—this system works for all industries. One platform, complete control.</p>
                   </div>
                 </div>
 
@@ -243,32 +243,68 @@ export default function Welcome() {
                     EVERYTHING YOU NEED IN ONE PLACE
                   </h3>
                   <div className="grid sm:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="text-[#FFD700] font-bold mb-3 flex items-center gap-2">
-                        <Check className="w-5 h-5" />
+                    <div className="bg-black/80 border-2 border-[#FFD700] rounded-xl p-6">
+                      <h4 className="text-[#FFD700] font-black mb-4 flex items-center gap-2 text-lg">
+                        <Check className="w-6 h-6" />
                         WHAT YOU GET
                       </h4>
-                      <ul className="text-sm space-y-2 text-gray-400">
-                        <li>• Secure evidence vault with AI document scanning</li>
-                        <li>• Automatic timeline builder tracking every interaction</li>
-                        <li>• Professional complaint letter generator</li>
-                        <li>• Deadline tracking with smart reminders</li>
-                        <li>• Tribunal-ready escalation bundles</li>
-                        <li>• Direct links to AFCA, TIO, NCAT, Energy & Water Ombudsman</li>
+                      <ul className="text-base space-y-3 text-white font-bold">
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700]">✓</span>
+                          Secure evidence vault with AI document scanning
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700]">✓</span>
+                          Automatic timeline builder tracking every interaction
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700]">✓</span>
+                          Professional complaint letter generator
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700]">✓</span>
+                          Deadline tracking with smart reminders
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700]">✓</span>
+                          Tribunal-ready escalation bundles
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700]">✓</span>
+                          Direct links to AFCA, TIO, NCAT, Energy & Water Ombudsman
+                        </li>
                       </ul>
                     </div>
-                    <div>
-                      <h4 className="text-[#FFD700] font-bold mb-3 flex items-center gap-2">
-                        <Check className="w-5 h-5" />
+                    <div className="bg-black/80 border-2 border-[#FFD700] rounded-xl p-6">
+                      <h4 className="text-[#FFD700] font-black mb-4 flex items-center gap-2 text-lg">
+                        <Check className="w-6 h-6" />
                         HOW IT WORKS
                       </h4>
-                      <ul className="text-sm space-y-2 text-gray-400">
-                        <li>1. Upload your documents and evidence</li>
-                        <li>2. AI extracts key details automatically</li>
-                        <li>3. Answer guided questions about your dispute</li>
-                        <li>4. Generate professional complaint letters</li>
-                        <li>5. Track responses and deadlines</li>
-                        <li>6. Escalate with complete tribunal bundles if needed</li>
+                      <ul className="text-base space-y-3 text-white font-bold">
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-black">1.</span>
+                          Upload your documents and evidence
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-black">2.</span>
+                          AI extracts key details automatically
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-black">3.</span>
+                          Answer guided questions about your dispute
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-black">4.</span>
+                          Generate professional complaint letters
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-black">5.</span>
+                          Track responses and deadlines
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-[#FFD700] font-black">6.</span>
+                          Escalate with complete tribunal bundles if needed
+                        </li>
                       </ul>
                     </div>
                   </div>
