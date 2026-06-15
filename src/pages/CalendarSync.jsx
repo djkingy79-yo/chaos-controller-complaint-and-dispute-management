@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Check, X, ArrowLeft, RefreshCw, Link as LinkIcon } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-const CONNECTOR_ID = "6a2f81580a7034080fc1b6e6";
+const CONNECTOR_ID = "6a2f842ded0843ad5cb9ecb7";
 
 export default function CalendarSync() {
   const navigate = useNavigate();

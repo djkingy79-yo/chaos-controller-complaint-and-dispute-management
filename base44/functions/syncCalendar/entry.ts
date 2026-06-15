@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const connectorId = '6a2f81580a7034080fc1b6e6';
+    const connectorId = '6a2f842ded0843ad5cb9ecb7';
     const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(connectorId);
 
     const action = req.query?.get('action') || 'sync';
