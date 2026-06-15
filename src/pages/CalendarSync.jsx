@@ -13,12 +13,16 @@ export default function CalendarSync() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncedEvents, setSyncedEvents] = useState([]);
+  const [syncedCount, setSyncedCount] = useState(0);
+  const [totalDeadlines, setTotalDeadlines] = useState(0);
   const [error, setError] = useState(null);
 
   const fetchData = async () => {
     try {
       const res = await base44.functions.invoke("syncCalendar", { action: "sync" });
       setSyncedEvents(res.data.events || []);
+      setSyncedCount(res.data.syncedCount || 0);
+      setTotalDeadlines(res.data.totalDeadlines || 0);
       setConnected(true);
       setError(null);
     } catch (err) {
@@ -155,7 +159,8 @@ export default function CalendarSync() {
                   <div>
                     <h3 className="font-heading font-semibold text-foreground">Calendar Connected</h3>
                     <p className="text-sm text-muted-foreground">
-                      {syncedEvents.length} deadline events synced to your calendar
+                      {totalDeadlines} active deadline{totalDeadlines !== 1 ? 's' : ''} tracked
+                      {syncedCount > 0 && ` · ${syncedCount} new event${syncedCount !== 1 ? 's' : ''} added`}
                     </p>
                   </div>
                 </div>
