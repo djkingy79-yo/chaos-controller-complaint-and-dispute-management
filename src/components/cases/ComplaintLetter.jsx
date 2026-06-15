@@ -68,19 +68,21 @@ export default function ComplaintLetter({ caseItem }) {
 
     const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
 
-COMPLAINANT DETAILS (use all provided fields directly — no placeholder brackets):
-- Name: ${client.name || "[COMPLAINANT NAME]"}
-- Address: ${client.address || "[COMPLAINANT ADDRESS]"}
-- Email: ${client.email || "[COMPLAINANT EMAIL]"}
-- Phone/Mobile: ${client.phone || "[COMPLAINANT PHONE]"}
+CRITICAL RULE: Never use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely or write naturally around it.
+
+COMPLAINANT DETAILS:
+- Name: ${client.name || "not provided — omit name line"}
+- Address: ${client.address || "not provided — omit address block"}
+- Email: ${client.email || "not provided"}
+- Phone/Mobile: ${client.phone || "not provided"}
 - Account/Reference Number: ${client.accounts?.join(", ") || caseItem.account_number || "not provided"}
 - Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : client.dates?.join(", ") || "not provided"}
 ${client.policies?.length ? `- Policy/Reference Numbers: ${client.policies.join(", ")}` : ""}
 ${client.amounts?.length ? `- Key Amounts: ${client.amounts.join(", ")}` : ""}
 
 ORGANISATION DETAILS:
-- Organisation: ${caseItem.organisation_name || "[ORGANISATION NAME]"}
-- Complaints Address: ${caseItem.organisation_complaints_address || "Complaints Department, " + (caseItem.organisation_name || "[Organisation]")}
+- Organisation: ${caseItem.organisation_name || "not provided"}
+- Complaints Address: ${caseItem.organisation_complaints_address || ("Complaints Department, " + (caseItem.organisation_name || "the organisation"))}
 - Complaints Email: ${caseItem.organisation_complaints_email || "not provided"}
 - Complaint Handler: ${caseItem.complaint_handler_name || "The Complaints Manager"}
 
@@ -89,18 +91,18 @@ CASE DETAILS:
 - Issue Summary: ${caseItem.issue_summary}
 - Full Details: ${caseItem.issue_details}
 - Desired Outcome: ${caseItem.desired_outcome}
-- Escalation Body: ${caseItem.escalation_body}
+- Escalation Body: ${caseItem.escalation_body || "the relevant ombudsman"}
 
 LETTER FORMAT INSTRUCTIONS:
-1. Top right block: complainant's full address, then today's date (${today}).
+1. Top right block: complainant's address (if provided), then today's date (${today}).
 2. Left block: complaint handler name/title, organisation name, organisation complaints address.
-3. Re: line — e.g. "Re: Formal Complaint — Account ${client.accounts?.[0] || caseItem.account_number || "[account]"}"
+3. Re: line — e.g. "Re: Formal Complaint — ${caseItem.account_number ? "Account " + caseItem.account_number : caseItem.title}"
 4. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-5. Opening paragraph must reference account number and incident date prominently.
+5. Opening paragraph references account number and incident date if available.
 6. Firm but professional tone. Include a 21-day response deadline.
 7. Mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step if unresolved.
-8. Close with "Yours faithfully," then the complainant's full name.
-9. Do NOT use placeholder brackets for any detail provided above.`;
+8. Close with "Yours faithfully," then the complainant's full name (if provided).
+9. NEVER write bracket placeholders — use real data or omit the line entirely.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);

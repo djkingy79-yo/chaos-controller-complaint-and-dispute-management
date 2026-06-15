@@ -24,12 +24,13 @@ const CATEGORY_ICONS = [
 export function LetterheadHeader({ today }) {
   return (
     <div className="bg-white border-b border-slate-200">
-      {/* Top banner — business card front image, no fixed height */}
-      <div className="w-full overflow-hidden">
+      {/* Top banner — cropped to logo/fist area only */}
+      <div className="w-full overflow-hidden" style={{ height: "120px" }}>
         <img
           src={CARD_FRONT}
           alt="Chaos Controller"
           className="w-full object-cover object-top"
+          style={{ objectPosition: "top center" }}
         />
       </div>
 
@@ -73,7 +74,7 @@ export function buildLetterheadHTML(caseItem, client, today) {
   return `
   <!-- LETTERHEAD BANNER -->
   <div style="margin:-2cm -2cm 0 -2cm;">
-    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;" />
+    <div style="width:100%;height:90pt;overflow:hidden;"><img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;object-fit:cover;object-position:top center;" /></div>
     <div style="background:#111;padding:6pt 16pt;display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:9pt;color:#facc15;font-family:Arial,sans-serif;">🌐 ${CONTACT.website} &nbsp;|&nbsp; ✉ ${CONTACT.email} &nbsp;|&nbsp; 📞 ${CONTACT.phone} &nbsp;|&nbsp; 📍 ${CONTACT.location}</span>
       <span style="font-size:8pt;font-weight:bold;color:#facc15;font-family:Arial,sans-serif;text-transform:uppercase;">${CONTACT.tagline}</span>
