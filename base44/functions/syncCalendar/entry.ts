@@ -3,14 +3,87 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    // Check if this is an automation trigger (no user auth needed for automations)
+    const contentType = req.headers.get('content-type') || '';
+    const isAutomation = contentType.includes('application/json');
+    
+    let user;
+    if (!isAutomation) {
+      user = await base44.auth.me();
+      if (!user) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     const connectorId = '6a2f842ded0843ad5cb9ecb7';
     const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(connectorId);
 
+    // Handle automation trigger
+    if (isAutomation) {
+      const payload = await req.json();
+      const deadlineId = payload.data?.id;
+      
+      if (!deadlineId) {
+        return Response.json({ error: 'Invalid automation payload' }, { status: 400 });
+      }
+      
+      // Get the deadline and associated case
+      const deadline = await base44.entities.Deadline.get(deadlineId);
+      const cases = await base44.entities.Case.list();
+      const caseInfo = cases.find(c => c.id === deadline.case_id);
+      
+      if (!caseInfo || !deadline) {
+        return Response.json({ error: 'Case or deadline not found' }, { status: 404 });
+      }
+      
+      // Create calendar event for this deadline
+      const event = {
+        summary: `⚖️ Chaos Controller: ${deadline.title}`,
+        description: `Case: ${caseInfo.title}\nDeadline Type: ${deadline.deadline_type}\nResponsibility: ${deadline.responsibility}\n\nThis deadline was created by Chaos Controller - Consumer Dispute Management`,
+        start: {
+          date: deadline.deadline_date,
+          timeZone: 'Australia/Sydney'
+        },
+        end: {
+          date: deadline.deadline_date,
+          timeZone: 'Australia/Sydney'
+        },
+        extendedProperties: {
+          private: {
+            caseId: deadline.case_id,
+            deadlineId: deadline.id,
+            deadlineType: deadline.deadline_type
+          }
+        },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: 'popup', minutes: 2880 }, // 2 days before
+            { method: 'popup', minutes: 1440 }, // 1 day before
+            { method: 'popup', minutes: 60 }    // 1 hour before
+          ]
+        }
+      };
+
+      const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(event)
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        return Response.json({ error: error.error?.message || 'Failed to create calendar event' }, { status: res.status });
+      }
+
+      return Response.json({ success: true, message: 'Deadline synced to calendar' });
+    }
+
+    // Handle frontend requests
     const action = req.query?.get('action') || 'sync';
 
     if (action === 'sync') {

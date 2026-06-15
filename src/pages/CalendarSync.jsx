@@ -218,25 +218,25 @@ export default function CalendarSync() {
                   <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-xs font-semibold text-primary">1</span>
                   </span>
-                  <span>When you set a response deadline in a case, it's automatically added to your Google Calendar</span>
+                  <span>When you create or update a deadline, it's automatically added to your Google Calendar</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-xs font-semibold text-primary">2</span>
                   </span>
-                  <span>Calendar events include case details and deadline type in the description</span>
+                  <span>Each event includes case details, deadline type, and responsibility in the description</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-xs font-semibold text-primary">3</span>
                   </span>
-                  <span>Events are tagged with Chaos Controller branding for easy identification</span>
+                  <span>Events are tagged with ⚖️ Chaos Controller for easy identification in your calendar</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-xs font-semibold text-primary">4</span>
                   </span>
-                  <span>You'll receive calendar reminders 1 day and 1 hour before each deadline</span>
+                  <span>You'll receive popup notifications: 2 days before, 1 day before, and 1 hour before each deadline</span>
                 </li>
               </ul>
             </div>
