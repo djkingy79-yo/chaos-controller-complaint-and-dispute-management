@@ -24,42 +24,42 @@ const features = [
     icon: Upload,
     title: "ORGANISE YOUR EVIDENCE",
     description: "Upload documents, contracts, emails, and correspondence. AI scans and extracts key details automatically.",
-    color: "#3498DB",
-    bgColor: "bg-[#3498DB]/10",
-    borderColor: "border-[#3498DB]/30"
+    color: "#CC0000",
+    bgColor: "bg-[#CC0000]/10",
+    borderColor: "border-[#CC0000]/30"
   },
   {
     icon: Clock,
     title: "TRACK EVERY RESPONSE",
     description: "Timeline builder tracks every interaction. Deadlines are monitored. Nothing slips through the cracks.",
-    color: "#9B59B6",
-    bgColor: "bg-[#9B59B6]/10",
-    borderColor: "border-[#9B59B6]/30"
+    color: "#660099",
+    bgColor: "bg-[#660099]/10",
+    borderColor: "border-[#660099]/30"
   },
   {
     icon: Scale,
     title: "ESCALATE WITH CONFIDENCE",
     description: "Generate professional complaint letters. Build tribunal-ready bundles. Escalate to AFCA, TIO, NCAT with one click.",
-    color: "#2ECC71",
-    bgColor: "bg-[#2ECC71]/10",
-    borderColor: "border-[#2ECC71]/30"
+    color: "#0066CC",
+    bgColor: "bg-[#0066CC]/10",
+    borderColor: "border-[#0066CC]/30"
   },
   {
     icon: Shield,
     title: "TAKE BACK CONTROL",
     description: "You're not powerless. Chaos Controller gives you the tools, structure, and evidence to fight back.",
-    color: "#E67E22",
-    bgColor: "bg-[#E67E22]/10",
-    borderColor: "border-[#E67E22]/30"
+    color: "#008000",
+    bgColor: "bg-[#008000]/10",
+    borderColor: "border-[#008000]/30"
   }
 ];
 
 const disputeTypes = [
-  { icon: FolderOpen, label: "BANK DISPUTES", color: "#C0392B" },
-  { icon: Shield, label: "INSURANCE CLAIMS", color: "#8E44AD" },
-  { icon: FileText, label: "HOUSING", color: "#2980B9" },
-  { icon: Scale, label: "NCAT", color: "#D35400" },
-  { icon: AlertTriangle, label: "CONSUMER COMPLAINTS", color: "#27AE60" }
+  { icon: FolderOpen, label: "BANK DISPUTES", color: "#CC0000" },
+  { icon: Shield, label: "INSURANCE CLAIMS", color: "#660099" },
+  { icon: FileText, label: "HOUSING", color: "#0066CC" },
+  { icon: Scale, label: "NCAT", color: "#CC8800" },
+  { icon: AlertTriangle, label: "CONSUMER COMPLAINTS", color: "#008000" }
 ];
 
 const plans = [
@@ -354,10 +354,10 @@ export default function Welcome() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * idx, duration: 0.6 }}
-                className="bg-gradient-to-br from-black to-gray-900 border-2 border-[#FFD700] p-6 rounded-xl hover:border-[#C0392B] transition-all"
+                className={`bg-gradient-to-br from-black to-gray-900 border-2 ${feature.borderColor} p-6 rounded-xl hover:border-[#C0392B] transition-all`}
               >
-                <div className="bg-[#FFD700] w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                  <Icon className="w-8 h-8 text-black" />
+                <div className={`${feature.bgColor} w-14 h-14 rounded-lg flex items-center justify-center mb-4`}>
+                  <Icon className="w-8 h-8" style={{ color: feature.color }} />
                 </div>
                 <h3 className="font-heading font-black text-lg mb-3 text-white tracking-wide">{feature.title}</h3>
                 <p className="text-base text-white font-bold leading-relaxed">{feature.description}</p>
@@ -385,8 +385,8 @@ export default function Welcome() {
                 transition={{ delay: 0.1 * idx, duration: 0.5 }}
                 className="flex items-center gap-3 bg-gradient-to-r from-gray-900 to-black border-2 border-[#FFD700] px-6 py-4 rounded-lg hover:border-[#C0392B] transition-all"
               >
-                <div className="w-10 h-10 bg-[#FFD700] rounded flex items-center justify-center">
-                  <Icon className="w-6 h-6 text-black" />
+                <div className="w-10 h-10 rounded flex items-center justify-center" style={{ backgroundColor: `${type.color}20` }}>
+                  <Icon className="w-6 h-6" style={{ color: type.color }} />
                 </div>
                 <span className="font-heading font-black text-white tracking-wide text-lg">{type.label}</span>
               </motion.div>
