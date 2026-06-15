@@ -26,14 +26,14 @@ const CATEGORY_ICONS = [
 /** React on-screen letterhead header */
 export function LetterheadHeader({ today }) {
   return (
-    <div className="bg-white border-b border-slate-200">
-      {/* Top banner image */}
-      <div className="w-full overflow-hidden" style={{ height: "110px" }}>
-        <img src={CARD_FRONT} alt="Chaos Controller" className="w-full object-cover object-top" />
+    <div className="border-b border-slate-200" style={{ background: "#0d1117" }}>
+      {/* Full image — no crop, no cutoff */}
+      <div className="w-full">
+        <img src={CARD_FRONT} alt="Chaos Controller" className="w-full block" style={{ display: "block" }} />
       </div>
 
-      {/* 3-column icon grid matching the business card */}
-      <div className="px-4 py-2 bg-slate-950 grid grid-cols-3 gap-x-4 gap-y-1.5">
+      {/* 3-column icon grid — same dark background as logo image */}
+      <div className="px-4 py-2 grid grid-cols-3 gap-x-4 gap-y-1.5" style={{ background: "#0d1117" }}>
         {CATEGORY_ICONS.map((cat) => (
           <span key={cat.label} className="flex items-center gap-1.5 text-[9px] text-slate-300 font-medium">
             <span className="text-sm">{cat.emoji}</span>
@@ -65,10 +65,10 @@ export function buildLetterheadHTML(caseItem, client, today) {
   return `
   <!-- LETTERHEAD BANNER -->
   <div style="margin:-2cm -2cm 0 -2cm;">
-    <div style="width:100%;height:90pt;overflow:hidden;">
-      <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;object-fit:cover;object-position:top center;" />
+    <div style="width:100%;">
+      <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;" />
     </div>
-    <div style="padding:6pt 16pt 4pt 16pt;background:#0a0f1e;">
+    <div style="padding:6pt 16pt 4pt 16pt;background:#0d1117;">
       ${iconGrid}
       <div style="text-align:right;font-size:8pt;font-style:italic;color:#666;font-family:Arial,sans-serif;margin-top:2pt;">${today}</div>
     </div>
