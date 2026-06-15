@@ -46,39 +46,38 @@ for (let i = 0; i < numRows; i++) {
 /** React on-screen letterhead header */
 export function LetterheadHeader({ today }) {
   return (
-    <div className="border-b border-slate-200" style={{ background: "#111" }}>
+    <div className="border-b border-slate-200">
       {/* Full logo image — no crop */}
-      <div className="w-full">
-        <img src={CARD_FRONT} alt="Chaos Controller" className="w-full block" />
+      <img src={CARD_FRONT} alt="Chaos Controller" className="w-full block" />
+
+      {/* Tagline bar — dark with gold accent, matches reference */}
+      <div style={{ background: "#1c1c1c", borderTop: "2px solid #333", borderBottom: "1px solid #333", padding: "10px 16px", textAlign: "center" }}>
+        <span style={{ fontSize: "11px", fontWeight: "900", letterSpacing: "2px", color: "#ffffff", fontFamily: "Arial, sans-serif" }}>UPLOAD THE CHAOS.&nbsp;&nbsp;&nbsp;WE BUILD THE CASE.&nbsp;&nbsp;&nbsp;</span>
+        <span style={{ fontSize: "11px", fontWeight: "900", letterSpacing: "2px", color: "#f59e0b", fontFamily: "Arial, sans-serif" }}>TAKE BACK CONTROL.</span>
       </div>
 
-      {/* Tagline bar */}
-      <div className="text-center py-2 px-4" style={{ background: "#1a1a1a", borderTop: "1px solid #333" }}>
-        <span className="text-[9px] font-bold tracking-widest text-white">UPLOAD THE CHAOS.&nbsp;&nbsp;</span>
-        <span className="text-[9px] font-bold tracking-widest text-white">WE BUILD THE CASE.&nbsp;&nbsp;</span>
-        <span className="text-[9px] font-bold tracking-widest" style={{ color: "#facc15" }}>TAKE BACK CONTROL.</span>
-      </div>
-
-      {/* 3-column icon grid matching reference image */}
-      <div className="grid grid-cols-3 gap-x-2 px-3 py-2" style={{ background: "#111" }}>
-        {CATEGORY_ICONS.map((cat, i) => (
-          cat.label ? (
-            <div key={i} className="flex items-start gap-1.5 py-1">
-              <span className="text-base leading-none mt-0.5 shrink-0">{cat.emoji}</span>
-              <div>
-                <p className="text-[8px] font-bold text-white leading-tight uppercase tracking-wide">{cat.label}</p>
-                <p className="text-[7px] text-slate-400 leading-tight mt-0.5">{cat.sub}</p>
+      {/* 3-column icon grid — white background matching reference */}
+      <div style={{ background: "#ffffff", padding: "12px 16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px 12px" }}>
+          {CATEGORY_ICONS.map((cat, i) => (
+            cat.label ? (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px", paddingBottom: "6px" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#1c1c1c", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "13px" }}>
+                  {cat.emoji}
+                </div>
+                <div>
+                  <p style={{ fontSize: "8px", fontWeight: "800", color: "#111", textTransform: "uppercase", letterSpacing: "0.5px", margin: 0, lineHeight: "1.2", fontFamily: "Arial, sans-serif" }}>{cat.label}</p>
+                  <p style={{ fontSize: "7px", color: "#555", margin: "2px 0 0 0", lineHeight: "1.3", fontFamily: "Arial, sans-serif" }}>{cat.sub}</p>
+                </div>
               </div>
-            </div>
-          ) : <div key={i} />
-        ))}
+            ) : <div key={i} />
+          ))}
+        </div>
+        <div style={{ textAlign: "right", fontSize: "7px", fontStyle: "italic", color: "#999", marginTop: "6px", fontFamily: "Arial, sans-serif" }}>{today}</div>
       </div>
 
-      {/* Date + gold separator */}
-      <div className="flex justify-end px-3 pb-1" style={{ background: "#111" }}>
-        <span className="text-[7px] italic text-slate-500">{today}</span>
-      </div>
-      <div className="h-0.5 bg-yellow-500" />
+      {/* Gold separator */}
+      <div style={{ height: "3px", background: "#f59e0b" }} />
     </div>
   );
 }
@@ -93,9 +92,13 @@ export function buildLetterheadHTML(caseItem, client, today) {
     while (chunk.length < 3) chunk.push({ emoji: "", label: "", sub: "" });
     const cells = chunk.map(c =>
       `<td style="width:33%;padding:3pt 6pt;vertical-align:top;font-family:Arial,sans-serif;">
-        ${c.emoji ? `<span style="font-size:11pt;">${c.emoji}</span>&nbsp;` : ""}
-        <strong style="font-size:7pt;color:#fff;text-transform:uppercase;letter-spacing:0.5pt;">${c.label}</strong>
-        ${c.sub ? `<br/><span style="font-size:6pt;color:#aaa;">${c.sub}</span>` : ""}
+        <div style="display:flex;align-items:flex-start;gap:5pt;">
+          ${c.emoji ? `<div style="width:18pt;height:18pt;border-radius:50%;background:#1c1c1c;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9pt;line-height:1;">${c.emoji}</div>` : ""}
+          <div>
+            <strong style="font-size:6.5pt;color:#111;text-transform:uppercase;letter-spacing:0.4pt;">${c.label}</strong>
+            ${c.sub ? `<br/><span style="font-size:5.5pt;color:#555;">${c.sub}</span>` : ""}
+          </div>
+        </div>
       </td>`
     ).join("");
     rows.push(`<tr>${cells}</tr>`);
@@ -108,13 +111,13 @@ export function buildLetterheadHTML(caseItem, client, today) {
     <div style="width:100%;">
       <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;" />
     </div>
-    <div style="padding:4pt 12pt;background:#1a1a1a;text-align:center;border-top:1px solid #333;">
-      <span style="font-size:7pt;font-weight:bold;color:#fff;letter-spacing:1pt;font-family:Arial,sans-serif;">UPLOAD THE CHAOS.&nbsp;&nbsp;WE BUILD THE CASE.&nbsp;&nbsp;</span>
-      <span style="font-size:7pt;font-weight:bold;color:#facc15;letter-spacing:1pt;font-family:Arial,sans-serif;">TAKE BACK CONTROL.</span>
+    <div style="padding:6pt 14pt;background:#1c1c1c;text-align:center;border-top:2px solid #333;border-bottom:1px solid #444;">
+      <span style="font-size:8pt;font-weight:900;color:#fff;letter-spacing:1.5pt;font-family:Arial,sans-serif;">UPLOAD THE CHAOS.&nbsp;&nbsp;&nbsp;WE BUILD THE CASE.&nbsp;&nbsp;&nbsp;</span>
+      <span style="font-size:8pt;font-weight:900;color:#f59e0b;letter-spacing:1.5pt;font-family:Arial,sans-serif;">TAKE BACK CONTROL.</span>
     </div>
-    <div style="padding:6pt 12pt 4pt 12pt;background:#111;">
+    <div style="padding:8pt 14pt 4pt 14pt;background:#fff;">
       ${iconGrid}
-      <div style="text-align:right;font-size:6pt;font-style:italic;color:#666;font-family:Arial,sans-serif;margin-top:2pt;">${today}</div>
+      <div style="text-align:right;font-size:6pt;font-style:italic;color:#999;font-family:Arial,sans-serif;margin-top:4pt;">${today}</div>
     </div>
     <div style="height:2pt;background:#eab308;"></div>
   </div>`;
