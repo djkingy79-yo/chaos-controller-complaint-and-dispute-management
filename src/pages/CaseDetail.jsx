@@ -14,6 +14,7 @@ import ChaosScore from "@/components/cases/ChaosScore";
 import PrintBundle from "@/components/cases/PrintBundle";
 import EscalationBundle from "@/components/cases/EscalationBundle";
 import CaseSummary from "@/components/cases/CaseSummary";
+import DisputeProgressTracker from "@/components/cases/DisputeProgressTracker";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
@@ -104,6 +105,7 @@ export default function CaseDetail() {
         {/* Sidebar */}
         <div className="lg:col-span-1 space-y-4">
           <CaseStatusControl caseItem={caseItem} />
+          <DisputeProgressTracker caseItem={caseItem} />
           <ChaosScore caseItem={caseItem} evidence={evidence} events={timelineEvents} />
 
           {/* Quick stats */}
