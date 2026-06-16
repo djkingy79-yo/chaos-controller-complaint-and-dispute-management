@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LetterheadHeader, buildLetterheadHTML, buildFooterHTML, CARD_FRONT } from "./LetterheadBanner";
+import { LetterheadHeader, buildFooterHTML } from "./LetterheadBanner";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -146,7 +146,7 @@ LETTER FORMAT INSTRUCTIONS:
       pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; }
     </style>
     </head><body>
-      <div class="letter-header"><img src="${CARD_FRONT}" alt="Chaos Controller" /></div>
+      <div class="letter-header"><img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" alt="Chaos Controller" style="width:100%;max-width:600px;height:auto;display:block;" /></div>
       <div class="letter-body">
         <pre>${letter}</pre>
         ${buildFooterHTML(caseItem, client, 1, "")}

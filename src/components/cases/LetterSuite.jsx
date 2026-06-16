@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LetterheadHeader, CARD_FRONT } from "./LetterheadBanner";
+import { LetterheadHeader } from "./LetterheadBanner";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -214,7 +214,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       .footer { font-size: 9pt; font-style: italic; border-top: 1pt solid #ccc; margin-top: 24pt; padding-top: 6pt; color: #888; display: flex; justify-content: space-between; }
     </style>
     </head><body>
-      <div class="letter-header"><img src="${CARD_FRONT}" alt="Chaos Controller" /></div>
+      <div class="letter-header"><img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" alt="Chaos Controller" style="width:100%;max-width:600px;height:auto;display:block;" /></div>
       <div class="letter-body">
         <pre>${text}</pre>
         <div class="footer">
