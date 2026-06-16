@@ -34,6 +34,8 @@ import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import SharedCasePortal from '@/pages/SharedCasePortal';
 import SamplePreviews from '@/pages/SamplePreviews';
+import MerchantLogin from '@/pages/MerchantLogin';
+import MerchantPortal from '@/pages/MerchantPortal';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -97,7 +99,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Welcome />} />
             <Route path="/shared-case/:token" element={<SharedCasePortal />} />
-            <Route path="/*" element={<AuthenticatedApp />} />
+                  <Route path="/merchant-login" element={<MerchantLogin />} />
+                  <Route path="/merchant-portal" element={<MerchantPortal />} />
+                <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
         </Router>
         <Toaster />
