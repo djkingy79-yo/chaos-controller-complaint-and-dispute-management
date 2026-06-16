@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Check, Copy, CheckCircle2, ArrowLeft, Mail, Smartphone, Wallet, Send } from "lucide-react";
+import { Check, Copy, CheckCircle2, ArrowLeft, Mail, Smartphone, Wallet, Send, ShieldCheck, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { ADMIN_EMAIL } from "@/lib/subscription";
 
 const plans = [
   {
@@ -99,6 +100,51 @@ export default function Payments() {
     setSubmitting(false);
     setSubmitted(true);
   };
+
+  const isAdmin = user?.email === ADMIN_EMAIL || user?.role === "admin";
+
+  if (isAdmin) {
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+          <img
+            src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
+            alt="Chaos Controller Logo"
+            className="w-24 h-24 mx-auto object-contain mb-6"
+          />
+          <div className="bg-[#FFD700]/10 border-2 border-[#FFD700] rounded-2xl p-10">
+            <div className="w-16 h-16 bg-[#FFD700] rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="w-9 h-9 text-black" />
+            </div>
+            <h1 className="text-3xl font-display font-black text-white mb-2">Owner Access</h1>
+            <p className="text-[#FFD700] font-bold text-lg mb-6">djkingy79@gmail.com</p>
+            <div className="bg-black/50 rounded-xl p-6 mb-6">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Star className="w-6 h-6 text-[#FFD700]" />
+                <span className="text-2xl font-display font-black text-[#FFD700]">Command Plan — FREE</span>
+              </div>
+              <p className="text-white font-bold mb-4">You have full access to all features across all 3 tiers:</p>
+              <div className="grid sm:grid-cols-3 gap-3 text-sm">
+                {["Starter", "Pro", "Command"].map(plan => (
+                  <div key={plan} className="bg-[#FFD700]/10 border border-[#FFD700]/30 rounded-lg p-3 text-center">
+                    <CheckCircle2 className="w-5 h-5 text-[#FFD700] mx-auto mb-1" />
+                    <span className="font-bold text-white">{plan}</span>
+                    <span className="text-[#FFD700] text-xs block">✓ Unlocked</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Button
+              className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-black px-10 py-6 text-lg"
+              onClick={() => navigate("/dashboard")}
+            >
+              Go to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black">

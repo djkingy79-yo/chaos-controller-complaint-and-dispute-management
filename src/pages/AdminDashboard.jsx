@@ -4,10 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { Navigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Users, FolderOpen, CheckCircle2, AlertTriangle, TrendingUp, Activity, Wallet } from "lucide-react";
+import { Users, FolderOpen, CheckCircle2, AlertTriangle, TrendingUp, Activity, Wallet, ShieldCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PaymentVerification from "@/components/admin/PaymentVerification";
+import SalesStats from "@/components/admin/SalesStats";
+import UserManagement from "@/components/admin/UserManagement";
+import { ADMIN_EMAIL } from "@/lib/subscription";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))"];
 
@@ -29,16 +32,8 @@ export default function AdminDashboard() {
     queryFn: () => base44.entities.Deadline.list("-deadline_date", 200),
   });
 
-  const { data: pendingPayments = [] } = useQuery({
-    queryKey: ["admin-pending-payments"],
-    queryFn: () => base44.entities.PaymentRequest.filter({ status: "pending" }),
-  });
-
   const active = cases.filter((c) => !["resolved", "closed"].includes(c.status));
   const resolved = cases.filter((c) => c.status === "resolved");
-  const urgent = cases.filter((c) => c.priority === "urgent" || c.priority === "high");
-  if (user?.role !== "admin") return <Navigate to="/" replace />;
-
   const overdueDeadlines = deadlines.filter((d) => d.status === "pending" && new Date(d.deadline_date) < new Date());
 
   // Category breakdown for pie chart
@@ -56,6 +51,13 @@ export default function AdminDashboard() {
     { name: "Resolved", count: cases.filter(c => c.status === "resolved").length },
   ];
 
+  const { data: pendingPayments = [] } = useQuery({
+    queryKey: ["admin-pending-payments"],
+    queryFn: () => base44.entities.PaymentRequest.filter({ status: "pending" }),
+  });
+
+  if (user?.role !== "admin") return <Navigate to="/" replace />;
+
   return (
     <div className="space-y-8">
       <div>
@@ -63,6 +65,11 @@ export default function AdminDashboard() {
           <Activity className="w-7 h-7 text-primary" /> Admin Command Centre
         </h1>
         <p className="text-muted-foreground text-sm mt-1">Platform-wide overview of all activity.</p>
+        {user?.email === ADMIN_EMAIL && (
+          <div className="mt-2 inline-flex items-center gap-2 bg-[#FFD700]/10 border border-[#FFD700]/30 px-3 py-1.5 rounded-lg text-xs font-bold text-[#FFD700]">
+            <ShieldCheck className="w-3.5 h-3.5" /> Signed in as owner — Command plan access granted (free)
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -74,8 +81,10 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="sales">Sales & Revenue</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="payments" className="relative">
             Payments
             {pendingPayments.length > 0 && (
@@ -148,6 +157,14 @@ export default function AdminDashboard() {
               {cases.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No cases yet.</p>}
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="sales" className="mt-6">
+          <SalesStats />
+        </TabsContent>
+
+        <TabsContent value="users" className="mt-6">
+          <UserManagement />
         </TabsContent>
 
         <TabsContent value="payments" className="mt-6">
