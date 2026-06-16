@@ -1,0 +1,9 @@
+{
+  "type": "outlook",
+  "scopes": [
+    "Calendars.ReadWrite",
+    "Mail.Send",
+    "offline_access",
+    "User.Read"
+  ]
+}
