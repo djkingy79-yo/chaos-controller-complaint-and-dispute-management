@@ -5,10 +5,11 @@ import { useAuth } from "@/lib/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download } from "lucide-react";
+import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download, BarChart2 } from "lucide-react";
 import CaseStatusControl from "@/components/cases/CaseStatusControl";
 import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
+import VisualTimeline from "@/components/cases/VisualTimeline";
 import ComplaintLetter from "@/components/cases/ComplaintLetter";
 import ChaosScore from "@/components/cases/ChaosScore";
 import PrintBundle from "@/components/cases/PrintBundle";
@@ -130,7 +131,7 @@ export default function CaseDetail() {
         {/* Main Content */}
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="w-full grid grid-cols-6 mb-4">
+            <TabsList className="w-full grid grid-cols-7 mb-4">
               <TabsTrigger value="summary" className="gap-1 text-xs sm:text-sm">
                 <FileText className="w-3.5 h-3.5 hidden sm:block" /> Summary
               </TabsTrigger>
@@ -142,6 +143,9 @@ export default function CaseDetail() {
               </TabsTrigger>
               <TabsTrigger value="timeline" className="gap-1 text-xs sm:text-sm">
                 <Clock className="w-3.5 h-3.5 hidden sm:block" /> Timeline
+              </TabsTrigger>
+              <TabsTrigger value="visual" className="gap-1 text-xs sm:text-sm">
+                <BarChart2 className="w-3.5 h-3.5 hidden sm:block" /> Visual
               </TabsTrigger>
               <TabsTrigger value="print" className="gap-1 text-xs sm:text-sm">
                 <Printer className="w-3.5 h-3.5 hidden sm:block" /> Print
@@ -161,6 +165,9 @@ export default function CaseDetail() {
             </TabsContent>
             <TabsContent value="timeline">
               <CaseTimeline caseId={caseId} events={timelineEvents} />
+            </TabsContent>
+            <TabsContent value="visual">
+              <VisualTimeline caseId={caseId} events={timelineEvents} evidence={evidence} />
             </TabsContent>
             <TabsContent value="print">
               <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
