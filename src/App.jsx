@@ -27,6 +27,7 @@ import Payments from '@/pages/Payments';
 import CalendarView from '@/pages/CalendarView';
 import CalendarSync from '@/pages/CalendarSync';
 import HelpGuide from '@/pages/HelpGuide';
+import TemplateLibrary from '@/pages/TemplateLibrary';
 import QnA from '@/pages/QnA';
 import SampleReports from '@/pages/SampleReports';
 import Terms from '@/pages/Terms';
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
           <Route path="/calendar" element={<CalendarView />} />
           <Route path="/calendar-sync" element={<CalendarSync />} />
           <Route path="/help" element={<HelpGuide />} />
+          <Route path="/templates" element={<TemplateLibrary />} />
           <Route path="/qna" element={<QnA />} />
           <Route path="/sample-reports" element={<SampleReports />} />
           <Route path="/terms" element={<Terms />} />

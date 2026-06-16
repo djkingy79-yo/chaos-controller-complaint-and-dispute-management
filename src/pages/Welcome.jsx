@@ -65,28 +65,28 @@ const disputeTypes = [
 const plans = [
   {
     name: "Starter",
-    price: "$9.99",
-    period: "/month",
+    price: "$25.00",
+    period: "AUD/month",
     description: "For single disputes",
-    features: ["1 active case", "Evidence vault (10 files)", "AI document scanning", "Complaint letter generation", "Timeline builder"],
+    features: ["3 active cases", "Evidence vault (25 files)", "AI document scanning", "Complaint letter generator", "Timeline builder", "Deadline tracker", "Full template library", "PDF export"],
     cta: "Select Plan",
     popular: false
   },
   {
     name: "Pro",
-    price: "$24.99",
-    period: "/month",
-    description: "For multiple disputes",
-    features: ["Unlimited cases", "Unlimited evidence files", "Priority AI scanning", "Escalation bundles", "Deadline reminders", "Calendar sync"],
+    price: "$35.00",
+    period: "AUD/month",
+    description: "For serious & ongoing disputes",
+    features: ["Unlimited cases", "Unlimited evidence files", "Priority AI scanning", "Tribunal-ready escalation bundles", "Google Calendar sync", "Smart checklist", "Organisation directory", "Ombudsman direct links", "Email notifications"],
     cta: "Select Plan",
     popular: true
   },
   {
-    name: "Premium",
-    price: "$49.99",
-    period: "/month",
-    description: "Maximum support",
-    features: ["Everything in Pro", "Priority support", "Legal template library", "Case strength analytics", "Export to PDF bundles", "Multi-user access"],
+    name: "Command",
+    price: "$49.00",
+    period: "AUD/month",
+    description: "Maximum firepower",
+    features: ["Everything in Pro", "Full ZIP case bundle export", "Advanced timeline & analytics", "AI evidence analysis", "Printable formal bundles", "Chaos Score tracker", "Priority support", "Early access to new features"],
     cta: "Select Plan",
     popular: false
   }

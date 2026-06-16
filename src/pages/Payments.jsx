@@ -8,26 +8,57 @@ import { motion } from "framer-motion";
 const plans = [
   {
     name: "Starter",
-    price: "$9.99",
-    period: "/month",
-    description: "For single disputes",
-    features: ["1 active case", "Evidence vault (10 files)", "AI document scanning", "Complaint letter generation", "Timeline builder"],
+    price: "$25.00",
+    period: "AUD/month",
+    description: "Perfect for a single dispute",
+    features: [
+      "3 active cases",
+      "Evidence vault (25 files per case)",
+      "AI document scanning & data extraction",
+      "Professional complaint letter generator",
+      "Automated case timeline builder",
+      "Deadline tracker with reminders",
+      "Access to full template library",
+      "Export case summary to PDF"
+    ],
     popular: false
   },
   {
     name: "Pro",
-    price: "$24.99",
-    period: "/month",
-    description: "For multiple disputes",
-    features: ["Unlimited cases", "Unlimited evidence files", "Priority AI scanning", "Escalation bundles", "Deadline reminders", "Calendar sync"],
+    price: "$35.00",
+    period: "AUD/month",
+    description: "For serious disputes & ongoing battles",
+    features: [
+      "Unlimited active cases",
+      "Unlimited evidence files",
+      "Priority AI scanning & smart extraction",
+      "Tribunal-ready escalation bundles",
+      "Google Calendar deadline sync",
+      "Smart checklist with proof tracking",
+      "Organisation contacts directory",
+      "Direct ombudsman links (AFCA, TIO, NCAT)",
+      "Chaos Score case strength tracker",
+      "Email notifications for deadlines & updates"
+    ],
     popular: true
   },
   {
-    name: "Premium",
-    price: "$49.99",
-    period: "/month",
-    description: "Maximum support",
-    features: ["Everything in Pro", "Priority support", "Legal template library", "Case strength analytics", "Export to PDF bundles", "Multi-user access"],
+    name: "Command",
+    price: "$49.00",
+    period: "AUD/month",
+    description: "Maximum firepower for complex cases",
+    features: [
+      "Everything in Pro — unlimited",
+      "Full letter template library with all categories",
+      "Export full case bundle as ZIP",
+      "Advanced timeline with event categorisation",
+      "Case strength analytics & Chaos Score",
+      "Multi-step guided complaint builder",
+      "AI-powered evidence analysis",
+      "Printable formal complaint bundles",
+      "Priority email support from our team",
+      "Early access to new features"
+    ],
     popular: false
   }
 ];
@@ -123,7 +154,7 @@ export default function Payments() {
             <div className="flex items-center gap-3 mb-6">
               <CheckCircle2 className="w-6 h-6 text-[#2ECC71]" />
               <h2 className="text-xl font-heading font-bold text-white">
-                Payment Instructions for {selectedPlan.name} Plan
+                Payment Instructions — {selectedPlan.name} Plan ({selectedPlan.price} {selectedPlan.period})
               </h2>
             </div>
 
