@@ -118,7 +118,7 @@ export default function Welcome() {
             <img
               src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
               alt="Chaos Controller Logo"
-              className="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 mx-auto object-contain drop-shadow-2xl"
+              className="w-72 h-72 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] mx-auto object-contain drop-shadow-2xl"
             />
           </motion.div>
 
@@ -147,6 +147,18 @@ export default function Welcome() {
                 NEVER FEAR. CONTROL STARTS HERE.
               </p>
             </div>
+          </motion.div>
+
+          {/* Quick explainer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-center mb-8"
+          >
+            <p className="text-base sm:text-lg text-gray-300 max-w-xl mx-auto leading-relaxed font-bold">
+              Chaos Controller is an <span className="text-white">AI-powered app</span> that helps everyday Australians fight back against banks, insurers, landlords, and telcos — by organising your evidence, writing your complaints, and tracking every deadline for you.
+            </p>
           </motion.div>
 
           {/* Hero statement */}
