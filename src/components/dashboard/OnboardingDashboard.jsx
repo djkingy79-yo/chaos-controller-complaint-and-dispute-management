@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Upload, FileText, ScanLine, Clock, Shield, CheckCircle, ArrowRight } from "lucide-react";
-import { CARD_FRONT } from "@/components/cases/LetterheadBanner";
 
 export default function OnboardingDashboard() {
   const navigate = useNavigate();
@@ -55,9 +54,9 @@ export default function OnboardingDashboard() {
       >
         <div className="relative z-10">
           <img 
-            src={CARD_FRONT} 
+            src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" 
             alt="Chaos Controller" 
-            className="w-full max-w-md mx-auto mb-6 rounded-lg shadow-2xl" 
+            className="w-32 h-32 mx-auto mb-6 rounded-lg shadow-2xl object-contain" 
           />
           <h1 className="text-2xl sm:text-4xl font-display font-bold text-foreground mb-2">
             CHAOS CONTROLLER

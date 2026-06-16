@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package } from "lucide-react";
 import { format } from "date-fns";
-import { buildLetterheadHTML, buildFooterHTML, CARD_FRONT, CONTACT } from "./LetterheadBanner";
+import { buildLetterheadHTML, buildFooterHTML } from "./LetterheadBanner";
 
 // Times New Roman print styles injected once
 const PRINT_STYLES = `
