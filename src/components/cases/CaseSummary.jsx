@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, differenceInDays, isPast, parseISO } from "date-fns";
 import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { buildLetterheadHTML, buildFooterHTML, CONTACT, CARD_FRONT } from "./LetterheadBanner";
+import { buildLetterheadHTML, buildFooterHTML } from "./LetterheadBanner";
 
 const STATUS_LABELS = {
   draft: "Draft",
