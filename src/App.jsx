@@ -33,6 +33,7 @@ import SampleReports from '@/pages/SampleReports';
 import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import SharedCasePortal from '@/pages/SharedCasePortal';
+import SamplePreviews from '@/pages/SamplePreviews';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
           <Route path="/sample-reports" element={<SampleReports />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/sample-previews" element={<SamplePreviews />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
