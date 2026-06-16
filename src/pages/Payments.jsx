@@ -209,12 +209,13 @@ export default function Payments() {
                 ))}
               </ul>
 
-              <Button
-                className={`w-full ${selectedPlan?.name === plan.name ? "bg-[#FFD700] hover:bg-[#FFD700]/90 text-black" : "bg-gray-800 hover:bg-gray-700 text-white"}`}
-                onClick={() => setSelectedPlan(plan)}
+              <button
+                type="button"
+                className={`w-full py-2 rounded-lg font-bold text-sm transition-colors ${selectedPlan?.name === plan.name ? "bg-[#FFD700] text-black" : "bg-gray-800 hover:bg-gray-700 text-white"}`}
+                onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan); }}
               >
-                {selectedPlan?.name === plan.name ? "Selected" : "Select Plan"}
-              </Button>
+                {selectedPlan?.name === plan.name ? "✓ Selected" : "Select Plan"}
+              </button>
             </motion.div>
           ))}
         </div>
