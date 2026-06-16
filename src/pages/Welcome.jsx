@@ -15,7 +15,13 @@ import {
   Building2,
   Phone,
   Zap,
-  Briefcase
+  Briefcase,
+  Bot,
+  Bell,
+  CalendarCheck,
+  BookOpen,
+  Layers,
+  Trophy
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -171,6 +177,69 @@ export default function Welcome() {
             >
               START YOUR CASE <ArrowRight className="w-6 h-6" />
             </Button>
+          </motion.div>
+
+          {/* New Banner Image */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.78, duration: 0.8 }}
+            className="max-w-4xl mx-auto px-4 mb-12"
+          >
+            <img
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/c228452e0_IMG_7082.jpg"
+              alt="Chaos Controller"
+              className="w-full rounded-2xl shadow-2xl border-2 border-[#FFD700]/40"
+            />
+          </motion.div>
+
+          {/* Personal Assistant Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.85, duration: 0.8 }}
+            className="max-w-5xl mx-auto mb-14"
+          >
+            <div className="bg-gradient-to-br from-gray-900 to-black border-2 border-[#C0392B] rounded-2xl p-6 sm:p-10">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-[#FFD700] rounded-full flex items-center justify-center">
+                  <Bot className="w-7 h-7 text-black" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-display font-black text-white">
+                  YOUR AI-POWERED PERSONAL ASSISTANT
+                </h2>
+              </div>
+              <p className="text-center text-[#FFD700] font-bold text-lg mb-8">
+                Like having a lawyer, case manager, and admin all in one — working for you 24/7.
+              </p>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[
+                  { icon: Upload, color: "#C0392B", title: "AUTO DOCUMENT SCAN", desc: "Upload any document — contract, email, statement, invoice — and AI instantly extracts names, dates, account numbers, and key amounts. No manual data entry." },
+                  { icon: FileText, color: "#FFD700", title: "LETTER GENERATOR", desc: "From 1st complaint to escalation letters — generate professional, legally worded correspondence in seconds. Tailored to your exact case and industry." },
+                  { icon: CalendarCheck, color: "#27AE60", title: "DEADLINE TRACKER", desc: "Every response deadline is tracked automatically. Get alerts before time runs out so you never miss a critical window to escalate." },
+                  { icon: Layers, color: "#9B59B6", title: "TIMELINE BUILDER", desc: "Every interaction, letter, and evidence piece is plotted on an automatic timeline — the full accountability record, always ready for tribunal." },
+                  { icon: Bell, color: "#F39C12", title: "SMART NOTIFICATIONS", desc: "Automated reminders for overdue responses, upcoming deadlines, and missing evidence. Your case manager that never sleeps." },
+                  { icon: Trophy, color: "#3498DB", title: "ESCALATION BUNDLES", desc: "One click generates a complete, print-ready submission bundle for AFCA, TIO, NCAT, and all ombudsman bodies. Tribunal-ready, every time." },
+                ].map(({ icon: Icon, color, title, desc }) => (
+                  <div key={title} className="bg-black/60 border border-gray-700 rounded-xl p-5 hover:border-[#FFD700]/40 transition-colors">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}22` }}>
+                        <Icon className="w-5 h-5" style={{ color }} />
+                      </div>
+                      <h3 className="text-white font-black text-sm tracking-wide">{title}</h3>
+                    </div>
+                    <p className="text-gray-300 font-bold text-sm leading-relaxed">{desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 bg-gradient-to-r from-[#FFD700]/10 via-[#C0392B]/10 to-[#FFD700]/10 border border-[#FFD700]/40 rounded-xl p-5 text-center">
+                <p className="text-white font-black text-lg">
+                  🤖 Think of it as your <span className="text-[#FFD700]">personal dispute manager</span> — it remembers everything, misses nothing, and builds your case while you sleep.
+                </p>
+              </div>
+            </div>
           </motion.div>
 
           {/* App Purpose Section */}
