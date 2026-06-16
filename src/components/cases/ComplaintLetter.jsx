@@ -66,7 +66,21 @@ export default function ComplaintLetter({ caseItem }) {
     const client = buildClientContext(caseItem, evidence);
     const today = format(new Date(), "d MMMM yyyy");
 
-    const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
+    // Format account numbers professionally — break into multiple lines if too long
+  const accountNumbers = client.accounts?.length ? client.accounts.join(", ") : caseItem.account_number || "";
+  const formattedAccounts = accountNumbers && accountNumbers.length > 60 
+    ? accountNumbers.split(", ").reduce((lines, acc, i) => {
+        const currentLine = lines[lines.length - 1];
+        if (!currentLine || (currentLine + ", " + acc).length > 60) {
+          lines.push(acc);
+        } else {
+          lines[lines.length - 1] = currentLine + ", " + acc;
+        }
+        return lines;
+      }, []).join("\n    ")
+    : accountNumbers;
+
+  const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
 
 CRITICAL RULE: Never use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely or write naturally around it.
 
@@ -75,7 +89,7 @@ COMPLAINANT DETAILS:
 - Address: ${client.address || "not provided — omit address block"}
 - Email: ${client.email || "not provided"}
 - Phone/Mobile: ${client.phone || "not provided"}
-- Account/Reference Number: ${client.accounts?.join(", ") || caseItem.account_number || "not provided"}
+- Account/Reference Number: ${formattedAccounts || "not provided"}
 - Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : client.dates?.join(", ") || "not provided"}
 ${client.policies?.length ? `- Policy/Reference Numbers: ${client.policies.join(", ")}` : ""}
 ${client.amounts?.length ? `- Key Amounts: ${client.amounts.join(", ")}` : ""}
@@ -102,7 +116,8 @@ LETTER FORMAT INSTRUCTIONS:
 6. Firm but professional tone. Include a 21-day response deadline.
 7. Mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step if unresolved.
 8. Close with "Yours faithfully," then the complainant's full name (if provided).
-9. NEVER write bracket placeholders — use real data or omit the line entirely.`;
+9. NEVER write bracket placeholders — use real data or omit the line entirely.
+10. If account numbers are very long, format them on separate lines for readability.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);
@@ -193,12 +208,10 @@ LETTER FORMAT INSTRUCTIONS:
       )}
 
       {/* Letterhead Preview */}
-      <div className="border border-border rounded-lg overflow-hidden shadow-sm" style={{ background: "#111" }}>
+      <div className="border border-border rounded-lg overflow-hidden shadow-sm" style={{ background: "#fff" }}>
 
-        {/* Header: business card banner + contact strip */}
-      <LetterheadHeader today={today} />
-
-
+        {/* Header: compact professional letterhead */}
+        <LetterheadHeader today={today} />
 
         {/* Letter body */}
         <div className="px-8 py-6" style={{ background: "#fff" }}>

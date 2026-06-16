@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FileText, ExternalLink, Printer } from "lucide-react";
-import { CARD_FRONT, buildFooterHTML } from "@/components/cases/LetterheadBanner";
+import { buildFooterHTML } from "@/components/cases/LetterheadBanner";
 import { format } from "date-fns";
 
 function buildClientContext(caseItem) {
@@ -39,7 +39,22 @@ export default function LetterPreview({ cases }) {
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-        <img src={CARD_FRONT} alt="Chaos Controller" className="w-full block" />
+        {/* Compact professional letterhead */}
+        <div style={{ background: "#000", padding: "10px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
+          <img 
+            src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" 
+            alt="Chaos Controller" 
+            style={{ width: "32px", height: "32px", objectFit: "contain" }} 
+          />
+          <div style={{ flex: 1 }}>
+            <div style={{ color: "#FFD700", fontSize: "11pt", fontWeight: "bold", fontFamily: "Times New Roman, serif" }}>
+              CHAOS CONTROLLER™
+            </div>
+            <div style={{ color: "#888", fontSize: "7pt", fontFamily: "Times New Roman, serif" }}>
+              Consumer Advocacy Platform
+            </div>
+          </div>
+        </div>
 
         <div className="px-5 pt-2 pb-1 flex justify-between items-center">
           <div>

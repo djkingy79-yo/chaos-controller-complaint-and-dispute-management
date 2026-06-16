@@ -1,5 +1,3 @@
-export const CARD_FRONT = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg";
-
 export const CONTACT = {
   website: "www.chaoscontroller.com.au",
   email: "chaoscontrollerapp@gmail.com",
@@ -7,15 +5,34 @@ export const CONTACT = {
   location: "Australia Wide",
 };
 
-export function LetterheadHeader() {
+// Professional letterhead header — compact logo with clean branding
+export function LetterheadHeader({ today }) {
   return (
-    <img src={CARD_FRONT} alt="Chaos Controller" style={{ width: "100%", display: "block" }} />
+    <div style={{ background: "#000", padding: "12px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
+      <img 
+        src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" 
+        alt="Chaos Controller" 
+        style={{ width: "40px", height: "40px", objectFit: "contain" }} 
+      />
+      <div style={{ flex: 1 }}>
+        <div style={{ color: "#FFD700", fontSize: "14pt", fontWeight: "bold", fontFamily: "Times New Roman, serif" }}>
+          CHAOS CONTROLLER™
+        </div>
+        <div style={{ color: "#888", fontSize: "8pt", fontFamily: "Times New Roman, serif" }}>
+          Consumer Advocacy Platform — {today}
+        </div>
+      </div>
+    </div>
   );
 }
 
-export function buildLetterheadHTML() {
-  return `<div style="margin:-2cm -2cm 0 -2cm;">
-    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:100%;display:block;" />
+export function buildLetterheadHTML(caseItem, client, today) {
+  return `<div style="background:#000;padding:12px 20px;display:flex;align-items:center;">
+    <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" style="width:40px;height:40px;object-fit:contain;" />
+    <div style="flex:1;padding-left:12px;">
+      <div style="color:#FFD700;font-size:14pt;font-weight:bold;font-family:'Times New Roman',serif;">CHAOS CONTROLLER™</div>
+      <div style="color:#888;font-size:8pt;font-family:'Times New Roman',serif;">Consumer Advocacy Platform — ${today}</div>
+    </div>
   </div>`;
 }
 
@@ -25,15 +42,15 @@ export function buildFooterHTML(caseItem, client, pageNum, totalPages) {
   const org = caseItem?.organisation_name || "";
   const title = caseItem?.title || "";
   const docDate = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const pageText = pageNum && totalPages ? `Page ${pageNum} of ${totalPages}` : pageNum ? `Page ${pageNum}` : "";
-  const line1 = `This App Chaos Controller was designed and developed by Deb King ${year}`;
-  const line2 = `${name ? `${name} vs ${org}` : org}${title ? ` — ${title}` : ""} ${docDate}`;
+  const pageText = pageNum && totalPages ? `Page ${pageNum} of ${totalPages}` : pageNum ? `Page ${pageNum}` : (pageNum ? `Page ${pageNum}` : "");
+  const line1 = `Chaos Controller™ — Designed & Developed by Deb King ${year}`;
+  const caseRef = title ? `${title}` : `${name ? name + " vs " + org : org}`;
   return `
-  <div style="font-size:9pt;font-style:italic;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#555;font-family:'Times New Roman',Times,serif;display:flex;justify-content:space-between;align-items:flex-end;">
-    <div>
-      <div>${line1}</div>
-      <div>${line2}</div>
+  <div style="font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;font-family:'Times New Roman',Times,serif;display:flex;justify-content:space-between;align-items:center;">
+    <div style="color:#666;">
+      <div style="margin-bottom:2px;">${line1}</div>
+      <div style="color:#888;">${caseRef}${docDate ? ` — ${docDate}` : ""}</div>
     </div>
-    ${pageText ? `<div style="white-space:nowrap;padding-left:12pt;">${pageText}</div>` : ""}
+    ${pageText ? `<div style="white-space:nowrap;padding-left:12pt;color:#888;">${pageText}</div>` : ""}
   </div>`;
 }

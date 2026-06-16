@@ -94,16 +94,22 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
     @page { margin: 2cm; }
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; }
-    .letterhead img { width: 100%; display: block; margin: -2cm -2cm 0 -2cm; width: calc(100% + 4cm); }
-    pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; }
-    .footer { font-size: 9pt; font-style: italic; border-top: 1pt solid #ccc; margin-top: 24pt; padding-top: 6pt; color: #555; display: flex; justify-content: space-between; }
+    .letterhead { background:#000;padding:12px 20px;display:flex;align-items:center; }
+    .letterhead img { width:40px;height:40px;object-fit:contain; }
+    .letterhead-text { flex:1;padding-left:12px;color:#FFD700;font-size:14pt;font-weight:bold;font-family:'Times New Roman',serif; }
+    .letterhead-sub { color:#888;font-size:8pt;font-family:'Times New Roman',serif; }
+    pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; padding: 2cm 2cm 1cm 2cm; }
+    .footer { font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;display:flex;justify-content:space-between; }
   </style></head><body>
-    <div class="letterhead"><img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" alt="Chaos Controller" /></div>
-    <pre>${content}</pre>
-    <div class="footer">
-      <div><div>This App Chaos Controller was designed and developed by Deb King ${new Date().getFullYear()}</div><div>${client.name ? client.name + " vs " + (caseItem.organisation_name || "") : (caseItem.organisation_name || "")} — ${today}</div></div>
-      <div>Page 1</div>
+    <div class="letterhead">
+      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" alt="Chaos Controller" />
+      <div style="flex:1;padding-left:12px;">
+        <div class="letterhead-text">CHAOS CONTROLLER™</div>
+        <div class="letterhead-sub">Consumer Advocacy Platform — ${today}</div>
+      </div>
     </div>
+    <pre>${content}</pre>
+    <div style="padding:0 2cm;">${buildFooterHTML(caseItem, client, 1, "")}</div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -270,10 +276,16 @@ function printBundle(caseItem, evidence, events) {
 
   const html = `<div style="${baseStyles()}">
     <!-- COVER PAGE -->
-    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:calc(100% + 4cm);margin:-2cm -2cm 0 -2cm;display:block;" />
+    <div style="background:#000;padding:12px 2cm;display:flex;align-items:center;">
+      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" style="width:40px;height:40px;object-fit:contain;" />
+      <div style="flex:1;padding-left:12px;">
+        <div style="color:#FFD700;font-size:14pt;font-weight:bold;font-family:'Times New Roman',serif;">CHAOS CONTROLLER™</div>
+        <div style="color:#888;font-size:8pt;font-family:'Times New Roman',serif;">Consumer Advocacy Platform</div>
+      </div>
+    </div>
 
     <!-- Blue header bar with case info -->
-    <div style="background:#1d4ed8;color:white;padding:20pt 2cm;margin:0 -2cm;margin-top:12pt;">
+    <div style="background:#1d4ed8;color:white;padding:20pt 2cm;margin:0;">
       <div style="font-size:24pt;font-weight:bold;margin-bottom:8pt;font-family:'Times New Roman',Times,serif;">ESCALATION BUNDLE</div>
       <div style="font-size:12pt;margin-bottom:4pt;font-family:'Times New Roman',Times,serif;">${today}</div>
       <div style="font-size:12pt;font-family:'Times New Roman',Times,serif;">chaoscontroller.com.au</div>
@@ -387,12 +399,18 @@ function printBundle(caseItem, evidence, events) {
       if (!content) return "";
       const sectionNum = idx + 4;
       return `${pageBreak}
-    <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:calc(100% + 4cm);margin:-2cm -2cm 0 -2cm;display:block;" />
-    <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0 -2cm;margin-bottom:20pt;">
+    <div style="background:#000;padding:12px 2cm;display:flex;align-items:center;">
+      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" style="width:40px;height:40px;object-fit:contain;" />
+      <div style="flex:1;padding-left:12px;">
+        <div style="color:#FFD700;font-size:14pt;font-weight:bold;font-family:'Times New Roman',serif;">CHAOS CONTROLLER™</div>
+        <div style="color:#888;font-size:8pt;font-family:'Times New Roman',serif;">Consumer Advocacy Platform</div>
+      </div>
+    </div>
+    <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0;">
       <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section ${sectionNum} — ${ld.label}</div>
     </div>
-    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin-top:12pt;">${content}</pre>
-    ${buildFooterHTML(caseItem, client, sectionNum, "")}`;
+    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin:0;padding:2cm 2cm 1cm 2cm;">${content}</pre>
+    <div style="padding:0 2cm;">${buildFooterHTML(caseItem, client, sectionNum, "")}</div>`;
     }).join("")}
   </div>`;
   setPrintArea(html);

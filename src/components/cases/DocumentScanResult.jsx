@@ -7,16 +7,27 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-const Field = ({ icon: Icon, label, value }) => {
+const Field = ({ icon: Icon, label, value, formatList = false }) => {
   if (!value || (Array.isArray(value) && value.length === 0)) return null;
+  const isArray = Array.isArray(value);
+  const displayValue = isArray && formatList 
+    ? value.reduce((lines, item, i) => {
+        const currentLine = lines[lines.length - 1];
+        if (!currentLine || (currentLine + ", " + item).length > 50) {
+          lines.push(item);
+        } else {
+          lines[lines.length - 1] = currentLine + ", " + item;
+        }
+        return lines;
+      }, []).join("\n      ")
+    : (isArray ? value.join(", ") : value);
+  
   return (
     <div className="flex items-start gap-2 text-xs">
       <Icon className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-      <div>
+      <div className="break-words">
         <span className="text-muted-foreground">{label}: </span>
-        <span className="font-medium text-foreground">
-          {Array.isArray(value) ? value.join(", ") : value}
-        </span>
+        <span className="font-medium text-foreground whitespace-pre-line">{displayValue}</span>
       </div>
     </div>
   );
@@ -60,10 +71,10 @@ export default function DocumentScanResult({ extracted, onConfirm, confirmed }) 
               <Field icon={Mail} label="Email" value={extracted.complainant_email} />
               <Field icon={Phone} label="Phone" value={extracted.complainant_phone} />
               <Field icon={Building2} label="Merchant / Provider" value={extracted.merchant_name} />
-              <Field icon={Hash} label="Account #" value={extracted.account_numbers} />
-              <Field icon={Hash} label="Policy #" value={extracted.policy_numbers} />
-              <Field icon={DollarSign} label="Amounts" value={extracted.key_amounts} />
-              <Field icon={Calendar} label="Dates" value={extracted.dates_mentioned} />
+              <Field icon={Hash} label="Account #" value={extracted.account_numbers} formatList={true} />
+              <Field icon={Hash} label="Policy #" value={extracted.policy_numbers} formatList={true} />
+              <Field icon={DollarSign} label="Amounts" value={extracted.key_amounts} formatList={true} />
+              <Field icon={Calendar} label="Dates" value={extracted.dates_mentioned} formatList={true} />
             </div>
           )}
 

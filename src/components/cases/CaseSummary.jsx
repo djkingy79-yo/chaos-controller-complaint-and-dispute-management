@@ -88,7 +88,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
           <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Complainant</td>
           <td style="padding:5pt 8pt;font-size:11pt;">${client.name || "—"}</td>
           <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Account #</td>
-          <td style="padding:5pt 8pt;font-size:11pt;">${caseItem.account_number || "—"}</td>
+          <td style="padding:5pt 8pt;font-size:11pt;word-break:break-word;">${caseItem.account_number || "—"}</td>
         </tr>
         <tr>
           <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Incident Date</td>
@@ -185,14 +185,14 @@ export default function CaseSummary({ caseItem, evidence, events }) {
             { label: "Status", value: STATUS_LABELS[caseItem.status] || caseItem.status },
             { label: "Category", value: caseItem.category },
             { label: "Priority", value: PRIORITY_LABELS[caseItem.priority] || caseItem.priority },
-            { label: "Account #", value: caseItem.account_number },
+            { label: "Account #", value: caseItem.account_number, breakWord: true },
             { label: "Incident Date", value: caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMM yyyy") : null },
             { label: "Escalation Body", value: caseItem.escalation_body },
             { label: "Complainant", value: caseItem.complainant_name },
-          ].map(({ label, value }) => value ? (
+          ].map(({ label, value, breakWord }) => value ? (
             <div key={label} className="flex gap-2">
               <span className="text-muted-foreground shrink-0 w-28">{label}</span>
-              <span className="font-medium text-foreground capitalize">{value}</span>
+              <span className={`font-medium text-foreground capitalize ${breakWord ? "break-words" : ""}`}>{value}</span>
             </div>
           ) : null)}
         </div>
