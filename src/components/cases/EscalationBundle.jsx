@@ -215,11 +215,20 @@ export default function EscalationBundle({ caseItem, evidence, events }) {
     doc.setTextColor(BLACK[0], BLACK[1], BLACK[2]);
     doc.text("Bundle Contents:", margin, y);
     y += 6;
+    const allLetters = [
+      { field: "complaint_letter", label: "1st Complaint Letter" },
+      { field: "complaint_letter_2", label: "2nd Complaint Letter" },
+      { field: "complaint_letter_3", label: "3rd Complaint Letter" },
+      { field: "letter_accept_offer", label: "Acceptance of Offer" },
+      { field: "letter_deny_offer", label: "Rejection of Offer" },
+      { field: "letter_escalation", label: "Escalation Letter" },
+    ].filter(l => caseItem[l.field]);
+
     const toc = [
       "Section 1 — Escalation Readiness Checklist",
       "Section 2 — Chronological Timeline",
       "Section 3 — Evidence Index",
-      "Section 4 — Complaint Letter",
+      ...allLetters.map((l, i) => `Section ${4 + i} — ${l.label}`),
     ];
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
@@ -361,63 +370,65 @@ export default function EscalationBundle({ caseItem, evidence, events }) {
 
     addPageFooter(doc, pageNum++);
 
-    // ─── PAGE 5: COMPLAINT LETTER ───
-    doc.addPage();
+    // ─── LETTER SECTIONS (one per generated letter) ───
+    for (let li = 0; li < allLetters.length; li++) {
+      const ld = allLetters[li];
+      doc.addPage();
 
-    // Letterhead band
-    doc.setFillColor(BLUE[0], BLUE[1], BLUE[2]);
-    doc.rect(0, 0, pageW, 22, "F");
-    if (logoData) {
-      doc.addImage(logoData, "PNG", margin, 2, 36, 18);
-    }
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(255, 255, 255);
-    doc.text(today, pageW - margin, 10, { align: "right" });
-    doc.text("Section 4 — Complaint Letter", pageW - margin, 17, { align: "right" });
-    y = 30;
+      // Letterhead band
+      doc.setFillColor(BLUE[0], BLUE[1], BLUE[2]);
+      doc.rect(0, 0, pageW, 22, "F");
+      if (logoData) {
+        doc.addImage(logoData, "PNG", margin, 2, 36, 18);
+      }
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text(today, pageW - margin, 10, { align: "right" });
+      doc.text(`Section ${4 + li} — ${ld.label}`, pageW - margin, 17, { align: "right" });
+      y = 30;
 
-    if (client.name) {
-      const clientFields2 = [
-        client.name && ["From", client.name],
-        client.address && ["Address", client.address],
-        client.email && ["Email", client.email + (client.phone ? "  |  " + client.phone : "")],
-        client.accounts?.length && ["Account(s)", client.accounts.join(", ")],
-      ].filter(Boolean);
-      const boxH2 = clientFields2.length * 6 + 8;
-      doc.setFillColor(248, 250, 252);
-      doc.setDrawColor(226, 232, 240);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(margin, y, pageW - 28, boxH2, 2, 2, "FD");
-      let cy2 = y + 6;
-      clientFields2.forEach(([lbl, val]) => {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
-        doc.setTextColor(GREY[0], GREY[1], GREY[2]);
-        doc.text(lbl + ":", margin + 4, cy2);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(BLACK[0], BLACK[1], BLACK[2]);
-        doc.text(String(val), margin + 26, cy2);
-        cy2 += 6;
+      if (client.name) {
+        const clientFields2 = [
+          client.name && ["From", client.name],
+          client.address && ["Address", client.address],
+          client.email && ["Email", client.email + (client.phone ? "  |  " + client.phone : "")],
+          client.accounts?.length && ["Account(s)", client.accounts.join(", ")],
+        ].filter(Boolean);
+        const boxH2 = clientFields2.length * 6 + 8;
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(margin, y, pageW - 28, boxH2, 2, 2, "FD");
+        let cy2 = y + 6;
+        clientFields2.forEach(([lbl, val]) => {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9);
+          doc.setTextColor(GREY[0], GREY[1], GREY[2]);
+          doc.text(lbl + ":", margin + 4, cy2);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(BLACK[0], BLACK[1], BLACK[2]);
+          doc.text(String(val), margin + 26, cy2);
+          cy2 += 6;
+        });
+        y = cy2 + 4;
+      }
+
+      drawHRule(doc, y);
+      y += 8;
+
+      doc.setFont("times", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(BLACK[0], BLACK[1], BLACK[2]);
+      const letterLines = doc.splitTextToSize(caseItem[ld.field] || "", pageW - 28);
+      letterLines.forEach((line) => {
+        if (y > pageH - 18) { addPageFooter(doc, pageNum++); doc.addPage(); y = 14; }
+        doc.text(line, margin, y);
+        y += 5.5;
       });
-      y = cy2 + 4;
+
+      addPageFooter(doc, pageNum++);
     }
-
-    drawHRule(doc, y);
-    y += 8;
-
-    doc.setFont("times", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(BLACK[0], BLACK[1], BLACK[2]);
-    const letterText = caseItem.complaint_letter || "No complaint letter has been generated for this case.";
-    const letterLines = doc.splitTextToSize(letterText, pageW - 28);
-    letterLines.forEach((line) => {
-      if (y > pageH - 18) { addPageFooter(doc, pageNum++); doc.addPage(); y = 14; }
-      doc.text(line, margin, y);
-      y += 5.5;
-    });
-
-    addPageFooter(doc, pageNum);
 
     const fileName = `CC-Bundle-${caseItem.title.replace(/[^a-zA-Z0-9]/g, "-").slice(0, 40)}-${format(new Date(), "yyyy-MM-dd")}.pdf`;
     doc.save(fileName);
@@ -468,7 +479,7 @@ export default function EscalationBundle({ caseItem, evidence, events }) {
           { icon: FileText, label: "Readiness Checklist", desc: "Section 1", color: "text-accent" },
           { icon: Clock, label: "Chronological Timeline", desc: "Section 2", color: "text-warning" },
           { icon: FolderOpen, label: "Evidence Index", desc: "Section 3", color: "text-success" },
-          { icon: FileText, label: "Complaint Letter", desc: "Section 4", color: "text-primary" },
+          { icon: FileText, label: "All Generated Letters", desc: "Sections 4+", color: "text-primary" },
         ].map((item) => (
           <div key={item.label} className="bg-secondary/30 border border-border rounded-lg p-3 flex items-center gap-2">
             <item.icon className={`w-4 h-4 ${item.color} shrink-0`} />

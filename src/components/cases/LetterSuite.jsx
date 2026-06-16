@@ -4,10 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText } from "lucide-react";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { LetterheadHeader, CARD_FRONT } from "./LetterheadBanner";
+import { useAuth } from "@/lib/AuthContext";
+import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
+import { Link } from "react-router-dom";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -38,13 +41,14 @@ function buildClientContext(caseItem, evidenceList) {
   return merged;
 }
 
+// minPlan: "Starter" | "Pro" | "Command"
 const LETTER_TYPES = [
-  { key: "letter1", label: "1st Complaint", field: "complaint_letter", description: "Initial formal complaint to the organisation" },
-  { key: "letter2", label: "2nd Complaint", field: "complaint_letter_2", description: "Follow-up when no response or unsatisfactory response" },
-  { key: "letter3", label: "3rd Complaint", field: "complaint_letter_3", description: "Final demand before external escalation" },
-  { key: "accept_offer", label: "Accept Offer", field: "letter_accept_offer", description: "Formally accept a settlement offer" },
-  { key: "deny_offer", label: "Deny Offer", field: "letter_deny_offer", description: "Reject an unsatisfactory offer and state reasons" },
-  { key: "escalation", label: "Escalation Letter", field: "letter_escalation", description: "Formal complaint to external body (AFCA, TIO, NCAT, etc.)" },
+  { key: "letter1", label: "1st Complaint", field: "complaint_letter", description: "Initial formal complaint to the organisation", minPlan: "Starter" },
+  { key: "letter2", label: "2nd Complaint", field: "complaint_letter_2", description: "Follow-up when no response or unsatisfactory response", minPlan: "Pro" },
+  { key: "letter3", label: "3rd Complaint", field: "complaint_letter_3", description: "Final demand before external escalation", minPlan: "Pro" },
+  { key: "accept_offer", label: "Accept Offer", field: "letter_accept_offer", description: "Formally accept a settlement offer", minPlan: "Pro" },
+  { key: "deny_offer", label: "Deny Offer", field: "letter_deny_offer", description: "Reject an unsatisfactory offer and state reasons", minPlan: "Pro" },
+  { key: "escalation", label: "Escalation Letter", field: "letter_escalation", description: "Formal complaint to external body (AFCA, TIO, NCAT, etc.)", minPlan: "Command" },
 ];
 
 function buildPrompt(type, caseItem, client, today) {
@@ -304,35 +308,63 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 }
 
 export default function LetterSuite({ caseItem }) {
+  const { user } = useAuth();
+
   const { data: evidence = [] } = useQuery({
     queryKey: ["evidence", caseItem.id],
     queryFn: () => base44.entities.Evidence.filter({ case_id: caseItem.id }),
   });
 
+  const { data: payments = [] } = useQuery({
+    queryKey: ["payments", user?.id],
+    queryFn: () => base44.entities.PaymentRequest.filter({ user_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const subscription = getActiveSubscription(user, payments);
+
   return (
     <div className="space-y-4">
       <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
         <p className="text-xs text-muted-foreground">
-          <span className="font-bold text-foreground">Letter Suite</span> — Generate each letter as your dispute progresses. 
-          Start with the 1st Complaint. Move to 2nd/3rd if unresolved. Use Accept/Deny Offer letters when a settlement is proposed. 
+          <span className="font-bold text-foreground">Letter Suite</span> — Generate each letter as your dispute progresses.
+          Start with the 1st Complaint. Move to 2nd/3rd if unresolved. Use Accept/Deny Offer letters when a settlement is proposed.
           Use the Escalation Letter to lodge with {caseItem.escalation_body || "AFCA / TIO / NCAT"}.
         </p>
       </div>
 
       <Tabs defaultValue="letter1">
         <TabsList className="flex-wrap h-auto gap-1">
-          {LETTER_TYPES.map(lt => (
-            <TabsTrigger key={lt.key} value={lt.key} className="text-xs">
-              {lt.label}
-              {caseItem[lt.field] && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />}
-            </TabsTrigger>
-          ))}
+          {LETTER_TYPES.map(lt => {
+            const locked = !hasPlanAccess(subscription, lt.minPlan);
+            return (
+              <TabsTrigger key={lt.key} value={lt.key} className="text-xs gap-1">
+                {locked && <Lock className="w-3 h-3 opacity-60" />}
+                {lt.label}
+                {!locked && caseItem[lt.field] && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
-        {LETTER_TYPES.map(lt => (
-          <TabsContent key={lt.key} value={lt.key} className="mt-4">
-            <LetterEditor letterType={lt} caseItem={caseItem} evidence={evidence} />
-          </TabsContent>
-        ))}
+        {LETTER_TYPES.map(lt => {
+          const locked = !hasPlanAccess(subscription, lt.minPlan);
+          return (
+            <TabsContent key={lt.key} value={lt.key} className="mt-4">
+              {locked ? (
+                <div className="bg-secondary/30 border border-dashed border-border rounded-xl p-10 text-center">
+                  <Lock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">{lt.label} — {lt.minPlan} Plan Required</p>
+                  <p className="text-sm text-muted-foreground mb-4">{lt.description}</p>
+                  <Link to="/payments">
+                    <Button size="sm" className="gap-2">Upgrade to {lt.minPlan}</Button>
+                  </Link>
+                </div>
+              ) : (
+                <LetterEditor letterType={lt} caseItem={caseItem} evidence={evidence} />
+              )}
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </div>
   );

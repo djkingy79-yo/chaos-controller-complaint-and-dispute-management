@@ -19,10 +19,10 @@ const plans = [
       "3 active cases",
       "Evidence vault (25 files per case)",
       "AI document scanning & data extraction",
-      "Professional complaint letter generator",
+      "1st Complaint Letter generator",
       "Automated case timeline builder",
       "Deadline tracker with reminders",
-      "Access to full template library",
+      "Access to template library",
       "Export case summary to PDF"
     ],
     popular: false
@@ -36,12 +36,13 @@ const plans = [
       "Unlimited active cases",
       "Unlimited evidence files",
       "Priority AI scanning & smart extraction",
+      "1st, 2nd & 3rd Complaint Letters",
+      "Accept Offer & Deny Offer letters",
       "Tribunal-ready escalation bundles",
-      "Google Calendar deadline sync",
+      "Google Calendar & Outlook auto-sync",
       "Smart checklist with proof tracking",
       "Organisation contacts directory",
       "Direct ombudsman links (AFCA, TIO, NCAT)",
-      "Chaos Score case strength tracker",
       "Email notifications for deadlines & updates"
     ],
     popular: true
@@ -53,13 +54,13 @@ const plans = [
     description: "Maximum firepower for complex cases",
     features: [
       "Everything in Pro — unlimited",
-      "Full letter template library with all categories",
+      "All 6 letters incl. Escalation Letter to AFCA/TIO/NCAT",
       "Export full case bundle as ZIP",
       "Advanced timeline with event categorisation",
       "Case strength analytics & Chaos Score",
       "Multi-step guided complaint builder",
       "AI-powered evidence analysis",
-      "Printable formal complaint bundles",
+      "Full print bundles with all 6 letters",
       "Priority email support from our team",
       "Early access to new features"
     ],

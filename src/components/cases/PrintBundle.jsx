@@ -75,16 +75,39 @@ function buildClientContext(caseItem, evidence) {
   return merged;
 }
 
-function printLetter(caseItem, evidence) {
+const LETTER_DEFS = [
+  { field: "complaint_letter", label: "1st Complaint Letter" },
+  { field: "complaint_letter_2", label: "2nd Complaint Letter" },
+  { field: "complaint_letter_3", label: "3rd Complaint Letter" },
+  { field: "letter_accept_offer", label: "Acceptance of Offer" },
+  { field: "letter_deny_offer", label: "Rejection of Offer" },
+  { field: "letter_escalation", label: "Escalation Letter" },
+];
+
+function printLetter(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
   const today = format(new Date(), "d MMMM yyyy");
   const client = buildClientContext(caseItem, evidence);
-  const html = `<div style="${baseStyles()}">
-    ${letterhead(caseItem, client, today)}
-    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;">${caseItem.complaint_letter || "No letter generated."}</pre>
-    ${footer(caseItem, client)}
-  </div>`;
-  setPrintArea(html);
-  window.print();
+  const content = caseItem[field] || `No ${label} generated yet.`;
+  const win = window.open("", "_blank");
+  win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
+  <style>
+    @page { margin: 2cm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; }
+    .letterhead img { width: 100%; display: block; margin: -2cm -2cm 0 -2cm; width: calc(100% + 4cm); }
+    pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; }
+    .footer { font-size: 9pt; font-style: italic; border-top: 1pt solid #ccc; margin-top: 24pt; padding-top: 6pt; color: #555; display: flex; justify-content: space-between; }
+  </style></head><body>
+    <div class="letterhead"><img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" alt="Chaos Controller" /></div>
+    <pre>${content}</pre>
+    <div class="footer">
+      <div><div>This App Chaos Controller was designed and developed by Deb King ${new Date().getFullYear()}</div><div>${client.name ? client.name + " vs " + (caseItem.organisation_name || "") : (caseItem.organisation_name || "")} — ${today}</div></div>
+      <div>Page 1</div>
+    </div>
+  </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); win.close(); }, 500);
 }
 
 function printTimeline(caseItem, events) {
@@ -359,14 +382,18 @@ function printBundle(caseItem, evidence, events) {
 
     ${pageBreak}
 
-    <!-- SECTION 4: COMPLAINT LETTER -->
+    ${LETTER_DEFS.map((ld, idx) => {
+      const content = caseItem[ld.field];
+      if (!content) return "";
+      const sectionNum = idx + 4;
+      return `${pageBreak}
     <img src="${CARD_FRONT}" alt="Chaos Controller" style="width:calc(100% + 4cm);margin:-2cm -2cm 0 -2cm;display:block;" />
     <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0 -2cm;margin-bottom:20pt;">
-      <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section 4 — Complaint Letter</div>
+      <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section ${sectionNum} — ${ld.label}</div>
     </div>
-    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin-top:12pt;">${caseItem.complaint_letter || "No complaint letter generated yet."}</pre>
-
-    ${buildFooterHTML(caseItem, client, 5, 5)}
+    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin-top:12pt;">${content}</pre>
+    ${buildFooterHTML(caseItem, client, sectionNum, "")}`;
+    }).join("")}
   </div>`;
   setPrintArea(html);
   window.print();
@@ -381,23 +408,29 @@ export default function PrintBundle({ caseItem, evidence, events }) {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">
-        <button
-          onClick={() => printLetter(caseItem, evidence)}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <FileText className="w-4 h-4 text-primary" />
+        {LETTER_DEFS.map((ld) => (
+          <button
+            key={ld.field}
+            onClick={() => printLetter(caseItem, evidence, ld.field, ld.label)}
+            className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <FileText className="w-4 h-4 text-primary" />
+              </div>
+              <span className="font-medium text-sm text-foreground">{ld.label}</span>
+              <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <span className="font-medium text-sm text-foreground">Complaint Letter</span>
-            <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <p className="text-xs text-muted-foreground">Print Letter 1 — formal complaint to the organisation</p>
-        </button>
+            <p className="text-xs text-muted-foreground">
+              {caseItem[ld.field] ? "Print letter with letterhead & footer" : "Not yet generated"}
+            </p>
+          </button>
+        ))}
 
         <button
           onClick={() => printTimeline(caseItem, events)}
           className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
+          style={{gridColumn: "1 / -1"}}
         >
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-warning/10 rounded-lg">
@@ -436,6 +469,7 @@ export default function PrintBundle({ caseItem, evidence, events }) {
           </div>
           <p className="text-xs text-muted-foreground">Print completion checklist — what's done, what's missing</p>
         </button>
+
       </div>
 
       {/* Full Bundle */}
