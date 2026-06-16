@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
+import { ADMIN_EMAIL } from "@/lib/subscription";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -52,7 +53,7 @@ export default function Layout() {
 
   const allItems = [
     ...navItems,
-    ...(user?.role === "admin" ? [{ path: "/admin", label: "Admin", icon: Activity }] : [])
+    ...(user?.role === "admin" || user?.email === ADMIN_EMAIL ? [{ path: "/admin", label: "Admin", icon: Activity }] : [])
   ];
 
   return (

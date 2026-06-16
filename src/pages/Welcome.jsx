@@ -341,7 +341,7 @@ export default function Welcome() {
               className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black px-8 py-6 text-lg font-black gap-2 border-2 border-[#FFD700]"
               onClick={() => navigate("/register")}
             >
-              Start Free Trial <ArrowRight className="w-5 h-5" />
+              Get Started <ArrowRight className="w-5 h-5" />
             </Button>
             <Button 
               size="lg" 
@@ -433,7 +433,7 @@ export default function Welcome() {
         </h2>
         <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-4" />
         <p className="text-center text-white font-bold mb-12 max-w-2xl mx-auto text-lg">
-          Start with a 7-day free trial. Cancel anytime. No hidden fees.
+          Pay via PayID. Cancel anytime. No hidden fees.
         </p>
         
         <div className="grid lg:grid-cols-3 gap-8">
@@ -492,7 +492,7 @@ export default function Welcome() {
             className="bg-black hover:bg-black/90 text-white px-8 py-6 text-lg font-semibold border-0"
             onClick={() => navigate("/register")}
           >
-            Start Your Free Trial Today
+            Start Your Case Today
           </Button>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download, BarChart2 } from "lucide-react";
@@ -22,7 +22,7 @@ import MerchantInvite from "@/components/cases/MerchantInvite";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
-  const caseId = window.location.pathname.split("/case/")[1];
+  const { id: caseId } = useParams();
   const { user } = useAuth();
 
   // Preserve tab state in URL params
@@ -40,9 +40,8 @@ export default function CaseDetail() {
   }, []);
 
   const handleTabChange = (tab) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set("tab", tab);
-    navigate(`/case/${caseId}?${params.toString()}`, { replace: true });
+    setActiveTab(tab);
+    navigate(`/case/${caseId}?tab=${tab}`, { replace: true });
   };
 
   const { data: caseItem, isLoading: caseLoading } = useQuery({
@@ -134,27 +133,27 @@ export default function CaseDetail() {
         {/* Main Content */}
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="w-full grid grid-cols-7 mb-4">
-              <TabsTrigger value="summary" className="gap-1 text-xs sm:text-sm">
-                <FileText className="w-3.5 h-3.5 hidden sm:block" /> Summary
+            <TabsList className="flex w-full overflow-x-auto mb-4 gap-0.5 h-auto flex-nowrap">
+              <TabsTrigger value="summary" className="gap-1 text-xs">
+                <FileText className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Summary</span>
               </TabsTrigger>
-              <TabsTrigger value="letter" className="gap-1 text-xs sm:text-sm">
-                <FileText className="w-3.5 h-3.5 hidden sm:block" /> Letters
+              <TabsTrigger value="letter" className="gap-1 text-xs">
+                <FileText className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Letters</span>
               </TabsTrigger>
-              <TabsTrigger value="evidence" className="gap-1 text-xs sm:text-sm">
-                <FolderOpen className="w-3.5 h-3.5 hidden sm:block" /> Evidence
+              <TabsTrigger value="evidence" className="gap-1 text-xs">
+                <FolderOpen className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Evidence</span>
               </TabsTrigger>
-              <TabsTrigger value="timeline" className="gap-1 text-xs sm:text-sm">
-                <Clock className="w-3.5 h-3.5 hidden sm:block" /> Timeline
+              <TabsTrigger value="timeline" className="gap-1 text-xs">
+                <Clock className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Timeline</span>
               </TabsTrigger>
-              <TabsTrigger value="visual" className="gap-1 text-xs sm:text-sm">
-                <BarChart2 className="w-3.5 h-3.5 hidden sm:block" /> Visual
+              <TabsTrigger value="visual" className="gap-1 text-xs">
+                <BarChart2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Visual</span>
               </TabsTrigger>
-              <TabsTrigger value="print" className="gap-1 text-xs sm:text-sm">
-                <Printer className="w-3.5 h-3.5 hidden sm:block" /> Print
+              <TabsTrigger value="print" className="gap-1 text-xs">
+                <Printer className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Print</span>
               </TabsTrigger>
-              <TabsTrigger value="bundle" className="gap-1 text-xs sm:text-sm">
-                <Download className="w-3.5 h-3.5 hidden sm:block" /> Bundle
+              <TabsTrigger value="bundle" className="gap-1 text-xs">
+                <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Bundle</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="summary">

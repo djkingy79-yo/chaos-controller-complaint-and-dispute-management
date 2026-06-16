@@ -64,7 +64,7 @@ export default function AdminDashboard() {
     queryFn: () => base44.entities.PaymentRequest.list("-created_date", 500),
   });
 
-  if (user?.role !== "admin") return <Navigate to="/" replace />;
+  if (user?.role !== "admin" && user?.email !== ADMIN_EMAIL) return <Navigate to="/dashboard" replace />;
 
   const active = cases.filter(c => !["resolved", "closed"].includes(c.status));
   const resolved = cases.filter(c => c.status === "resolved");
