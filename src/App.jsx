@@ -32,6 +32,7 @@ import QnA from '@/pages/QnA';
 import SampleReports from '@/pages/SampleReports';
 import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
+import SharedCasePortal from '@/pages/SharedCasePortal';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -61,6 +62,8 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       {/* Public landing page */}
       <Route path="/" element={<Welcome />} />
+      {/* Public shared case portal — no auth required */}
+      <Route path="/shared-case/:token" element={<SharedCasePortal />} />
       
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<Layout />}>

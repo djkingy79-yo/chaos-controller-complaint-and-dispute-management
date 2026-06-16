@@ -88,6 +88,19 @@ Support: chaoscontrollerapp@gmail.com`;
       from_name: "Chaos Controller™"
     });
 
+    // Notify merchant/respondent if there's an active share
+    const shares = await base44.asServiceRole.entities.CaseShare.filter({ case_id: caseItem.id });
+    const activeShare = shares.find(s => s.is_active && s.notify_on_update && s.recipient_email);
+    if (activeShare) {
+      const portalUrl = `https://chaoscontroller.base44.app/shared-case/${activeShare.share_token}`;
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: activeShare.recipient_email,
+        subject: `📋 Case Update: "${caseItem.title}" — Status Changed to ${statusLabel}`,
+        body: `Dear ${activeShare.recipient_name || 'Representative'},\n\nA case you have been shared on has been updated.\n\nCase: ${caseItem.title}\nNew Status: ${statusLabel}\n\nView the case portal:\n${portalUrl}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nChaos Controller™ — AI-Powered Consumer Advocacy`,
+        from_name: "Chaos Controller™"
+      });
+    }
+
     // Also create an in-app notification
     await base44.asServiceRole.entities.Notification.create({
       user_id: caseItem.created_by_id,

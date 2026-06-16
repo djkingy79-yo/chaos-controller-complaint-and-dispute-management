@@ -17,7 +17,7 @@ import EscalationBundle from "@/components/cases/EscalationBundle";
 import CaseSummary from "@/components/cases/CaseSummary";
 import DisputeProgressTracker from "@/components/cases/DisputeProgressTracker";
 import ExportCaseZip from "@/components/cases/ExportCaseZip";
-import OutlookDeadlineSync from "@/components/cases/OutlookDeadlineSync";
+import MerchantInvite from "@/components/cases/MerchantInvite";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
@@ -111,7 +111,7 @@ export default function CaseDetail() {
           <CaseStatusControl caseItem={caseItem} />
           <DisputeProgressTracker caseItem={caseItem} />
           <ChaosScore caseItem={caseItem} evidence={evidence} events={timelineEvents} />
-          <OutlookDeadlineSync caseItem={caseItem} />
+          <MerchantInvite caseItem={caseItem} />
 
           {/* Quick stats */}
           <div className="bg-card rounded-xl border border-border p-4 space-y-3">
