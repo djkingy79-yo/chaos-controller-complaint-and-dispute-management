@@ -250,7 +250,7 @@ export default function Welcome() {
                       <Briefcase className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="text-white font-black mb-2 text-lg">AND MORE</h3>
-                    <p className="text-white font-bold text-sm">Any consumer dispute—this system works for all industries. One platform, complete control.</p>
+                    <p className="text-white font-bold text-sm">Any consumer dispute — this system works for all industries. One platform, complete control.</p>
                   </div>
                 </div>
 

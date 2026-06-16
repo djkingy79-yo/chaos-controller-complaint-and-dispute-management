@@ -51,7 +51,7 @@ const guides = [
           "Access quick actions from the Command Centre",
           "Review recent letters and documents"
         ],
-        tips: ["Cases are color-coded by status", "Higher strength scores mean better documentation"]
+        tips: ["Cases are colour-coded by status", "Higher strength scores mean better documentation"]
       }
     ]
   },
@@ -86,7 +86,7 @@ const guides = [
         tips: ["Scanning takes 10-30 seconds", "You can edit any extracted data before saving"]
       },
       {
-        title: "Organizing Evidence",
+        title: "Organising Evidence",
         steps: [
           "Filter by document type using the filter dropdown",
           "Sort by date to see chronological order",
@@ -287,7 +287,7 @@ const guides = [
         steps: [
           "Access 'Checklist' from the main menu",
           "View all checklist items across your cases",
-          "Items are categorized (Complaint, Evidence, Response, etc.)",
+          "Items are categorised (Complaint, Evidence, Response, etc.)",
           "Status shows: Complete, Needs Review, Missing, or Locked",
           "Items requiring proof show a paperclip icon"
         ],
@@ -373,7 +373,7 @@ const guides = [
         steps: [
           "Access 'Calendar' from the main menu",
           "See all deadlines and events in monthly view",
-          "Color-coded by case and event type",
+          "Colour-coded by case and event type",
           "Tap any date to see detailed events",
           "Switch between month, week, and day views"
         ],
