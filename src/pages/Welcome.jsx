@@ -179,20 +179,6 @@ export default function Welcome() {
             </Button>
           </motion.div>
 
-          {/* New Banner Image */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.78, duration: 0.8 }}
-            className="max-w-4xl mx-auto px-4 mb-12"
-          >
-            <img
-              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/c228452e0_IMG_7082.jpg"
-              alt="Chaos Controller"
-              className="w-full rounded-2xl shadow-2xl border-2 border-[#FFD700]/40"
-            />
-          </motion.div>
-
           {/* Personal Assistant Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
