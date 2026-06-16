@@ -1,0 +1,45 @@
+{
+  "name": "CaseShare",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "ID of the case being shared"
+    },
+    "share_token": {
+      "type": "string",
+      "description": "Unique token for the share link"
+    },
+    "created_by_id": {
+      "type": "string",
+      "description": "User who created the share"
+    },
+    "recipient_email": {
+      "type": "string",
+      "description": "Email of the merchant/respondent invited"
+    },
+    "recipient_name": {
+      "type": "string",
+      "description": "Name of the merchant/respondent"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the share link is active"
+    },
+    "notify_on_update": {
+      "type": "boolean",
+      "default": true,
+      "description": "Email the recipient when case status changes"
+    },
+    "last_viewed": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the recipient last viewed the portal"
+    }
+  },
+  "required": [
+    "case_id",
+    "share_token"
+  ]
+}
