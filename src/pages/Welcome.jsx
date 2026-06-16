@@ -156,8 +156,8 @@ export default function Welcome() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-center mb-8"
           >
-            <p className="text-base sm:text-lg text-gray-300 max-w-xl mx-auto leading-relaxed font-bold">
-              Chaos Controller is an <span className="text-white">AI-powered app</span> that helps everyday Australians fight back against banks, insurers, landlords, and telcos — by organising your evidence, writing your complaints, and tracking every deadline for you.
+            <p className="text-base sm:text-lg text-white max-w-xl mx-auto leading-relaxed font-black">
+              Chaos Controller is an AI-powered app that helps everyday Australians fight back against banks, insurers, landlords, and telcos — by organising your evidence, writing your complaints, and tracking every deadline for you.
             </p>
           </motion.div>
 
