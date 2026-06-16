@@ -1,3 +1,5 @@
+const LOGO_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/9d65d2d51_IMG_6994.jpeg";
+
 export const CONTACT = {
   website: "www.chaoscontroller.com.au",
   email: "chaoscontrollerapp@gmail.com",
@@ -5,34 +7,22 @@ export const CONTACT = {
   location: "Australia Wide",
 };
 
-// Professional letterhead header — compact logo with clean branding
+// React letterhead header — full-width banner image
 export function LetterheadHeader({ today }) {
   return (
-    <div style={{ background: "#000", padding: "12px 20px", display: "flex", alignItems: "center", gap: "12px" }}>
-      <img 
-        src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" 
-        alt="Chaos Controller" 
-        style={{ width: "40px", height: "40px", objectFit: "contain" }} 
+    <div style={{ background: "#000", lineHeight: 0 }}>
+      <img
+        src={LOGO_URL}
+        alt="Chaos Controller"
+        style={{ width: "100%", display: "block", maxHeight: "120px", objectFit: "cover", objectPosition: "center" }}
       />
-      <div style={{ flex: 1 }}>
-        <div style={{ color: "#FFD700", fontSize: "14pt", fontWeight: "bold", fontFamily: "Times New Roman, serif" }}>
-          CHAOS CONTROLLER™
-        </div>
-        <div style={{ color: "#888", fontSize: "8pt", fontFamily: "Times New Roman, serif" }}>
-          Consumer Advocacy Platform — {today}
-        </div>
-      </div>
     </div>
   );
 }
 
 export function buildLetterheadHTML(caseItem, client, today) {
-  return `<div style="background:#000;padding:12px 20px;display:flex;align-items:center;">
-    <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" style="width:40px;height:40px;object-fit:contain;" />
-    <div style="flex:1;padding-left:12px;">
-      <div style="color:#FFD700;font-size:14pt;font-weight:bold;font-family:'Times New Roman',serif;">CHAOS CONTROLLER™</div>
-      <div style="color:#888;font-size:8pt;font-family:'Times New Roman',serif;">Consumer Advocacy Platform — ${today}</div>
-    </div>
+  return `<div style="background:#000;line-height:0;">
+    <img src="${LOGO_URL}" alt="Chaos Controller" style="width:100%;display:block;max-height:120px;object-fit:cover;object-position:center;" />
   </div>`;
 }
 
@@ -42,7 +32,7 @@ export function buildFooterHTML(caseItem, client, pageNum, totalPages) {
   const org = caseItem?.organisation_name || "";
   const title = caseItem?.title || "";
   const docDate = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const pageText = pageNum && totalPages ? `Page ${pageNum} of ${totalPages}` : pageNum ? `Page ${pageNum}` : (pageNum ? `Page ${pageNum}` : "");
+  const pageText = pageNum && totalPages ? `Page ${pageNum} of ${totalPages}` : pageNum ? `Page ${pageNum}` : "";
   const line1 = `Chaos Controller™ — Designed & Developed by Deb King ${year}`;
   const caseRef = title ? `${title}` : `${name ? name + " vs " + org : org}`;
   return `

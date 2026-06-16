@@ -102,11 +102,7 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
     .footer { font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;display:flex;justify-content:space-between; }
   </style></head><body>
     <div class="letterhead">
-      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" alt="Chaos Controller" />
-      <div style="flex:1;padding-left:12px;">
-        <div class="letterhead-text">CHAOS CONTROLLER™</div>
-        <div class="letterhead-sub">Consumer Advocacy Platform — ${today}</div>
-      </div>
+      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/9d65d2d51_IMG_6994.jpeg" alt="Chaos Controller" style="width:100%;display:block;max-height:100px;object-fit:cover;" />
     </div>
     <pre>${content}</pre>
     <div style="padding:0 2cm;">${buildFooterHTML(caseItem, client, 1, "")}</div>
@@ -276,12 +272,8 @@ function printBundle(caseItem, evidence, events) {
 
   const html = `<div style="${baseStyles()}">
     <!-- COVER PAGE -->
-    <div style="background:#000;padding:12px 2cm;display:flex;align-items:center;">
-      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" style="width:40px;height:40px;object-fit:contain;" />
-      <div style="flex:1;padding-left:12px;">
-        <div style="color:#FFD700;font-size:14pt;font-weight:bold;font-family:'Times New Roman',serif;">CHAOS CONTROLLER™</div>
-        <div style="color:#888;font-size:8pt;font-family:'Times New Roman',serif;">Consumer Advocacy Platform</div>
-      </div>
+    <div style="background:#000;line-height:0;">
+      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/9d65d2d51_IMG_6994.jpeg" style="width:100%;display:block;max-height:120px;object-fit:cover;" />
     </div>
 
     <!-- Blue header bar with case info -->
@@ -399,12 +391,8 @@ function printBundle(caseItem, evidence, events) {
       if (!content) return "";
       const sectionNum = idx + 4;
       return `${pageBreak}
-    <div style="background:#000;padding:12px 2cm;display:flex;align-items:center;">
-      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" style="width:40px;height:40px;object-fit:contain;" />
-      <div style="flex:1;padding-left:12px;">
-        <div style="color:#FFD700;font-size:14pt;font-weight:bold;font-family:'Times New Roman',serif;">CHAOS CONTROLLER™</div>
-        <div style="color:#888;font-size:8pt;font-family:'Times New Roman',serif;">Consumer Advocacy Platform</div>
-      </div>
+    <div style="background:#000;line-height:0;">
+      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/9d65d2d51_IMG_6994.jpeg" style="width:100%;display:block;max-height:120px;object-fit:cover;" />
     </div>
     <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0;">
       <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section ${sectionNum} — ${ld.label}</div>
