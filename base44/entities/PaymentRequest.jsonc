@@ -1,0 +1,70 @@
+{
+  "name": "PaymentRequest",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user who made the payment"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Full name of the user"
+    },
+    "plan_name": {
+      "type": "string",
+      "enum": [
+        "Starter",
+        "Pro",
+        "Command"
+      ],
+      "description": "Plan selected"
+    },
+    "amount": {
+      "type": "string",
+      "description": "Amount paid e.g. $25.00"
+    },
+    "payid_reference": {
+      "type": "string",
+      "description": "Payment reference or description user included"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Payment verification status"
+    },
+    "admin_notes": {
+      "type": "string",
+      "description": "Admin notes about the payment"
+    },
+    "verified_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When payment was verified"
+    },
+    "subscription_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether subscription is currently active"
+    },
+    "subscription_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "Subscription expiry date"
+    }
+  },
+  "required": [
+    "user_id",
+    "user_email",
+    "plan_name",
+    "amount"
+  ]
+}

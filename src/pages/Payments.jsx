@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Copy, CheckCircle2, ArrowLeft, Mail, Smartphone, Wallet } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Check, Copy, CheckCircle2, ArrowLeft, Mail, Smartphone, Wallet, Send } from "lucide-react";
 import { motion } from "framer-motion";
+import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 
 const plans = [
   {
@@ -65,8 +68,12 @@ const plans = [
 
 export default function Payments() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [payRef, setPayRef] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const payidEmail = "djkingy79@gmail.com";
 
@@ -74,6 +81,23 @@ export default function Payments() {
     navigator.clipboard.writeText(payidEmail);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSubmitPayment = async () => {
+    if (!selectedPlan || !user) return;
+    setSubmitting(true);
+    await base44.entities.PaymentRequest.create({
+      user_id: user.id,
+      user_email: user.email,
+      user_name: user.full_name,
+      plan_name: selectedPlan.name,
+      amount: selectedPlan.price,
+      payid_reference: payRef,
+      status: "pending",
+      subscription_active: false
+    });
+    setSubmitting(false);
+    setSubmitted(true);
   };
 
   return (
@@ -219,14 +243,52 @@ export default function Payments() {
                 </ol>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-800">
-                <p className="text-xs text-gray-500">
-                  Your subscription activates immediately after payment confirmation.
-                </p>
-                <Button className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black px-8 py-6 text-base font-bold">
-                  I've Sent Payment - Activate Now
-                </Button>
-              </div>
+              {/* Payment Reference Input */}
+              {!submitted ? (
+                <div className="pt-4 border-t border-gray-800 space-y-4">
+                  <div>
+                    <label className="text-sm text-gray-400 block mb-2">
+                      Payment Reference / Description <span className="text-gray-600">(optional but helpful)</span>
+                    </label>
+                    <Input
+                      placeholder="e.g. your email or transaction reference number"
+                      value={payRef}
+                      onChange={e => setPayRef(e.target.value)}
+                      className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-600"
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-xs text-gray-500">
+                      Once you click below, our team will be notified to verify your payment and activate your account within a few hours.
+                    </p>
+                    <Button
+                      onClick={handleSubmitPayment}
+                      disabled={submitting}
+                      className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black px-8 py-6 text-base font-bold gap-2 shrink-0"
+                    >
+                      <Send className="w-4 h-4" />
+                      {submitting ? "Submitting..." : "I've Sent Payment — Notify Us"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-4 border-t border-gray-800">
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-5 text-center">
+                    <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-3" />
+                    <p className="font-bold text-white text-lg mb-1">Payment Notification Sent!</p>
+                    <p className="text-sm text-gray-400">
+                      We've received your notification for the <strong className="text-white">{selectedPlan.name}</strong> plan.
+                      Our team will verify your payment and activate your account — usually within a few hours.
+                    </p>
+                    <Button
+                      className="mt-4 bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-bold"
+                      onClick={() => navigate("/dashboard")}
+                    >
+                      Go to Dashboard
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
