@@ -148,8 +148,26 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
 
   const applyExtractedData = async (extracted) => {
     const caseUpdates = {};
-    if (extracted.merchant_name && !caseItem?.organisation_name) {
+    // Only fill fields that are currently blank on the case
+    if (extracted.merchant_name && !caseItem?.organisation_name)
       caseUpdates.organisation_name = extracted.merchant_name;
+    if (extracted.complainant_name && !caseItem?.complainant_name)
+      caseUpdates.complainant_name = extracted.complainant_name;
+    if (extracted.complainant_address && !caseItem?.complainant_address)
+      caseUpdates.complainant_address = extracted.complainant_address;
+    if (extracted.complainant_email && !caseItem?.complainant_email)
+      caseUpdates.complainant_email = extracted.complainant_email;
+    if (extracted.complainant_phone && !caseItem?.complainant_phone)
+      caseUpdates.complainant_phone = extracted.complainant_phone;
+    if (extracted.account_numbers?.length && !caseItem?.account_number)
+      caseUpdates.account_number = extracted.account_numbers[0];
+    // Use the earliest timeline event date as the incident date if not set
+    if (!caseItem?.incident_date && extracted.timeline_events?.length) {
+      const dates = extracted.timeline_events
+        .map((e) => e.date)
+        .filter(Boolean)
+        .sort();
+      if (dates[0]) caseUpdates.incident_date = dates[0];
     }
     if (Object.keys(caseUpdates).length > 0) {
       await base44.entities.Case.update(caseId, caseUpdates);
