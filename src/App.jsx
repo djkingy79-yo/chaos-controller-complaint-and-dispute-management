@@ -60,11 +60,6 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      {/* Public landing page */}
-      <Route path="/" element={<Welcome />} />
-      {/* Public shared case portal — no auth required */}
-      <Route path="/shared-case/:token" element={<SharedCasePortal />} />
-      
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -96,7 +91,12 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <AuthenticatedApp />
+          {/* Public routes — rendered immediately, no auth wait */}
+          <Routes>
+            <Route path="/" element={<Welcome />} />
+            <Route path="/shared-case/:token" element={<SharedCasePortal />} />
+            <Route path="/*" element={<AuthenticatedApp />} />
+          </Routes>
         </Router>
         <Toaster />
       </QueryClientProvider>

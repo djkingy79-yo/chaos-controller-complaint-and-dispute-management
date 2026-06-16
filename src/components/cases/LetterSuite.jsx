@@ -1,0 +1,339 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText } from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { LetterheadHeader, CARD_FRONT } from "./LetterheadBanner";
+
+function buildClientContext(caseItem, evidenceList) {
+  const merged = {
+    name: caseItem.complainant_name || "",
+    address: caseItem.complainant_address || "",
+    email: caseItem.complainant_email || "",
+    phone: caseItem.complainant_phone || "",
+    accounts: caseItem.account_number ? [caseItem.account_number] : [],
+    policies: [],
+    amounts: [],
+    dates: caseItem.incident_date ? [format(new Date(caseItem.incident_date), "d MMMM yyyy")] : [],
+  };
+  for (const ev of (evidenceList || [])) {
+    const d = ev.extracted_data;
+    if (!d) continue;
+    if (!merged.name && d.complainant_name) merged.name = d.complainant_name;
+    if (!merged.address && d.complainant_address) merged.address = d.complainant_address;
+    if (!merged.email && d.complainant_email) merged.email = d.complainant_email;
+    if (!merged.phone && d.complainant_phone) merged.phone = d.complainant_phone;
+    if (d.account_numbers?.length) merged.accounts = [...merged.accounts, ...d.account_numbers];
+    if (d.policy_numbers?.length) merged.policies = [...merged.policies, ...d.policy_numbers];
+    if (d.key_amounts?.length) merged.amounts = [...merged.amounts, ...d.key_amounts];
+    if (d.dates_mentioned?.length) merged.dates = [...merged.dates, ...d.dates_mentioned];
+  }
+  for (const k of ["accounts", "policies", "amounts", "dates"]) {
+    merged[k] = [...new Set(merged[k])];
+  }
+  return merged;
+}
+
+const LETTER_TYPES = [
+  { key: "letter1", label: "1st Complaint", field: "complaint_letter", description: "Initial formal complaint to the organisation" },
+  { key: "letter2", label: "2nd Complaint", field: "complaint_letter_2", description: "Follow-up when no response or unsatisfactory response" },
+  { key: "letter3", label: "3rd Complaint", field: "complaint_letter_3", description: "Final demand before external escalation" },
+  { key: "accept_offer", label: "Accept Offer", field: "letter_accept_offer", description: "Formally accept a settlement offer" },
+  { key: "deny_offer", label: "Deny Offer", field: "letter_deny_offer", description: "Reject an unsatisfactory offer and state reasons" },
+  { key: "escalation", label: "Escalation Letter", field: "letter_escalation", description: "Formal complaint to external body (AFCA, TIO, NCAT, etc.)" },
+];
+
+function buildPrompt(type, caseItem, client, today) {
+  const base = `You are a professional consumer advocacy assistant in Australia. Generate a formal letter for a consumer dispute.
+
+CRITICAL RULE: NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
+
+COMPLAINANT DETAILS:
+- Name: ${client.name || "not provided — omit name line"}
+- Address: ${client.address || "not provided — omit address block"}
+- Email: ${client.email || "not provided"}
+- Phone: ${client.phone || "not provided"}
+- Account/Reference: ${client.accounts?.join(", ") || caseItem.account_number || "not provided"}
+- Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : client.dates?.join(", ") || "not provided"}
+${client.policies?.length ? `- Policy Numbers: ${client.policies.join(", ")}` : ""}
+${client.amounts?.length ? `- Key Amounts: ${client.amounts.join(", ")}` : ""}
+
+ORGANISATION DETAILS:
+- Organisation: ${caseItem.organisation_name || "not provided"}
+- Complaints Address: ${caseItem.organisation_complaints_address || "Complaints Department, " + (caseItem.organisation_name || "the organisation")}
+- Complaints Email: ${caseItem.organisation_complaints_email || "not provided"}
+- Complaint Handler: ${caseItem.complaint_handler_name || "The Complaints Manager"}
+
+CASE DETAILS:
+- Category: ${caseItem.category}
+- Issue Summary: ${caseItem.issue_summary}
+- Full Details: ${caseItem.issue_details}
+- Desired Outcome: ${caseItem.desired_outcome}
+- Escalation Body: ${caseItem.escalation_body || "the relevant ombudsman"}
+- Today's Date: ${today}`;
+
+  const formats = `
+LETTER FORMAT:
+1. Top right: complainant address (if known), then date (${today})
+2. Left block: complaint handler, organisation name, address
+3. Re: line referencing case/account
+4. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
+5. Professional, firm Australian English tone
+6. Close: "Yours faithfully," then complainant name (if provided)
+7. NEVER use bracket placeholders`;
+
+  if (type === "letter1") {
+    return `${base}
+
+LETTER TYPE: First Formal Complaint Letter
+- This is the INITIAL formal complaint to the organisation
+- Include a clear 21-day response deadline
+- Mention ${caseItem.escalation_body || "the relevant ombudsman"} as next step if unresolved
+- Reference the incident date and account number
+- State the desired outcome clearly
+${formats}`;
+  }
+
+  if (type === "letter2") {
+    return `${base}
+
+LETTER TYPE: Second Formal Complaint Letter (Follow-Up)
+- The organisation has either NOT responded within 21 days, or gave an unsatisfactory response
+- Reference that a previous complaint letter was sent and the deadline has passed (or response was inadequate)
+- Escalate the tone — firm, assertive, professional
+- Provide a FINAL 14-day deadline before escalation to ${caseItem.escalation_body || "the relevant ombudsman"}
+- Mention you have documented evidence ready for external submission
+${formats}`;
+  }
+
+  if (type === "letter3") {
+    return `${base}
+
+LETTER TYPE: Third and Final Complaint Letter (Final Notice)
+- This is the LAST internal letter before escalating to ${caseItem.escalation_body || "the external ombudsman/tribunal"}
+- Reference that TWO prior letters have been sent with no satisfactory resolution
+- Give a FINAL 7-day ultimatum
+- State clearly you will be lodging a formal complaint with ${caseItem.escalation_body || "the relevant external body"} and/or seeking legal advice
+- Very firm, professional, evidence-focused tone
+${formats}`;
+  }
+
+  if (type === "accept_offer") {
+    return `${base}
+
+LETTER TYPE: Acceptance of Settlement Offer
+- The organisation has made a settlement offer in response to the complaint
+- Formally accept the offer and state the terms being accepted
+- Request written confirmation and a timeline for fulfilment
+- State that if the offer is not fulfilled by the agreed date, the matter will be escalated
+- Professional, clear, binding language
+${formats}`;
+  }
+
+  if (type === "deny_offer") {
+    return `${base}
+
+LETTER TYPE: Rejection of Settlement Offer
+- The organisation has made an offer but it is UNSATISFACTORY
+- Formally REJECT the offer with clear reasons why it does not address the dispute
+- Counter with the desired outcome stated in the case: "${caseItem.desired_outcome}"
+- Give a 14-day deadline to reconsider or provide an improved offer
+- State that failure to respond acceptably will result in escalation to ${caseItem.escalation_body || "the relevant ombudsman"}
+- Firm, reasoned, professional tone
+${formats}`;
+  }
+
+  if (type === "escalation") {
+    return `${base}
+
+LETTER TYPE: External Escalation Complaint Letter
+- This letter is addressed TO ${caseItem.escalation_body || "the external ombudsman/tribunal"}, NOT the organisation
+- Summarise the entire dispute: what happened, when, what was sought, what the organisation did or didn't do
+- Attach a chronology of complaint letters sent (mention 1st, 2nd, 3rd letters and dates if known)
+- State the desired outcome clearly
+- Reference all key evidence: account numbers, dates, amounts
+- Request the external body investigate and order appropriate remedy
+- Address to: The Complaints Officer, ${caseItem.escalation_body || "External Dispute Resolution Body"}
+- Professional, comprehensive, factual tone
+${formats}`;
+  }
+
+  return base;
+}
+
+function LetterEditor({ letterType, caseItem, evidence }) {
+  const queryClient = useQueryClient();
+  const field = letterType.field;
+  const [text, setText] = useState(caseItem[field] || "");
+  const [editing, setEditing] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  const updateMutation = useMutation({
+    mutationFn: (data) => base44.entities.Case.update(caseItem.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+      setEditing(false);
+    },
+  });
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const client = buildClientContext(caseItem, evidence);
+      const today = format(new Date(), "d MMMM yyyy");
+      const prompt = buildPrompt(letterType.key, caseItem, client, today);
+      const result = await base44.integrations.Core.InvokeLLM({ prompt });
+      setText(result);
+      updateMutation.mutate({ [field]: result });
+      toast.success(`${letterType.label} generated`);
+    } catch (e) {
+      toast.error("Generation failed: " + e.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handlePrint = () => {
+    const client = buildClientContext(caseItem, evidence);
+    const win = window.open("", "_blank");
+    win.document.write(`<!DOCTYPE html><html><head><title>${letterType.label}</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; }
+      .letter-header img { width: 100%; display: block; }
+      .letter-body { padding: 1.5cm 2cm 2cm 2cm; }
+      pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; }
+      .footer { font-size: 9pt; font-style: italic; border-top: 1pt solid #ccc; margin-top: 24pt; padding-top: 6pt; color: #888; display: flex; justify-content: space-between; }
+    </style>
+    </head><body>
+      <div class="letter-header"><img src="${CARD_FRONT}" alt="Chaos Controller" /></div>
+      <div class="letter-body">
+        <pre>${text}</pre>
+        <div class="footer">
+          <span>Chaos Controller™ — Designed &amp; Developed by Deb King ${new Date().getFullYear()}</span>
+          <span>Page 1</span>
+        </div>
+      </div>
+    </body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); win.close(); }, 500);
+  };
+
+  const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[.*?\]/.test(text);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h3 className="font-heading font-semibold text-foreground">{letterType.label}</h3>
+          <p className="text-xs text-muted-foreground">{letterType.description}</p>
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {text && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(text); toast.success("Copied"); }} className="gap-1.5 text-xs">
+                <Copy className="w-3.5 h-3.5" /> Copy
+              </Button>
+              <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 text-xs">
+                <Printer className="w-3.5 h-3.5" /> Print
+              </Button>
+              <Button
+                variant="outline" size="sm"
+                onClick={() => { if (editing) updateMutation.mutate({ [field]: text }); setEditing(!editing); }}
+                className="gap-1.5 text-xs"
+              >
+                {editing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                {editing ? "Save" : "Edit"}
+              </Button>
+            </>
+          )}
+          <Button size="sm" onClick={handleGenerate} disabled={generating} className="gap-1.5 text-xs">
+            {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {text ? "Regenerate" : "Generate Letter"}
+          </Button>
+        </div>
+      </div>
+
+      {hasPlaceholders && !generating && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3 text-xs text-destructive font-medium">
+          ⚠️ Placeholder text detected. Click Regenerate to fill with your real case details.
+        </div>
+      )}
+
+      {text ? (
+        <div className="border border-border rounded-lg overflow-hidden shadow-sm">
+          <LetterheadHeader today={format(new Date(), "d MMMM yyyy")} />
+          <div className="px-8 py-6 bg-white">
+            {editing ? (
+              <Textarea
+                value={text}
+                onChange={e => setText(e.target.value)}
+                rows={22}
+                className="font-body text-sm leading-relaxed bg-white text-slate-900"
+              />
+            ) : (
+              <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+                {text}
+              </pre>
+            )}
+          </div>
+          <div className="px-6 py-3 border-t border-slate-200 bg-white flex justify-between items-center">
+            <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555" }}>
+              Chaos Controller™ — Designed & Developed by Deb King {new Date().getFullYear()}
+            </p>
+            <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555" }}>Page 1</p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-10 text-center">
+          <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground mb-3">No {letterType.label} generated yet.</p>
+          <Button onClick={handleGenerate} disabled={generating} className="gap-2">
+            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {generating ? "Generating..." : `Generate ${letterType.label}`}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function LetterSuite({ caseItem }) {
+  const { data: evidence = [] } = useQuery({
+    queryKey: ["evidence", caseItem.id],
+    queryFn: () => base44.entities.Evidence.filter({ case_id: caseItem.id }),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
+        <p className="text-xs text-muted-foreground">
+          <span className="font-bold text-foreground">Letter Suite</span> — Generate each letter as your dispute progresses. 
+          Start with the 1st Complaint. Move to 2nd/3rd if unresolved. Use Accept/Deny Offer letters when a settlement is proposed. 
+          Use the Escalation Letter to lodge with {caseItem.escalation_body || "AFCA / TIO / NCAT"}.
+        </p>
+      </div>
+
+      <Tabs defaultValue="letter1">
+        <TabsList className="flex-wrap h-auto gap-1">
+          {LETTER_TYPES.map(lt => (
+            <TabsTrigger key={lt.key} value={lt.key} className="text-xs">
+              {lt.label}
+              {caseItem[lt.field] && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {LETTER_TYPES.map(lt => (
+          <TabsContent key={lt.key} value={lt.key} className="mt-4">
+            <LetterEditor letterType={lt} caseItem={caseItem} evidence={evidence} />
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
+  );
+}

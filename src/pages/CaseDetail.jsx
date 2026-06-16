@@ -11,6 +11,7 @@ import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
 import VisualTimeline from "@/components/cases/VisualTimeline";
 import ComplaintLetter from "@/components/cases/ComplaintLetter";
+import LetterSuite from "@/components/cases/LetterSuite";
 import ChaosScore from "@/components/cases/ChaosScore";
 import PrintBundle from "@/components/cases/PrintBundle";
 import EscalationBundle from "@/components/cases/EscalationBundle";
@@ -138,7 +139,7 @@ export default function CaseDetail() {
                 <FileText className="w-3.5 h-3.5 hidden sm:block" /> Summary
               </TabsTrigger>
               <TabsTrigger value="letter" className="gap-1 text-xs sm:text-sm">
-                <FileText className="w-3.5 h-3.5 hidden sm:block" /> Letter
+                <FileText className="w-3.5 h-3.5 hidden sm:block" /> Letters
               </TabsTrigger>
               <TabsTrigger value="evidence" className="gap-1 text-xs sm:text-sm">
                 <FolderOpen className="w-3.5 h-3.5 hidden sm:block" /> Evidence
@@ -160,7 +161,7 @@ export default function CaseDetail() {
               <CaseSummary caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
             <TabsContent value="letter">
-              <ComplaintLetter caseItem={caseItem} />
+              <LetterSuite caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="evidence">
               <EvidenceVault caseId={caseId} evidence={evidence} caseItem={caseItem} />

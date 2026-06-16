@@ -34,70 +34,75 @@
       "description": "Current status of the case"
     },
     "organisation_name": {
-      "type": "string",
-      "description": "Name of the organisation the complaint is against"
+      "type": "string"
     },
     "organisation_complaints_address": {
-      "type": "string",
-      "description": "Postal address of the organisation's complaints department"
+      "type": "string"
     },
     "organisation_complaints_email": {
-      "type": "string",
-      "description": "Email address of the organisation's complaints department"
+      "type": "string"
     },
     "complaint_handler_name": {
-      "type": "string",
-      "description": "Name of the person handling the complaint at the organisation"
+      "type": "string"
     },
     "complainant_name": {
-      "type": "string",
-      "description": "Full name of the complainant"
+      "type": "string"
     },
     "complainant_address": {
-      "type": "string",
-      "description": "Postal address of the complainant"
+      "type": "string"
     },
     "complainant_email": {
-      "type": "string",
-      "description": "Email address of the complainant"
+      "type": "string"
     },
     "complainant_phone": {
-      "type": "string",
-      "description": "Mobile/phone number of the complainant"
+      "type": "string"
     },
     "account_number": {
-      "type": "string",
-      "description": "Account or policy number"
+      "type": "string"
     },
     "incident_date": {
       "type": "string",
-      "format": "date",
-      "description": "Date of the incident"
+      "format": "date"
     },
     "issue_summary": {
-      "type": "string",
-      "description": "Brief summary of the issue"
+      "type": "string"
     },
     "issue_details": {
-      "type": "string",
-      "description": "Full details of the issue from guided questions"
+      "type": "string"
     },
     "desired_outcome": {
-      "type": "string",
-      "description": "What the user wants to achieve"
+      "type": "string"
     },
     "complaint_letter": {
       "type": "string",
-      "description": "AI-generated complaint letter content"
+      "description": "1st formal complaint letter"
+    },
+    "complaint_letter_2": {
+      "type": "string",
+      "description": "2nd complaint letter (follow-up)"
+    },
+    "complaint_letter_3": {
+      "type": "string",
+      "description": "3rd and final internal complaint letter"
+    },
+    "letter_accept_offer": {
+      "type": "string",
+      "description": "Letter accepting a settlement offer"
+    },
+    "letter_deny_offer": {
+      "type": "string",
+      "description": "Letter rejecting an unsatisfactory offer"
+    },
+    "letter_escalation": {
+      "type": "string",
+      "description": "Escalation letter to external body"
     },
     "response_deadline": {
       "type": "string",
-      "format": "date",
-      "description": "Deadline for the organisation to respond"
+      "format": "date"
     },
     "escalation_body": {
-      "type": "string",
-      "description": "Name of the relevant escalation body"
+      "type": "string"
     },
     "priority": {
       "type": "string",
@@ -110,8 +115,7 @@
       "default": "medium"
     },
     "notes": {
-      "type": "string",
-      "description": "Additional notes"
+      "type": "string"
     }
   },
   "required": [
