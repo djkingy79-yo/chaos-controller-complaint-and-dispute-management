@@ -97,11 +97,11 @@ export default function DocumentScanResult({ extracted, onConfirm, confirmed }) 
             </div>
           )}
 
-          {!confirmed && onConfirm && (
-            <Button size="sm" className="w-full h-7 text-xs mt-2 gap-1.5" onClick={onConfirm}>
+          {confirmed && (
+            <div className="mt-2 text-xs text-success font-semibold flex items-center gap-1.5 border-t border-primary/10 pt-2">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              Apply to Case & Generate Timeline
-            </Button>
+              Auto-applied — case fields, timeline, checklist &amp; deadlines updated
+            </div>
           )}
         </div>
       )}

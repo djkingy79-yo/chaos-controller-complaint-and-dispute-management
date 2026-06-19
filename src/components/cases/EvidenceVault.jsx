@@ -33,22 +33,26 @@ const typeConfig = {
 
 async function scanDocument(fileUrl, fileName, fileType) {
   const prompt = `You are an AI document analysis assistant for an Australian consumer advocacy platform. Use Australian English spelling in all responses.
-Analyse this document (${fileType}: "${fileName}") and extract all relevant information.
+Analyse this document (${fileType}: "${fileName}") and extract ALL relevant information to fully set up the case.
 
-Extract the following if present:
-- complainant_name: Full name of the person making the complaint / the account holder
+Extract the following:
+- complainant_name: Full name of the person making the complaint / account holder
 - complainant_address: Full postal address of the complainant
 - complainant_email: Email address of the complainant
 - complainant_phone: Phone number of the complainant
-- account_numbers: Array of any account numbers, reference numbers, loan numbers, card numbers (last 4 digits ok)
+- account_numbers: Array of any account, reference, loan, claim or membership numbers found
 - policy_numbers: Array of any policy, claim, or membership numbers
-- merchant_name: Name of the company, bank, landlord, telco, insurer, etc. being complained about
-- dates_mentioned: Array of key dates found (format as "DD MMM YYYY - context" e.g. "15 Jan 2024 - Transaction date")
+- merchant_name: Name of the company, bank, landlord, telco, insurer, etc. involved
+- dates_mentioned: Array of key dates found (format as "DD MMM YYYY - context")
 - key_amounts: Array of dollar amounts with context e.g. "$1,200 - Disputed charge"
-- document_summary: 1-2 sentence plain English summary of what this document is and what it shows
-- timeline_events: Array of objects {date: "YYYY-MM-DD", description: "what happened", event_type: "incident|complaint|response|evidence|deadline"}
+- document_summary: 2-3 sentence plain English summary of what this document is and what it shows
+- issue_summary: 1-2 sentence summary of the core dispute or issue described in the document
+- desired_outcome: What a reasonable person in this situation would want as a resolution (1 sentence)
+- timeline_events: Array of {date: "YYYY-MM-DD", description: "what happened", event_type: "incident|complaint|response|evidence|deadline|action_required"}
+- checklist_items: Array of {label: "action item description", category: "complaint|evidence|response|deadline|document|escalation"} — things the person needs to do to resolve this dispute
+- deadlines: Array of {title: "deadline description", deadline_date: "YYYY-MM-DD", deadline_type: "response_due|submission|escalation_window|review_period|other", notes: "why this deadline matters"} — any time-sensitive actions or legal deadlines
 
-Be thorough. Extract all dates, all account numbers, all amounts. If something is not present, omit the field.
+Be thorough. If a response deadline is mentioned (e.g. "respond within 21 days"), calculate the deadline from the document date.
 Return as JSON only.`;
 
   const schema = {
@@ -64,6 +68,8 @@ Return as JSON only.`;
       dates_mentioned: { type: "array", items: { type: "string" } },
       key_amounts: { type: "array", items: { type: "string" } },
       document_summary: { type: "string" },
+      issue_summary: { type: "string" },
+      desired_outcome: { type: "string" },
       timeline_events: {
         type: "array",
         items: {
@@ -72,6 +78,28 @@ Return as JSON only.`;
             date: { type: "string" },
             description: { type: "string" },
             event_type: { type: "string" },
+          },
+        },
+      },
+      checklist_items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            label: { type: "string" },
+            category: { type: "string" },
+          },
+        },
+      },
+      deadlines: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            deadline_date: { type: "string" },
+            deadline_type: { type: "string" },
+            notes: { type: "string" },
           },
         },
       },
@@ -105,8 +133,10 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       setScanResult(null);
       setScanning(true);
       const extracted = await scanDocument(created.file_url, created.file_name, created.file_type);
-      setScanResult({ evidenceId: created.id, data: extracted });
       await base44.entities.Evidence.update(created.id, { extracted_data: extracted, scan_status: "complete" });
+      // Auto-apply everything immediately
+      await autoApplyExtracted(extracted, created.id);
+      setScanResult({ evidenceId: created.id, data: extracted });
       queryClient.invalidateQueries({ queryKey: ["evidence", caseId] });
       setScanning(false);
     },
@@ -146,9 +176,9 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     await uploadAndProcess(file, "photo");
   };
 
-  const applyExtractedData = async (extracted) => {
+  const autoApplyExtracted = async (extracted, evidenceId) => {
+    // 1. Update case fields (only blank ones)
     const caseUpdates = {};
-    // Only fill fields that are currently blank on the case
     if (extracted.merchant_name && !caseItem?.organisation_name)
       caseUpdates.organisation_name = extracted.merchant_name;
     if (extracted.complainant_name && !caseItem?.complainant_name)
@@ -161,33 +191,67 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       caseUpdates.complainant_phone = extracted.complainant_phone;
     if (extracted.account_numbers?.length && !caseItem?.account_number)
       caseUpdates.account_number = extracted.account_numbers[0];
-    // Use the earliest timeline event date as the incident date if not set
+    if (extracted.issue_summary && !caseItem?.issue_summary)
+      caseUpdates.issue_summary = extracted.issue_summary;
+    if (extracted.desired_outcome && !caseItem?.desired_outcome)
+      caseUpdates.desired_outcome = extracted.desired_outcome;
+    // Use earliest timeline event as incident date if not set
     if (!caseItem?.incident_date && extracted.timeline_events?.length) {
-      const dates = extracted.timeline_events
-        .map((e) => e.date)
-        .filter(Boolean)
-        .sort();
+      const dates = extracted.timeline_events.map((e) => e.date).filter(Boolean).sort();
       if (dates[0]) caseUpdates.incident_date = dates[0];
     }
     if (Object.keys(caseUpdates).length > 0) {
       await base44.entities.Case.update(caseId, caseUpdates);
       queryClient.invalidateQueries({ queryKey: ["case", caseId] });
     }
+
+    // 2. Auto-create timeline events
     if (extracted.timeline_events?.length > 0) {
       for (const ev of extracted.timeline_events) {
-        if (!ev.date || !ev.description) continue;
+        if (!ev.description) continue;
         await base44.entities.TimelineEvent.create({
           case_id: caseId,
           title: ev.description.slice(0, 80),
           description: ev.description,
-          event_date: ev.date,
+          event_date: ev.date || undefined,
           event_type: ev.event_type || "incident",
-          is_action_required: false,
+          is_action_required: ev.event_type === "action_required",
         });
       }
       queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
     }
-    setAppliedIds((prev) => new Set([...prev, scanResult?.evidenceId]));
+
+    // 3. Auto-create checklist items
+    if (extracted.checklist_items?.length > 0) {
+      for (const item of extracted.checklist_items) {
+        if (!item.label) continue;
+        await base44.entities.ChecklistItem.create({
+          case_id: caseId,
+          label: item.label,
+          category: item.category || "complaint",
+          status: "missing",
+          requires_proof: true,
+        });
+      }
+    }
+
+    // 4. Auto-create deadlines
+    if (extracted.deadlines?.length > 0) {
+      for (const dl of extracted.deadlines) {
+        if (!dl.title) continue;
+        await base44.entities.Deadline.create({
+          case_id: caseId,
+          title: dl.title,
+          deadline_date: dl.deadline_date || undefined,
+          deadline_type: dl.deadline_type || "other",
+          notes: dl.notes || "",
+          status: "pending",
+          responsibility: "user",
+        });
+      }
+    }
+
+    setAppliedIds((prev) => new Set([...prev, evidenceId]));
   };
 
   const sorted = [...evidence].sort((a, b) => {
@@ -275,18 +339,20 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       </div>
 
       {scanning && (
-        <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 text-sm text-primary">
-          <ScanLine className="w-4 h-4 animate-pulse" />
-          <span className="font-medium">AI is scanning your document...</span>
-          <span className="text-xs text-primary/70">Extracting names, dates, account numbers &amp; building timeline</span>
+        <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 space-y-1">
+          <div className="flex items-center gap-2 text-sm text-primary">
+            <ScanLine className="w-4 h-4 animate-pulse shrink-0" />
+            <span className="font-medium">AI is analysing your document...</span>
+          </div>
+          <p className="text-xs text-primary/70 pl-6">Extracting details · Building timeline · Generating checklist · Setting deadlines — all automatic</p>
         </div>
       )}
 
       {scanResult && !scanning && (
         <DocumentScanResult
           extracted={scanResult.data}
-          confirmed={appliedIds.has(scanResult.evidenceId)}
-          onConfirm={() => applyExtractedData(scanResult.data)}
+          confirmed={true}
+          onConfirm={null}
         />
       )}
 
