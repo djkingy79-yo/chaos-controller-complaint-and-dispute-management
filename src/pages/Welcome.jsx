@@ -248,7 +248,7 @@ export default function Welcome() {
             className="max-w-5xl mx-auto px-4 mb-10"
           >
             <img
-              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/3bafca5cd_IMG_6994.jpeg"
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/b9a091c62_1494D044-1ED5-4BFF-9EF4-C2A80D01A494.png"
               alt="Chaos Controller — They Had Your Loyalty. Now You Deserve Their Accountability."
               className="w-full rounded-2xl shadow-2xl border-2 border-[#FFD700]/30"
             />
@@ -441,7 +441,7 @@ export default function Welcome() {
             className="max-w-4xl mx-auto px-4 mb-0"
           >
             <img
-              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/fc5838d1b_IMG_6994.jpeg"
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1774a4819_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png"
               alt="Chaos Controller - They Had Your Loyalty. Now You Deserve Their Accountability."
               className="w-full rounded-2xl shadow-2xl border-2 border-[#FFD700]/30"
             />
