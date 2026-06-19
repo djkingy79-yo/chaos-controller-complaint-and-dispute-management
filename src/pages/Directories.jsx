@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Search, Building2, Scale, Home, Zap, Phone, Shield, Landmark, Mail, BookOpen } from "lucide-react";
+import { ExternalLink, Search, Building2, Scale, Home, Zap, Phone, Shield, Landmark, Mail, BookOpen, Car, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { escalationBodies, contactDirectory } from "@/lib/directoriesData";
 import MyOrganisations from "@/components/directories/MyOrganisations";
 
-const iconMap = { Landmark, Shield, Home, Phone, Zap, Scale, Building2 };
+const iconMap = { Landmark, Shield, Home, Phone, Zap, Scale, Building2, Car, Heart };
 
 function DirectoryEntry({ entry }) {
   return (
