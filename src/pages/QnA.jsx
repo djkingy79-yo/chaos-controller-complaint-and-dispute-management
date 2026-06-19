@@ -9,7 +9,7 @@ const faqs = [
     questions: [
       {
         q: "What is Chaos Controller?",
-        a: "Chaos Controller is a consumer advocacy and dispute management platform that helps you organize evidence, draft professional complaint letters, track deadlines, and escalate disputes to the appropriate ombudsman or tribunal. It's designed to give you the tools to effectively resolve consumer disputes with banks, insurers, telcos, utilities, and other organisations."
+        a: "Chaos Controller is a consumer advocacy and dispute management platform that helps you organise evidence, draft professional complaint letters, track deadlines, and escalate disputes to the appropriate ombudsman or tribunal. It's designed to give you the tools to effectively resolve consumer disputes with banks, insurers, telcos, utilities, and other organisations."
       },
       {
         q: "How do I create my first case?",
@@ -122,7 +122,7 @@ const faqs = [
       },
       {
         q: "How do I contact support?",
-        a: "You can reach our support team by email at info@chaoscontroller.com.au, by phone at 1300 4 CHAOS (1300 424 267), or through the 'Contact Support' link in the Help & Guide section. We typically respond within 24-48 hours."
+        a: "You can reach our support team by email at chaoscontrollerapp@gmail.com, by phone at 0413 572 850 (call to discuss any chaos!), or through the 'Contact Support' link in the Help & Guide section. We typically respond within 24-48 hours."
       },
       {
         q: "Can I use Chaos Controller offline?",
@@ -215,12 +215,20 @@ export default function QnA() {
               <p className="text-sm text-muted-foreground mb-3">
                 Our support team is ready to help with any questions about your cases or the platform.
               </p>
-              <a 
-                href="mailto:chaoscontrollerapp@gmail.com"
-                className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
-              >
-                Contact Support →
-              </a>
+              <div className="flex flex-col gap-1">
+                <a 
+                  href="mailto:chaoscontrollerapp@gmail.com"
+                  className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+                >
+                  chaoscontrollerapp@gmail.com →
+                </a>
+                <a 
+                  href="tel:0413572850"
+                  className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+                >
+                  📞 0413 572 850
+                </a>
+              </div>
             </div>
           </div>
         </div>

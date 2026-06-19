@@ -23,7 +23,7 @@ RE: Formal Complaint — Unauthorised Transaction & Failure to Refund
 
 I am writing to formally lodge a complaint regarding an unauthorised transaction of $1,247.50 debited from my account (Account No: 062-001 1234 5678) on 14 March 2026, which I did not authorise.
 
-I immediately contacted your customer service on 15 March 2026 and was advised a dispute had been lodged (Reference: CBA-2026-44821). Despite your organisation's commitment to resolve disputes within 21 days, I am yet to receive any substantive response or refund as of the date of this letter.
+I immediately contacted your customer service on 15 March 2026 and was advised a dispute had been lodged (Reference: CBA-2026-44821). Despite your organisation's commitment to resolve disputes within 21 days, I am yet to receive any substantive response or refund as at the date of this letter.
 
 Under the Australian Banking Code of Practice and the ePayments Code, I am entitled to a full refund of this unauthorised transaction. I request that Commonwealth Bank:
 
@@ -246,7 +246,7 @@ export default function SamplePreviews() {
 
         {/* Footer */}
         <p className="text-center text-gray-600 text-xs mt-8">
-          Designed & Developed by Deb King, Glenmore Park 2025
+          Designed & Developed by Deb King, Glenmore Park 2026 · chaoscontrollerapp@gmail.com · 0413 572 850
         </p>
       </div>
     </div>

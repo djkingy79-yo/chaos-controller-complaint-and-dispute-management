@@ -280,7 +280,7 @@ export default function SampleReports() {
                       <div className="text-xs text-muted-foreground capitalize">{doc.type}</div>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/sample-previews")}>
                     <Eye className="w-4 h-4" /> View Sample
                   </Button>
                 </div>

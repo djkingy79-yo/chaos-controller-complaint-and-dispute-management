@@ -3,7 +3,7 @@ const LOGO_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f9467
 export const CONTACT = {
   website: "www.chaoscontroller.com.au",
   email: "chaoscontrollerapp@gmail.com",
-  phone: "1300 4 CHAOS (1300 424 267)",
+  phone: "0413 572 850",
   location: "Australia Wide",
 };
 

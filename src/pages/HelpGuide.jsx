@@ -604,13 +604,21 @@ export default function HelpGuide() {
           <p className="text-sm text-muted-foreground mb-4">
             Our support team is here to assist you with any questions about your cases or the platform.
           </p>
-          <a 
-            href="mailto:chaoscontrollerapp@gmail.com"
-            className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
-          >
-            <Send className="w-4 h-4" />
-            Contact Support
-          </a>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a 
+              href="mailto:chaoscontrollerapp@gmail.com"
+              className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+            >
+              <Send className="w-4 h-4" />
+              chaoscontrollerapp@gmail.com
+            </a>
+            <a 
+              href="tel:0413572850"
+              className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+            >
+              📞 0413 572 850
+            </a>
+          </div>
         </div>
       </div>
     </div>

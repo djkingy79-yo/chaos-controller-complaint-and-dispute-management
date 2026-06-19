@@ -17,17 +17,33 @@ export default function CalendarSync() {
   const [totalDeadlines, setTotalDeadlines] = useState(0);
   const [error, setError] = useState(null);
 
+  const checkConnection = async () => {
+    try {
+      // Just check if the connector is connected without syncing
+      const res = await base44.functions.invoke("syncCalendar", { action: "check" });
+      setConnected(res.data?.connected || false);
+      setSyncedEvents(res.data?.events || []);
+      setSyncedCount(res.data?.syncedCount || 0);
+      setTotalDeadlines(res.data?.totalDeadlines || 0);
+      setError(null);
+    } catch (err) {
+      // 403 = not connected yet, not an error to show
+      setConnected(false);
+      setError(null);
+    }
+  };
+
   const fetchData = async () => {
     try {
       const res = await base44.functions.invoke("syncCalendar", { action: "sync" });
-      setSyncedEvents(res.data.events || []);
-      setSyncedCount(res.data.syncedCount || 0);
-      setTotalDeadlines(res.data.totalDeadlines || 0);
+      setSyncedEvents(res.data?.events || []);
+      setSyncedCount(res.data?.syncedCount || 0);
+      setTotalDeadlines(res.data?.totalDeadlines || 0);
       setConnected(true);
       setError(null);
     } catch (err) {
       setConnected(false);
-      setError(err.message);
+      setError(null);
     }
   };
 
@@ -36,7 +52,7 @@ export default function CalendarSync() {
       if (authed) {
         const me = await base44.auth.me();
         setUser(me);
-        await fetchData();
+        await checkConnection();
       }
       setLoading(false);
     });
