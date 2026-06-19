@@ -485,18 +485,20 @@ export default function PrintBundle({ caseItem, evidence, events }) {
             <Package className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="font-heading font-semibold text-sm text-foreground">Full Case Bundle</p>
-            <p className="text-xs text-muted-foreground">Cover page + all 4 documents in one print-ready file</p>
+            <p className="font-heading font-semibold text-sm text-foreground">Full Case Bundle — Formal Submission PDF</p>
+            <p className="text-xs text-muted-foreground">Cover page · Summary · Timeline · Evidence Index · All letters — ready to print or save as PDF for email submission</p>
           </div>
         </div>
         <Button
           onClick={() => printBundle(caseItem, evidence, events)}
-          className="w-full gap-2"
+          className="w-full gap-2 mb-2"
         >
           <Printer className="w-4 h-4" />
-          Print Complete Bundle
+          Print / Save as PDF
         </Button>
-        <p className="text-xs text-muted-foreground text-center mt-2">Suitable for submission to AFCA, NCAT, TIO, and all tribunals</p>
+        <p className="text-xs text-muted-foreground text-center bg-muted/40 rounded-lg py-2 px-3">
+          💡 <strong>To save as PDF:</strong> In the print dialog, choose <strong>"Save as PDF"</strong> as the destination — then attach the file to your email submission to AFCA, NCAT, TIO or any tribunal.
+        </p>
       </div>
     </div>
   );
