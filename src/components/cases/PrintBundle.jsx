@@ -1,6 +1,7 @@
-import React, { useRef } from "react";
+import React, { useEffect, useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Printer, FileText, Clock, FolderOpen, Package } from "lucide-react";
+import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
 import { buildLetterheadHTML, buildFooterHTML } from "./LetterheadBanner";
 
@@ -221,6 +222,67 @@ function printChecklist(caseItem, evidence, events) {
   window.print();
 }
 
+function printChecklistItems(caseItem, checklistItems) {
+  const rows = checklistItems.map(item => `
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:6pt 8pt;font-size:14pt;">${item.status === 'complete' ? '☑' : '☐'}</td>
+      <td style="padding:6pt 8pt;font-size:12pt;${item.status === 'complete' ? 'text-decoration:line-through;color:#888;' : ''}">${item.label}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(item.category||'').replace(/_/g,' ')}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;${item.status === 'complete' ? 'color:green;' : item.status === 'missing' ? 'color:#c00;' : 'color:#f90;'}">${(item.status||'').replace('_',' ').toUpperCase()}</td>
+    </tr>`).join('');
+  const client = buildClientContext(caseItem, []);
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist — ${caseItem.title}</title>
+  <style>@page{margin:2cm;}body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;}
+  .header{background:#7c3aed;color:white;padding:16pt 24pt;}
+  table{width:100%;border-collapse:collapse;margin-top:16pt;}
+  th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
+  </head><body>
+  <div class="header"><div style="font-size:20pt;font-weight:bold;">Smart Checklist</div>
+  <div style="font-size:13pt;font-style:italic;">${caseItem.title}</div></div>
+  <div style="padding:16pt 0;">
+  <p style="font-size:11pt;color:#555;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <table><thead><tr><th></th><th>Item</th><th>Category</th><th>Status</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <div style="font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;">Chaos Controller™ — chaoscontrollerapp@gmail.com | 0413 572 850</div>
+  </div></body></html>`);
+  win.document.close();
+  setTimeout(() => { win.print(); win.close(); }, 400);
+}
+
+function printDeadlineItems(caseItem, deadlines) {
+  const sorted = [...deadlines].sort((a,b) => new Date(a.deadline_date||0) - new Date(b.deadline_date||0));
+  const rows = sorted.map(d => {
+    const daysLeft = d.deadline_date ? Math.round((new Date(d.deadline_date) - new Date()) / 86400000) : null;
+    const urgency = daysLeft === null ? '—' : daysLeft < 0 ? 'OVERDUE' : daysLeft === 0 ? 'TODAY' : `${daysLeft} days`;
+    const color = daysLeft !== null && daysLeft < 0 ? '#c00' : daysLeft !== null && daysLeft <= 7 ? '#f90' : '#060';
+    return `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:6pt 8pt;font-size:12pt;font-weight:bold;">${d.title}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;">${d.deadline_date ? format(new Date(d.deadline_date),'d MMM yyyy') : '—'}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;color:${color};">${urgency}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(d.deadline_type||'').replace(/_/g,' ')}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;${d.status==='completed'?'color:green;':'color:#c00;'}">${(d.status||'').toUpperCase()}</td>
+    </tr>`;
+  }).join('');
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Deadlines — ${caseItem.title}</title>
+  <style>@page{margin:2cm;}body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;}
+  .header{background:#b91c1c;color:white;padding:16pt 24pt;}
+  table{width:100%;border-collapse:collapse;margin-top:16pt;}
+  th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
+  </head><body>
+  <div class="header"><div style="font-size:20pt;font-weight:bold;">Deadline War Room</div>
+  <div style="font-size:13pt;font-style:italic;">${caseItem.title}</div></div>
+  <div style="padding:16pt 0;">
+  <p style="font-size:11pt;color:#555;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <table><thead><tr><th>Deadline</th><th>Date</th><th>Urgency</th><th>Type</th><th>Status</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <div style="font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;">Chaos Controller™ — chaoscontrollerapp@gmail.com | 0413 572 850</div>
+  </div></body></html>`);
+  win.document.close();
+  setTimeout(() => { win.print(); win.close(); }, 400);
+}
+
 function printBundle(caseItem, evidence, events) {
   const sorted = [...events].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
   const evSorted = [...evidence].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
@@ -406,6 +468,15 @@ function printBundle(caseItem, evidence, events) {
 }
 
 export default function PrintBundle({ caseItem, evidence, events }) {
+  const [checklistItems, setChecklistItems] = useState([]);
+  const [deadlines, setDeadlines] = useState([]);
+
+  useEffect(() => {
+    if (!caseItem?.id) return;
+    base44.entities.ChecklistItem.filter({ case_id: caseItem.id }).then(setChecklistItems).catch(() => {});
+    base44.entities.Deadline.filter({ case_id: caseItem.id }).then(setDeadlines).catch(() => {});
+  }, [caseItem?.id]);
+
   return (
     <div className="space-y-4">
       <div>
@@ -474,6 +545,35 @@ export default function PrintBundle({ caseItem, evidence, events }) {
             <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           <p className="text-xs text-muted-foreground">Print completion checklist — what's done, what's missing</p>
+        </button>
+
+        <button
+          onClick={() => printChecklistItems(caseItem, checklistItems)}
+          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-accent/20 rounded-lg">
+              <ClipboardList className="w-4 h-4 text-accent" />
+            </div>
+            <span className="font-medium text-sm text-foreground">Smart Checklist</span>
+            <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <p className="text-xs text-muted-foreground">Print AI-generated action items ({checklistItems.length} items)</p>
+        </button>
+
+        <button
+          onClick={() => printDeadlineItems(caseItem, deadlines)}
+          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
+          style={{gridColumn: "1 / -1"}}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-destructive/10 rounded-lg">
+              <Siren className="w-4 h-4 text-destructive" />
+            </div>
+            <span className="font-medium text-sm text-foreground">Deadline War Room</span>
+            <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <p className="text-xs text-muted-foreground">Print all deadlines with urgency status ({deadlines.length} deadlines)</p>
         </button>
 
       </div>

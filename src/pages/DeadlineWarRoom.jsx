@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { differenceInDays, format, isPast, isToday } from "date-fns";
-import { Siren, Clock, Plus, CheckCircle2, XCircle, AlertTriangle, Calendar, User2, Trash2 } from "lucide-react";
+import { Siren, Clock, Plus, CheckCircle2, XCircle, AlertTriangle, Calendar, User2, Trash2, Printer } from "lucide-react";
 import { motion } from "framer-motion";
 
 const urgencyConfig = (daysLeft) => {
@@ -23,6 +23,41 @@ const urgencyConfig = (daysLeft) => {
 };
 
 const responsibilityLabel = { user: "You", provider: "Provider", tribunal: "Tribunal", other: "Other" };
+
+function printDeadlines(deadlines, cases) {
+  const getCaseName = (id) => cases.find(c => c.id === id)?.title || '';
+  const sorted = [...deadlines].sort((a,b) => new Date(a.deadline_date) - new Date(b.deadline_date));
+  const rows = sorted.map(d => {
+    const daysLeft = Math.round((new Date(d.deadline_date) - new Date()) / 86400000);
+    const urgency = daysLeft < 0 ? 'OVERDUE' : daysLeft === 0 ? 'TODAY' : daysLeft <= 7 ? `${daysLeft} DAYS` : format(new Date(d.deadline_date), 'd MMM yyyy');
+    const color = daysLeft < 0 ? '#c00' : daysLeft <= 7 ? '#f90' : '#060';
+    return `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:6pt 8pt;font-size:12pt;font-weight:bold;">${d.title}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;">${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : '—'}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;color:${color};">${urgency}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(d.deadline_type||'').replace(/_/g,' ')}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;">${getCaseName(d.case_id)}</td>
+      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;${d.status==='completed'?'color:green;':'color:#c00;'}">${d.status?.toUpperCase()}</td>
+    </tr>`;
+  }).join('');
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Deadlines</title>
+  <style>@page{margin:2cm;}body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;}
+  .header{background:#b91c1c;color:white;padding:16pt 24pt;}h1{font-size:18pt;margin:0 0 4pt 0;}
+  table{width:100%;border-collapse:collapse;margin-top:16pt;}
+  th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}
+  .footer{font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;}</style>
+  </head><body>
+  <div class="header"><h1>Deadline War Room</h1></div>
+  <div style="padding:16pt 0;">
+  <p style="font-size:11pt;color:#555;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <table><thead><tr><th>Deadline</th><th>Date</th><th>Urgency</th><th>Type</th><th>Case</th><th>Status</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <div class="footer">Chaos Controller™ — chaoscontrollerapp@gmail.com | 0413 572 850</div>
+  </div></body></html>`);
+  win.document.close();
+  setTimeout(() => { win.print(); win.close(); }, 400);
+}
 
 export default function DeadlineWarRoom() {
   const { user } = useAuth();
@@ -70,6 +105,10 @@ export default function DeadlineWarRoom() {
           <p className="text-muted-foreground text-sm mt-1">Track every critical date. Miss nothing.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => printDeadlines(deadlines, cases)}>
+            <Printer className="w-4 h-4" />
+            <span className="hidden sm:inline">Print</span>
+          </Button>
           <Button variant="outline" className="gap-2" onClick={() => window.location.href = '/calendar-sync'}>
             <Calendar className="w-4 h-4" />
             <span className="hidden sm:inline">Sync to Calendar</span>
