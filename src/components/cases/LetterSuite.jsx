@@ -86,7 +86,7 @@ LETTER FORMAT:
 2. Left block: complaint handler, organisation name, address
 3. Re: line referencing case/account
 4. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-5. Professional, firm Australian English tone
+5. Professional, firm Australian English tone — use Australian spelling throughout (e.g. organise, recognise, behaviour, honour, colour)
 6. Close: "Yours faithfully," then complainant name (if provided)
 7. NEVER use bracket placeholders`;
 
@@ -135,6 +135,7 @@ LETTER TYPE: Acceptance of Settlement Offer
 - Request written confirmation and a timeline for fulfilment
 - State that if the offer is not fulfilled by the agreed date, the matter will be escalated
 - Professional, clear, binding language
+- Use Australian English spelling throughout
 ${formats}`;
   }
 

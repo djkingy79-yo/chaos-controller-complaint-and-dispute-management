@@ -78,7 +78,7 @@ export default function NewCase() {
     const complainantBlock = [f.complainant_name, f.complainant_address, f.complainant_email ? `Email: ${f.complainant_email}` : null, f.complainant_phone ? `Mobile: ${f.complainant_phone}` : null, today].filter(Boolean).join("\n");
     const recipientBlock = [f.complaint_handler_name || "The Complaints Manager", f.organisation_name, f.organisation_complaints_address || null, f.organisation_complaints_email ? `Email: ${f.organisation_complaints_email}` : null].filter(Boolean).join("\n");
 
-    const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
+    const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute. Use Australian English spelling throughout (e.g. organise, recognise, behaviour, honour, colour).
 
 CRITICAL RULE: NEVER use bracket placeholders like [Name], [Address], [Date] or similar. If a detail is not provided, omit that line entirely.
 

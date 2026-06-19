@@ -156,7 +156,7 @@ export default function Privacy() {
         <section className="prose prose-sm max-w-none">
           <h2 className="font-heading font-bold text-xl text-foreground mb-4">6. Data Security</h2>
           <p className="text-foreground leading-relaxed">
-            We implement appropriate technical and organizational security measures to protect your 
+            We implement appropriate technical and organisational security measures to protect your 
             personal information, including:
           </p>
           <ul className="list-disc list-inside space-y-2 text-foreground ml-4">
@@ -186,7 +186,7 @@ export default function Privacy() {
             <li><strong>Restriction:</strong> Request restriction of processing your personal information</li>
           </ul>
           <p className="text-foreground leading-relaxed mt-4">
-            To exercise these rights, please contact us at info@chaoscontroller.com.au. We will respond 
+            To exercise these rights, please contact us at chaoscontrollerapp@gmail.com. We will respond 
             to your request within 30 days.
           </p>
         </section>
@@ -266,7 +266,7 @@ export default function Privacy() {
             <p className="text-foreground font-medium">Chaos Controller</p>
             <p className="text-foreground">Email: chaoscontrollerapp@gmail.com</p>
             <p className="text-foreground">Website: www.chaoscontroller.com.au</p>
-            <p className="text-foreground">Phone: 1300 4 CHAOS (1300 424 267)</p>
+            <p className="text-foreground">Phone: 0413 572 850</p>
           </div>
         </section>
 

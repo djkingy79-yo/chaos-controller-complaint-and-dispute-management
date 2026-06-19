@@ -32,7 +32,7 @@ const typeConfig = {
 };
 
 async function scanDocument(fileUrl, fileName, fileType) {
-  const prompt = `You are an AI document analysis assistant for an Australian consumer advocacy platform.
+  const prompt = `You are an AI document analysis assistant for an Australian consumer advocacy platform. Use Australian English spelling in all responses.
 Analyse this document (${fileType}: "${fileName}") and extract all relevant information.
 
 Extract the following if present:

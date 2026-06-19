@@ -46,7 +46,7 @@ export default function Terms() {
           <ul className="list-disc list-inside space-y-2 text-foreground ml-4">
             <li>Case management tools for consumer disputes</li>
             <li>AI-powered complaint letter generation</li>
-            <li>Evidence organization and document management</li>
+            <li>Evidence organisation and document management</li>
             <li>Timeline tracking and deadline management</li>
             <li>Escalation bundle preparation for tribunals</li>
             <li>Access to complaint contact directories</li>
@@ -90,7 +90,7 @@ export default function Terms() {
           <h2 className="font-heading font-bold text-xl text-foreground mb-4">5. No Legal Advice</h2>
           <p className="text-foreground leading-relaxed">
             Chaos Controller is not a law firm and does not provide legal advice. The Platform provides 
-            administrative and organizational tools to help you manage consumer disputes. For legal advice, 
+            administrative and organisational tools to help you manage consumer disputes. For legal advice, 
             you should consult with a qualified legal practitioner.
           </p>
         </section>
@@ -162,7 +162,7 @@ export default function Terms() {
             <p className="text-foreground font-medium">Chaos Controller</p>
             <p className="text-foreground">Email: chaoscontrollerapp@gmail.com</p>
             <p className="text-foreground">Website: www.chaoscontroller.com.au</p>
-            <p className="text-foreground">Phone: 1300 4 CHAOS (1300 424 267)</p>
+            <p className="text-foreground">Phone: 0413 572 850</p>
           </div>
         </section>
 
