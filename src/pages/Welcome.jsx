@@ -193,41 +193,7 @@ export default function Welcome() {
           </div>
         </div>
 
-        {/* Sample Letters Preview */}
-        <div className="mt-16">
-          <h2 className="text-3xl sm:text-4xl font-display font-black text-center mb-4 text-white">
-            SAMPLE LETTERS
-          </h2>
-          <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-8" />
-          <p className="text-center text-white font-bold mb-8 max-w-2xl mx-auto text-lg">
-            Professional, tribunal-ready letters generated in seconds
-          </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: "1st Complaint Letter", category: "Banking Dispute", preview: "I am writing to formally complain about the unfair fees charged to my account..." },
-              { title: "2nd Complaint Letter", category: "Insurance Claim", preview: "Further to my previous correspondence, I am disappointed to note that my claim..." },
-              { title: "3rd & Final Letter", category: "Tenancy Dispute", preview: "This is my third and final attempt to resolve this matter internally before..." },
-              { title: "Accept Offer Letter", category: "Telco Dispute", preview: "I am writing to confirm my acceptance of the settlement offer dated..." },
-              { title: "Deny Offer Letter", category: "Utilities Dispute", preview: "I regret to inform you that the settlement offer proposed is unacceptable because..." },
-              { title: "Escalation Letter", category: "AFCA External", preview: "I wish to escalate this matter to the Australian Financial Complaints Authority..." },
-            ].map((letter, idx) => (
-              <div key={idx} className="bg-gradient-to-br from-black to-gray-900 border-2 border-[#FFD700]/30 rounded-xl p-6 hover:border-[#FFD700]/60 transition-colors">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-[#FFD700]/20 rounded-full flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-[#FFD700]" />
-                  </div>
-                  <div>
-                    <p className="text-white font-black text-sm">{letter.title}</p>
-                    <p className="text-[#FFD700] font-bold text-xs">{letter.category}</p>
-                  </div>
-                </div>
-                <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 mb-3">
-                  <p className="text-gray-400 font-mono text-xs italic">"{letter.preview}"</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
       </div>
 
       {/* Footer Branding */}
