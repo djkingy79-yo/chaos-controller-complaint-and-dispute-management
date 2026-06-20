@@ -165,7 +165,7 @@ export default function CalendarSync() {
 
   const handleGoogleConnect = async () => {
     try {
-      const url = await base44.connectors.connectAppUser(GOOGLE_CONNECTOR_ID);
+      const url = await base44.connectors.getAppUserConnectURL(GOOGLE_CONNECTOR_ID);
       const popup = window.open(url, "_blank");
       const timer = setInterval(() => {
         if (!popup || popup.closed) { clearInterval(timer); syncGoogle(); }
@@ -174,8 +174,10 @@ export default function CalendarSync() {
   };
 
   const handleGoogleDisconnect = async () => {
-    await base44.connectors.disconnectAppUser(GOOGLE_CONNECTOR_ID);
-    setGoogleConnected(false); setGoogleEvents([]);
+    try {
+      await base44.connectors.disconnectAppUser(GOOGLE_CONNECTOR_ID);
+      setGoogleConnected(false); setGoogleEvents([]);
+    } catch (err) { setGoogleError(err.message); }
   };
 
   const handleOutlookSync = async () => {
