@@ -629,6 +629,15 @@ export default function Welcome() {
       {/* Footer Branding */}
       <div className="bg-gradient-to-r from-[#C0392B] via-black to-[#C0392B] py-12 border-t-2 border-[#FFD700]">
         <div className="max-w-4xl mx-auto px-4 text-center">
+          {/* Footer Logo */}
+          <div className="mb-8">
+            <img
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/43ffd1867_67B5CC10-D393-47DF-871D-C5B37790EF8E.png"
+              alt="Chaos Controller — Never Fear. Control Starts Here."
+              className="w-full max-w-2xl mx-auto object-contain drop-shadow-2xl"
+            />
+          </div>
+          
           <h2 className="text-3xl font-display font-black text-white mb-2">CHAOS CONTROLLER</h2>
           <p className="text-[#FFD700] font-bold text-lg mb-6">Designed & Developed by Deb King</p>
           <p className="text-white font-bold text-base mb-6">Glenmore Park 2025</p>
