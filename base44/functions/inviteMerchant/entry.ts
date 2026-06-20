@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
       notify_on_update: notifyOnUpdate !== false
     });
 
-    // Use the app's actual domain (works for custom domains too)
-    const portalUrl = `${req.headers.get('x-forwarded-proto') || 'https'}://${req.headers.get('host')}/shared-case/${token}`;
+    // Use the correct app domain
+    const portalUrl = `https://app.base44.com/6a2ac3b012e45642b1f94671/shared-case/${token}`;
 
     // Send invite email to merchant
     await base44.asServiceRole.integrations.Core.SendEmail({
