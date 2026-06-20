@@ -78,14 +78,16 @@ const plans = [
     period: "AUD/month",
     description: "For single disputes",
     features: [
-      "3 active cases",
+      "Up to 3 active cases",
       "Evidence vault (25 files per case)",
       "AI document scanning & data extraction",
-      "1st Complaint Letter generator",
+      "1st Formal Complaint Letter generator",
       "Automated case timeline builder",
-      "Deadline tracker with reminders",
+      "Deadline tracker with email reminders",
       "Full template library access",
-      "PDF export for submissions"
+      "PDF export for tribunal submissions",
+      "Secure cloud storage",
+      "Mobile & desktop access"
     ],
     cta: "Select Plan",
     popular: false,
@@ -123,15 +125,21 @@ Date: 16 June 2026`,
     period: "AUD/month",
     description: "For serious & ongoing disputes",
     features: [
+      "Everything in Starter — unlimited",
       "Unlimited active cases",
-      "Unlimited evidence files",
+      "Unlimited evidence file uploads",
+      "Priority AI scanning & smart extraction",
       "All 6 professional complaint letters",
+      "1st, 2nd & 3rd Complaint Letters",
+      "Accept Offer & Deny Offer letters",
       "Tribunal-ready escalation bundles",
-      "Google Calendar & Outlook auto-sync",
+      "Google Calendar auto-sync",
+      "Outlook Calendar auto-sync",
       "Smart checklist with proof tracking",
-      "Organisation directory & templates",
+      "Organisation contacts directory",
       "Direct ombudsman links (AFCA, TIO, NCAT)",
-      "Automated email notifications"
+      "Automated email notifications",
+      "Case status change alerts"
     ],
     cta: "Select Plan",
     popular: true,
@@ -163,7 +171,7 @@ Michael Johnson
 45 Sample Road, Chatswood NSW 2067
 michael.j@email.com | 0455 111 222
 Date: 16 June 2026`,
-    lockedFeatures: ["Accept Offer Letter", "Deny Offer Letter", "Chaos Score analytics", "ZIP bundle export"]
+    lockedFeatures: ["Chaos Score analytics", "ZIP bundle export"]
   },
   {
     name: "Command",
@@ -176,9 +184,14 @@ Date: 16 June 2026`,
       "Chaos Score & case strength analytics",
       "AI-powered evidence analysis",
       "Printable formal letter bundles",
+      "Multi-step guided complaint builder",
+      "Advanced timeline & event categorisation",
       "Merchant shared case portals",
+      "Invite merchants to respond online",
       "Priority email support",
-      "Early access to new features"
+      "Early access to new features",
+      "Advanced dispute resolution metrics",
+      "Case outcome tracking & reporting"
     ],
     cta: "Select Plan",
     popular: false,
@@ -733,13 +746,13 @@ export default function Welcome() {
         </motion.div>
 
         {/* Locked Features */}
-        {plans[activePlan].locked_features?.length > 0 && (
+        {plans[activePlan].lockedFeatures?.length > 0 && (
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-5 mb-8">
             <p className="font-bold text-white mb-3 flex items-center gap-2">
               <Lock className="w-4 h-4 text-gray-400" /> Also included in higher tiers:
             </p>
             <div className="grid sm:grid-cols-2 gap-2">
-              {plans[activePlan].locked_features.map(f => (
+              {plans[activePlan].lockedFeatures.map(f => (
                 <div key={f} className="flex items-center gap-2 text-sm text-gray-400">
                   <Lock className="w-3.5 h-3.5 text-gray-600 shrink-0" />
                   {f}
@@ -749,7 +762,7 @@ export default function Welcome() {
           </div>
         )}
 
-        {plans[activePlan].locked_features?.length === 0 && (
+        {plans[activePlan].lockedFeatures?.length === 0 && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-5 mb-8 flex items-center gap-3">
             <Star className="w-5 h-5 text-red-400 shrink-0" />
             <p className="text-white font-bold">Command plan includes everything — all 6 letters, full PDF bundle, Chaos Score, and ZIP export.</p>
