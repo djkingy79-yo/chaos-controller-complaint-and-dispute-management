@@ -56,21 +56,21 @@ export default function CaseCard({ caseItem, index }) {
               </span>
               <span className={`w-2 h-2 rounded-full ${priorityDot[caseItem.priority] || priorityDot.medium}`} />
             </div>
-            <h3 className="font-heading font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+            <h3 className="font-heading font-bold text-foreground truncate group-hover:text-primary transition-colors text-base">
               {caseItem.title}
             </h3>
             {caseItem.organisation_name && (
-              <div className="flex items-center gap-1.5 mt-1.5 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5 mt-1.5 text-sm text-foreground font-semibold">
                 <Building2 className="w-3.5 h-3.5" />
                 <span>{caseItem.organisation_name}</span>
               </div>
             )}
             {caseItem.issue_summary && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              <p className="text-sm text-foreground font-semibold mt-1 line-clamp-2">
                 {caseItem.issue_summary}
               </p>
             )}
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-foreground font-bold">
               <Calendar className="w-3 h-3" />
               <span>{format(new Date(caseItem.created_date), "d MMM yyyy")}</span>
             </div>

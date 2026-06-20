@@ -10,10 +10,10 @@ export default function StatsCard({ title, value, icon: Icon, color, subtitle })
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-3xl font-display font-bold mt-1 text-foreground">{value}</p>
+          <p className="text-sm font-bold text-muted-foreground">{title}</p>
+          <p className="text-3xl font-display font-black mt-1 text-foreground">{value}</p>
           {subtitle && (
-            <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+            <p className="text-xs text-muted-foreground mt-1 font-bold">{subtitle}</p>
           )}
         </div>
         <div className={`p-2.5 rounded-lg ${color}`}>

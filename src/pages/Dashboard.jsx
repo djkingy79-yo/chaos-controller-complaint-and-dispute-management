@@ -102,10 +102,10 @@ export default function Dashboard() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-display font-black text-foreground">
                 Welcome back{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
               </h1>
-              <p className="text-muted-foreground mt-1 text-sm">
+              <p className="text-muted-foreground mt-1 text-sm font-bold">
                 Control starts here. Here's your dispute command centre.
               </p>
             </div>

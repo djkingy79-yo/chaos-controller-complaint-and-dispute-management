@@ -74,7 +74,16 @@ const plans = [
     price: "$25.00",
     period: "AUD/month",
     description: "For single disputes",
-    features: ["3 active cases", "Evidence vault (25 files)", "AI document scanning", "Complaint letter generator", "Timeline builder", "Deadline tracker", "Full template library", "PDF export"],
+    features: [
+      "3 active cases",
+      "Evidence vault (25 files per case)",
+      "AI document scanning & data extraction",
+      "1st Complaint Letter generator",
+      "Automated case timeline builder",
+      "Deadline tracker with reminders",
+      "Full template library access",
+      "PDF export for submissions"
+    ],
     cta: "Select Plan",
     popular: false
   },
@@ -83,7 +92,17 @@ const plans = [
     price: "$35.00",
     period: "AUD/month",
     description: "For serious & ongoing disputes",
-    features: ["Unlimited cases", "Unlimited evidence files", "Priority AI scanning", "Tribunal-ready escalation bundles", "Google Calendar sync", "Smart checklist", "Organisation directory", "Ombudsman direct links", "Email notifications"],
+    features: [
+      "Unlimited active cases",
+      "Unlimited evidence files",
+      "All 6 professional complaint letters",
+      "Tribunal-ready escalation bundles",
+      "Google Calendar & Outlook auto-sync",
+      "Smart checklist with proof tracking",
+      "Organisation directory & templates",
+      "Direct ombudsman links (AFCA, TIO, NCAT)",
+      "Automated email notifications"
+    ],
     cta: "Select Plan",
     popular: true
   },
@@ -92,7 +111,16 @@ const plans = [
     price: "$49.00",
     period: "AUD/month",
     description: "Maximum firepower",
-    features: ["Everything in Pro", "Full ZIP case bundle export", "Advanced timeline & analytics", "AI evidence analysis", "Printable formal bundles", "Chaos Score tracker", "Priority support", "Early access to new features"],
+    features: [
+      "Everything in Pro — unlimited",
+      "Full ZIP case bundle export",
+      "Chaos Score & case strength analytics",
+      "AI-powered evidence analysis",
+      "Printable formal letter bundles",
+      "Merchant shared case portals",
+      "Priority email support",
+      "Early access to new features"
+    ],
     cta: "Select Plan",
     popular: false
   }
