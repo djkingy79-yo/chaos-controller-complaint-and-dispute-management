@@ -179,6 +179,9 @@ export default function CaseDetail() {
               <TabsTrigger value="print" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Printer className="w-3.5 h-3.5" /> <span>Print</span>
               </TabsTrigger>
+              <TabsTrigger value="weekly" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <BarChart2 className="w-3.5 h-3.5" /> <span>Weekly Snapshot</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="summary" className="mt-4">
@@ -202,6 +205,9 @@ export default function CaseDetail() {
             </TabsContent>
             <TabsContent value="print" className="mt-4">
               <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+            </TabsContent>
+            <TabsContent value="weekly" className="mt-4">
+              <WeeklySnapshot caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
           </Tabs>
         </div>
