@@ -33,15 +33,21 @@ export default function CalendarView() {
     queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }),
   });
 
+  const caseIds = cases.map(c => c.id);
+
   const { data: deadlines = [] } = useQuery({
-    queryKey: ["deadlines-all"],
-    queryFn: () => base44.entities.Deadline.list(),
+    queryKey: ["deadlines-all", caseIds],
+    queryFn: () => caseIds.length > 0
+      ? base44.entities.Deadline.filter({ case_id: { $in: caseIds } })
+      : Promise.resolve([]),
     enabled: cases.length > 0,
   });
 
   const { data: timelineEvents = [] } = useQuery({
-    queryKey: ["timeline-all"],
-    queryFn: () => base44.entities.TimelineEvent.list(),
+    queryKey: ["timeline-all", caseIds],
+    queryFn: () => caseIds.length > 0
+      ? base44.entities.TimelineEvent.filter({ case_id: { $in: caseIds } })
+      : Promise.resolve([]),
     enabled: cases.length > 0,
   });
 

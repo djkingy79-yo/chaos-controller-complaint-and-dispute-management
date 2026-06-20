@@ -1,6 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { TrendingUp, Award, Clock, Target, AlertTriangle, CheckCircle, FileUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -23,19 +24,30 @@ const STATUS_COLORS = {
 };
 
 export default function Analytics() {
+  const { user } = useAuth();
+
   const { data: cases = [] } = useQuery({
-    queryKey: ["analytics-cases"],
-    queryFn: () => base44.entities.Case.filter({}),
+    queryKey: ["analytics-cases", user?.id],
+    queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
   });
 
+  const caseIds = cases.map(c => c.id);
+
   const { data: deadlines = [] } = useQuery({
-    queryKey: ["analytics-deadlines"],
-    queryFn: () => base44.entities.Deadline.filter({}),
+    queryKey: ["analytics-deadlines", caseIds],
+    queryFn: () => caseIds.length > 0
+      ? base44.entities.Deadline.filter({ case_id: { $in: caseIds } })
+      : Promise.resolve([]),
+    enabled: caseIds.length > 0,
   });
 
   const { data: evidence = [] } = useQuery({
-    queryKey: ["analytics-evidence"],
-    queryFn: () => base44.entities.Evidence.filter({}),
+    queryKey: ["analytics-evidence", caseIds],
+    queryFn: () => caseIds.length > 0
+      ? base44.entities.Evidence.filter({ case_id: { $in: caseIds } })
+      : Promise.resolve([]),
+    enabled: caseIds.length > 0,
   });
 
   // Calculate metrics

@@ -101,7 +101,7 @@ export default function CalendarSync() {
   const [outlookSyncedCount, setOutlookSyncedCount] = useState(0);
   const [outlookTotal, setOutlookTotal] = useState(0);
   const [outlookError, setOutlookError] = useState(null);
-  const OUTLOOK_CONNECTOR_ID = "outlook";
+
 
   const checkGoogle = async () => {
     try {
@@ -144,18 +144,12 @@ export default function CalendarSync() {
   };
 
   const handleOutlookConnect = async () => {
-    try {
-      const url = await base44.connectors.connectAppUser(OUTLOOK_CONNECTOR_ID);
-      const popup = window.open(url, "_blank");
-      const timer = setInterval(() => {
-        if (!popup || popup.closed) { clearInterval(timer); checkOutlook(); }
-      }, 500);
-    } catch (err) { setOutlookError(err.message); }
+    // Outlook is a shared connector managed by the app owner in dashboard settings
+    setOutlookError("Outlook is connected as a shared account. Manage the connection in your dashboard settings.");
   };
 
   const handleOutlookDisconnect = async () => {
-    await base44.connectors.disconnectAppUser(OUTLOOK_CONNECTOR_ID);
-    setOutlookConnected(false); setOutlookItems([]);
+    setOutlookError("Outlook is a shared connector. To disconnect, please use the dashboard connector settings.");
   };
 
   useEffect(() => {
