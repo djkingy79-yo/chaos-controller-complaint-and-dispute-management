@@ -299,18 +299,18 @@ function LetterEditor({ letterType, caseItem, evidence }) {
           <div style={{ position: "relative" }}>
             <img src={LETTERHEAD_URL} alt="Chaos Controller Full Letterhead" style={{ width: "100%", display: "block" }} />
           </div>
-          {/* Letter body — sits directly below letterhead */}
-          <div className="px-8 pb-8 bg-white" style={{ marginTop: 0, paddingTop: "16px" }}>
+          {/* Letter body — starts immediately below letterhead with minimal spacing */}
+          <div className="px-8 pb-6 bg-white" style={{ marginTop: "-8px", paddingTop: "8px" }}>
             {editing ? (
               <Textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                rows={22}
+                rows={20}
                 className="font-body text-sm leading-relaxed bg-white text-slate-900"
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt" }}
               />
             ) : (
-              <pre className="whitespace-pre-wrap leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.7", paddingTop: "12px" }}>
+              <pre className="whitespace-pre-wrap leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", marginTop: "0" }}>
                 {text}
               </pre>
             )}
