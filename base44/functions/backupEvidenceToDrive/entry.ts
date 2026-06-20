@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     let uploadResponse;
     let lastError;
     for (let attempt = 1; attempt <= 3; attempt++) {
-      uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`

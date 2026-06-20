@@ -148,44 +148,14 @@ Deno.serve(async (req) => {
 </html>
     `.trim();
 
-    // Send via Gmail integration if connected, otherwise use platform email
-    try {
-      // Try Gmail first
-      const gmailConnection = await base44.asServiceRole.connectors.getConnection('gmail');
-      if (gmailConnection) {
-        await base44.asServiceRole.integrations.Gmail.SendEmail({
-          to: userEmail,
-          subject: subject,
-          htmlBody: body
-        });
-        console.log('Monthly report sent via Gmail');
-      } else {
-        throw new Error('Gmail not connected');
-      }
-    } catch (emailError) {
-      // Fallback to Outlook
-      try {
-        const outlookConnection = await base44.asServiceRole.connectors.getConnection('outlook');
-        if (outlookConnection) {
-          await base44.asServiceRole.integrations.Outlook.SendEmail({
-            to: userEmail,
-            subject: subject.replace('📊', ''), // Outlook may not support emoji in subject
-            htmlBody: body
-          });
-          console.log('Monthly report sent via Outlook');
-        } else {
-          throw new Error('Outlook not connected');
-        }
-      } catch (outlookError) {
-        // Final fallback to platform email
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: userEmail,
-          subject: subject.replace('📊', ''),
-          body: body.replace(/<[^>]*>/g, '') // Strip HTML for plain text
-        });
-        console.log('Monthly report sent via platform email');
-      }
-    }
+    // Send via platform email
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      to: userEmail,
+      subject: subject,
+      body: body.replace(/<[^>]*>/g, ''), // Strip HTML for plain text
+      from_name: "Chaos Controller™"
+    });
+    console.log('Monthly report sent');
 
     return Response.json({
       success: true,

@@ -3,22 +3,37 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    let body = {};
+    try { body = await req.json(); } catch { /* entity automation — no body */ }
+
+    const { paymentId, status, data: automationData, event: automationEvent } = body;
+
+    // Support both entity automation path and direct frontend call
+    let payment;
+    if (automationEvent?.entity_name === 'PaymentRequest') {
+      // Automation path — read from payload
+      payment = automationData;
+      if (!payment) return Response.json({ skipped: 'no payment data' });
+      // Determine effective status for routing
+      const effectiveStatus = payment.status;
+      if (!['pending', 'verified'].includes(effectiveStatus)) {
+        return Response.json({ skipped: 'status not pending or verified' });
+      }
+      // Reuse same email logic below by setting status
+      body.status = effectiveStatus;
+      body.paymentId = payment.id;
+    } else {
+      // Direct call from admin UI
+      if (!paymentId || !status) {
+        return Response.json({ error: 'Missing paymentId or status' }, { status: 400 });
+      }
+      payment = await base44.asServiceRole.entities.PaymentRequest.get(paymentId);
     }
-
-    const body = await req.json();
-    const { paymentId, status } = body;
-
-    if (!paymentId || !status) {
-      return Response.json({ error: 'Missing paymentId or status' }, { status: 400 });
-    }
-
-    const payment = await base44.entities.PaymentRequest.get(paymentId);
     if (!payment) {
       return Response.json({ error: 'Payment not found' }, { status: 404 });
     }
+
+    const effectivePaymentStatus = body.status;
 
     // Send email using Core integration
     const sendEmail = async (to, subject, body) => {
@@ -36,7 +51,7 @@ Deno.serve(async (req) => {
     };
 
     // Send email to admin (chaoscontrollerapp@gmail.com) for new payments
-    if (status === 'pending') {
+    if (effectivePaymentStatus === 'pending') {
       const adminEmail = 'chaoscontrollerapp@gmail.com';
       const adminSubject = `New Payment Notification - ${payment.plan_name} Plan`;
       const adminBody = `
@@ -111,7 +126,7 @@ Deno.serve(async (req) => {
     }
 
     // Send email to customer when payment is verified
-    if (status === 'verified') {
+    if (effectivePaymentStatus === 'verified') {
       const customerEmail = payment.user_email;
       const customerSubject = `Payment Verified - ${payment.plan_name} Plan Activated`;
       const customerBody = `
@@ -200,7 +215,7 @@ Deno.serve(async (req) => {
       await sendEmail(customerEmail, customerSubject, customerBody);
     }
 
-    return Response.json({ success: true, message: `Email sent for ${status} payment` });
+    return Response.json({ success: true, message: `Email sent for ${effectivePaymentStatus} payment` });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

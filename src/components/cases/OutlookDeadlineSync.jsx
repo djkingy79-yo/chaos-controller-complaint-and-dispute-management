@@ -27,10 +27,8 @@ export default function OutlookDeadlineSync({ caseItem }) {
   const addToOutlook = async (deadline) => {
     setSyncing(deadline.id);
     try {
-      const res = await base44.functions.invoke("outlookCalendarSync", {
-        action: "add_deadline",
-        deadline,
-        caseTitle: caseItem?.title,
+      const res = await base44.functions.invoke("syncOutlookCalendar", {
+        caseId: caseItem?.id,
       });
       if (res.data?.success) {
         setSynced(prev => ({ ...prev, [deadline.id]: true }));
@@ -46,13 +44,11 @@ export default function OutlookDeadlineSync({ caseItem }) {
   const sendChecklistReminder = async () => {
     setReminding(true);
     try {
-      const res = await base44.functions.invoke("outlookCalendarSync", {
-        action: "send_checklist_reminder",
-        checklistItems,
-        caseTitle: caseItem?.title,
+      const res = await base44.functions.invoke("syncOutlookCalendar", {
+        caseId: caseItem?.id,
       });
-      if (res.data?.sent) {
-        toast({ title: "Reminder Sent", description: `${res.data.count} incomplete items emailed to you via Outlook.` });
+      if (res.data?.success) {
+        toast({ title: "Synced to Outlook", description: `${res.data.synced} items synced to your Outlook calendar.` });
       } else {
         toast({ title: "All Done!", description: "Your checklist is fully complete — nothing to remind." });
       }
