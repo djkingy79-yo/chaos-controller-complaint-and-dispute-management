@@ -57,10 +57,6 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -101,6 +97,10 @@ function App() {
           <Route path="/shared-case/:token" element={<SharedCasePortal />} />
           <Route path="/merchant-login" element={<MerchantLogin />} />
           <Route path="/merchant-portal" element={<MerchantPortal />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* Auth wrapper for all protected routes */}
           <Route path="/*" element={
             <AuthProvider>
