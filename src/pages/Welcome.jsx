@@ -71,6 +71,8 @@ const disputeTypes = [
   { icon: Shield, label: "INSURANCE CLAIMS", color: "#660099" },
   { icon: FileText, label: "HOUSING", color: "#0066CC" },
   { icon: Scale, label: "NCAT", color: "#CC8800" },
+  { icon: Zap, label: "UTILITIES", color: "#F39C12" },
+  { icon: Briefcase, label: "GOVERNMENT AGENCIES", color: "#3498DB" },
   { icon: AlertTriangle, label: "CONSUMER COMPLAINTS", color: "#008000" }
 ];
 
@@ -371,6 +373,9 @@ export default function Welcome() {
                 NEVER FEAR. CONTROL STARTS HERE.
               </p>
             </div>
+            <p className="text-white font-bold text-sm mt-3 tracking-wide">
+              Created by Deb King
+            </p>
           </motion.div>
 
           {/* Branding Banner - THE ONLY COMPLAINT & DISPUTE APP */}
@@ -395,8 +400,8 @@ export default function Welcome() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-center mb-6 sm:mb-8"
           >
-            <p className="text-sm sm:text-base md:text-lg text-white max-w-xl mx-auto leading-relaxed font-black px-2">
-              Chaos Controller is an AI-powered app that helps everyday Australians fight back against banks, insurers, landlords, and telcos — by organising your evidence, writing your complaints, and tracking every deadline for you.
+            <p className="text-sm sm:text-base md:text-lg text-white max-w-2xl mx-auto leading-relaxed font-black px-2">
+              Chaos Controller is an AI-powered app that helps everyday Australians fight back against banks, insurers, landlords, telcos, utilities, and government agencies — by organising your evidence, writing your complaints, and tracking every deadline for you.
             </p>
           </motion.div>
 
@@ -454,10 +459,10 @@ export default function Welcome() {
                 {[
                   { icon: Upload, color: "#C0392B", title: "AUTO DOCUMENT SCAN", desc: "Upload any document — contract, email, statement, invoice — and AI instantly extracts names, dates, account numbers, and key amounts. No manual data entry." },
                   { icon: FileText, color: "#FFD700", title: "LETTER GENERATOR", desc: "From 1st complaint to escalation letters — generate professional, legally worded correspondence in seconds. Tailored to your exact case and industry." },
-                  { icon: CalendarCheck, color: "#27AE60", title: "DEADLINE TRACKER", desc: "Every response deadline is tracked automatically. Get alerts before time runs out so you never miss a critical window to escalate." },
+                  { icon: CalendarCheck, color: "#27AE60", title: "CALENDAR SYNC", desc: "Deadlines automatically sync to Google Calendar and Outlook Calendar. Never miss a response date — your dispute schedule lives where you work." },
                   { icon: Layers, color: "#9B59B6", title: "TIMELINE BUILDER", desc: "Every interaction, letter, and evidence piece is plotted on an automatic timeline — the full accountability record, always ready for tribunal." },
-                  { icon: Bell, color: "#F39C12", title: "SMART NOTIFICATIONS", desc: "Automated reminders for overdue responses, upcoming deadlines, and missing evidence. Your case manager that never sleeps." },
-                  { icon: Trophy, color: "#3498DB", title: "ESCALATION BUNDLES", desc: "One click generates a complete, print-ready submission bundle for AFCA, TIO, NCAT, and all ombudsman bodies. Tribunal-ready, every time." },
+                  { icon: Bell, color: "#F39C12", title: "AUTOMATED EMAILS", desc: "Smart notifications for overdue responses, upcoming deadlines, and missing evidence. Daily summaries keep you on track without checking the app." },
+                  { icon: Trophy, color: "#3498DB", title: "MERCHANT PLATFORM", desc: "Invite organisations to view your case and respond online. Shared portals streamline communication and create a documented response trail." },
                 ].map(({ icon: Icon, color, title, desc }) => (
                   <div key={title} className="bg-black/60 border border-gray-700 rounded-xl p-5 hover:border-[#FFD700]/40 transition-colors">
                     <div className="flex items-center gap-3 mb-3">
