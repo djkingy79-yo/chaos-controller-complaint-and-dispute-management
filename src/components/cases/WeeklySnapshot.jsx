@@ -26,17 +26,13 @@ function printSnapshot(caseItem, snapshot, generatedAt) {
       ul, ol { margin: 4pt 0 6pt 18pt; }
       li { margin-bottom: 2pt; line-height: 1.0; }
       p { margin: 4pt 0 6pt; line-height: 1.0; }
-      .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
+
     </style>
   </head><body>
     <div class="header">Chaos Controller™ — Weekly Case Snapshot</div>
     <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">${caseItem.title}</div>
     <div style="font-size:10.5pt;color:#666;margin-bottom:16pt;">vs. ${caseItem.organisation_name || "Organisation"} &nbsp;|&nbsp; Ref: ${caseRef} &nbsp;|&nbsp; Generated: ${generatedAt}</div>
     <div style="margin-top:14pt;">${snapshot.replace(/\n/g, "<br/>")}</div>
-    <div class="footer">
-      <span>Chaos Controller™ — chaoscontroller.com.au</span>
-      <span>${caseRef} · Generated: ${generatedAt}</span>
-    </div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 500);

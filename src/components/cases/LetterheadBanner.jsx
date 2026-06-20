@@ -116,5 +116,4 @@ export function getLetterPageStyles() {
   `;
 }
 
-// No-op — letterhead is handled via CSS background-image on .letter-page
 export function buildLetterheadHTML() { return ""; }

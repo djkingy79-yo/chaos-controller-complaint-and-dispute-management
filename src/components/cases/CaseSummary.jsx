@@ -93,50 +93,44 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 10pt; }
         th { background: white; text-align: left; padding: 4pt 6pt; font-weight: bold; border-bottom: 1px solid #000; font-size: 10pt; color: #000; }
         td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 10pt; color: #000; }
-        .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
-      </style>
-    </head><body>
-      <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">Case Summary</div>
-      <div class="section-title" style="font-size:13pt;margin-bottom:16pt;">${caseItem.title}</div>
-      
-      <div class="summary-box">
-        <table class="summary-row">
-          <tbody>
-            <tr><td>Organisation</td><td>${caseItem.organisation_name || "—"}</td></tr>
-            <tr><td>Status</td><td>${STATUS_LABELS[caseItem.status] || caseItem.status}</td></tr>
-            <tr><td>Category</td><td>${caseItem.category}</td></tr>
-            <tr><td>Priority</td><td>${PRIORITY_LABELS[caseItem.priority] || caseItem.priority}</td></tr>
-            <tr><td>Complainant</td><td>${client.name || "—"}</td></tr>
-            <tr><td>Account #</td><td>${caseItem.account_number || "—"}</td></tr>
-            <tr><td>Incident Date</td><td>${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}</td></tr>
-            <tr><td>Escalation Body</td><td>${caseItem.escalation_body || "—"}</td></tr>
-          </tbody>
-        </table>
-      </div>
+        </style>
+        </head><body>
+        <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">Case Summary</div>
+        <div class="section-title" style="font-size:13pt;margin-bottom:16pt;">${caseItem.title}</div>
 
-      ${caseItem.issue_summary ? `<div class="section" style="margin-top:14pt;">
+        <div class="summary-box">
+        <table class="summary-row">
+        <tbody>
+          <tr><td>Organisation</td><td>${caseItem.organisation_name || "—"}</td></tr>
+          <tr><td>Status</td><td>${STATUS_LABELS[caseItem.status] || caseItem.status}</td></tr>
+          <tr><td>Category</td><td>${caseItem.category}</td></tr>
+          <tr><td>Priority</td><td>${PRIORITY_LABELS[caseItem.priority] || caseItem.priority}</td></tr>
+          <tr><td>Complainant</td><td>${client.name || "—"}</td></tr>
+          <tr><td>Account #</td><td>${caseItem.account_number || "—"}</td></tr>
+          <tr><td>Incident Date</td><td>${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}</td></tr>
+          <tr><td>Escalation Body</td><td>${caseItem.escalation_body || "—"}</td></tr>
+        </tbody>
+        </table>
+        </div>
+
+        ${caseItem.issue_summary ? `<div class="section" style="margin-top:14pt;">
         <div class="section-title" style="font-size:11pt;">Issue Summary</div>
         <div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_summary}</div>
-      </div>` : ""}
+        </div>` : ""}
 
-      ${caseItem.desired_outcome ? `<div class="section" style="margin-top:14pt;">
+        ${caseItem.desired_outcome ? `<div class="section" style="margin-top:14pt;">
         <div class="section-title" style="font-size:11pt;">Desired Outcome</div>
         <div style="font-size:10.5pt;line-height:1.6;">${caseItem.desired_outcome}</div>
-      </div>` : ""}
+        </div>` : ""}
 
-      <div class="section" style="margin-top:14pt;">
+        <div class="section" style="margin-top:14pt;">
         <div class="section-title" style="font-size:11pt;">Upcoming Deadlines (${upcomingDeadlines.length})</div>
         <table>
-          <thead><tr><th>Title</th><th style="width:80pt;">Due Date</th><th style="width:80pt;">Type</th><th>Days Remaining</th></tr></thead>
-          <tbody>${deadlineRows}</tbody>
+        <thead><tr><th>Title</th><th style="width:80pt;">Due Date</th><th style="width:80pt;">Type</th><th>Days Remaining</th></tr></thead>
+        <tbody>${deadlineRows}</tbody>
         </table>
-      </div>
-
-      <div class="footer">
-        <span>Chaos Controller™ — chaoscontroller.com.au</span>
-        <span>${caseRef} · Generated: ${today}</span>
-      </div>
-    </body></html>`;
+        </div>
+        </body></html>`;
 
     const win = window.open("", "_blank");
     win.document.write(html);

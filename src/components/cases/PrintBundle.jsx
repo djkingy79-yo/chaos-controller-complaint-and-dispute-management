@@ -100,7 +100,6 @@ function printTimeline(caseItem, events) {
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Case Timeline</h1>
@@ -109,10 +108,6 @@ function printTimeline(caseItem, events) {
       <thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Details</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    <div class="footer">
-      <span>Chaos Controller™ — chaoscontroller.com.au</span>
-      <span>${caseRef}</span>
-    </div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -160,7 +155,6 @@ function printEvidence(caseItem, evidence) {
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Evidence Index ${allTags.length > 0 ? "— Grouped by Tags" : ""}</h1>
@@ -170,10 +164,6 @@ function printEvidence(caseItem, evidence) {
       <thead><tr><th style="width:25pt;">#</th><th>File Name</th><th style="width:80pt;">Type</th><th style="width:70pt;">Date</th><th>Description / Tags</th></tr></thead>
       <tbody>${tableRows}</tbody>
     </table>
-    <div class="footer">
-      <span>Chaos Controller™ — chaoscontroller.com.au</span>
-      <span>${caseRef}</span>
-    </div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -215,7 +205,6 @@ function printChecklist(caseItem, evidence, events) {
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Case Checklist</h1>
@@ -224,10 +213,6 @@ function printChecklist(caseItem, evidence, events) {
       <thead><tr><th style="width:30pt;"></th><th>Item</th><th style="width:80pt;">Status</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    <div class="footer">
-      <span>Chaos Controller™ — chaoscontroller.com.au</span>
-      <span>${caseRef}</span>
-    </div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -256,7 +241,6 @@ function printChecklistItems(caseItem, checklistItems) {
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Smart Checklist</h1>
@@ -265,10 +249,6 @@ function printChecklistItems(caseItem, checklistItems) {
       <thead><tr><th style="width:30pt;"></th><th>Action</th><th style="width:80pt;">Category</th><th style="width:70pt;">Status</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    <div class="footer">
-      <span>Chaos Controller™ — chaoscontroller.com.au</span>
-      <span>${caseRef}</span>
-    </div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);
@@ -302,7 +282,6 @@ function printDeadlineItems(caseItem, deadlines) {
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Deadline War Room</h1>
@@ -311,10 +290,6 @@ function printDeadlineItems(caseItem, deadlines) {
       <thead><tr><th>Deadline</th><th style="width:80pt;">Date</th><th style="width:70pt;">Urgency</th><th style="width:90pt;">Type</th><th style="width:70pt;">Status</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    <div class="footer">
-      <span>Chaos Controller™ — chaoscontroller.com.au</span>
-      <span>${caseRef}</span>
-    </div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);
@@ -438,10 +413,6 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         <div style="font-size:8pt;color:#888;margin-top:4pt;">Generated: ${today} · Ref: ${caseRef}</div>
       </div>
       
-      <div class="footer">
-        <span>Chaos Controller™ — chaoscontroller.com.au</span>
-        <span>${caseRef} · Page 1</span>
-      </div>
     </div>
     
     <!-- TABLE OF CONTENTS -->
@@ -455,26 +426,18 @@ function printBundle(caseItem, evidence, events, checklistItems) {
             <div class="toc-title">${s.title}</div>
           </div>`).join("")}
       </div>
-      <div class="footer">
-        <span>Table of Contents — chaoscontroller.com.au</span>
-        <span>${caseRef} · Page 2</span>
       </div>
-    </div>
-    
-    <!-- SECTION 1: CASE SUMMARY -->
+
+      <!-- SECTION 1: CASE SUMMARY -->
     <div class="page">
       <div class="section-title">1. Case Summary</div>
       <table class="summary-row" style="margin-top:8pt;">
         <tbody>${summaryRows.map(r=>`<tr><td>${r.label}</td><td>${r.value}</td></tr>`).join("")}</tbody>
       </table>
       ${caseItem.issue_details ? `<div style="margin-top:14pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Full Details</div><div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_details}</div></div>` : ""}
-      <div class="footer">
-        <span>Case Summary — chaoscontroller.com.au</span>
-        <span>${caseRef} · Page 3</span>
       </div>
-    </div>
-    
-    <!-- SECTION 2: READINESS CHECKLIST -->
+
+      <!-- SECTION 2: READINESS CHECKLIST -->
     <div class="page">
       <div class="section-title">2. Escalation Readiness Checklist</div>
       <div class="section-subtitle">Readiness: <strong>${readinessPct}%</strong> — ${readinessChecks.filter(c=>c.done).length} of ${readinessChecks.length} complete</div>
@@ -499,13 +462,9 @@ function printBundle(caseItem, evidence, events, checklistItems) {
             </tr>`).join("")}</tbody>
           </table>
         </div>` : ""}
-      <div class="footer">
-        <span>Escalation Readiness — chaoscontroller.com.au</span>
-        <span>${caseRef} · Page 4</span>
       </div>
-    </div>
-    
-    <!-- SECTION 3: TIMELINE -->
+
+      <!-- SECTION 3: TIMELINE -->
     <div class="page">
       <div class="section-title">3. Chronological Timeline</div>
       ${sorted.length === 0 ? `<p style="color:#888;font-style:italic;">No timeline events recorded.</p>` : `
@@ -518,13 +477,9 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           <td style="color:#555;">${ev.description||""}</td>
         </tr>`).join("")}</tbody>
       </table>`}
-      <div class="footer">
-        <span>Timeline — chaoscontroller.com.au</span>
-        <span>${caseRef} · Page 5</span>
       </div>
-    </div>
-    
-    <!-- SECTION 4: EVIDENCE INDEX -->
+
+      <!-- SECTION 4: EVIDENCE INDEX -->
     <div class="page">
       <div class="section-title">4. Evidence Index ${allTags.length > 0 ? `— ${allTags.length} tag categories` : ""}</div>
       <div class="section-subtitle">Total documents: <strong>${evidence.length}</strong></div>
@@ -539,13 +494,9 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           <td style="color:#555;">${[ev.description, ev.tags?.join(", ")].filter(Boolean).join(" · ")||"—"}</td>
         </tr>`).join("")}</tbody>
       </table>`}
-      <div class="footer">
-        <span>Evidence Index — chaoscontroller.com.au</span>
-        <span>${caseRef} · Page 6</span>
       </div>
-    </div>
-    
-    <!-- SECTION 5: SMART CHECKLIST -->
+
+      <!-- SECTION 5: SMART CHECKLIST -->
     <div class="page">
       <div class="section-title">5. Smart Checklist</div>
       <div class="section-subtitle">${checklistItems.length} AI-generated action items</div>
@@ -559,21 +510,13 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           <td style="font-weight:bold;${item.status==="complete"?"color:green;":item.status==="missing"?"color:#c00;":"color:#f90;"}">${(item.status||"").toUpperCase()}</td>
         </tr>`).join("")}</tbody>
       </table>`}
-      <div class="footer">
-        <span>Smart Checklist — chaoscontroller.com.au</span>
-        <span>${caseRef} · Page 7</span>
       </div>
-    </div>
-    
-    <!-- LETTERS -->
+
+      <!-- LETTERS -->
     ${presentLetters.map((ld, idx) => `
     <div class="page">
       <div class="section-title">${ld.label}</div>
       <pre style="margin-top:12pt;">${caseItem[ld.field]}</pre>
-      <div class="footer">
-        <span>${ld.label} — chaoscontroller.com.au</span>
-        <span>${caseRef} · Page ${8 + idx}</span>
-      </div>
     </div>`).join("")}
     
   </body></html>`);

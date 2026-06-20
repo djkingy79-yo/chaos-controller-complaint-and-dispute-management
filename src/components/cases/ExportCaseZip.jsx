@@ -47,11 +47,10 @@ function buildSummaryHTML(caseItem, evidence, events) {
       table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 10pt; }
       th { background: white; text-align: left; padding: 4pt 6pt; font-weight: bold; border-bottom: 1px solid #000; font-size: 10pt; color: #000; }
       td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 10pt; color: #000; }
-      .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
-    </style>
-  </head><body>
-    
-    <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">CHAOS CONTROLLER™ — CASE EXPORT</div>
+      </style>
+      </head><body>
+
+      <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">CHAOS CONTROLLER™ — CASE EXPORT</div>
     
     <div class="summary-box">
       <table class="summary-row">
@@ -120,11 +119,6 @@ function buildSummaryHTML(caseItem, evidence, events) {
       <div class="section-title">${ld.label}</div>
       <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10.5pt;line-height:1.6;margin:0;">${caseItem[ld.field]}</pre>
     </div>`).join("")}
-
-    <div class="footer">
-      <span>Chaos Controller™ — chaoscontroller.com.au</span>
-      <span>${caseRef} · Generated: ${now}</span>
-    </div>
 
   </body></html>`;
 }
