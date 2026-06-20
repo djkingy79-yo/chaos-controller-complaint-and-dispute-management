@@ -30,8 +30,8 @@ export default function Login() {
 
   const handleGoogle = async () => {
     try {
-      // Use hard redirect to ensure clean OAuth flow
-      const redirectUrl = `${window.location.origin}/dashboard`;
+      // Redirect to home page first to avoid ProtectedRoute loop
+      const redirectUrl = `${window.location.origin}/`;
       await base44.auth.loginWithProvider("google", redirectUrl);
       // Fallback: if loginWithProvider doesn't redirect immediately
       window.location.href = redirectUrl;
@@ -43,7 +43,8 @@ export default function Login() {
 
   const handleMicrosoft = async () => {
     try {
-      const redirectUrl = `${window.location.origin}/dashboard`;
+      // Redirect to home page first to avoid ProtectedRoute loop
+      const redirectUrl = `${window.location.origin}/`;
       await base44.auth.loginWithProvider("microsoft", redirectUrl);
       window.location.href = redirectUrl;
     } catch (err) {
