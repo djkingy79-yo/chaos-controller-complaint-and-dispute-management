@@ -6,14 +6,14 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 
 const statusConfig = {
-  draft: { label: "Draft", className: "bg-secondary text-secondary-foreground" },
-  complaint_sent: { label: "Complaint Sent", className: "bg-primary/15 text-primary" },
-  awaiting_response: { label: "Awaiting Response", className: "bg-warning/15 text-warning" },
-  response_received: { label: "Response Received", className: "bg-accent/15 text-accent" },
-  escalation_ready: { label: "Ready to Escalate", className: "bg-destructive/15 text-destructive" },
-  escalated: { label: "Escalated", className: "bg-destructive/15 text-destructive" },
-  resolved: { label: "Resolved", className: "bg-success/15 text-success" },
-  closed: { label: "Closed", className: "bg-muted text-muted-foreground" },
+  draft: { label: "Draft", className: "bg-gray-500/15 text-gray-400 border-gray-500/30" },
+  complaint_sent: { label: "Complaint Sent", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+  awaiting_response: { label: "Awaiting Response", className: "bg-orange-500/15 text-orange-400 border-orange-500/30" },
+  response_received: { label: "Response Received", className: "bg-purple-500/15 text-purple-400 border-purple-500/30" },
+  escalation_ready: { label: "Ready to Escalate", className: "bg-red-500/15 text-red-400 border-red-500/30" },
+  escalated: { label: "Escalated", className: "bg-red-600/20 text-red-300 border-red-500/40" },
+  resolved: { label: "Resolved", className: "bg-green-500/15 text-green-400 border-green-500/30" },
+  closed: { label: "Closed", className: "bg-gray-700/15 text-gray-500 border-gray-700/30" },
 };
 
 const categoryLabels = {
@@ -45,15 +45,27 @@ export default function CaseCard({ caseItem, index }) {
         to={`/case/${caseItem.id}`}
         className="block relative overflow-hidden bg-card rounded-2xl border-2 border-border p-6 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all group hover:-translate-y-1"
       >
+        {/* Status indicator bar on left edge */}
+        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+          caseItem.status === 'escalated' || caseItem.status === 'escalation_ready' ? 'bg-gradient-to-b from-red-500 to-red-600' :
+          caseItem.status === 'resolved' ? 'bg-gradient-to-b from-green-500 to-green-600' :
+          caseItem.status === 'closed' ? 'bg-gradient-to-b from-gray-500 to-gray-600' :
+          caseItem.status === 'awaiting_response' ? 'bg-gradient-to-b from-orange-400 to-orange-500' :
+          'bg-gradient-to-b from-blue-500 to-blue-600'
+        }`} />
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-bl-full" />
         <div className="relative flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-3 flex-wrap">
-              <Badge className={`${status.className} border-2 font-black text-sm px-3 py-1`}>
+              <Badge className={`${status.className} border-2 font-black text-sm px-3 py-1 shadow-lg`}>
                 {status.label}
               </Badge>
-              <span className="text-sm font-black text-foreground uppercase tracking-wide">
-                {categoryLabels[caseItem.category] || caseItem.category}
+              <span className={`text-sm font-black uppercase tracking-wide px-2 py-0.5 rounded-md ${
+                caseItem.status === 'resolved' || caseItem.status === 'closed' 
+                  ? 'bg-gray-700/20 text-gray-500' 
+                  : 'bg-primary/10 text-primary'
+              }`}>
+                {caseItem.status === 'resolved' || caseItem.status === 'closed' ? 'INACTIVE' : categoryLabels[caseItem.category] || caseItem.category}
               </span>
               <span className={`w-3 h-3 rounded-full ${priorityDot[caseItem.priority] || priorityDot.medium} animate-pulse`} />
             </div>
