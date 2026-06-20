@@ -227,9 +227,9 @@ function printChecklistItems(caseItem, checklistItems) {
   <style>${getLetterPageStyles()}table{width:100%;border-collapse:collapse;margin-top:16pt;}th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
   </head><body>
   <div class="letter-page"><div class="letter-content">
-  <div style="font-size:18pt;font-weight:bold;margin-bottom:4pt;">Smart Checklist</div>
-  <div style="font-size:13pt;font-style:italic;margin-bottom:12pt;">${caseItem.title}</div>
-  <p style="font-size:11pt;color:#555;margin-bottom:8pt;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <h2 class="section-title">Smart Checklist</h2>
+  <p style="font-style:italic;color:#444;margin-bottom:4pt;">${caseItem.title}</p>
+  <p style="font-size:10pt;color:#666;margin-bottom:10pt;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
   <table><thead><tr><th></th><th>Item</th><th>Category</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
   </div></div></body></html>`);
@@ -256,9 +256,9 @@ function printDeadlineItems(caseItem, deadlines) {
   <style>${getLetterPageStyles()}table{width:100%;border-collapse:collapse;margin-top:16pt;}th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
   </head><body>
   <div class="letter-page"><div class="letter-content">
-  <div style="font-size:18pt;font-weight:bold;margin-bottom:4pt;">Deadline War Room</div>
-  <div style="font-size:13pt;font-style:italic;margin-bottom:12pt;">${caseItem.title}</div>
-  <p style="font-size:11pt;color:#555;margin-bottom:8pt;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <h2 class="section-title">Deadline War Room</h2>
+  <p style="font-style:italic;color:#444;margin-bottom:4pt;">${caseItem.title}</p>
+  <p style="font-size:10pt;color:#666;margin-bottom:10pt;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
   <table><thead><tr><th>Deadline</th><th>Date</th><th>Urgency</th><th>Type</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
   </div></div></body></html>`);
@@ -438,8 +438,8 @@ function printBundle(caseItem, evidence, events) {
       return `${pageBreak}
     <div style="position:relative;width:210mm;min-height:297mm;background-image:url('${LETTERHEAD_URL}');background-size:100% 100%;background-repeat:no-repeat;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;">
       <div style="padding:52mm 18mm 42mm 18mm;min-height:297mm;">
-        <div style="font-size:14pt;font-weight:bold;margin-bottom:16pt;color:#1d4ed8;">Section ${sectionNum} — ${ld.label}</div>
-        <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin:0;">${content}</pre>
+        <h2 class="section-title">Section ${sectionNum} — ${ld.label}</h2>
+        <pre>${content}</pre>
       </div>
     </div>`;
     }).join("")}

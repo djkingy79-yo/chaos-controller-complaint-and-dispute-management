@@ -22,10 +22,13 @@ export function LetterheadHeader({ today }) {
 }
 
 // Returns print styles that use the full A4 letterhead as background
+// Letterhead image: ~28% header (fist/logo), ~10% footer (black bar) — body is white area in between
 export function getLetterPageStyles() {
   return `
-    @page { margin: 0; }
-    body { margin: 0; padding: 0; }
+    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap');
+    @page { margin: 0; size: A4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background: white; }
     .letter-page {
       position: relative;
       width: 210mm;
@@ -34,16 +37,39 @@ export function getLetterPageStyles() {
       background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: top left;
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 12pt;
-      color: #000;
+      page-break-after: always;
     }
     .letter-content {
       position: relative;
-      padding: 52mm 18mm 42mm 18mm;
+      /* top pad clears the header graphic (~28% of 297mm ≈ 83mm), bottom pad clears footer bar (~10% ≈ 30mm) */
+      padding: 85mm 20mm 35mm 20mm;
       min-height: 297mm;
+      font-family: 'EB Garamond', 'Times New Roman', Times, serif;
+      font-size: 11.5pt;
+      color: #111;
+      line-height: 1.65;
     }
-    pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; }
+    h2.section-title {
+      font-family: 'EB Garamond', 'Times New Roman', Times, serif;
+      font-size: 13pt;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin: 0 0 14pt 0;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4pt;
+    }
+    pre {
+      white-space: pre-wrap;
+      font-family: 'EB Garamond', 'Times New Roman', Times, serif;
+      font-size: 11.5pt;
+      line-height: 1.7;
+      margin: 0;
+      color: #111;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 11pt; }
+    th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-size: 10.5pt; font-weight: 600; border-bottom: 1px solid #ccc; }
+    td { padding: 5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; }
+    p { margin: 0 0 8pt 0; }
   `;
 }
 
