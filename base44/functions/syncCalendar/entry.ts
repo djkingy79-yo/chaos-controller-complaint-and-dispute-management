@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
 
     let connToken;
     try {
-      connToken = await base44.connectors.getCurrentAppUserConnection(CONNECTOR_ID);
+      connToken = await base44.asServiceRole.connectors.getAppUserConnection(CONNECTOR_ID, user.id);
     } catch (_) {
       return Response.json({ error: 'Calendar not connected' }, { status: 403 });
     }

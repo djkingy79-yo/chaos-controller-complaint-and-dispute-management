@@ -257,16 +257,18 @@ LETTER INSTRUCTIONS:
         {step === 2 && (
           <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="space-y-4">
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="w-4 h-4 text-blue-500" />
-                  <p className="text-sm font-bold text-blue-500">AI Auto-Selected Category</p>
+              {category && (
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                    <p className="text-sm font-bold text-blue-500">AI Auto-Selected Category</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Based on your uploaded documents, AI selected <strong className="text-foreground capitalize">{category}</strong>. 
+                    If this is incorrect, please choose the right category below.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Based on your uploaded documents, AI selected <strong className="text-foreground capitalize">{category}</strong>. 
-                  If this is incorrect, please choose the right category below.
-                </p>
-              </div>
+              )}
               <CategorySelector selected={category} onSelect={(val) => { setCategory(val); setStep(3); }} />
             </div>
           </motion.div>
