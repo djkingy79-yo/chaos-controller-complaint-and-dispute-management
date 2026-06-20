@@ -92,12 +92,12 @@ function printTimeline(caseItem, events) {
   win.document.write(`<!DOCTYPE html><html><head><title>Timeline — ${caseItem.title}</title>
   <style>
     @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; }
-    h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4pt; }
+    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #111; }
+    h1 { font-size: 12pt; font-weight: bold; margin-bottom: 4pt; }
     h2 { font-size: 12pt; font-style: italic; color: #666; margin-bottom: 12pt; font-weight: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
     th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; }
+    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; font-size: 10pt; }
     .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
   </style>
   </head><body>
@@ -193,9 +193,9 @@ function printChecklist(caseItem, evidence, events) {
 
   const rows = checks.map((c) => `
     <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:14pt;">${c.done ? "☑" : "☐"}</td>
-      <td style="padding:6pt 8pt;font-size:12pt;">${c.label}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;${c.done ? "color:green;" : "color:#c00;"}">${c.done ? "COMPLETE" : "MISSING"}</td>
+      <td style="padding:6pt 8pt;font-size:12pt;">${c.done ? "☑" : "☐"}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;">${c.label}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${c.done ? "color:green;" : "color:#c00;"}">${c.done ? "COMPLETE" : "MISSING"}</td>
     </tr>
   `).join("");
 
@@ -233,10 +233,10 @@ function printChecklist(caseItem, evidence, events) {
 function printChecklistItems(caseItem, checklistItems) {
   const rows = checklistItems.map(item => `
     <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:14pt;">${item.status === 'complete' ? '☑' : '☐'}</td>
-      <td style="padding:6pt 8pt;font-size:12pt;${item.status === 'complete' ? 'text-decoration:line-through;color:#888;' : ''}">${item.label}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(item.category || '').replace(/_/g, ' ')}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;${item.status === 'complete' ? 'color:green;' : item.status === 'missing' ? 'color:#c00;' : 'color:#f90;'}">${(item.status || '').replace('_', ' ').toUpperCase()}</td>
+      <td style="padding:6pt 8pt;font-size:12pt;">${item.status === 'complete' ? '☑' : '☐'}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;${item.status === 'complete' ? 'text-decoration:line-through;color:#888;' : ''}">${item.label}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(item.category || '').replace(/_/g, ' ')}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${item.status === 'complete' ? 'color:green;' : item.status === 'missing' ? 'color:#c00;' : 'color:#f90;'}">${(item.status || '').replace('_', ' ').toUpperCase()}</td>
     </tr>`).join('');
   
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
@@ -276,11 +276,11 @@ function printDeadlineItems(caseItem, deadlines) {
     const urgency = daysLeft === null ? '—' : daysLeft < 0 ? 'OVERDUE' : daysLeft === 0 ? 'TODAY' : `${daysLeft} days`;
     const color = daysLeft !== null && daysLeft < 0 ? '#c00' : daysLeft !== null && daysLeft <= 7 ? '#f90' : '#060';
     return `<tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:12pt;font-weight:bold;">${d.title}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;">${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : '—'}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;color:${color};">${urgency}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(d.deadline_type || '').replace(/_/g, ' ')}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;${d.status === 'completed' ? 'color:green;' : 'color:#c00;'}">${(d.status || '').toUpperCase()}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${d.title}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;">${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : '—'}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;color:${color};">${urgency}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(d.deadline_type || '').replace(/_/g, ' ')}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${d.status === 'completed' ? 'color:green;' : 'color:#c00;'}">${(d.status || '').toUpperCase()}</td>
     </tr>`;
   }).join('');
   
@@ -379,27 +379,27 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       .page { page-break-after: always; padding: 0; }
       .page:last-child { page-break-after: auto; }
       
-      .cover-title { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 12pt; }
-      .cover-main { font-size: 20pt; font-weight: bold; line-height: 1.3; margin-bottom: 6pt; color: #1a1a2e; }
-      .cover-sub { font-size: 12pt; color: #666; font-style: italic; margin-bottom: 20pt; }
+      .cover-title { font-size: 8pt; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 10pt; }
+      .cover-main { font-size: 12pt; font-weight: bold; line-height: 1.3; margin-bottom: 6pt; color: #1a1a2e; }
+      .cover-sub { font-size: 10pt; color: #666; font-style: italic; margin-bottom: 14pt; }
       
-      .summary-box { background: #f8f8f8; border: 1px solid #ddd; padding: 12pt 14pt; border-radius: 4pt; margin-bottom: 16pt; }
-      .summary-row td { border: none; padding: 2pt 12pt 2pt 0; font-size: 10pt; }
+      .summary-box { background: #f8f8f8; border: 1px solid #ddd; padding: 10pt 12pt; border-radius: 4pt; margin-bottom: 12pt; }
+      .summary-row td { border: none; padding: 2pt 10pt 2pt 0; font-size: 10pt; }
       .summary-row td:first-child { color: #666; font-style: italic; white-space: nowrap; width: 35%; }
       .summary-row td:last-child { font-weight: bold; }
       
-      .section-title { font-size: 14pt; font-weight: bold; color: #1a1a2e; margin-bottom: 12pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
-      .section-subtitle { font-size: 10pt; color: #666; margin-bottom: 10pt; }
+      .section-title { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
+      .section-subtitle { font-size: 10pt; color: #666; margin-bottom: 8pt; }
       
-      table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10.5pt; }
+      table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
       th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-weight: bold; border-bottom: 2px solid #ddd; font-size: 10pt; }
-      td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; }
+      td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; font-size: 10pt; }
       
-      .toc-item { display: flex; align-items: baseline; padding: 6pt 0; border-bottom: 1px dotted #ccc; }
-      .toc-num { font-weight: bold; color: #1a1a2e; min-width: 25pt; font-size: 11pt; }
-      .toc-title { font-size: 11pt; font-weight: bold; flex: 1; }
+      .toc-item { display: flex; align-items: baseline; padding: 5pt 0; border-bottom: 1px dotted #ccc; }
+      .toc-num { font-weight: bold; color: #1a1a2e; min-width: 25pt; font-size: 10pt; }
+      .toc-title { font-size: 10pt; font-weight: bold; flex: 1; }
       
-      pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; line-height: 1.6; margin: 0; }
+      pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.6; margin: 0; }
       
       .footer { margin-top: 25pt; padding-top: 6pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; font-family: 'Times New Roman', Times, serif; }
       
@@ -410,26 +410,26 @@ function printBundle(caseItem, evidence, events, checklistItems) {
     
     <!-- COVER PAGE -->
     <div class="page">
-      <div class="cover-title">Chaos Controller™ — Formal Case Bundle</div>
+      <div class="cover-title" style="font-size:8pt;">Chaos Controller™ — Formal Case Bundle</div>
       <div style="border-left: 4px solid #1a1a2e; padding-left: 12pt; margin-bottom: 18pt;">
-        <div class="cover-main">${caseItem.title}</div>
-        <div class="cover-sub">vs. ${caseItem.organisation_name || "Organisation"}</div>
+        <div class="cover-main" style="font-size:12pt;">${caseItem.title}</div>
+        <div class="cover-sub" style="font-size:10pt;">vs. ${caseItem.organisation_name || "Organisation"}</div>
       </div>
       
       <div class="summary-box">
         <table class="summary-row">
-          <tbody>${summaryRows.map(r => `<tr><td>${r.label}</td><td>${r.value}</td></tr>`).join("")}</tbody>
+          <tbody>${summaryRows.map(r => `<tr><td style="font-size:10pt;">${r.label}</td><td style="font-size:10pt;">${r.value}</td></tr>`).join("")}</tbody>
         </table>
       </div>
       
-      ${caseItem.issue_summary ? `<div style="margin-bottom:12pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Issue Summary</div><div style="font-size:11pt;line-height:1.5;">${caseItem.issue_summary}</div></div>` : ""}
-      ${caseItem.desired_outcome ? `<div style="margin-bottom:12pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Desired Outcome</div><div style="font-size:11pt;line-height:1.5;">${caseItem.desired_outcome}</div></div>` : ""}
+      ${caseItem.issue_summary ? `<div style="margin-bottom:10pt;"><div style="font-size:8pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Issue Summary</div><div style="font-size:10pt;line-height:1.5;">${caseItem.issue_summary}</div></div>` : ""}
+      ${caseItem.desired_outcome ? `<div style="margin-bottom:10pt;"><div style="font-size:8pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Desired Outcome</div><div style="font-size:10pt;line-height:1.5;">${caseItem.desired_outcome}</div></div>` : ""}
       
-      <div style="margin-top: 20pt; padding-top: 12pt; border-top: 1px solid #ddd;">
-        <div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Escalation Readiness</div>
+      <div style="margin-top: 14pt; padding-top: 10pt; border-top: 1px solid #ddd;">
+        <div style="font-size:8pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Escalation Readiness</div>
         <div class="progress-bar"><div class="progress-fill" style="width:${readinessPct}%"></div></div>
         <div style="font-size:10pt;font-weight:bold;color:#1a1a2e;">${readinessPct}% Ready — ${readinessChecks.filter(c=>c.done).length}/${readinessChecks.length} steps complete</div>
-        <div style="font-size:9pt;color:#888;margin-top:4pt;">Generated: ${today} · Ref: ${caseRef}</div>
+        <div style="font-size:8pt;color:#888;margin-top:4pt;">Generated: ${today} · Ref: ${caseRef}</div>
       </div>
       
       <div class="footer">
