@@ -253,8 +253,8 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h3 className="font-heading font-semibold text-foreground">{letterType.label}</h3>
-          <p className="text-xs text-muted-foreground">{letterType.description}</p>
+          <h3 className="font-heading font-semibold text-foreground" style={{ fontSize: "12pt" }}>{letterType.label}</h3>
+          <p className="text-xs text-muted-foreground" style={{ fontSize: "10pt" }}>{letterType.description}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <LetterTemplateManager
@@ -307,10 +307,10 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                 onChange={e => setText(e.target.value)}
                 rows={18}
                 className="font-body text-sm leading-relaxed bg-white text-slate-900 w-full"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6" }}
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6" }}
               />
             ) : (
-              <pre className="whitespace-pre-wrap leading-relaxed text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: "0" }}>
+              <pre className="whitespace-pre-wrap leading-relaxed text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6", margin: "0" }}>
                 {text}
               </pre>
             )}

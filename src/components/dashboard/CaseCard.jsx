@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Calendar, Building2 } from "lucide-react";
+import { ChevronRight, Calendar, Building2, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 
@@ -78,11 +78,28 @@ export default function CaseCard({ caseItem, index }) {
                 <span>{caseItem.organisation_name}</span>
               </div>
             )}
-            {caseItem.issue_summary && (
+            {caseItem.executive_summary ? (
+              <div className="mt-2 sm:mt-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-black text-primary uppercase">AI Summary</span>
+                </div>
+                <p className="text-xs sm:text-sm text-foreground font-medium line-clamp-3 leading-relaxed">
+                  {(() => {
+                    try {
+                      const summary = JSON.parse(caseItem.executive_summary);
+                      return summary.overview || summary.case_overview || JSON.stringify(summary, null, 2);
+                    } catch {
+                      return caseItem.executive_summary;
+                    }
+                  })()}
+                </p>
+              </div>
+            ) : caseItem.issue_summary ? (
               <p className="text-sm sm:text-base text-foreground font-bold mt-2 sm:mt-3 line-clamp-2 leading-relaxed">
                 {caseItem.issue_summary}
               </p>
-            )}
+            ) : null}
             <div className="flex items-center gap-2 mt-3 text-sm text-foreground font-black">
               <Calendar className="w-4 h-4" />
               <span>{format(new Date(caseItem.created_date), "d MMMM yyyy")}</span>

@@ -46,12 +46,12 @@ export function getLetterPageStyles() {
     /* Letter body starts below the full letterhead header (~35% from top) */
     .letter-content {
       position: relative;
-      padding: 35% 12mm 15mm 12mm;
+      padding: 35% 25mm 15mm 25mm;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
+      font-size: 10pt;
       color: #111;
       line-height: 1.6;
-      max-width: 186mm;
+      max-width: 160mm;
     }
 
     /* Continuation pages — MINIMAL header only, no footer */
@@ -59,22 +59,22 @@ export function getLetterPageStyles() {
       position: relative;
       width: 210mm;
       min-height: 297mm;
-      padding: 20mm 12mm 20mm 12mm;
+      padding: 20mm 25mm 20mm 25mm;
       page-break-before: always;
       background-image: url('${CONTINUATION_PAGE_URL}');
       background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: top left;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
+      font-size: 10pt;
       color: #111;
       line-height: 1.6;
-      max-width: 186mm;
+      max-width: 160mm;
     }
 
     h2.section-title {
       font-family: 'Times New Roman', Times, serif;
-      font-size: 13pt;
+      font-size: 12pt;
       font-weight: bold;
       color: #1a1a2e;
       margin: 0 0 10pt 0;
@@ -84,15 +84,15 @@ export function getLetterPageStyles() {
     pre {
       white-space: pre-wrap;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
-      line-height: 1.7;
+      font-size: 10pt;
+      line-height: 1.6;
       margin: 0;
       color: #111;
     }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10.5pt; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
     th { background: rgba(0,0,0,0.05); text-align: left; padding: 4pt 7pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #ccc; }
-    td { padding: 4pt 7pt; border-bottom: 1px solid #eee; vertical-align: top; }
+    td { padding: 4pt 7pt; border-bottom: 1px solid #eee; vertical-align: top; font-size: 10pt; }
     p { margin: 0 0 6pt 0; }
   `;
 }
