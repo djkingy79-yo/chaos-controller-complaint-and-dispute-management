@@ -10,18 +10,20 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
   const [generating, setGenerating] = useState(false);
   const [summary, setSummary] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   const handleGenerateSummary = async () => {
     setGenerating(true);
+    setElapsedTime(0);
+    
+    // Start timer
+    const timerInterval = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+    
     try {
       console.log("Generating summary for case:", caseItem.id);
       
-      toast({
-        title: "Generating Summary",
-        description: "AI is analyzing your case file. This may take 30-60 seconds...",
-      });
-      
-      // Use AbortController for timeout (90 seconds)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 90000);
       
@@ -31,6 +33,7 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
         }, { signal: controller.signal });
         
         clearTimeout(timeoutId);
+        clearInterval(timerInterval);
         
         console.log("Response status:", response.status);
         console.log("Response data:", response.data);
@@ -40,7 +43,7 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
           setShowDialog(true);
           toast({
             title: "✓ Summary Generated",
-            description: "AI has analyzed your complete case file.",
+            description: `AI analyzed your case in ${elapsedTime + 1} seconds.`,
           });
         } else if (response.data?.error) {
           throw new Error(response.data.error);
@@ -49,13 +52,15 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
         }
       } catch (fetchError) {
         clearTimeout(timeoutId);
+        clearInterval(timerInterval);
         if (fetchError.name === 'AbortError') {
-          throw new Error("Request timed out. Please try again with a smaller case file.");
+          throw new Error("Request timed out. Please try again.");
         }
         throw fetchError;
       }
     } catch (error) {
       console.error("Summary generation failed:", error);
+      clearInterval(timerInterval);
       const errorMsg = error.message || "Network error occurred";
       toast({
         title: "✗ Generation Failed",
@@ -87,6 +92,39 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
           </>
         )}
       </Button>
+
+      {/* Loading Timer Box */}
+      {generating && (
+        <div className="fixed bottom-6 right-6 bg-card border-2 border-primary/40 rounded-xl p-4 shadow-2xl z-50 min-w-[280px] animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">Generating Summary...</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                AI is analyzing your case file
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <Clock className="w-3.5 h-3.5 text-primary" />
+                <span className="text-lg font-mono font-bold text-primary">
+                  {elapsedTime}s
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 bg-secondary/50 rounded-full h-2 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-linear"
+              style={{ width: `${Math.min((elapsedTime / 60) * 100, 100)}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
+            Typically takes 15-30 seconds
+          </p>
+        </div>
+      )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
