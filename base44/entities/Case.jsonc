@@ -116,6 +116,10 @@
     },
     "notes": {
       "type": "string"
+    },
+    "executive_summary": {
+      "type": "string",
+      "description": "AI-generated executive summary (JSON string)"
     }
   },
   "required": [

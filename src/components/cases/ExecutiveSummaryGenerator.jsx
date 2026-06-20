@@ -30,6 +30,12 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
       if (response.data?.success && response.data?.summary) {
         setSummary(response.data);
         setShowDialog(true);
+        
+        // Save summary to case entity for persistent storage
+        await base44.entities.Case.update(caseItem.id, {
+          executive_summary: JSON.stringify(response.data.summary)
+        });
+        
         toast({
           title: "✓ Summary Generated",
           description: `AI analyzed your case in ${elapsedTime + 1} seconds.`,

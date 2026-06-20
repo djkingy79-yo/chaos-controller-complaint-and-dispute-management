@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { format, differenceInDays, isPast, parseISO } from "date-fns";
-import { Printer } from "lucide-react";
+import { Printer, FileText, TrendingUp, AlertCircle, CheckCircle2, Clock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
@@ -40,6 +40,18 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     queryFn: () => base44.entities.Deadline.filter({ case_id: caseItem.id }),
     enabled: !!caseItem?.id,
   });
+
+  const [executiveSummary, setExecutiveSummary] = useState(null);
+
+  useEffect(() => {
+    if (caseItem?.executive_summary) {
+      try {
+        setExecutiveSummary(JSON.parse(caseItem.executive_summary));
+      } catch (e) {
+        console.error("Failed to parse executive summary:", e);
+      }
+    }
+  }, [caseItem?.executive_summary]);
 
   const today = format(new Date(), "d MMMM yyyy");
   const upcomingDeadlines = deadlines
@@ -242,6 +254,125 @@ export default function CaseSummary({ caseItem, evidence, events }) {
           </div>
         )}
       </div>
+
+      {/* AI Executive Summary */}
+      {executiveSummary && (
+        <div className="space-y-4 mt-6">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            <h3 className="font-heading font-bold text-lg text-foreground">AI Case Assessment</h3>
+          </div>
+
+          {/* Case Overview */}
+          <div className="bg-gradient-to-br from-primary/10 via-card to-accent/5 border border-primary/30 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h4 className="font-heading font-bold text-base">Case Overview</h4>
+            </div>
+            <p className="text-sm text-foreground leading-relaxed">
+              {executiveSummary.summary}
+            </p>
+          </div>
+
+          {/* Case Strength */}
+          {executiveSummary.case_strength_assessment && (
+            <div className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="w-5 h-5 text-accent" />
+                <h4 className="font-heading font-bold text-base">Case Strength Assessment</h4>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed">
+                {executiveSummary.case_strength_assessment}
+              </p>
+            </div>
+          )}
+
+          {/* Key Issues */}
+          {executiveSummary.key_issues?.length > 0 && (
+            <div className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle className="w-5 h-5 text-warning" />
+                <h4 className="font-heading font-bold text-base">Key Issues</h4>
+              </div>
+              <ul className="space-y-2">
+                {executiveSummary.key_issues.map((issue, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-warning shrink-0 mt-1.5" />
+                    <span>{issue}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Evidence Analysis */}
+          {executiveSummary.evidence_analysis?.length > 0 && (
+            <div className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle2 className="w-5 h-5 text-success" />
+                <h4 className="font-heading font-bold text-base">Evidence Highlights</h4>
+              </div>
+              <ul className="space-y-2">
+                {executiveSummary.evidence_analysis.map((highlight, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
+                    <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                    <span>{highlight}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Correspondence Summary */}
+          {executiveSummary.correspondence_summary && (
+            <div className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Mail className="w-5 h-5 text-primary" />
+                <h4 className="font-heading font-bold text-base">Correspondence History</h4>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed">
+                {executiveSummary.correspondence_summary}
+              </p>
+            </div>
+          )}
+
+          {/* Next Steps */}
+          {executiveSummary.next_steps?.length > 0 && (
+            <div className="bg-gradient-to-br from-accent/10 via-card to-primary/5 border border-accent/30 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle2 className="w-5 h-5 text-accent" />
+                <h4 className="font-heading font-bold text-base">Recommended Next Steps</h4>
+              </div>
+              <ul className="space-y-2">
+                {executiveSummary.next_steps.map((step, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 mt-1.5" />
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Critical Deadlines */}
+          {executiveSummary.critical_deadlines?.length > 0 && (
+            <div className="bg-destructive/10 border-2 border-destructive/40 rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="w-5 h-5 text-destructive" />
+                <h4 className="font-heading font-bold text-lg text-destructive">Critical Deadlines</h4>
+              </div>
+              <ul className="space-y-2">
+                {executiveSummary.critical_deadlines.map((deadline, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-sm font-semibold text-destructive">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{deadline}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
