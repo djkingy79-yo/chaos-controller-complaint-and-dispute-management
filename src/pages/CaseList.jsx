@@ -6,14 +6,16 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, List, Kanban } from "lucide-react";
 import CaseCard from "@/components/dashboard/CaseCard";
+import KanbanBoard from "@/components/cases/KanbanBoard";
 
 export default function CaseList() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("list");
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
@@ -35,12 +37,30 @@ export default function CaseList() {
           <h1 className="text-2xl font-display font-bold text-foreground">My Cases</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{cases.length} total cases</p>
         </div>
-        <Link to="/new-case">
-          <Button className="gap-2 font-medium">
-            <Plus className="w-4 h-4" />
-            New Case
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-muted rounded-lg p-1 gap-1">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              title="List view"
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("kanban")}
+              className={`p-1.5 rounded-md transition-all ${viewMode === "kanban" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              title="Kanban view"
+            >
+              <Kanban className="w-4 h-4" />
+            </button>
+          </div>
+          <Link to="/new-case">
+            <Button className="gap-2 font-medium">
+              <Plus className="w-4 h-4" />
+              New Case
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -86,8 +106,13 @@ export default function CaseList() {
         </Select>
       </div>
 
+      {/* Kanban Board */}
+      {viewMode === "kanban" && !isLoading && (
+        <KanbanBoard cases={filtered} />
+      )}
+
       {/* Case List */}
-      {isLoading ? (
+      {viewMode === "list" && isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-card rounded-xl border border-border p-5 animate-pulse">
@@ -97,19 +122,19 @@ export default function CaseList() {
             </div>
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : viewMode === "list" && filtered.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-10 text-center">
           <p className="text-muted-foreground text-sm">
             {cases.length === 0 ? "No cases yet. Create your first one." : "No cases match your filters."}
           </p>
         </div>
-      ) : (
+      ) : viewMode === "list" ? (
         <div className="space-y-3">
           {filtered.map((c, i) => (
             <CaseCard key={c.id} caseItem={c} index={i} />
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
