@@ -150,6 +150,20 @@ export default function Welcome() {
             />
           </motion.div>
 
+          {/* Branding Banner */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="text-center mb-8 sm:mb-10"
+          >
+            <img
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/905937e41_IMG_7337.jpg"
+              alt="The Only Complaint & Dispute App That's 100% Got Your Back"
+              className="w-full max-w-3xl mx-auto object-contain"
+            />
+          </motion.div>
+
           {/* Main Heading */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -173,6 +187,21 @@ export default function Welcome() {
             <div className="inline-block bg-[#C0392B] px-5 sm:px-8 py-2.5 sm:py-3 rounded-sm">
               <p className="text-white font-bold tracking-widest text-xs sm:text-sm md:text-base">
                 NEVER FEAR. CONTROL STARTS HERE.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Branding Banner - THE ONLY COMPLAINT & DISPUTE APP */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="text-center mb-8 sm:mb-10"
+          >
+            <div className="inline-block bg-black px-6 sm:px-10 py-4 sm:py-5 border-y-4 border-[#D4A017]">
+              <p className="text-[#D4A017] font-black tracking-wide text-sm sm:text-base md:text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase" }}>
+                THE ONLY COMPLAINT & DISPUTE APP<br className="hidden sm:block" />
+                THAT'S 100% GOT YOUR BACK
               </p>
             </div>
           </motion.div>

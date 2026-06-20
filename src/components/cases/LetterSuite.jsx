@@ -58,9 +58,10 @@ function buildPrompt(type, caseItem, client, today) {
 CRITICAL RULES:
 1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
 2. Use STANDARD BUSINESS LETTER FORMAT with DATE FIRST.
+3. ALWAYS use AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence).
 
 FORMATTING REQUIREMENTS:
-- FIRST LINE: Today's date in BOLD: **${today}**
+- FIRST LINE: Today's date with asterisks: **${today}**
 - TOP RIGHT (below date): Sender's (complainant's) full name, address lines, email, phone
 - LEFT SIDE (below date, opposite sender): Merchant's complaint handler name, organisation name, complaints address, complaints email
 - Then: Re: line, salutation, body, closing
@@ -91,13 +92,13 @@ CASE DETAILS:
 
   const formats = `
   PROFESSIONAL BUSINESS LETTER FORMAT - CRITICAL:
-  1. LINE 1: **${today}** (DATE IN BOLD, FIRST)
+  1. LINE 1: **${today}** (DATE IN BOLD WITH ASTERISKS, FIRST)
   2. NEXT: Sender details RIGHT side (Name, Address, Email, Phone) - each on separate line
   3. OPPOSITE LEFT: Recipient details (Complaint Handler, Organisation, Address, Email) - each on separate line
   4. BLANK LINE
-  5. Re: [Account/Reference number]
+  5. Re: line with account/reference
   6. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-  7. Body paragraphs - professional Australian English (organise, recognise, behaviour, colour)
+  7. Body paragraphs - professional AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence)
   8. Close: "Yours faithfully," then blank line, then complainant name
   9. NEVER use [brackets] for placeholders - if data missing, omit that line entirely
   10. Keep formatting CLEAN and PROFESSIONAL - this is a legal document`;

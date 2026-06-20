@@ -86,15 +86,15 @@ ${upcomingDeadlines.length > 0 ? 'UPCOMING DEADLINES:\n' + upcomingDeadlines.joi
 ${missingChecklist.length > 0 ? 'MISSING/INCOMPLETE ACTION ITEMS:\n' + missingChecklist.join('\n') : ''}
 
 Generate a comprehensive executive summary with these sections:
-1. **Case Overview** (3-4 sentences): Summarize the core dispute, parties involved, current status, and stage in the escalation process
+1. **Case Overview** (3-4 sentences): Summarise the core dispute, parties involved, current status, and stage in the escalation process
 2. **Key Issues** (4-6 bullet points): List the main legal, factual, and practical issues - be specific about what went wrong
 3. **Evidence Analysis** (3-5 bullet points): Highlight the most critical evidence documents and what each proves or reveals about the case
-4. **Correspondence Summary** (2-3 sentences): Summarize the complaint history and any responses received from the organisation
+4. **Correspondence Summary** (2-3 sentences): Summarise the complaint history and any responses received from the organisation
 5. **Next Steps** (4-6 bullet points): Recommend immediate and short-term actions based on case status, missing evidence, and upcoming deadlines
 6. **Critical Deadlines** (if any): List urgent deadlines within the next 14 days
 7. **Case Strength Assessment** (2-3 sentences): Provide a brief, objective assessment of the case's strengths and any potential weaknesses or gaps
 
-Keep it professional, actionable, and easy to scan. Use Australian English spelling. Focus on giving the user a complete picture of where they stand in 60 seconds or less.`;
+Keep it professional, actionable, and easy to scan. Use AUSTRALIAN ENGLISH spelling throughout (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence, summarise, analyse, prioritise, finalise). Focus on giving the user a complete picture of where they stand in 60 seconds or less.`;
 
     console.log("Invoking LLM for summary generation...");
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({

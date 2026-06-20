@@ -66,7 +66,7 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
         {generating ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            Analyzing Case...
+            Analysing Case...
           </>
         ) : (
           <>
@@ -87,7 +87,7 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
             <div className="flex-1">
               <p className="text-sm font-bold text-foreground">Generating Summary...</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                AI is analyzing your case file
+                AI is analysing your case file
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <Clock className="w-3.5 h-3.5 text-primary" />
