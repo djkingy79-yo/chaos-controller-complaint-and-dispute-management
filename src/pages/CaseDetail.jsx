@@ -22,6 +22,7 @@ import WeeklySnapshot from "@/components/cases/WeeklySnapshot";
 import ExecutiveSummaryGenerator from "@/components/cases/ExecutiveSummaryGenerator";
 import SmartChecklist from "@/components/cases/SmartChecklist";
 import GeneratedChecklist from "@/components/cases/GeneratedChecklist";
+import OutlookDeadlineSync from "@/components/cases/OutlookDeadlineSync";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
@@ -201,7 +202,7 @@ export default function CaseDetail() {
               <GeneratedChecklist caseId={caseId} caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="deadlines" className="mt-4">
-              <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+              <OutlookDeadlineSync caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="print" className="mt-4">
               <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
