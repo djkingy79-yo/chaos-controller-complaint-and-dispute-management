@@ -14,22 +14,30 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
   const handleGenerateSummary = async () => {
     setGenerating(true);
     try {
+      console.log("Generating summary for case:", caseItem.id);
       const response = await base44.functions.invoke('generateExecutiveSummary', {
         caseId: caseItem.id
       });
 
-      if (response.data.success) {
+      console.log("Response received:", response.data);
+      
+      if (response.data.success && response.data.summary) {
         setSummary(response.data);
         setShowDialog(true);
         toast({
           title: "Case Summary Generated",
           description: "AI has analyzed all evidence, correspondence, and deadlines.",
         });
+      } else if (response.data.error) {
+        throw new Error(response.data.error);
+      } else {
+        throw new Error("No summary generated - please try again");
       }
     } catch (error) {
+      console.error("Summary generation failed:", error);
       toast({
         title: "Generation Failed",
-        description: error.message,
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
