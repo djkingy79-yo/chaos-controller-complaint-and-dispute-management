@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   Upload, FileText, Image, Mail, FileCheck, Loader2,
-  Trash2, ExternalLink, Plus, ScanLine, Camera,
+  Trash2, ExternalLink, Plus, ScanLine, Camera, Tag,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -118,7 +118,16 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   const [showScanner, setShowScanner] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [newEvidence, setNewEvidence] = useState({ file_type: "other", description: "", event_date: "" });
+  const [newEvidence, setNewEvidence] = useState({ file_type: "other", description: "", event_date: "", tags: [] });
+
+  const TAGS = ["Contract", "Correspondence", "Receipt", "Invoice", "Statement", "Notice", "Photo", "ID Document", "Other"];
+
+  const toggleTag = (tag) => {
+    setNewEvidence((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
+    }));
+  };
   const [pendingScan, setPendingScan] = useState(null);
   const [scanResult, setScanResult] = useState(null);
   const [appliedIds, setAppliedIds] = useState(new Set());
@@ -158,12 +167,13 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         file_type: newEvidence.file_type,
         description: newEvidence.description,
         event_date: newEvidence.event_date || undefined,
+        tags: newEvidence.tags.length ? newEvidence.tags : undefined,
         scan_status: "pending",
       });
     }
     setUploading(false);
     setShowUpload(false);
-    setNewEvidence({ file_type: "other", description: "", event_date: "" });
+    setNewEvidence({ file_type: "other", description: "", event_date: "", tags: [] });
   };
 
   const handleUpload = async (e) => {
@@ -309,6 +319,25 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Tags (optional)</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {TAGS.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleTag(tag)}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                          newEvidence.tags.includes(tag)
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <Label>Event Date (optional)</Label>
                   <Input
                     type="date"
@@ -397,6 +426,15 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                         </span>
                       )}
                     </div>
+                    {ev.tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {ev.tags.map((tag) => (
+                          <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     {ev.description && (
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">{ev.description}</p>
                     )}

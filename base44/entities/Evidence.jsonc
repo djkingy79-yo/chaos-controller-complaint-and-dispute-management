@@ -33,6 +33,13 @@
       ],
       "description": "Type of evidence"
     },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User-applied labels e.g. Contract, Correspondence, Receipt"
+    },
     "description": {
       "type": "string",
       "description": "Description of the evidence"

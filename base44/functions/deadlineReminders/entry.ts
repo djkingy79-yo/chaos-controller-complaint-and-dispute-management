@@ -21,8 +21,8 @@ Deno.serve(async (req) => {
       const deadlineDate = new Date(deadline.deadline_date);
       const daysUntil = Math.ceil((deadlineDate - now) / 86400000);
 
-      // Remind at 7 days, 3 days, 1 day, and on the day
-      if (![7, 3, 1, 0].includes(daysUntil)) continue;
+      // Remind at 7 days, 3 days, 2 days (48hr), 1 day, and on the day
+      if (![7, 3, 2, 1, 0].includes(daysUntil)) continue;
 
       const caseItem = caseMap[deadline.case_id];
       if (!caseItem) continue;
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       const caseOwner = userMap[caseItem.created_by_id];
       if (!caseOwner?.email) continue;
 
-      const urgencyLabel = daysUntil === 0 ? "TODAY" : daysUntil === 1 ? "TOMORROW" : `in ${daysUntil} days`;
+      const urgencyLabel = daysUntil === 0 ? "TODAY" : daysUntil === 1 ? "TOMORROW" : daysUntil === 2 ? "in 48 HOURS" : `in ${daysUntil} days`;
       const subject = `⚠️ Deadline ${urgencyLabel}: ${deadline.title}`;
       const body = `Hi ${caseOwner.full_name || "there"},
 
