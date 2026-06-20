@@ -28,10 +28,31 @@ export function getActiveSubscription(user, payments = []) {
 }
 
 export const PLAN_LEVELS = { Starter: 1, Pro: 2, Command: 3 };
+export const PLAN_PRICES = { Starter: 25, Pro: 35, Command: 49 };
 
 export function hasPlanAccess(subscription, requiredPlan) {
   if (!subscription?.subscription_active) return false;
   const userLevel = PLAN_LEVELS[subscription.plan_name] || 0;
   const requiredLevel = PLAN_LEVELS[requiredPlan] || 0;
   return userLevel >= requiredLevel;
+}
+
+// Calculate upgrade price - only pay the difference
+export function getUpgradePrice(currentPlan, targetPlan) {
+  if (!currentPlan || !targetPlan) return null;
+  const currentLevel = PLAN_LEVELS[currentPlan];
+  const targetLevel = PLAN_LEVELS[targetPlan];
+  if (!currentLevel || !targetLevel || targetLevel <= currentLevel) return null;
+  
+  const currentPrice = PLAN_PRICES[currentPlan];
+  const targetPrice = PLAN_PRICES[targetPlan];
+  const priceDifference = targetPrice - currentPrice;
+  
+  return {
+    from_plan: currentPlan,
+    to_plan: targetPlan,
+    original_price: targetPrice,
+    upgrade_price: priceDifference,
+    savings: currentPrice
+  };
 }

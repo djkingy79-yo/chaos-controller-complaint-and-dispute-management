@@ -10,7 +10,8 @@ import {
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { ADMIN_EMAIL } from "@/lib/subscription";
+import { ADMIN_EMAIL, getUpgradePrice } from "@/lib/subscription";
+import { useQuery } from "@tanstack/react-query";
 
 const plans = [
   {
@@ -109,6 +110,16 @@ export default function Payments() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Get current subscription for upgrade pricing
+  const { data: currentSubscription } = useQuery({
+    queryKey: ["subscription", user?.id],
+    queryFn: async () => {
+      const payments = await base44.entities.PaymentRequest.filter({ user_id: user?.id, status: "verified", subscription_active: true }, "-verified_date", 1);
+      return payments[0] || null;
+    },
+    enabled: !!user?.id,
+  });
+
   const payidEmail = "djkingy79@gmail.com";
 
   const handleCopy = () => {
@@ -116,6 +127,11 @@ export default function Payments() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Calculate upgrade pricing for selected plan
+  const upgradeInfo = selectedPlan && currentSubscription?.plan_name
+    ? getUpgradePrice(currentSubscription.plan_name, selectedPlan.name)
+    : null;
 
   const handleSubmitPayment = async () => {
     if (!selectedPlan || !user) return;
@@ -125,10 +141,11 @@ export default function Payments() {
       user_email: user.email,
       user_name: user.full_name,
       plan_name: selectedPlan.name,
-      amount: selectedPlan.price,
+      amount: upgradeInfo ? `$${upgradeInfo.upgrade_price}` : selectedPlan.price,
       payid_reference: payRef,
       status: "pending",
       subscription_active: false,
+      admin_notes: upgradeInfo ? `Upgrade from ${upgradeInfo.from_plan} - Original price: $${upgradeInfo.original_price}, Savings: $${upgradeInfo.savings}` : undefined,
     });
     setSubmitting(false);
     setSubmitted(true);
@@ -190,12 +207,28 @@ export default function Payments() {
 
       <div className="max-w-6xl mx-auto px-4 py-12">
 
+        {/* Upgrade Credit Banner */}
+        {currentSubscription?.plan_name && (
+          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+            className="bg-green-500/10 border-2 border-green-500/30 rounded-xl p-4 mb-8 text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <CheckCircle2 className="w-5 h-5 text-green-400" />
+              <span className="text-sm font-black text-green-400">Upgrade Credit Active</span>
+            </div>
+            <p className="text-xs text-gray-300 font-bold">
+              You're on the <strong className="text-white">{currentSubscription.plan_name}</strong> plan. Upgrade to any higher tier and only pay the price difference!
+            </p>
+          </motion.div>
+        )}
+
         {/* Hero Value */}
         <div className="text-center mb-14">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-block bg-[#C0392B] px-4 py-1.5 rounded-full text-xs font-black tracking-widest mb-4">
-              PROFESSIONAL TOOLS · AFFORDABLE PRICE
-            </div>
+            {!currentSubscription?.plan_name && (
+              <div className="inline-block bg-[#C0392B] px-4 py-1.5 rounded-full text-xs font-black tracking-widest mb-4">
+                PROFESSIONAL TOOLS · AFFORDABLE PRICE
+              </div>
+            )}
             <h2 className="text-3xl sm:text-5xl font-display font-black mb-4">
               Fight Back Like You Mean It
             </h2>
@@ -316,7 +349,14 @@ export default function Payments() {
                 <h2 className="text-lg font-display font-black text-white">
                   Payment Instructions — {selectedPlan.name} Plan
                 </h2>
-                <p className="text-sm text-gray-400">{selectedPlan.price}/month AUD · Activate within a few hours of payment</p>
+                {upgradeInfo ? (
+                  <>
+                    <p className="text-sm text-green-400 font-bold">Upgrade Special: Only ${upgradeInfo.upgrade_price}/month AUD</p>
+                    <p className="text-xs text-gray-400">You save ${upgradeInfo.savings} — pay only the difference!</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-400">{selectedPlan.price}/month AUD · Activate within a few hours of payment</p>
+                )}
               </div>
             </div>
 
@@ -340,8 +380,18 @@ export default function Payments() {
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <span className="text-gray-400 flex items-center gap-1.5"><Smartphone className="w-4 h-4 text-[#FFD700]" /> Amount:</span>
-                    <span className="font-black text-2xl" style={{ color: selectedPlan.color }}>{selectedPlan.price}</span>
-                    <span className="text-gray-400">AUD/month</span>
+                    {upgradeInfo ? (
+                      <>
+                        <span className="font-black text-2xl text-green-400">${upgradeInfo.upgrade_price}</span>
+                        <span className="text-gray-400">AUD/month</span>
+                        <span className="text-xs text-gray-500 line-through ml-2">${selectedPlan.price}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-black text-2xl" style={{ color: selectedPlan.color }}>{selectedPlan.price}</span>
+                        <span className="text-gray-400">AUD/month</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
