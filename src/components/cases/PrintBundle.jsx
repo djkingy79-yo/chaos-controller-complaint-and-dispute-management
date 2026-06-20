@@ -108,7 +108,7 @@ function printTimeline(caseItem, events) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
+      <span>Chaos Controller™ — chaoscontroller.com.au</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -168,7 +168,7 @@ function printEvidence(caseItem, evidence) {
       <tbody>${tableRows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
+      <span>Chaos Controller™ — chaoscontroller.com.au</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -221,7 +221,7 @@ function printChecklist(caseItem, evidence, events) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
+      <span>Chaos Controller™ — chaoscontroller.com.au</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -261,7 +261,7 @@ function printChecklistItems(caseItem, checklistItems) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
+      <span>Chaos Controller™ — chaoscontroller.com.au</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -306,7 +306,7 @@ function printDeadlineItems(caseItem, deadlines) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
+      <span>Chaos Controller™ — chaoscontroller.com.au</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -450,7 +450,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           </div>`).join("")}
       </div>
       <div class="footer">
-        <span>Table of Contents — app.base44.com/6a2ac3b012e45642b1f94671</span>
+        <span>Table of Contents — chaoscontroller.com.au</span>
         <span>${caseRef} · Page 2</span>
       </div>
     </div>
@@ -463,7 +463,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       </table>
       ${caseItem.issue_details ? `<div style="margin-top:14pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Full Details</div><div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_details}</div></div>` : ""}
       <div class="footer">
-        <span>Case Summary — app.base44.com/6a2ac3b012e45642b1f94671</span>
+        <span>Case Summary — chaoscontroller.com.au</span>
         <span>${caseRef} · Page 3</span>
       </div>
     </div>
@@ -494,7 +494,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           </table>
         </div>` : ""}
       <div class="footer">
-        <span>Escalation Readiness — app.base44.com/6a2ac3b012e45642b1f94671</span>
+        <span>Escalation Readiness — chaoscontroller.com.au</span>
         <span>${caseRef} · Page 4</span>
       </div>
     </div>
@@ -513,7 +513,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>Timeline — app.base44.com/6a2ac3b012e45642b1f94671</span>
+        <span>Timeline — chaoscontroller.com.au</span>
         <span>${caseRef} · Page 5</span>
       </div>
     </div>
@@ -534,7 +534,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>Evidence Index — app.base44.com/6a2ac3b012e45642b1f94671</span>
+        <span>Evidence Index — chaoscontroller.com.au</span>
         <span>${caseRef} · Page 6</span>
       </div>
     </div>
@@ -554,7 +554,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>Smart Checklist — app.base44.com/6a2ac3b012e45642b1f94671</span>
+        <span>Smart Checklist — chaoscontroller.com.au</span>
         <span>${caseRef} · Page 7</span>
       </div>
     </div>
@@ -565,7 +565,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       <div class="section-title">${ld.label}</div>
       <pre style="margin-top:12pt;">${caseItem[ld.field]}</pre>
       <div class="footer">
-        <span>${ld.label} — app.base44.com/6a2ac3b012e45642b1f94671</span>
+        <span>${ld.label} — chaoscontroller.com.au</span>
         <span>${caseRef} · Page ${8 + idx}</span>
       </div>
     </div>`).join("")}
