@@ -21,55 +21,71 @@ export function LetterheadHeader({ today }) {
   );
 }
 
-// Returns print styles that use the full A4 letterhead as background
-// Letterhead image: ~28% header (fist/logo), ~10% footer (black bar) — body is white area in between
+// Returns professional print styles with letterhead banner as top header image
 export function getLetterPageStyles() {
   return `
-    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
     @page { margin: 0; size: A4; }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; background: white; }
+    body { margin: 0; padding: 0; background: white; font-family: 'EB Garamond', 'Times New Roman', Times, serif; }
     .letter-page {
-      position: relative;
       width: 210mm;
       min-height: 297mm;
-      background-image: url('${LETTERHEAD_URL}');
-      background-size: 100% 100%;
-      background-repeat: no-repeat;
-      background-position: top left;
+      background: white;
       page-break-after: always;
     }
+    .letter-header {
+      width: 100%;
+      line-height: 0;
+      display: block;
+    }
+    .letter-header img {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 55mm;
+      object-fit: cover;
+      object-position: center top;
+    }
     .letter-content {
-      position: relative;
-      /* top pad clears the header graphic (~28% of 297mm ≈ 83mm), bottom pad clears footer bar (~10% ≈ 30mm) */
-      padding: 85mm 20mm 35mm 20mm;
-      min-height: 297mm;
+      padding: 10mm 20mm 20mm 20mm;
       font-family: 'EB Garamond', 'Times New Roman', Times, serif;
-      font-size: 11.5pt;
+      font-size: 10pt;
       color: #111;
-      line-height: 1.65;
+      line-height: 1.55;
     }
     h2.section-title {
       font-family: 'EB Garamond', 'Times New Roman', Times, serif;
-      font-size: 13pt;
+      font-size: 12pt;
       font-weight: 600;
       color: #1a1a2e;
-      margin: 0 0 14pt 0;
+      margin: 0 0 10pt 0;
       border-bottom: 1px solid #ccc;
-      padding-bottom: 4pt;
+      padding-bottom: 3pt;
     }
     pre {
       white-space: pre-wrap;
       font-family: 'EB Garamond', 'Times New Roman', Times, serif;
-      font-size: 11.5pt;
-      line-height: 1.7;
+      font-size: 10pt;
+      line-height: 1.55;
       margin: 0;
       color: #111;
     }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 11pt; }
-    th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-size: 10.5pt; font-weight: 600; border-bottom: 1px solid #ccc; }
-    td { padding: 5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; }
-    p { margin: 0 0 8pt 0; }
+    .letter-footer {
+      font-size: 7.5pt;
+      border-top: 1pt solid #ccc;
+      margin-top: 16pt;
+      padding-top: 5pt;
+      color: #777;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-family: 'Times New Roman', Times, serif;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
+    th { background: #f4f4f4; text-align: left; padding: 4pt 7pt; font-size: 9.5pt; font-weight: 600; border-bottom: 1px solid #ccc; }
+    td { padding: 4pt 7pt; border-bottom: 1px solid #eee; vertical-align: top; }
+    p { margin: 0 0 6pt 0; }
   `;
 }
 

@@ -86,16 +86,27 @@ const LETTER_DEFS = [
 ];
 
 function printLetter(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
-  const today = format(new Date(), "d MMMM yyyy");
   const client = buildClientContext(caseItem, evidence);
   const content = caseItem[field] || `No ${label} generated yet.`;
+  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
+  const docDate = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
   <style>${getLetterPageStyles()}</style>
   </head><body>
     <div class="letter-page">
+      <div class="letter-header">
+        <img src="${LETTERHEAD_URL}" alt="Chaos Controller" />
+      </div>
       <div class="letter-content">
         <pre>${content}</pre>
+        <div class="letter-footer">
+          <div>
+            <div>Chaos Controller™ — chaoscontrollerapp@gmail.com | 0413 572 850</div>
+            <div style="color:#999;">${caseItem.title} — Ref: ${caseRef}</div>
+          </div>
+          <div style="white-space:nowrap;padding-left:10pt;">${docDate}</div>
+        </div>
       </div>
     </div>
   </body></html>`);
@@ -224,9 +235,11 @@ function printChecklistItems(caseItem, checklistItems) {
   const client = buildClientContext(caseItem, []);
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist — ${caseItem.title}</title>
-  <style>${getLetterPageStyles()}table{width:100%;border-collapse:collapse;margin-top:16pt;}th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
+  <style>${getLetterPageStyles()}</style>
   </head><body>
-  <div class="letter-page"><div class="letter-content">
+  <div class="letter-page">
+  <div class="letter-header"><img src="${LETTERHEAD_URL}" alt="Chaos Controller" /></div>
+  <div class="letter-content">
   <h2 class="section-title">Smart Checklist</h2>
   <p style="font-style:italic;color:#444;margin-bottom:4pt;">${caseItem.title}</p>
   <p style="font-size:10pt;color:#666;margin-bottom:10pt;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
@@ -253,9 +266,11 @@ function printDeadlineItems(caseItem, deadlines) {
   }).join('');
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Deadlines — ${caseItem.title}</title>
-  <style>${getLetterPageStyles()}table{width:100%;border-collapse:collapse;margin-top:16pt;}th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
+  <style>${getLetterPageStyles()}</style>
   </head><body>
-  <div class="letter-page"><div class="letter-content">
+  <div class="letter-page">
+  <div class="letter-header"><img src="${LETTERHEAD_URL}" alt="Chaos Controller" /></div>
+  <div class="letter-content">
   <h2 class="section-title">Deadline War Room</h2>
   <p style="font-style:italic;color:#444;margin-bottom:4pt;">${caseItem.title}</p>
   <p style="font-size:10pt;color:#666;margin-bottom:10pt;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
