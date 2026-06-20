@@ -54,19 +54,10 @@ export default function OnboardingDashboard() {
       >
         <div className="relative z-10">
           <img 
-            src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" 
+            src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/c958c2bba_0981DD92-6950-41DB-A349-D1DD688641B5.png" 
             alt="Chaos Controller" 
-            className="w-32 h-32 mx-auto mb-6 rounded-lg shadow-2xl object-contain" 
+            className="w-full max-w-3xl mx-auto mb-6 rounded-lg shadow-2xl object-contain" 
           />
-          <h1 className="text-2xl sm:text-4xl font-display font-bold text-foreground mb-2">
-            CHAOS CONTROLLER
-          </h1>
-          <p className="text-primary font-bold text-sm sm:text-lg mb-4">
-            NEVER FEAR. CONTROL STARTS HERE.
-          </p>
-          <p className="text-muted-foreground text-xs sm:text-sm max-w-2xl mx-auto">
-            Upload your evidence first. AI builds your case. You take back control.
-          </p>
         </div>
       </motion.div>
 
