@@ -70,9 +70,14 @@ export default function DeadlineWarRoom() {
     queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }),
   });
 
+  const caseIds = cases.map(c => c.id);
+
   const { data: deadlines = [], isLoading } = useQuery({
-    queryKey: ["deadlines"],
-    queryFn: () => base44.entities.Deadline.filter({ created_by_id: user?.id }, "deadline_date"),
+    queryKey: ["deadlines", caseIds],
+    queryFn: () => caseIds.length > 0
+      ? base44.entities.Deadline.filter({ case_id: { $in: caseIds } }, "deadline_date")
+      : Promise.resolve([]),
+    enabled: cases.length > 0,
   });
 
   const createMutation = useMutation({

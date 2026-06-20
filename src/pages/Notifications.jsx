@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
 import { Bell, Check, Trash2, AlertTriangle, Calendar, FileUp, MessageSquare, ArrowUp, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,14 +25,16 @@ const TYPE_ICONS = {
 
 export default function Notifications() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedUrgency, setSelectedUrgency] = useState("all");
 
   const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ["notifications"],
+    queryKey: ["notifications", user?.id],
     queryFn: async () => {
-      const all = await base44.entities.Notification.filter({});
+      const all = await base44.entities.Notification.filter({ user_id: user?.id });
       return all.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
+    enabled: !!user?.id,
   });
 
   const markAsReadMutation = useMutation({

@@ -36,18 +36,17 @@ export default function MerchantResponsesDashboard() {
       // Get all cases for this user
       const cases = await base44.entities.Case.filter({ created_by_id: user?.id });
       const caseIds = cases.map(c => c.id);
-      
-      // Get all merchant responses for these cases
-      const allResponses = await base44.entities.MerchantResponse.filter({});
-      const filteredResponses = allResponses.filter(r => caseIds.includes(r.case_id));
-      
-      // Enrich with case data
-      const enriched = await Promise.all(
-        filteredResponses.map(async (response) => {
-          const caseItem = await base44.entities.Case.get(response.case_id);
-          return { ...response, case: caseItem };
-        })
-      );
+      if (caseIds.length === 0) return [];
+      const caseMap = Object.fromEntries(cases.map(c => [c.id, c]));
+
+      // Get merchant responses scoped to user's cases
+      const filteredResponses = await base44.entities.MerchantResponse.filter({ case_id: { $in: caseIds } });
+
+      // Enrich with case data from local map (no extra fetches)
+      const enriched = filteredResponses.map(response => ({
+        ...response,
+        case: caseMap[response.case_id] || null,
+      }));
       
       // Sort by most recent first
       return enriched.sort((a, b) => 

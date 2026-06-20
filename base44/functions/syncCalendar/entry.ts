@@ -146,12 +146,11 @@ Deno.serve(async (req) => {
     if (action === 'sync') {
       const allCases = await base44.entities.Case.filter({ created_by_id: user.id });
       const activeCases = allCases.filter(c => !['resolved', 'closed'].includes(c.status));
-      const activeCaseIds = new Set(activeCases.map(c => c.id));
+      const activeCaseIds = activeCases.map(c => c.id);
 
-      const allDeadlines = await base44.entities.Deadline.list();
-      const pendingDeadlines = allDeadlines.filter(d =>
-        activeCaseIds.has(d.case_id) && d.status === 'pending' && d.deadline_date
-      );
+      const pendingDeadlines = activeCaseIds.length > 0
+        ? (await base44.entities.Deadline.filter({ case_id: { $in: activeCaseIds }, status: 'pending' })).filter(d => d.deadline_date)
+        : [];
 
       const timeMin = new Date().toISOString();
       const calRes = await fetch(
