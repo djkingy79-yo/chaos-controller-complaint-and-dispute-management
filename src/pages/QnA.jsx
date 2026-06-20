@@ -164,9 +164,9 @@ export default function QnA() {
           {/* Logo */}
           <div className="mb-6">
             <img
-              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/4dacc98be_67B5CC10-D393-47DF-871D-C5B37790EF8E.png"
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/20c6363b8_67B5CC10-D393-47DF-871D-C5B37790EF8E.jpg"
               alt="Chaos Controller Logo"
-              className="w-full max-w-md mx-auto block"
+              className="w-full max-w-2xl mx-auto block"
             />
           </div>
           
