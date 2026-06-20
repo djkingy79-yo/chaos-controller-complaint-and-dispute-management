@@ -20,8 +20,9 @@ export default function CaseList() {
   const [viewMode, setViewMode] = useState("list");
 
   const { data: cases = [], isLoading } = useQuery({
-    queryKey: ["cases"],
+    queryKey: ["cases", user?.id],
     queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }, "-created_date", 100),
+    enabled: !!user?.id,
   });
 
   const filtered = cases.filter((c) => {

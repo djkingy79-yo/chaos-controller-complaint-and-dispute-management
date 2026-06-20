@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { DollarSign, TrendingUp, Users, Star } from "lucide-react";
 
 const PLAN_COLORS = { Starter: "#27AE60", Pro: "#FFD700", Command: "#CC0000" };
-const PLAN_PRICES = { Starter: 25, Pro: 35, Command: 49 };
+const PLAN_PRICES = { Starter: 9.99, Pro: 15.99, Command: 19.99 };
 
 function StatBox({ label, value, sub, color }) {
   return (

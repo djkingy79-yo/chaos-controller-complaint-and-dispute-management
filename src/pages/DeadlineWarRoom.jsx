@@ -66,8 +66,9 @@ export default function DeadlineWarRoom() {
   const [form, setForm] = useState({ title: "", deadline_date: "", deadline_type: "response_due", responsibility: "user", notes: "", case_id: "" });
 
   const { data: cases = [] } = useQuery({
-    queryKey: ["cases"],
+    queryKey: ["cases", user?.id],
     queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }),
+    enabled: !!user?.id,
   });
 
   const caseIds = cases.map(c => c.id);

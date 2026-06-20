@@ -476,8 +476,8 @@ export default function Payments() {
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-5">
             <h3 className="font-black text-white mb-1">Need Help?</h3>
             <p className="text-sm text-gray-400 mb-3">Questions about your subscription or payment?</p>
-            <a href={`mailto:${payidEmail}`} className="inline-flex items-center gap-2 text-[#FFD700] hover:underline text-sm font-bold">
-              <Mail className="w-4 h-4" /> {payidEmail}
+            <a href="mailto:chaoscontrollerapp@gmail.com" className="inline-flex items-center gap-2 text-[#FFD700] hover:underline text-sm font-bold">
+              <Mail className="w-4 h-4" /> chaoscontrollerapp@gmail.com
             </a>
           </div>
           <div className="bg-gray-900 border border-gray-700 rounded-xl p-5">

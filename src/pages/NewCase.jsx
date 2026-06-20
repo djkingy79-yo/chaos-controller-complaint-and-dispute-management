@@ -24,9 +24,9 @@ const escalationBodies = {
 };
 
 const PLANS = [
-  { name: "Starter", price: "$25.00", desc: "Single dispute", features: ["3 active cases", "AI doc scanning", "1st complaint letter", "Deadline tracker", "PDF export"] },
-  { name: "Pro", price: "$35.00", desc: "Serious disputes", popular: true, features: ["Unlimited cases", "All 5 letters", "Tribunal bundles", "Calendar sync", "Smart checklist"] },
-  { name: "Command", price: "$49.00", desc: "Maximum firepower", features: ["Everything in Pro", "All 6 letters incl. escalation", "Chaos Score", "ZIP bundle export", "Priority support"] },
+  { name: "Starter", price: "$9.99", desc: "Single dispute", features: ["3 active cases", "AI doc scanning", "1st complaint letter", "Deadline tracker", "PDF export"] },
+  { name: "Pro", price: "$15.99", desc: "Serious disputes", popular: true, features: ["Unlimited cases", "All 5 letters", "Tribunal bundles", "Calendar sync", "Smart checklist"] },
+  { name: "Command", price: "$19.99", desc: "Maximum firepower", features: ["Everything in Pro", "All 6 letters incl. escalation", "Chaos Score", "ZIP bundle export", "Priority support"] },
 ];
 
 export default function NewCase() {
