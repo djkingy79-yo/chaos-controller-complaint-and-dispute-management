@@ -5,12 +5,11 @@ import { useAuth } from "@/lib/AuthContext";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download, BarChart2, CalendarDays } from "lucide-react";
+import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download, BarChart2, CalendarDays, CheckSquare, AlertTriangle } from "lucide-react";
 import CaseStatusControl from "@/components/cases/CaseStatusControl";
 import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
 import VisualTimeline from "@/components/cases/VisualTimeline";
-import ComplaintLetter from "@/components/cases/ComplaintLetter";
 import LetterSuite from "@/components/cases/LetterSuite";
 import ChaosScore from "@/components/cases/ChaosScore";
 import PrintBundle from "@/components/cases/PrintBundle";
@@ -88,101 +87,114 @@ export default function CaseDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-4">
-        <Link to="/cases">
-          <Button variant="ghost" size="icon" className="mt-0.5">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-        </Link>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground truncate">
-            {caseItem.title}
-          </h1>
-          {caseItem.issue_summary && (
-            <p className="text-sm text-muted-foreground mt-1">{caseItem.issue_summary}</p>
-          )}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
+          <Link to="/cases">
+            <Button variant="ghost" size="icon" className="mt-0.5">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-display font-bold text-foreground truncate">
+              {caseItem.title}
+            </h1>
+            {caseItem.issue_summary && (
+              <p className="text-sm text-muted-foreground mt-1">{caseItem.issue_summary}</p>
+            )}
+          </div>
         </div>
         <ExportCaseZip caseItem={caseItem} evidence={evidence} events={timelineEvents} />
       </div>
 
-      {/* Layout */}
+      {/* Top Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+            <FolderOpen className="w-4 h-4" /> Evidence
+          </div>
+          <div className="text-2xl font-bold text-foreground">{evidence.length}</div>
+          <div className="text-xs text-muted-foreground">files uploaded</div>
+        </div>
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+            <Clock className="w-4 h-4" /> Timeline
+          </div>
+          <div className="text-2xl font-bold text-foreground">{timelineEvents.length}</div>
+          <div className="text-xs text-muted-foreground">events recorded</div>
+        </div>
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+            <CheckSquare className="w-4 h-4" /> Status
+          </div>
+          <div className="text-sm font-semibold text-foreground">{caseItem.status?.replace(/_/g, ' ').toUpperCase()}</div>
+          <div className="text-xs text-muted-foreground">current state</div>
+        </div>
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+            <AlertTriangle className="w-4 h-4" /> Priority
+          </div>
+          <div className="text-sm font-semibold text-foreground">{caseItem.priority?.toUpperCase()}</div>
+          <div className="text-xs text-muted-foreground">case priority</div>
+        </div>
+      </div>
+
+      {/* Main Grid Layout */}
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Sidebar */}
+        {/* Left Sidebar - Case Controls */}
         <div className="lg:col-span-1 space-y-4">
           <CaseStatusControl caseItem={caseItem} />
           <DisputeProgressTracker caseItem={caseItem} />
           <ChaosScore caseItem={caseItem} evidence={evidence} events={timelineEvents} />
           <MerchantInvite caseItem={caseItem} />
-
-          {/* Quick stats */}
-          <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <FolderOpen className="w-3.5 h-3.5" /> Evidence
-              </span>
-              <span className="font-medium">{evidence.length} files</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" /> Timeline
-              </span>
-              <span className="font-medium">{timelineEvents.length} events</span>
-            </div>
-          </div>
         </div>
 
-        {/* Main Content */}
+        {/* Right - Tabbed Content */}
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="flex w-full overflow-x-auto mb-4 gap-0.5 h-auto flex-nowrap">
-              <TabsTrigger value="summary" className="gap-1 text-xs">
-                <FileText className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Summary</span>
+            <TabsList className="flex w-full overflow-x-auto gap-1 h-auto flex-nowrap bg-transparent p-0">
+              <TabsTrigger value="summary" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <FileText className="w-3.5 h-3.5" /> <span>Summary</span>
               </TabsTrigger>
-              <TabsTrigger value="letter" className="gap-1 text-xs">
-                <FileText className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Letters</span>
+              <TabsTrigger value="letter" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <FileText className="w-3.5 h-3.5" /> <span>Letters</span>
               </TabsTrigger>
-              <TabsTrigger value="evidence" className="gap-1 text-xs">
-                <FolderOpen className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Evidence</span>
+              <TabsTrigger value="evidence" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <FolderOpen className="w-3.5 h-3.5" /> <span>Evidence</span>
               </TabsTrigger>
-              <TabsTrigger value="timeline" className="gap-1 text-xs">
-                <Clock className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Timeline</span>
+              <TabsTrigger value="timeline" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Clock className="w-3.5 h-3.5" /> <span>Timeline</span>
               </TabsTrigger>
-              <TabsTrigger value="visual" className="gap-1 text-xs">
-                <BarChart2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Visual</span>
+              <TabsTrigger value="checklist" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <CheckSquare className="w-3.5 h-3.5" /> <span>Checklist</span>
               </TabsTrigger>
-              <TabsTrigger value="print" className="gap-1 text-xs">
-                <Printer className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Print</span>
+              <TabsTrigger value="deadlines" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <CalendarDays className="w-3.5 h-3.5" /> <span>Deadlines</span>
               </TabsTrigger>
-              <TabsTrigger value="bundle" className="gap-1 text-xs">
-                <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Bundle</span>
-              </TabsTrigger>
-              <TabsTrigger value="snapshot" className="gap-1 text-xs">
-                <CalendarDays className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Snapshot</span>
+              <TabsTrigger value="print" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Printer className="w-3.5 h-3.5" /> <span>Print</span>
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="summary">
+
+            <TabsContent value="summary" className="mt-4">
               <CaseSummary caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
-            <TabsContent value="letter">
+            <TabsContent value="letter" className="mt-4">
               <LetterSuite caseItem={caseItem} />
             </TabsContent>
-            <TabsContent value="evidence">
+            <TabsContent value="evidence" className="mt-4">
               <EvidenceVault caseId={caseId} evidence={evidence} caseItem={caseItem} />
             </TabsContent>
-            <TabsContent value="timeline">
+            <TabsContent value="timeline" className="mt-4">
               <CaseTimeline caseId={caseId} events={timelineEvents} />
             </TabsContent>
-            <TabsContent value="visual">
-              <VisualTimeline caseId={caseId} events={timelineEvents} evidence={evidence} />
-            </TabsContent>
-            <TabsContent value="print">
+            <TabsContent value="checklist" className="mt-4">
               <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
-            <TabsContent value="bundle">
-              <EscalationBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+            <TabsContent value="deadlines" className="mt-4">
+              <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
-            <TabsContent value="snapshot">
-              <WeeklySnapshot caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+            <TabsContent value="print" className="mt-4">
+              <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
           </Tabs>
         </div>
