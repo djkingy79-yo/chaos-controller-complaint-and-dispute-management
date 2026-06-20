@@ -214,6 +214,14 @@ export default function Welcome() {
             <a href="/privacy" className="text-white hover:text-[#FFD700] transition-colors">Privacy Policy</a>
             <a href="mailto:chaoscontrollerapp@gmail.com" className="text-white hover:text-[#FFD700] transition-colors">Contact</a>
           </div>
+          
+          {/* Disclaimer */}
+          <div className="mt-8 bg-[#C0392B] border-2 border-[#FFD700] rounded-lg px-4 py-3 max-w-2xl mx-auto">
+            <p className="text-[#FFD700] font-bold italic text-xs" style={{ fontSize: '9pt' }}>
+              ⚠️⚠️IMPORTANT DISCLAIMER⚠️⚠️<br />
+              All content provided is for educational and informational purposes only. It does not constitute formal legal advice and should not be relied upon.
+            </p>
+          </div>
         </div>
       </div>
     </div>
