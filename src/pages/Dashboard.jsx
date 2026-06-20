@@ -151,9 +151,6 @@ export default function Dashboard() {
           {/* Google Drive Backup */}
           <GoogleDriveBackup />
 
-          {/* Google Drive Backup */}
-          <GoogleDriveBackup />
-
           {/* Google Tasks Integration */}
           <GoogleTasksSync user={user} />
 
