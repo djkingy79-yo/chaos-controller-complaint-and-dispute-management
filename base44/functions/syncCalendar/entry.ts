@@ -3,9 +3,30 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const CONNECTOR_ID = '6a2f842ded0843ad5cb9ecb7';
 
 async function createCalendarEvent(accessToken, deadline, caseInfo) {
-  const event = {
-    summary: `⚖️ Chaos Controller: ${deadline.title}`,
-    description: `Case: ${caseInfo.title}\nOrganisation: ${caseInfo.organisation_name || 'N/A'}\nDeadline Type: ${deadline.deadline_type || 'N/A'}\nResponsibility: ${deadline.responsibility || 'user'}\n\nManage this case: https://chaoscontroller.base44.app/case/${caseInfo.id}`,
+  const event = buildEventPayload(deadline, caseInfo);
+  const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(event)
+  });
+  return res.ok;
+}
+
+async function updateCalendarEvent(accessToken, googleEventId, deadline, caseInfo) {
+  const event = buildEventPayload(deadline, caseInfo);
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${googleEventId}`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(event)
+  });
+  return res.ok;
+}
+
+function buildEventPayload(deadline, caseInfo) {
+  const statusLabel = caseInfo.status ? ` [${caseInfo.status.replace(/_/g, ' ').toUpperCase()}]` : '';
+  return {
+    summary: `⚖️ ${deadline.title} — ${caseInfo.title}${statusLabel}`,
+    description: `Case: ${caseInfo.title}\nOrganisation: ${caseInfo.organisation_name || 'N/A'}\nStatus: ${caseInfo.status || 'N/A'}\nDeadline Type: ${deadline.deadline_type || 'N/A'}\nResponsibility: ${deadline.responsibility || 'user'}\n\nManage this case: https://chaoscontroller.base44.app/case/${caseInfo.id}`,
     start: { date: deadline.deadline_date, timeZone: 'Australia/Sydney' },
     end: { date: deadline.deadline_date, timeZone: 'Australia/Sydney' },
     extendedProperties: {
@@ -20,13 +41,17 @@ async function createCalendarEvent(accessToken, deadline, caseInfo) {
       ]
     }
   };
+}
 
-  const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(event)
-  });
-  return res.ok;
+async function findExistingEvent(accessToken, deadlineId) {
+  const timeMin = new Date(Date.now() - 365 * 86400000).toISOString(); // look back 1 year
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=250&timeMin=${timeMin}&privateExtendedProperty=deadlineId%3D${deadlineId}&privateExtendedProperty=source%3DChaosController`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.items?.[0] || null;
 }
 
 Deno.serve(async (req) => {
@@ -35,18 +60,16 @@ Deno.serve(async (req) => {
     const payload = await req.json().catch(() => ({}));
     const { action = 'sync', data: automationData, event: automationEvent } = payload;
 
-    // --- AUTOMATION PATH: entity trigger for Deadline create/update ---
-    const isAutomation = !!automationEvent;
-    if (isAutomation) {
+    // --- AUTOMATION PATH: Deadline create/update ---
+    const isDeadlineAutomation = !!automationEvent && automationEvent.entity_name === 'Deadline';
+    if (isDeadlineAutomation) {
       const deadlineId = automationEvent?.entity_id || automationData?.id;
-      if (!deadlineId) return Response.json({ error: 'No deadline ID in payload' }, { status: 400 });
+      if (!deadlineId) return Response.json({ error: 'No deadline ID' }, { status: 400 });
 
-      // Find the deadline
       const deadlines = await base44.asServiceRole.entities.Deadline.filter({ id: deadlineId });
       const deadline = deadlines[0];
       if (!deadline || !deadline.deadline_date) return Response.json({ skipped: 'No deadline date' });
 
-      // Find the case owner and get their calendar token
       const cases = await base44.asServiceRole.entities.Case.filter({ id: deadline.case_id });
       const caseInfo = cases[0];
       if (!caseInfo) return Response.json({ skipped: 'Case not found' });
@@ -59,8 +82,51 @@ Deno.serve(async (req) => {
       }
       if (!connToken?.accessToken) return Response.json({ skipped: 'No access token' });
 
-      const ok = await createCalendarEvent(connToken.accessToken, deadline, caseInfo);
-      return Response.json({ success: ok, deadlineId, caseId: caseInfo.id });
+      const { accessToken } = connToken;
+
+      // Check if event already exists — update it, otherwise create
+      const existing = await findExistingEvent(accessToken, deadline.id);
+      let ok;
+      if (existing) {
+        ok = await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo);
+      } else {
+        ok = await createCalendarEvent(accessToken, deadline, caseInfo);
+      }
+      return Response.json({ success: ok, deadlineId, caseId: caseInfo.id, action: existing ? 'updated' : 'created' });
+    }
+
+    // --- AUTOMATION PATH: Case status/deadline field update ---
+    const isCaseAutomation = !!automationEvent && automationEvent.entity_name === 'Case';
+    if (isCaseAutomation) {
+      const caseId = automationEvent?.entity_id || automationData?.id;
+      if (!caseId) return Response.json({ skipped: 'No case ID' });
+
+      const cases = await base44.asServiceRole.entities.Case.filter({ id: caseId });
+      const caseInfo = cases[0];
+      if (!caseInfo) return Response.json({ skipped: 'Case not found' });
+
+      let connToken;
+      try {
+        connToken = await base44.asServiceRole.connectors.getAppUserConnection(CONNECTOR_ID, caseInfo.created_by_id);
+      } catch (_) {
+        return Response.json({ skipped: 'User calendar not connected' });
+      }
+      if (!connToken?.accessToken) return Response.json({ skipped: 'No access token' });
+
+      const { accessToken } = connToken;
+
+      // Update all calendar events for this case's deadlines
+      const deadlines = await base44.asServiceRole.entities.Deadline.filter({ case_id: caseId });
+      let updatedCount = 0;
+      for (const deadline of deadlines) {
+        if (!deadline.deadline_date) continue;
+        const existing = await findExistingEvent(accessToken, deadline.id);
+        if (existing) {
+          const ok = await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo);
+          if (ok) updatedCount++;
+        }
+      }
+      return Response.json({ success: true, caseId, updatedCount });
     }
 
     // --- FRONTEND PATH: requires user auth ---
@@ -78,7 +144,6 @@ Deno.serve(async (req) => {
     const { accessToken } = connToken;
 
     if (action === 'sync') {
-      // Get all pending deadlines for this user's active cases
       const allCases = await base44.entities.Case.filter({ created_by_id: user.id });
       const activeCases = allCases.filter(c => !['resolved', 'closed'].includes(c.status));
       const activeCaseIds = new Set(activeCases.map(c => c.id));
@@ -88,7 +153,6 @@ Deno.serve(async (req) => {
         activeCaseIds.has(d.case_id) && d.status === 'pending' && d.deadline_date
       );
 
-      // Fetch existing Chaos Controller events from calendar
       const timeMin = new Date().toISOString();
       const calRes = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=250&timeMin=${timeMin}&q=Chaos+Controller`,
@@ -96,19 +160,21 @@ Deno.serve(async (req) => {
       );
       const calData = calRes.ok ? await calRes.json() : { items: [] };
       const existingEvents = calData.items || [];
-      const existingDeadlineIds = new Set(
-        existingEvents.map(e => e.extendedProperties?.private?.deadlineId).filter(Boolean)
-      );
+      const existingByDeadlineId = {};
+      for (const e of existingEvents) {
+        const did = e.extendedProperties?.private?.deadlineId;
+        if (did) existingByDeadlineId[did] = e;
+      }
 
-      // Create events for deadlines not yet in calendar
       let syncedCount = 0;
       for (const deadline of pendingDeadlines) {
-        if (!existingDeadlineIds.has(deadline.id)) {
-          const caseInfo = activeCases.find(c => c.id === deadline.case_id);
-          if (caseInfo) {
-            const ok = await createCalendarEvent(accessToken, deadline, caseInfo);
-            if (ok) syncedCount++;
-          }
+        const caseInfo = activeCases.find(c => c.id === deadline.case_id);
+        if (!caseInfo) continue;
+        if (existingByDeadlineId[deadline.id]) {
+          await updateCalendarEvent(accessToken, existingByDeadlineId[deadline.id].id, deadline, caseInfo);
+        } else {
+          const ok = await createCalendarEvent(accessToken, deadline, caseInfo);
+          if (ok) syncedCount++;
         }
       }
 

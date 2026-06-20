@@ -1,0 +1,48 @@
+{
+  "name": "LetterTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "letter_type": {
+      "type": "string",
+      "enum": [
+        "letter1",
+        "letter2",
+        "letter3",
+        "accept_offer",
+        "deny_offer",
+        "escalation"
+      ],
+      "description": "Which letter type this template applies to"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full letter text"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "banking",
+        "insurance",
+        "tenancy",
+        "telco",
+        "utilities",
+        "other",
+        "general"
+      ],
+      "description": "Dispute category this template is suited for"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes about when to use this template"
+    }
+  },
+  "required": [
+    "name",
+    "letter_type",
+    "content"
+  ]
+}

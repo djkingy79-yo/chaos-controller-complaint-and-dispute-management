@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
-import { buildLetterheadHTML, buildFooterHTML, getLetterPageStyles, LETTERHEAD_URL } from "./LetterheadBanner";
+import { buildLetterheadHTML, buildFooterHTML, getLetterPageStyles, LETTERHEAD_URL, CONTINUATION_PAGE_URL } from "./LetterheadBanner";
 
 // Times New Roman print styles injected once
 const PRINT_STYLES = `
@@ -349,15 +349,16 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       }
       .toc-page {
         width: 210mm; min-height: 297mm; page-break-after: always;
-        background-image: url('${LETTERHEAD_URL}');
+        background-image: url('${CONTINUATION_PAGE_URL}');
         background-size: 100% 100%; background-repeat: no-repeat;
       }
       .section-page {
         width: 210mm; min-height: 297mm; page-break-before: always;
-        background-image: url('${LETTERHEAD_URL}');
+        background-image: url('${CONTINUATION_PAGE_URL}');
         background-size: 100% 100%; background-repeat: no-repeat;
       }
-      .page-body { padding: 76mm 22mm 38mm 22mm; font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; }
+      .page-body { padding: 38mm 22mm 32mm 22mm; font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; }
+      .cover-body { padding: 76mm 22mm 38mm 22mm; font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; }
       table { width:100%; border-collapse:collapse; font-size:10.5pt; margin-top:8pt; }
       th { background:#f4f4f4; text-align:left; padding:5pt 8pt; font-weight:bold; border-bottom:2px solid #ddd; }
       td { padding:4.5pt 8pt; border-bottom:1px solid #eee; vertical-align:top; }
@@ -371,7 +372,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
 
   <!-- ═══════════════════ TITLE PAGE ═══════════════════ -->
   <div class="cover-page">
-    <div class="page-body" style="display:flex;flex-direction:column;justify-content:space-between;min-height:183mm;">
+    <div class="cover-body" style="display:flex;flex-direction:column;justify-content:space-between;min-height:183mm;">
       <!-- Top: case title block -->
       <div>
         <div style="font-size:9pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:12pt;font-family:'Times New Roman',Times,serif;">Chaos Controller™ — Formal Case Bundle</div>

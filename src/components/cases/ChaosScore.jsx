@@ -80,9 +80,9 @@ export default function ChaosScore({ caseItem, evidence, events }) {
     } else if (caseItem.category === "telco") {
       window.open("https://www.tio.com.au/complaints", "_blank");
     } else if (caseItem.category === "utilities") {
-      window.open("https://www.ewon.com.au/make-a-complaint", "_blank");
+      window.open("https://www.ewon.com.au/page/making-a-complaint/complaint-forms", "_blank");
     } else if (caseItem.category === "tenancy") {
-      window.open("https://www.ncat.nsw.gov.au/apply", "_blank");
+      window.open("https://www.ncat.nsw.gov.au/ncat/how-to-apply.html", "_blank");
     } else {
       // Default to bundle for review first
       navigate(`/case/${caseItem.id}?tab=bundle`);

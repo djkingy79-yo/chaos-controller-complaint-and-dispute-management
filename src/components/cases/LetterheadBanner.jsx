@@ -1,7 +1,8 @@
 const NEW_LETTERHEAD_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/d7c82de93_9E8BA4FC-02D7-4B9E-809C-6A24FA7522B1.png";
+const CONTINUATION_PAGE_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/0cbc19cc4_5596A320-E07C-48EE-8743-6D15F12CE701.png";
 
 // Export for use in PrintBundle and other print contexts
-export { NEW_LETTERHEAD_URL as LETTERHEAD_URL };
+export { NEW_LETTERHEAD_URL as LETTERHEAD_URL, CONTINUATION_PAGE_URL };
 
 export const CONTACT = {
   website: "www.chaoscontroller.com.au",
@@ -53,12 +54,16 @@ export function getLetterPageStyles() {
       line-height: 1.7;
     }
 
-    /* Continuation pages — plain white, no letterhead image */
+    /* Continuation pages — continuation letterhead background */
     .letter-continuation {
       width: 210mm;
       min-height: 297mm;
-      padding: 20mm 22mm 28mm 22mm;
+      padding: 38mm 22mm 28mm 22mm;
       page-break-before: always;
+      background-image: url('${CONTINUATION_PAGE_URL}');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: top left;
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
       color: #111;

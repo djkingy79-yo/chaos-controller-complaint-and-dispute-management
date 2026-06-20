@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText, Lock } from "lucide-react";
+import LetterTemplateManager from "./LetterTemplateManager";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LETTERHEAD_URL, getLetterPageStyles } from "./LetterheadBanner";
+import { LETTERHEAD_URL, CONTINUATION_PAGE_URL, getLetterPageStyles } from "./LetterheadBanner";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -177,6 +178,12 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [editing, setEditing] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  const handleApplyTemplate = (content) => {
+    setText(content);
+    updateMutation.mutate({ [field]: content });
+    setEditing(false);
+  };
+
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Case.update(caseItem.id, data),
     onSuccess: () => {
@@ -203,13 +210,25 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handlePrint = () => {
+    const lines = text.split('\n');
+    // Split: first page holds ~45 lines, continuation pages ~55 lines each
+    const firstPageLines = lines.slice(0, 45);
+    const remainingLines = lines.slice(45);
+    const continuationPages = [];
+    for (let i = 0; i < remainingLines.length; i += 55) {
+      continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
+    }
+    const continuationHTML = continuationPages.map(chunk => `
+      <div class="letter-continuation"><pre>${chunk}</pre></div>
+    `).join('');
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>${letterType.label}</title>
     <style>${getLetterPageStyles()}</style>
     </head><body>
       <div class="letter-page">
-        <div class="letter-content"><pre>${text}</pre></div>
+        <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
       </div>
+      ${continuationHTML}
     </body></html>`);
     win.document.close();
     win.focus();
@@ -226,6 +245,11 @@ function LetterEditor({ letterType, caseItem, evidence }) {
           <p className="text-xs text-muted-foreground">{letterType.description}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
+          <LetterTemplateManager
+            letterType={letterType.key}
+            currentText={text}
+            onApplyTemplate={handleApplyTemplate}
+          />
           {text && (
             <>
               <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(text); toast.success("Copied"); }} className="gap-1.5 text-xs">
