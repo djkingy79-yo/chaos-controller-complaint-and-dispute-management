@@ -86,10 +86,10 @@ Return as JSON with this structure:
     
     return Response.json({
       success: true,
-      converted: true,
+      converted: false,
       originalFileUrl: fileUrl,
       extractedData: result,
-      message: 'Image text extracted successfully. PDF creation requires additional PDF library.'
+      message: 'Image text extracted successfully.'
     });
 
   } catch (error) {

@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
 
     // Remove completed items from Google Tasks
     let tasksRemoved = 0;
-    for (const [itemId, task] of existingTaskMap) {
+    for (const [, task] of existingTaskMap) {
       await fetch(`https://www.googleapis.com/tasks/v1/lists/${taskListId}/tasks/${task.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${accessToken}` }

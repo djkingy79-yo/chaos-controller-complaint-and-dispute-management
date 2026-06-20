@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         subject: `[Chaos Controller] ${deadline.title}`,
         body: {
           contentType: 'HTML',
-          content: `<p><strong>Case:</strong> ${caseTitle || 'Unknown'}</p><p><strong>Deadline Type:</strong> ${deadline.deadline_type || 'Other'}</p>${deadline.notes ? `<p><strong>Notes:</strong> ${deadline.notes}</p>` : ''}<p><a href="https://chaoscontroller.app/case/${deadline.case_id}">View Case</a></p>`,
+          content: `<p><strong>Case:</strong> ${caseTitle || 'Unknown'}</p><p><strong>Deadline Type:</strong> ${deadline.deadline_type || 'Other'}</p>${deadline.notes ? `<p><strong>Notes:</strong> ${deadline.notes}</p>` : ''}<p><a href="https://chaoscontroller.com.au/case/${deadline.case_id}">View Case</a></p>`,
         },
         start: { dateTime: `${startDate}T09:00:00`, timeZone: 'Australia/Sydney' },
         end:   { dateTime: `${startDate}T10:00:00`, timeZone: 'Australia/Sydney' },
@@ -62,8 +62,7 @@ Deno.serve(async (req) => {
             <thead><tr style="background:#1a1a1a;"><th style="padding:8px;text-align:left;color:#FFD700;">Item</th><th style="padding:8px;text-align:left;color:#FFD700;">Status</th><th style="padding:8px;text-align:left;color:#FFD700;">Category</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
-          <p style="margin-top:24px;"><a href="https://chaoscontroller.app/checklist" style="background:#FFD700;color:#000;padding:10px 20px;text-decoration:none;font-weight:bold;border-radius:6px;">View Checklist</a></p>
-          <p style="color:#666;font-size:12px;margin-top:32px;">Designed &amp; Developed by Deb King, Glenmore Park 2025</p>
+          <p style="margin-top:24px;"><a href="https://chaoscontroller.com.au/checklist" style="background:#FFD700;color:#000;padding:10px 20px;text-decoration:none;font-weight:bold;border-radius:6px;">View Checklist</a></p>
         </div>`;
 
       await graphRequest(accessToken, '/me/sendMail', {
