@@ -8,12 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   Upload, FileText, Image, Mail, FileCheck, Loader2,
-  Trash2, ExternalLink, Plus, ScanLine, Camera, Tag,
+  Trash2, ExternalLink, Plus, ScanLine, Camera, Tag, FileDigit,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import DocumentScanResult from "./DocumentScanResult";
 import DocumentScanner from "./DocumentScanner";
+import { useToast } from "@/components/ui/use-toast";
 
 const typeConfig = {
   email:         { icon: Mail,      label: "Email",           color: "bg-primary/10 text-primary" },
@@ -118,8 +119,10 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   const [showScanner, setShowScanner] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [converting, setConverting] = useState(false);
   const [newEvidence, setNewEvidence] = useState({ file_type: "other", description: "", event_date: "", tags: [] });
   const [filterTag, setFilterTag] = useState(null);
+  const { toast } = useToast();
 
   const TAGS = ["Bank Statement", "Email Chain", "Photo", "Contract", "Lease", "Invoice", "Receipt", "Correspondence", "Notice", "Report", "ID Document", "Other"];
 
@@ -159,19 +162,69 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
 
   const uploadAndProcess = async (files) => {
     setUploading(true);
+    
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      let fileUrl = null;
+      let fileName = file.name;
+      let fileType = newEvidence.file_type;
+      
+      // Check if file is an image that should be converted to PDF
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
+      const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+      const isImage = imageExtensions.includes(fileExtension);
+      
+      if (isImage) {
+        try {
+          setConverting(true);
+          // Upload original image first
+          const { file_url: originalUrl } = await base44.integrations.Core.UploadFile({ file });
+          
+          // Convert to searchable PDF
+          const result = await base44.functions.invoke('convertImageToSearchablePDF', {
+            fileUrl: originalUrl,
+            fileName: file.name
+          });
+          
+          if (result.success && result.converted && result.pdfUrl) {
+            fileUrl = result.pdfUrl;
+            fileName = result.pdfFileName;
+            fileType = 'other'; // PDF type
+            
+            toast({
+              title: "Image Converted to PDF",
+              description: `${file.name} was automatically converted to a searchable PDF`,
+              duration: 4000,
+            });
+          } else {
+            // Fallback to original image if conversion fails
+            fileUrl = originalUrl;
+          }
+          setConverting(false);
+        } catch (error) {
+          console.error('PDF conversion failed:', error);
+          setConverting(false);
+          // Fallback to original upload
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          fileUrl = file_url;
+        }
+      } else {
+        // Non-image file, upload normally
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        fileUrl = file_url;
+      }
+      
       createMutation.mutate({
         case_id: caseId,
-        file_url,
-        file_name: file.name,
-        file_type: newEvidence.file_type,
+        file_url: fileUrl,
+        file_name: fileName,
+        file_type: fileType,
         description: newEvidence.description,
         event_date: newEvidence.event_date || undefined,
         tags: newEvidence.tags.length > 0 ? newEvidence.tags : undefined,
         scan_status: "pending",
       });
     }
+    
     setUploading(false);
     setShowUpload(false);
     setNewEvidence({ file_type: "other", description: "", event_date: "", tags: [] });
@@ -396,13 +449,26 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         )}
       </div>
 
-      {scanning && (
+      {(scanning || converting) && (
         <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 space-y-1">
           <div className="flex items-center gap-2 text-sm text-primary">
-            <ScanLine className="w-4 h-4 animate-pulse shrink-0" />
-            <span className="font-medium">AI is analysing your document...</span>
+            {converting ? (
+              <>
+                <FileDigit className="w-4 h-4 animate-pulse shrink-0" />
+                <span className="font-medium">Converting image to searchable PDF...</span>
+              </>
+            ) : (
+              <>
+                <ScanLine className="w-4 h-4 animate-pulse shrink-0" />
+                <span className="font-medium">AI is analysing your document...</span>
+              </>
+            )}
           </div>
-          <p className="text-xs text-primary/70 pl-6">Extracting details · Building timeline · Generating checklist · Setting deadlines — all automatic</p>
+          <p className="text-xs text-primary/70 pl-6">
+            {converting 
+              ? 'Creating professional PDF · Embedding image · Optimising for quality'
+              : 'Extracting details · Building timeline · Generating checklist · Setting deadlines — all automatic'}
+          </p>
         </div>
       )}
 
