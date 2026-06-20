@@ -27,10 +27,10 @@ export function LetterheadHeader() {
 // Print styles — full letterhead on page 1 only (with header and footer), minimal header on subsequent pages
 export function getLetterPageStyles() {
   return `
-    @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
-    @page { margin: 1.5in; size: A4; }
+    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
 
     /* Page 1: FULL letterhead with header and footer */
     .letter-page {
@@ -43,12 +43,12 @@ export function getLetterPageStyles() {
       background-position: top center;
     }
 
-    /* Letter body with 1.5 inch margins - text spans full width between margins */
+    /* Letter body with 25mm margins - text spans full width between margins */
     .letter-content {
       position: relative;
       padding: 38mm 0 25mm 0;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 10pt;
+      font-size: 11pt;
       color: #111;
       line-height: 1.6;
       width: 100%;
@@ -67,7 +67,7 @@ export function getLetterPageStyles() {
       background-repeat: no-repeat;
       background-position: top center;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 10pt;
+      font-size: 11pt;
       color: #111;
       line-height: 1.6;
       width: 100%;
@@ -79,23 +79,23 @@ export function getLetterPageStyles() {
       font-size: 12pt;
       font-weight: bold;
       color: #1a1a2e;
-      margin: 0 0 10pt 0;
-      border-bottom: 1px solid #bbb;
-      padding-bottom: 3pt;
+      margin: 14pt 0 10pt 0;
+      border-bottom: 2px solid #1a1a2e;
+      padding-bottom: 4pt;
     }
     pre {
       white-space: pre-wrap;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 10pt;
+      font-size: 11pt;
       line-height: 1.6;
       margin: 0;
       color: #111;
     }
 
     table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
-    th { background: rgba(0,0,0,0.05); text-align: left; padding: 4pt 7pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #ccc; }
-    td { padding: 4pt 7pt; border-bottom: 1px solid #eee; vertical-align: top; font-size: 10pt; }
-    p { margin: 0 0 6pt 0; }
+    th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
+    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; font-size: 10pt; }
+    p { margin: 0 0 8pt 0; }
   `;
 }
 
