@@ -71,7 +71,7 @@ const disputeTypes = [
 const plans = [
   {
     name: "Starter",
-    price: "$25.00",
+    price: "$9.99",
     period: "AUD/month",
     description: "For single disputes",
     features: [
@@ -89,7 +89,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$35.00",
+    price: "$15.99",
     period: "AUD/month",
     description: "For serious & ongoing disputes",
     features: [
@@ -108,7 +108,7 @@ const plans = [
   },
   {
     name: "Command",
-    price: "$49.00",
+    price: "$19.99",
     period: "AUD/month",
     description: "Maximum firepower",
     features: [
