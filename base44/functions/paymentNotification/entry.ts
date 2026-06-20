@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     // Send email to admin (chaoscontrollerapp@gmail.com) for new payments
     if (status === 'pending') {
       const adminEmail = 'chaoscontrollerapp@gmail.com';
-      const adminSubject = `🔔 New Payment Notification — ${payment.plan_name} Plan`;
+      const adminSubject = `New Payment Notification - ${payment.plan_name} Plan`;
       const adminBody = `
         <!DOCTYPE html>
         <html>
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
             
             <div class="section">
               <div class="label">Customer Name</div>
-              <div class="value">${payment.user_name || 'N/A'}</div>
+              <div class="value">${payment.user_name || 'Not provided'}</div>
             </div>
             
             <div class="section">
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
             ${payment.payid_reference ? `
             <div class="section">
               <div class="label">Payment Reference</div>
-              <div class="value">${payment.payid_reference}</div>
+              <div class="value">${payment.payid_reference || 'Not provided'}</div>
             </div>
             ` : ''}
             
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     // Send email to customer when payment is verified
     if (status === 'verified') {
       const customerEmail = payment.user_email;
-      const customerSubject = `✅ Payment Verified — ${payment.plan_name} Plan Activated!`;
+      const customerSubject = `Payment Verified - ${payment.plan_name} Plan Activated`;
       const customerBody = `
         <!DOCTYPE html>
         <html>

@@ -20,8 +20,7 @@ import {
   Lock,
   Calendar,
   FileText,
-  HelpCircle,
-  ChevronDown
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -65,72 +64,16 @@ export default function Layout() {
           <div className="flex items-center justify-between h-16">
             {/* Left: Hamburger + Logo */}
             <div className="flex items-center gap-3">
-              {/* Dropdown Trigger */}
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="text-foreground hover:bg-secondary"
-                >
-                  {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </Button>
-
-                {/* Dropdown Menu */}
-                <AnimatePresence>
-                  {menuOpen && (
-                    <>
-                      {/* Backdrop */}
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setMenuOpen(false)}
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute left-0 top-12 z-50 w-64 bg-card border border-border rounded-xl shadow-2xl overflow-hidden"
-                      >
-                        <div className="p-2 max-h-[80vh] overflow-y-auto">
-                          {allItems.map((item) => {
-                            const isActive = location.pathname === item.path;
-                            return (
-                              <Link
-                                key={item.path}
-                                to={item.path}
-                                onClick={() => setMenuOpen(false)}
-                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5 ${
-                                  isActive
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                                }`}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <item.icon className="w-4 h-4 shrink-0" />
-                                  {item.label}
-                                </div>
-                                <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                              </Link>
-                            );
-                          })}
-
-                          {/* Divider + Logout */}
-                          <div className="border-t border-border mt-2 pt-2">
-                            <button
-                              onClick={() => { setMenuOpen(false); base44.auth.logout(); }}
-                              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-all"
-                            >
-                              <LogOut className="w-4 h-4" />
-                              Sign Out
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
+              {/* Hamburger Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="text-foreground hover:bg-secondary h-10 w-10"
+                aria-label="Toggle menu"
+              >
+                {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
 
               {/* Logo */}
               <Link to="/dashboard" className="flex items-center gap-2">
@@ -160,16 +103,100 @@ export default function Layout() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground h-10 w-10"
                 onClick={() => base44.auth.logout()}
                 title="Sign Out"
+                aria-label="Sign out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-5 h-5" />
               </Button>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            {/* Backdrop with fade */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+              onClick={() => setMenuOpen(false)}
+            />
+            {/* Slide-in menu from left */}
+            <motion.div
+              initial={{ x: "-100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "-100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed left-0 top-0 z-50 h-full w-80 bg-card border-r border-border shadow-2xl overflow-hidden"
+            >
+              {/* Menu Header */}
+              <div className="flex items-center justify-between p-4 border-b border-border bg-secondary/50">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
+                    alt="Chaos Controller"
+                    className="w-10 h-10 object-contain rounded-lg"
+                  />
+                  <div>
+                    <h2 className="font-display font-black text-foreground">Menu</h2>
+                    <p className="text-xs text-muted-foreground font-bold">Navigate your cases</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMenuOpen(false)}
+                  className="h-10 w-10"
+                  aria-label="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {/* Menu Items - Scrollable */}
+              <div className="p-3 h-[calc(100%-140px)] overflow-y-auto">
+                {allItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMenuOpen(false)}
+                      className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-base font-bold transition-all mb-1 ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "text-foreground hover:bg-secondary/70"
+                      }`}
+                    >
+                      <item.icon className={`w-5 h-5 shrink-0 ${isActive ? "opacity-100" : "opacity-70"}`} />
+                      <span className="flex-1">{item.label}</span>
+                      {isActive && <ChevronRight className="w-4 h-4 opacity-50" />}
+                    </Link>
+                  );
+                })}
+
+                {/* Divider + Logout */}
+                <div className="border-t border-border mt-3 pt-3">
+                  <button
+                    onClick={() => { setMenuOpen(false); base44.auth.logout(); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-base font-bold text-destructive hover:bg-destructive/10 transition-all"
+                  >
+                    <LogOut className="w-5 h-5 shrink-0" />
+                    <span className="flex-1 text-left">Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

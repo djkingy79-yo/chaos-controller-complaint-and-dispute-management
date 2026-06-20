@@ -72,30 +72,17 @@ Deno.serve(async (req) => {
       closed: "Closed"
     };
 
-    const statusEmojis = {
-      draft: "📝",
-      complaint_sent: "📤",
-      awaiting_response: "⏳",
-      response_received: "📬",
-      escalation_ready: "🚨",
-      escalated: "⚖️",
-      resolved: "✅",
-      closed: "🔒"
-    };
-
-    const emoji = statusEmojis[newStatus] || "📋";
     const statusLabel = statusLabels[newStatus] || newStatus;
     const oldStatusLabel = statusLabels[oldStatus] || oldStatus || "Unknown";
     const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
 
-    const subject = `${emoji} [${caseRef}] Case Update: "${caseItem.title}" → ${statusLabel}`;
+    const subject = `[${caseRef}] Case Update: ${statusLabel}`;
     const emailBody = `Hi ${owner.full_name || "there"},
 
-Your case status has been updated in Chaos Controller™.
+Your case status has been updated in Chaos Controller.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CASE STATUS CHANGE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+==================
 
 Case Reference: ${caseRef}
 Case: ${caseItem.title}
@@ -105,16 +92,15 @@ Category: ${caseItem.category ? caseItem.category.charAt(0).toUpperCase() + case
 Previous Status: ${oldStatusLabel}
 New Status: ${statusLabel}
 
-${newStatus === "escalation_ready" ? "🚨 Your case is now ready for escalation to the relevant ombudsman. Log in to generate your escalation bundle." : ""}
-${newStatus === "resolved" ? "✅ Congratulations! Your case has been marked as resolved." : ""}
-${newStatus === "response_received" ? "📬 A response has been received. Log in to review and decide your next steps." : ""}
+${newStatus === "escalation_ready" ? "Your case is now ready for escalation to the relevant ombudsman. Log in to generate your escalation bundle." : ""}
+${newStatus === "resolved" ? "Congratulations! Your case has been marked as resolved." : ""}
+${newStatus === "response_received" ? "A response has been received. Log in to review and decide your next steps." : ""}
 
 View your case:
 https://chaoscontroller.base44.app/case/${caseItem.id}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Never Fear. Control Starts Here.
-Chaos Controller™ — AI-Powered Consumer Advocacy
+Chaos Controller - AI-Powered Consumer Advocacy
 Support: chaoscontrollerapp@gmail.com`;
 
     await sendGmail(accessToken, {
@@ -132,8 +118,8 @@ Support: chaoscontrollerapp@gmail.com`;
       await sendGmail(accessToken, {
         to: activeShare.recipient_email,
         from: "Chaos Controller™ <chaoscontrollerapp@gmail.com>",
-        subject: `📋 [${caseRef}] Case Update: "${caseItem.title}" — Status Changed to ${statusLabel}`,
-        body: `Dear ${activeShare.recipient_name || 'Representative'},\n\nA case you have been shared on has been updated.\n\nCase Reference: ${caseRef}\nCase: ${caseItem.title}\nNew Status: ${statusLabel}\n\nView the case portal:\n${portalUrl}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nChaos Controller™ — AI-Powered Consumer Advocacy`
+        subject: `[${caseRef}] Case Update: Status Changed to ${statusLabel}`,
+        body: `Dear ${activeShare.recipient_name || 'Representative'},\n\nA case you have been shared on has been updated.\n\nCase Reference: ${caseRef}\nCase: ${caseItem.title}\nNew Status: ${statusLabel}\n\nView the case portal:\n${portalUrl}\n\nChaos Controller - AI-Powered Consumer Advocacy`
       });
     }
 
@@ -141,7 +127,7 @@ Support: chaoscontrollerapp@gmail.com`;
     await base44.asServiceRole.entities.Notification.create({
       user_id: caseItem.created_by_id,
       case_id: caseItem.id,
-      title: `[${caseRef}] Case status updated: ${statusLabel}`,
+      title: `Case status updated: ${statusLabel}`,
       message: `"${caseItem.title}" status changed from ${oldStatusLabel} to ${statusLabel}.`,
       type: "action_required",
       urgency: ["escalation_ready", "escalated"].includes(newStatus) ? "high" : "medium",

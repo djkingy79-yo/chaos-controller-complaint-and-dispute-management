@@ -12,6 +12,7 @@ import CommandCentre from "@/components/dashboard/CommandCentre";
 import LetterPreview from "@/components/dashboard/LetterPreview";
 import OnboardingDashboard from "@/components/dashboard/OnboardingDashboard";
 import GoogleTasksSync from "@/components/dashboard/GoogleTasksSync";
+import GoogleDriveBackup from "@/components/dashboard/GoogleDriveBackup";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -146,6 +147,12 @@ export default function Dashboard() {
               color="bg-success/10 text-success"
             />
           </div>
+
+          {/* Google Drive Backup */}
+          <GoogleDriveBackup />
+
+          {/* Google Drive Backup */}
+          <GoogleDriveBackup />
 
           {/* Google Tasks Integration */}
           <GoogleTasksSync user={user} />
