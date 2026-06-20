@@ -9,8 +9,6 @@ export { FULL_LETTERHEAD_URL as LETTERHEAD_URL, CONTINUATION_PAGE_URL };
 export const CONTACT = {
   website: "app.base44.com/6a2ac3b012e45642b1f94671",
   email: "chaoscontrollerapp@gmail.com",
-  phone: "0413 572 850",
-  location: "Australia Wide",
 };
 
 // React letterhead — full-page background letterhead image shown in the app preview
@@ -105,7 +103,7 @@ export function buildFooterHTML(caseItem, client, pageNum) {
   const ref = caseItem ? `CC-${caseItem.id?.slice(0, 8).toUpperCase()}` : "";
   const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   return `<div class="letter-footer">
-    <span>${CONTACT.website} | ${CONTACT.email} | ${CONTACT.phone}</span>
+    <span>${CONTACT.email}</span>
     <span>${ref} &nbsp;|&nbsp; ${now} &nbsp;|&nbsp; Page ${pageNum}</span>
   </div>`;
 }
