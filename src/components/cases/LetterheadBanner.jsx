@@ -101,13 +101,3 @@ export function getLetterPageStyles() {
 
 // No-op — letterhead is handled via CSS background-image on .letter-page
 export function buildLetterheadHTML() { return ""; }
-
-// Plain text footer for printed pages
-export function buildFooterHTML(caseItem, client, pageNum) {
-  const ref = caseItem ? `CC-${caseItem.id?.slice(0, 8).toUpperCase()}` : "";
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  return `<div class="letter-footer">
-    <span>${CONTACT.email}</span>
-    <span>${ref} &nbsp;|&nbsp; ${now} &nbsp;|&nbsp; Page ${pageNum}</span>
-  </div>`;
-}
