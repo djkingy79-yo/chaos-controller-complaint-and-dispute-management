@@ -1,12 +1,45 @@
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, CheckCircle, X, Loader2 } from "lucide-react";
+import { Upload, FileText, CheckCircle, X, Loader2, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 export default function DocumentUploadStep({ onContinue, onBack }) {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [detectingCategory, setDetectingCategory] = useState(false);
+  const [detectedCategory, setDetectedCategory] = useState(null);
   const fileInputRef = useRef(null);
+
+  const detectCategoryFromDocuments = async (files) => {
+    setDetectingCategory(true);
+    try {
+      const prompt = `Analyse these uploaded documents and determine the dispute category. Return ONLY one word from: banking, insurance, tenancy, telco, utilities, government, other.
+      
+      Look for keywords:
+      - Banking: bank names (CBA, Westpac, NAB, ANZ), account numbers, transactions
+      - Insurance: policy numbers, claims, insurers (NRMA, Allianz)
+      - Tenancy: lease, rental, property manager, NCAT, bond
+      - Telco: phone, mobile, Optus, Telstra, Vodafone, billing
+      - Utilities: electricity, gas, energy, water, AGL, Origin
+      - Government: Centrelink, Services Australia, ATO, tax, government department
+      - Other: none of the above
+      
+      Return the category name only.`;
+      
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        file_urls: files.map(f => f.file_url),
+      });
+      
+      const category = result.trim().toLowerCase();
+      setDetectedCategory(category);
+      return category;
+    } catch (error) {
+      console.error("Category detection failed:", error);
+      setDetectingCategory(false);
+      return null;
+    }
+  };
 
   const handleFileSelect = async (files) => {
     setUploading(true);
@@ -35,8 +68,11 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
 
   const handleContinue = async () => {
     if (uploadedFiles.length > 0) {
-      // Pass files to parent - it will handle auto-generation
-      onContinue(uploadedFiles);
+      // Auto-detect category from documents
+      const category = await detectCategoryFromDocuments(uploadedFiles);
+      setDetectingCategory(false);
+      // Pass files and detected category to parent
+      onContinue(uploadedFiles, category);
     }
   };
 
@@ -105,6 +141,29 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
         </div>
       )}
 
+      {/* AI Category Detection Status */}
+      {detectingCategory && (
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+            <p className="text-sm font-semibold text-primary">AI Detecting Your Dispute Category...</p>
+          </div>
+          <p className="text-xs text-muted-foreground">Analysing documents to auto-select the right category for you</p>
+        </div>
+      )}
+
+      {detectedCategory && !detectingCategory && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <CheckCircle className="w-4 h-4 text-green-500" />
+            <p className="text-sm font-semibold text-green-500">Category Auto-Detected</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Based on your documents, this appears to be a <strong className="text-foreground capitalize">{detectedCategory}</strong> dispute
+          </p>
+        </div>
+      )}
+
       {/* Navigation */}
       <div className="flex gap-3">
         {onBack && (
@@ -114,13 +173,18 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
         )}
         <Button 
           onClick={handleContinue} 
-          disabled={uploadedFiles.length === 0 || uploading}
+          disabled={uploadedFiles.length === 0 || uploading || detectingCategory}
           className="flex-1 gap-2"
         >
           {uploading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
               Uploading...
+            </>
+          ) : detectingCategory ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Detecting...
             </>
           ) : (
             <>
@@ -133,11 +197,11 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
 
       <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
         <p className="text-xs text-primary font-semibold">⚡ Fast Track Enabled</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">AI will auto-generate your complaint letter after you provide case details</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">AI detects your dispute category automatically from uploaded documents</p>
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        Tip: Upload everything first. AI will extract the details and prompt for any missing information.
+        Tip: Upload everything first. AI will detect the category and extract all details automatically.
       </p>
     </div>
   );
