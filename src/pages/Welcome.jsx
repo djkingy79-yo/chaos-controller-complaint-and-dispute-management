@@ -564,6 +564,16 @@ export default function Welcome() {
         </div>
       </div>
 
+      {/* Banner Image between pricing and footer CTA */}
+      <div className="w-full overflow-hidden">
+        <img
+          src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/9cd7e60cb_CF9B071E-D876-484A-95EA-29F9621FB84C.png"
+          alt="Chaos Controller — Never Fear. Control Starts Here."
+          className="w-full"
+          style={{ display: "block", maxWidth: "100%", height: "auto" }}
+        />
+      </div>
+
       {/* Footer CTA - Yellow Band */}
       <div className="bg-[#FFD700] py-12">
         <div className="max-w-4xl mx-auto px-4 text-center">
