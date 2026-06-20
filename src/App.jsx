@@ -96,21 +96,24 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          {/* Public routes — rendered immediately, no auth wait */}
-          <Routes>
-            <Route path="/" element={<Welcome />} />
-            <Route path="/shared-case/:token" element={<SharedCasePortal />} />
-            <Route path="/merchant-login" element={<MerchantLogin />} />
-            <Route path="/merchant-portal" element={<MerchantPortal />} />
-            <Route path="/*" element={<AuthenticatedApp />} />
-          </Routes>
-        </Router>
+    <QueryClientProvider client={queryClientInstance}>
+      <Router>
+        {/* Public routes — completely outside auth, render immediately */}
+        <Routes>
+          <Route path="/" element={<Welcome />} />
+          <Route path="/shared-case/:token" element={<SharedCasePortal />} />
+          <Route path="/merchant-login" element={<MerchantLogin />} />
+          <Route path="/merchant-portal" element={<MerchantPortal />} />
+          {/* Auth wrapper for all protected routes */}
+          <Route path="/*" element={
+            <AuthProvider>
+              <AuthenticatedApp />
+            </AuthProvider>
+          } />
+        </Routes>
         <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   )
 }
 
