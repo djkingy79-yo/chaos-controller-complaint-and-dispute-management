@@ -151,6 +151,14 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       await base44.entities.Evidence.update(created.id, { extracted_data: extracted, scan_status: "complete" });
       await autoApplyExtracted(extracted, created.id);
       setScanResult({ evidenceId: created.id, data: extracted });
+      
+      // Backup to Google Drive in category-organized folder
+      try {
+        await base44.functions.invoke('backupEvidenceToDrive', { evidenceId: created.id });
+      } catch (error) {
+        console.error('Drive backup failed:', error);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["evidence", caseId] });
       setScanning(false);
     },
@@ -494,6 +502,14 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         </div>
       ) : (
         <div className="space-y-2">
+          {/* Category Info Banner */}
+          <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2 text-xs text-primary">
+              <HardDrive className="w-3.5 h-3.5" />
+              <span className="font-medium">Files are automatically organized in Google Drive by category: <strong>{caseItem?.category || 'other'}</strong></span>
+            </div>
+          </div>
+          
           {filtered.map((ev) => {
             const cfg = typeConfig[ev.file_type] || typeConfig.other;
             const TypeIcon = cfg.icon;

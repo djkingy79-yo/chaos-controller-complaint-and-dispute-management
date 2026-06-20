@@ -21,6 +21,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Evidence not found' }, { status: 404 });
     }
 
+    // Get case to determine category
+    const caseItem = await base44.entities.Case.get(evidence.case_id);
+    if (!caseItem) {
+      return Response.json({ error: 'Case not found' }, { status: 404 });
+    }
+
     // Get Google Drive access token
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googledrive');
 
@@ -28,9 +34,14 @@ Deno.serve(async (req) => {
     const folderName = 'Chaos Controller Evidence Backup';
     let folderId = await getOrCreateFolder(accessToken, folderName);
 
-    // Create case-specific subfolder
-    const caseFolderName = `Case ${evidence.case_id.slice(0, 8).toUpperCase()}`;
-    const caseFolderId = await getOrCreateFolder(accessToken, caseFolderName, folderId);
+    // Create category-specific subfolder (banking, insurance, tenancy, telco, utilities, other)
+    const categoryName = caseItem.category || 'other';
+    const categoryFolderName = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+    const categoryFolderId = await getOrCreateFolder(accessToken, categoryFolderName, folderId);
+
+    // Create case-specific subfolder within category
+    const caseFolderName = `Case ${caseItem.title || evidence.case_id.slice(0, 8).toUpperCase()}`;
+    const caseFolderId = await getOrCreateFolder(accessToken, caseFolderName, categoryFolderId);
 
     // Download file from Base44
     const fileResponse = await fetch(evidence.file_url);
