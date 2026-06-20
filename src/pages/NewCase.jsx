@@ -58,11 +58,17 @@ export default function NewCase() {
           uploadedFiles.map((file) => ({ ...file, case_id: newCase.id, scan_status: "pending" }))
         );
       }
+      // Auto-generate AI checklist
+      try {
+        await base44.functions.invoke('generateAIChecklist', { caseId: newCase.id });
+      } catch (err) {
+        console.error('Failed to auto-generate checklist:', err);
+      }
       return newCase;
     },
     onSuccess: (newCase) => {
       queryClient.invalidateQueries({ queryKey: ["cases"] });
-      navigate(`/case/${newCase.id}?tab=evidence`);
+      navigate(`/case/${newCase.id}?tab=checklist`);
     },
   });
 

@@ -20,7 +20,7 @@ import ExportCaseZip from "@/components/cases/ExportCaseZip";
 import MerchantInvite from "@/components/cases/MerchantInvite";
 import WeeklySnapshot from "@/components/cases/WeeklySnapshot";
 import ExecutiveSummaryGenerator from "@/components/cases/ExecutiveSummaryGenerator";
-import AIChecklistGenerator from "@/components/cases/AIChecklistGenerator";
+import SmartChecklist from "@/components/cases/SmartChecklist";
 import GeneratedChecklist from "@/components/cases/GeneratedChecklist";
 
 export default function CaseDetail() {
@@ -194,7 +194,7 @@ export default function CaseDetail() {
               <CaseTimeline caseId={caseId} events={timelineEvents} />
             </TabsContent>
             <TabsContent value="checklist" className="mt-4 space-y-4">
-              <AIChecklistGenerator caseItem={caseItem} />
+              <SmartChecklist caseItem={caseItem} />
               <GeneratedChecklist caseId={caseId} caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="deadlines" className="mt-4">

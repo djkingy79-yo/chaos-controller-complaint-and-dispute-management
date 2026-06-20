@@ -26,17 +26,27 @@ CASE DETAILS:
 - Incident Date: ${caseItem.incident_date || 'Not specified'}
 - Current Status: ${caseItem.status}
 
-Based on Australian consumer law and the specific industry (${caseItem.category}), generate a detailed checklist of 8-15 essential steps required to properly escalate this dispute. Include:
+Based on Australian consumer law and the specific industry (${caseItem.category}), generate a detailed checklist of 10-15 essential steps required to properly escalate this dispute. Include:
 
-1. Evidence gathering steps (specific documents needed for this industry)
+1. EVIDENCE GATHERING (specific to ${caseItem.category}):
+   - Account statements/policy documents
+   - Correspondence records
+   - Proof of loss/damage
+   - ID documents
+   - Industry-specific evidence
+
 2. Mandatory waiting periods (e.g., 21 days for response, 45 days for escalation)
-3. Internal complaint steps
-4. External escalation steps (AFCA, TIO, NCAT, etc. as appropriate)
+
+3. Internal complaint steps (initial complaint, follow-up, final letter)
+
+4. External escalation steps (AFCA, TIO, NCAT, etc. as appropriate for ${caseItem.category})
+
 5. Deadline tracking items
+
 6. Documentation requirements
 
 For each checklist item, specify:
-- label: Clear action item description
+- label: Clear action item description (be specific, e.g. "Upload account statements (last 6 months)" not just "Gather evidence")
 - category: One of [complaint, evidence, response, deadline, escalation, document]
 - estimated_days: Number of days from case creation this should be completed (for deadline calculation)
 - requires_proof: true/false (whether proof is needed to mark complete)
@@ -53,7 +63,7 @@ Return ONLY a valid JSON array of objects with this exact schema:
   }
 ]
 
-Ensure the checklist is specific to ${caseItem.category} disputes and follows Australian regulatory requirements.`;
+Ensure the checklist is specific to ${caseItem.category} disputes and follows Australian regulatory requirements. Include at least 3-4 evidence-gathering items specific to this industry.`;
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt,
