@@ -101,6 +101,7 @@ export default function CalendarSync() {
   const [outlookSyncedCount, setOutlookSyncedCount] = useState(0);
   const [outlookTotal, setOutlookTotal] = useState(0);
   const [outlookError, setOutlookError] = useState(null);
+  const OUTLOOK_CONNECTOR_ID = "outlook";
 
   const checkGoogle = async () => {
     try {
@@ -135,11 +136,26 @@ export default function CalendarSync() {
       setOutlookConnected(true);
       setOutlookItems(res.data?.items || []);
       setOutlookSyncedCount(res.data?.synced || 0);
-      setOutlookTotal(res.data?.items?.length || 0);
+      setOutlookTotal(res.data?.totalDeadlines || 0);
       setOutlookError(null);
     } catch {
       setOutlookConnected(false);
     }
+  };
+
+  const handleOutlookConnect = async () => {
+    try {
+      const url = await base44.connectors.connectAppUser(OUTLOOK_CONNECTOR_ID);
+      const popup = window.open(url, "_blank");
+      const timer = setInterval(() => {
+        if (!popup || popup.closed) { clearInterval(timer); checkOutlook(); }
+      }, 500);
+    } catch (err) { setOutlookError(err.message); }
+  };
+
+  const handleOutlookDisconnect = async () => {
+    await base44.connectors.disconnectAppUser(OUTLOOK_CONNECTOR_ID);
+    setOutlookConnected(false); setOutlookItems([]);
   };
 
   useEffect(() => {
@@ -247,24 +263,18 @@ export default function CalendarSync() {
           syncedCount={outlookSyncedCount}
           totalDeadlines={outlookTotal}
           syncedItems={outlookItems}
-          onConnect={() => {}}
-          onDisconnect={() => {}}
+          onConnect={handleOutlookConnect}
+          onDisconnect={handleOutlookDisconnect}
           onSync={handleOutlookSync}
           error={outlookError}
           steps={[
-            "New deadlines sync to Outlook Calendar automatically on creation",
-            "Pending checklist tasks appear as calendar reminders",
-            "Action-required timeline events are added for awareness",
-            "Full daily sync runs every morning to catch any missed items",
+            "New deadlines are instantly added to Outlook Calendar",
+            "Case status changes update existing events automatically",
+            "Events tagged ⚖️ Chaos Controller for easy filtering",
+            "Reminders: 1 day before each deadline",
           ]}
         />
       </div>
-
-      {outlookConnected && (
-        <div className="bg-accent/5 border border-accent/20 rounded-xl p-4 text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">Outlook note:</span> Outlook is connected at the platform level — all users share the authorised Microsoft 365 account for calendar writes. Events are created under the <em>Chaos Controller</em> category in your calendar.
-        </div>
-      )}
     </div>
   );
 }
