@@ -119,8 +119,9 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [newEvidence, setNewEvidence] = useState({ file_type: "other", description: "", event_date: "", tags: [] });
+  const [filterTag, setFilterTag] = useState(null);
 
-  const TAGS = ["Contract", "Correspondence", "Receipt", "Invoice", "Statement", "Notice", "Photo", "ID Document", "Other"];
+  const TAGS = ["Bank Statement", "Email Chain", "Photo", "Contract", "Lease", "Invoice", "Receipt", "Correspondence", "Notice", "Report", "ID Document", "Other"];
 
   const toggleTag = (tag) => {
     setNewEvidence((prev) => ({
@@ -128,6 +129,7 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
     }));
   };
+
   const [pendingScan, setPendingScan] = useState(null);
   const [scanResult, setScanResult] = useState(null);
   const [appliedIds, setAppliedIds] = useState(new Set());
@@ -143,7 +145,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       setScanning(true);
       const extracted = await scanDocument(created.file_url, created.file_name, created.file_type);
       await base44.entities.Evidence.update(created.id, { extracted_data: extracted, scan_status: "complete" });
-      // Auto-apply everything immediately
       await autoApplyExtracted(extracted, created.id);
       setScanResult({ evidenceId: created.id, data: extracted });
       queryClient.invalidateQueries({ queryKey: ["evidence", caseId] });
@@ -167,7 +168,7 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         file_type: newEvidence.file_type,
         description: newEvidence.description,
         event_date: newEvidence.event_date || undefined,
-        tags: newEvidence.tags.length ? newEvidence.tags : undefined,
+        tags: newEvidence.tags.length > 0 ? newEvidence.tags : undefined,
         scan_status: "pending",
       });
     }
@@ -183,11 +184,10 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   };
 
   const handleScanCapture = async (file) => {
-    await uploadAndProcess(file, "photo");
+    await uploadAndProcess([file]);
   };
 
   const autoApplyExtracted = async (extracted, evidenceId) => {
-    // 1. Update case fields (only blank ones)
     const caseUpdates = {};
     if (extracted.merchant_name && !caseItem?.organisation_name)
       caseUpdates.organisation_name = extracted.merchant_name;
@@ -205,7 +205,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       caseUpdates.issue_summary = extracted.issue_summary;
     if (extracted.desired_outcome && !caseItem?.desired_outcome)
       caseUpdates.desired_outcome = extracted.desired_outcome;
-    // Use earliest timeline event as incident date if not set
     if (!caseItem?.incident_date && extracted.timeline_events?.length) {
       const dates = extracted.timeline_events.map((e) => e.date).filter(Boolean).sort();
       if (dates[0]) caseUpdates.incident_date = dates[0];
@@ -215,7 +214,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       queryClient.invalidateQueries({ queryKey: ["case", caseId] });
     }
 
-    // 2. Auto-create timeline events
     if (extracted.timeline_events?.length > 0) {
       for (const ev of extracted.timeline_events) {
         if (!ev.description) continue;
@@ -231,7 +229,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
     }
 
-    // 3. Auto-create checklist items
     if (extracted.checklist_items?.length > 0) {
       for (const item of extracted.checklist_items) {
         if (!item.label) continue;
@@ -245,7 +242,6 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       }
     }
 
-    // 4. Auto-create deadlines
     if (extracted.deadlines?.length > 0) {
       for (const dl of extracted.deadlines) {
         if (!dl.title) continue;
@@ -264,7 +260,9 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     setAppliedIds((prev) => new Set([...prev, evidenceId]));
   };
 
-  const sorted = [...evidence].sort((a, b) => {
+  const allTags = [...new Set(evidence.flatMap((ev) => ev.tags || []))];
+  const filtered = filterTag ? evidence.filter((ev) => ev.tags?.includes(filterTag)) : evidence;
+  const sorted = [...filtered].sort((a, b) => {
     if (a.event_date && b.event_date) return new Date(a.event_date) - new Date(b.event_date);
     return new Date(a.created_date) - new Date(b.created_date);
   });
@@ -277,94 +275,125 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         onCapture={handleScanCapture}
       />
 
-      <div className="flex items-center justify-between">
-        <h3 className="font-heading font-semibold text-foreground">Evidence Vault</h3>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowScanner(true)}>
-            <Camera className="w-3.5 h-3.5" /> Scan Doc
-          </Button>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-heading font-semibold text-foreground">Evidence Vault</h3>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowScanner(true)}>
+              <Camera className="w-3.5 h-3.5" /> Scan Doc
+            </Button>
 
-          <Dialog open={showUpload} onOpenChange={setShowUpload}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1.5 text-xs">
-                <Plus className="w-3.5 h-3.5" /> Upload File
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Drop the Evidence</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <p className="text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-3">
-                  <ScanLine className="w-3.5 h-3.5 text-primary inline mr-1.5" />
-                  AI will automatically scan your document and extract key details — names, account numbers, dates, amounts — and build your case timeline.
-                </p>
-                <div className="space-y-2">
-                  <Label>Document Type</Label>
-                  <Select value={newEvidence.file_type} onValueChange={(v) => setNewEvidence({ ...newEvidence, file_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(typeConfig).map(([key, cfg]) => (
-                        <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+            <Dialog open={showUpload} onOpenChange={setShowUpload}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1.5 text-xs">
+                  <Plus className="w-3.5 h-3.5" /> Upload File
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Drop the Evidence</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-2">
+                  <p className="text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-3">
+                    <ScanLine className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                    AI will automatically scan your document and extract key details — names, account numbers, dates, amounts — and build your case timeline.
+                  </p>
+                  <div className="space-y-2">
+                    <Label>Document Type</Label>
+                    <Select value={newEvidence.file_type} onValueChange={(v) => setNewEvidence({ ...newEvidence, file_type: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(typeConfig).map(([key, cfg]) => (
+                          <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description (optional)</Label>
+                    <Input
+                      value={newEvidence.description}
+                      onChange={(e) => setNewEvidence({ ...newEvidence, description: e.target.value })}
+                      placeholder="e.g. Email from bank rejecting claim"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Tags (optional)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {TAGS.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleTag(tag)}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                            newEvidence.tags.includes(tag)
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "border-border text-muted-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          {tag}
+                        </button>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Description (optional)</Label>
-                  <Input
-                    value={newEvidence.description}
-                    onChange={(e) => setNewEvidence({ ...newEvidence, description: e.target.value })}
-                    placeholder="e.g. Email from bank rejecting claim"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Tags (optional)</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {TAGS.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleTag(tag)}
-                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                          newEvidence.tags.includes(tag)
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border text-muted-foreground hover:border-primary/40"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Event Date (optional)</Label>
+                    <Input
+                      type="date"
+                      value={newEvidence.event_date}
+                      onChange={(e) => setNewEvidence({ ...newEvidence, event_date: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <input ref={fileRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.csv,.eml" onChange={handleUpload} />
+                    <Button
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading || createMutation.isPending}
+                      className="w-full gap-2"
+                    >
+                      {uploading || createMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      {uploading ? "Uploading..." : createMutation.isPending ? "Saving..." : "Choose Files & Upload"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center mt-2">Select multiple files at once</p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Event Date (optional)</Label>
-                  <Input
-                    type="date"
-                    value={newEvidence.event_date}
-                    onChange={(e) => setNewEvidence({ ...newEvidence, event_date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <input ref={fileRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.csv,.eml" onChange={handleUpload} />
-                  <Button
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploading || createMutation.isPending}
-                    className="w-full gap-2"
-                  >
-                    {uploading || createMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Upload className="w-4 h-4" />
-                    )}
-                    {uploading ? "Uploading..." : createMutation.isPending ? "Saving..." : "Choose Files & Upload"}
-                  </Button>
-                  <p className="text-xs text-muted-foreground text-center mt-2">Select multiple files at once</p>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
+
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-muted-foreground">Filter by tag:</span>
+            <button
+              onClick={() => setFilterTag(null)}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                filterTag === null
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              All
+            </button>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setFilterTag(tag)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  filterTag === tag
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border text-muted-foreground hover:border-primary/40"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {scanning && (
@@ -385,16 +414,20 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         />
       )}
 
-      {sorted.length === 0 && !scanning ? (
+      {filtered.length === 0 && !scanning ? (
         <div className="bg-secondary/30 rounded-lg border-2 border-dashed border-border p-8 text-center">
           <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm font-semibold text-foreground mb-1">DROP THE EVIDENCE</p>
-          <p className="text-xs text-muted-foreground">Leases, bank statements, emails, letters, photos.</p>
-          <p className="text-xs text-muted-foreground mt-0.5">AI scans every document and builds your timeline automatically.</p>
+          <p className="text-sm font-semibold text-foreground mb-1">
+            {filterTag ? `No documents tagged "${filterTag}"` : "DROP THE EVIDENCE"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {filterTag ? "Try selecting a different tag or upload new evidence." : "Leases, bank statements, emails, letters, photos."}
+          </p>
+          {!filterTag && <p className="text-xs text-muted-foreground mt-0.5">AI scans every document and builds your timeline automatically.</p>}
         </div>
       ) : (
         <div className="space-y-2">
-          {sorted.map((ev) => {
+          {filtered.map((ev) => {
             const cfg = typeConfig[ev.file_type] || typeConfig.other;
             const TypeIcon = cfg.icon;
             const isScanning = pendingScan?.evidenceId === ev.id && scanning;

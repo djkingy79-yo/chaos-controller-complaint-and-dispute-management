@@ -141,21 +141,39 @@ function printTimeline(caseItem, events) {
 
 function printEvidence(caseItem, evidence) {
   const sorted = [...evidence].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
-  const rows = sorted.map((ev, i) => `
-    <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:11pt;">${i + 1}</td>
-      <td style="padding:6pt 8pt;font-size:12pt;font-weight:bold;">${ev.file_name}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(ev.file_type || "").replace("_", " ")}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;color:#444;">${ev.description || ""}</td>
-    </tr>
-  `).join("");
+  const allTags = [...new Set(evidence.flatMap((ev) => ev.tags || []))];
+  
+  // Group by tags if any exist
+  const grouped = allTags.length > 0 ? {} : { "All Documents": sorted };
+  if (allTags.length > 0) {
+    for (const tag of allTags) {
+      grouped[tag] = sorted.filter((ev) => ev.tags?.includes(tag));
+    }
+    // Add untagged items
+    const untagged = sorted.filter((ev) => !ev.tags || ev.tags.length === 0);
+    if (untagged.length > 0) grouped["Other"] = untagged;
+  }
+
+  let tableRows = "";
+  let itemNum = 1;
+  for (const [groupName, items] of Object.entries(grouped)) {
+    tableRows += `<tr style="background:#1a1a2e;color:white;"><th colspan="5" style="text-align:left;padding:6pt 8pt;font-size:11pt;">${groupName} (${items.length})</th></tr>`;
+    tableRows += items.map((ev) => `
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:6pt 8pt;font-size:11pt;">${itemNum++}</td>
+        <td style="padding:6pt 8pt;font-size:12pt;font-weight:bold;">${ev.file_name}</td>
+        <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(ev.file_type || "").replace("_", " ")}</td>
+        <td style="padding:6pt 8pt;font-size:11pt;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
+        <td style="padding:6pt 8pt;font-size:11pt;color:#444;">${[ev.description, ev.tags?.join(", ")].filter(Boolean).join(" · ")||"—"}</td>
+      </tr>
+    `).join("");
+  }
 
   const client = buildClientContext(caseItem, evidence);
   const html = `<div style="${baseStyles()}">
-    ${h1("Evidence Index")}
+    ${h1("Evidence Index — Grouped by Tags")}
     ${h2(caseItem.title + " — " + (caseItem.organisation_name || ""))}
-    <p style="font-size:11pt;margin-bottom:12pt;">Total evidence items: <strong>${evidence.length}</strong></p>
+    <p style="font-size:11pt;margin-bottom:12pt;">Total evidence items: <strong>${evidence.length}</strong> ${allTags.length > 0 ? `· ${allTags.length} tag categories` : ""}</p>
     <table style="width:100%;border-collapse:collapse;">
       <thead>
         <tr style="background:#f0f0f0;">
@@ -163,10 +181,10 @@ function printEvidence(caseItem, evidence) {
           <th style="text-align:left;padding:6pt 8pt;font-size:11pt;">File Name</th>
           <th style="text-align:left;padding:6pt 8pt;font-size:11pt;">Type</th>
           <th style="text-align:left;padding:6pt 8pt;font-size:11pt;">Date</th>
-          <th style="text-align:left;padding:6pt 8pt;font-size:11pt;">Description</th>
+          <th style="text-align:left;padding:6pt 8pt;font-size:11pt;">Description / Tags</th>
         </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>${tableRows}</tbody>
     </table>
     ${footer(caseItem, client, 1)}
   </div>`;
