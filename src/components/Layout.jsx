@@ -21,7 +21,10 @@ import {
   Calendar,
   FileText,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  Bell,
+  BarChart3,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -32,6 +35,8 @@ const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/cases", label: "My Cases", icon: FolderOpen },
   { path: "/new-case", label: "New Case", icon: Plus },
+  { path: "/notifications", label: "Notifications", icon: Bell },
+  { path: "/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/escalation", label: "Escalation Command", icon: Scale },
   { path: "/calendar", label: "Calendar", icon: CalendarDays },
   { path: "/deadlines", label: "Deadlines", icon: Siren },
@@ -41,6 +46,7 @@ const navItems = [
   { path: "/templates", label: "Template Library", icon: FileText },
   { path: "/merchant-responses", label: "Merchant Responses", icon: MessageSquare },
   { path: "/sample-reports", label: "Sample Reports", icon: Scale },
+  { path: "/settings", label: "Settings", icon: Settings },
   { path: "/help", label: "Help & Guide", icon: BookOpen },
   { path: "/qna", label: "Q&A", icon: HelpCircle },
   { path: "/payments", label: "Plans & Pricing", icon: CreditCard },

@@ -39,6 +39,10 @@ import LetterDraftAgent from '@/pages/LetterDraftAgent';
 import MerchantLogin from '@/pages/MerchantLogin';
 import MerchantPortal from '@/pages/MerchantPortal';
 import MerchantResponsesDashboard from '@/pages/MerchantResponsesDashboard';
+import Notifications from '@/pages/Notifications';
+import Analytics from '@/pages/Analytics';
+import UserSettings from '@/pages/UserSettings';
+import CaseTemplates from '@/pages/CaseTemplates';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -80,6 +84,10 @@ const AuthenticatedApp = () => {
           <Route path="/escalation" element={<EscalatedCases />} />
           <Route path="/letter-agent" element={<LetterDraftAgent />} />
           <Route path="/merchant-responses" element={<MerchantResponsesDashboard />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/settings" element={<UserSettings />} />
+          <Route path="/templates" element={<CaseTemplates />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

@@ -1,0 +1,36 @@
+{
+  "name": "CaseTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "banking",
+        "insurance",
+        "tenancy",
+        "telco",
+        "utilities",
+        "government",
+        "other"
+      ],
+      "description": "Industry category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of when to use this template"
+    },
+    "template_data": {
+      "type": "object",
+      "description": "JSON object with pre-filled case fields"
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "template_data"
+  ]
+}
