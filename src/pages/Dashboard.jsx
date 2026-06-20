@@ -66,7 +66,7 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div>
-                    <p className={`font-bold ${
+                    <p className={`font-black ${
                       payment.status === 'verified' && payment.subscription_active
                         ? 'text-green-500'
                         : 'text-warning'
@@ -77,7 +77,7 @@ export default function Dashboard() {
                         ? 'Payment Pending Verification'
                         : 'Payment Status Unknown'}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-foreground font-bold">
                       {payment.status === 'verified' && payment.subscription_active
                         ? payment.subscription_expiry
                           ? `Expires: ${new Date(payment.subscription_expiry).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
@@ -154,33 +154,33 @@ export default function Dashboard() {
                   <Trophy className="w-5 h-5 text-green-500" />
                 </div>
                 <div>
-                  <h2 className="font-heading font-bold text-foreground text-base">Your Dispute Record</h2>
-                  <p className="text-xs text-muted-foreground">Successful resolutions and escalations</p>
+                  <h2 className="font-heading font-black text-foreground text-base">Your Dispute Record</h2>
+                  <p className="text-xs text-foreground font-bold">Successful resolutions and escalations</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
                   <p className="text-3xl font-display font-black text-green-500">{resolvedCases.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1 font-medium">Cases Won</p>
+                  <p className="text-xs text-foreground mt-1 font-black">Cases Won</p>
                 </div>
                 <div className="text-center border-x border-border">
                   <p className="text-3xl font-display font-black text-primary">{winRate}%</p>
-                  <p className="text-xs text-muted-foreground mt-1 font-medium">Win Rate</p>
+                  <p className="text-xs text-foreground mt-1 font-black">Win Rate</p>
                 </div>
                 <div className="text-center">
                   <p className="text-3xl font-display font-black text-warning">{escalatedCases.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1 font-medium">Escalated</p>
+                  <p className="text-xs text-foreground mt-1 font-black">Escalated</p>
                 </div>
               </div>
               {resolvedCases.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border space-y-1.5">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Recent Wins</p>
+                  <p className="text-xs font-black text-foreground uppercase tracking-wide">Recent Wins</p>
                   {resolvedCases.slice(0, 3).map((c) => (
                     <div key={c.id} className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                      <span className="text-foreground font-medium truncate">{c.title}</span>
+                      <span className="text-foreground font-black truncate">{c.title}</span>
                       {c.organisation_name && (
-                        <span className="text-muted-foreground text-xs shrink-0">vs {c.organisation_name}</span>
+                        <span className="text-foreground font-bold text-xs shrink-0">vs {c.organisation_name}</span>
                       )}
                     </div>
                   ))}
@@ -200,14 +200,14 @@ export default function Dashboard() {
           {/* Action Items & Recent Cases */}
           <div className="grid lg:grid-cols-5 gap-6">
             <div className="lg:col-span-2 space-y-4">
-              <h2 className="text-lg font-heading font-semibold text-foreground">Action Required</h2>
+              <h2 className="text-lg font-heading font-black text-foreground">Action Required</h2>
               <ActionItems cases={cases} />
             </div>
             <div className="lg:col-span-3 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-heading font-semibold text-foreground">Recent Cases</h2>
+                <h2 className="text-lg font-heading font-black text-foreground">Recent Cases</h2>
                 {cases.length > 3 && (
-                  <Link to="/cases" className="text-sm text-primary hover:underline font-medium">
+                  <Link to="/cases" className="text-sm text-primary hover:underline font-bold">
                     View all
                   </Link>
                 )}

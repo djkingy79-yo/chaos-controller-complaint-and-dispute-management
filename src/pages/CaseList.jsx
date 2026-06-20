@@ -37,20 +37,20 @@ export default function CaseList() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-black text-foreground">My Cases</h1>
-          <p className="text-sm text-muted-foreground mt-0.5 font-bold">{cases.length} total cases</p>
+          <p className="text-sm text-foreground mt-0.5 font-black">{cases.length} total cases</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex bg-muted rounded-lg p-1 gap-1">
             <button
               onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-card shadow text-foreground" : "text-foreground hover:text-foreground"}`}
               title="List view"
             >
               <List className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode("kanban")}
-              className={`p-1.5 rounded-md transition-all ${viewMode === "kanban" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              className={`p-1.5 rounded-md transition-all ${viewMode === "kanban" ? "bg-card shadow text-foreground" : "text-foreground hover:text-foreground"}`}
               title="Kanban view"
             >
               <Kanban className="w-4 h-4" />
@@ -74,16 +74,16 @@ export default function CaseList() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
           <Input
             placeholder="Search cases..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 font-bold"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-44">
+          <SelectTrigger className="w-full sm:w-44 font-bold">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -99,7 +99,7 @@ export default function CaseList() {
           </SelectContent>
         </Select>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-40">
+          <SelectTrigger className="w-full sm:w-40 font-bold">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
