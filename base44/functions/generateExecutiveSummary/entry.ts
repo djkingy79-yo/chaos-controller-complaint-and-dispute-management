@@ -29,10 +29,18 @@ Deno.serve(async (req) => {
       base44.entities.ChecklistItem.filter({ case_id: caseId }),
     ]);
 
-    // Build context for AI
-    const evidenceList = evidence.map(e => 
-      `- ${e.file_name} (${e.file_type || 'unknown'}): ${e.description || e.extracted_data?.document_summary || 'No description'}`
-    ).join('\n');
+    // Build context for AI - include extracted data from evidence
+    const evidenceList = evidence.map(e => {
+      const extractedInfo = e.extracted_data ? `
+    * Summary: ${e.extracted_data.document_summary || 'N/A'}
+    * Key dates: ${(e.extracted_data.dates_mentioned || []).join(', ') || 'None'}
+    * Key amounts: ${(e.extracted_data.key_amounts || []).join(', ') || 'None'}
+    * Account/Policy numbers: ${[...(e.extracted_data.account_numbers || []), ...(e.extracted_data.policy_numbers || [])].join(', ') || 'None'}
+  ` : 'No extracted data';
+      return `- ${e.file_name} (${e.file_type || 'unknown'})
+  Description: ${e.description || 'N/A'}
+  ${extractedInfo}`;
+    }).join('\n\n');
 
     const timelineSummary = events.slice(0, 15).map(e => 
       `- ${e.event_date}: ${e.title} - ${e.description || ''}`
@@ -48,8 +56,8 @@ Deno.serve(async (req) => {
       .filter(c => c.status === 'missing' || c.status === 'needs_review')
       .map(c => `- ${c.label}`);
 
-    // Generate executive summary using AI
-    const prompt = `You are a professional legal case analyst. Generate a concise one-page executive summary for this consumer dispute case.
+    // Generate comprehensive case summary using AI
+    const prompt = `You are a professional legal case analyst. Generate a comprehensive yet concise executive summary that gives a complete picture of where this case stands.
 
 CASE DETAILS:
 Title: ${caseItem.title}
@@ -75,28 +83,32 @@ ${upcomingDeadlines.length > 0 ? 'UPCOMING DEADLINES:\n' + upcomingDeadlines.joi
 
 ${missingChecklist.length > 0 ? 'MISSING/INCOMPLETE ACTION ITEMS:\n' + missingChecklist.join('\n') : ''}
 
-Generate a professional executive summary with these sections:
-1. **Case Overview** (2-3 sentences): Summarize the core dispute, who is involved, and current status
-2. **Key Issues** (3-5 bullet points): List the main legal/practical issues
-3. **Evidence Highlights** (2-4 bullet points): Mention the most critical evidence and what it shows
-4. **Next Steps** (3-5 bullet points): Recommend immediate actions based on case status and missing items
-5. **Critical Deadlines** (if any): List urgent upcoming deadlines
+Generate a comprehensive executive summary with these sections:
+1. **Case Overview** (3-4 sentences): Summarize the core dispute, parties involved, current status, and stage in the escalation process
+2. **Key Issues** (4-6 bullet points): List the main legal, factual, and practical issues - be specific about what went wrong
+3. **Evidence Analysis** (3-5 bullet points): Highlight the most critical evidence documents and what each proves or reveals about the case
+4. **Correspondence Summary** (2-3 sentences): Summarize the complaint history and any responses received from the organisation
+5. **Next Steps** (4-6 bullet points): Recommend immediate and short-term actions based on case status, missing evidence, and upcoming deadlines
+6. **Critical Deadlines** (if any): List urgent deadlines within the next 14 days
+7. **Case Strength Assessment** (2-3 sentences): Provide a brief, objective assessment of the case's strengths and any potential weaknesses or gaps
 
-Keep it concise, professional, and actionable. Use Australian English spelling. Focus on what matters most for quick decision-making.`;
+Keep it professional, actionable, and easy to scan. Use Australian English spelling. Focus on giving the user a complete picture of where they stand in 60 seconds or less.`;
 
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: prompt,
       model: 'claude_sonnet_4_6',
       response_json_schema: {
-        type: "object",
-        properties: {
-          summary: { type: "string", description: "2-3 sentence case overview" },
-          key_issues: { type: "array", items: { type: "string" }, description: "3-5 key issues as bullet points" },
-          evidence_highlights: { type: "array", items: { type: "string" }, description: "2-4 evidence highlights" },
-          next_steps: { type: "array", items: { type: "string" }, description: "3-5 recommended next steps" },
-          critical_deadlines: { type: "array", items: { type: "string" }, description: "Urgent deadlines if any" }
-        },
-        required: ["summary", "key_issues", "evidence_highlights", "next_steps"]
+      type: "object",
+      properties: {
+        summary: { type: "string", description: "3-4 sentence comprehensive case overview" },
+        key_issues: { type: "array", items: { type: "string" }, description: "4-6 key issues as bullet points" },
+        evidence_analysis: { type: "array", items: { type: "string" }, description: "3-5 evidence highlights with analysis" },
+        correspondence_summary: { type: "string", description: "2-3 sentence summary of complaint history" },
+        next_steps: { type: "array", items: { type: "string" }, description: "4-6 recommended next steps" },
+        critical_deadlines: { type: "array", items: { type: "string" }, description: "Urgent deadlines within 14 days" },
+        case_strength_assessment: { type: "string", description: "2-3 sentence objective case assessment" }
+      },
+      required: ["summary", "key_issues", "evidence_analysis", "next_steps", "case_strength_assessment"]
       }
     });
 
