@@ -20,7 +20,8 @@ import {
   Lock,
   Calendar,
   FileText,
-  HelpCircle
+  HelpCircle,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -38,6 +39,7 @@ const navItems = [
   { path: "/checklist", label: "Checklist", icon: ClipboardList },
   { path: "/directories", label: "Directories", icon: Building2 },
   { path: "/templates", label: "Template Library", icon: FileText },
+  { path: "/merchant-responses", label: "Merchant Responses", icon: MessageSquare },
   { path: "/sample-reports", label: "Sample Reports", icon: Scale },
   { path: "/help", label: "Help & Guide", icon: BookOpen },
   { path: "/qna", label: "Q&A", icon: HelpCircle },

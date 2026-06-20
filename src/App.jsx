@@ -38,6 +38,7 @@ import EscalatedCases from '@/pages/EscalatedCases';
 import LetterDraftAgent from '@/pages/LetterDraftAgent';
 import MerchantLogin from '@/pages/MerchantLogin';
 import MerchantPortal from '@/pages/MerchantPortal';
+import MerchantResponsesDashboard from '@/pages/MerchantResponsesDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -82,6 +83,7 @@ const AuthenticatedApp = () => {
           <Route path="/sample-previews" element={<SamplePreviews />} />
           <Route path="/escalation" element={<EscalatedCases />} />
           <Route path="/letter-agent" element={<LetterDraftAgent />} />
+          <Route path="/merchant-responses" element={<MerchantResponsesDashboard />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
