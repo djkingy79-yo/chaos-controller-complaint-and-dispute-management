@@ -56,6 +56,8 @@ Deno.serve(async (req) => {
       .filter(c => c.status === 'missing' || c.status === 'needs_review')
       .map(c => `- ${c.label}`);
 
+    console.log("Case data loaded:", { caseId, evidenceCount: evidence.length, eventsCount: events.length, deadlinesCount: deadlines.length, checklistsCount: checklists.length });
+    
     // Generate comprehensive case summary using AI
     const prompt = `You are a professional legal case analyst. Generate a comprehensive yet concise executive summary that gives a complete picture of where this case stands.
 
@@ -94,9 +96,10 @@ Generate a comprehensive executive summary with these sections:
 
 Keep it professional, actionable, and easy to scan. Use Australian English spelling. Focus on giving the user a complete picture of where they stand in 60 seconds or less.`;
 
+    console.log("Invoking LLM for summary generation...");
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: prompt,
-      model: 'claude_sonnet_4_6',
+      model: 'gpt_5_mini',
       response_json_schema: {
       type: "object",
       properties: {
@@ -112,6 +115,7 @@ Keep it professional, actionable, and easy to scan. Use Australian English spell
       }
     });
 
+    console.log("Summary generated successfully");
     return Response.json({
       success: true,
       summary: aiResponse

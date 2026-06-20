@@ -15,29 +15,51 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
     setGenerating(true);
     try {
       console.log("Generating summary for case:", caseItem.id);
-      const response = await base44.functions.invoke('generateExecutiveSummary', {
-        caseId: caseItem.id
-      });
-
-      console.log("Response received:", response.data);
       
-      if (response.data.success && response.data.summary) {
-        setSummary(response.data);
-        setShowDialog(true);
-        toast({
-          title: "Case Summary Generated",
-          description: "AI has analyzed all evidence, correspondence, and deadlines.",
-        });
-      } else if (response.data.error) {
-        throw new Error(response.data.error);
-      } else {
-        throw new Error("No summary generated - please try again");
+      toast({
+        title: "Generating Summary",
+        description: "AI is analyzing your case file. This may take 30-60 seconds...",
+      });
+      
+      // Use AbortController for timeout (90 seconds)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
+      
+      try {
+        const response = await base44.functions.invoke('generateExecutiveSummary', {
+          caseId: caseItem.id
+        }, { signal: controller.signal });
+        
+        clearTimeout(timeoutId);
+        
+        console.log("Response status:", response.status);
+        console.log("Response data:", response.data);
+        
+        if (response.status === 200 && response.data?.success && response.data?.summary) {
+          setSummary(response.data);
+          setShowDialog(true);
+          toast({
+            title: "✓ Summary Generated",
+            description: "AI has analyzed your complete case file.",
+          });
+        } else if (response.data?.error) {
+          throw new Error(response.data.error);
+        } else {
+          throw new Error("AI did not return a summary - please try again");
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error("Request timed out. Please try again with a smaller case file.");
+        }
+        throw fetchError;
       }
     } catch (error) {
       console.error("Summary generation failed:", error);
+      const errorMsg = error.message || "Network error occurred";
       toast({
-        title: "Generation Failed",
-        description: error.message || "An unexpected error occurred",
+        title: "✗ Generation Failed",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
