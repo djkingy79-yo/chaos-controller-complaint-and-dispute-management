@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
             </div>
             
             <div class="cta">
-              <a href="https://chaoscontroller.com.au/admin" class="button">Verify Payment in Admin Dashboard</a>
+              <a href="https://chaoscontroller.com.au/dashboard" class="button">Verify Payment in Admin Dashboard</a>
             </div>
             
             <div class="footer">
@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
             </div>
             
             <div class="cta">
-              <a href="https://chaoscontroller.com.au/dashboard" class="button">Go to Dashboard</a>
+              <a href="https://chaoscontroller.com.au/dashboard" class="button">Go to Your Dashboard</a>
             </div>
             
             <div class="footer">

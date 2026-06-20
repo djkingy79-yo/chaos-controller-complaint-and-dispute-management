@@ -21,7 +21,7 @@ export default function CaseList() {
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
-    queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }, "-created_date"),
+    queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }, "-created_date", 100),
   });
 
   const filtered = cases.filter((c) => {

@@ -26,7 +26,7 @@ function buildEventPayload(deadline, caseInfo) {
   const statusLabel = caseInfo.status ? ` [${caseInfo.status.replace(/_/g, ' ').toUpperCase()}]` : '';
   return {
     summary: `⚖️ ${deadline.title} — ${caseInfo.title}${statusLabel}`,
-    description: `Case: ${caseInfo.title}\nOrganisation: ${caseInfo.organisation_name || 'N/A'}\nStatus: ${caseInfo.status || 'N/A'}\nDeadline Type: ${deadline.deadline_type || 'N/A'}\nResponsibility: ${deadline.responsibility || 'user'}\n\nManage this case: https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseInfo.id}`,
+    description: `Case: ${caseInfo.title}\nOrganisation: ${caseInfo.organisation_name || 'N/A'}\nStatus: ${caseInfo.status || 'N/A'}\nDeadline Type: ${deadline.deadline_type || 'N/A'}\nResponsibility: ${deadline.responsibility || 'user'}\n\nManage at: https://chaoscontroller.com.au/case/${caseInfo.id}`,
     start: { date: deadline.deadline_date, timeZone: 'Australia/Sydney' },
     end: { date: deadline.deadline_date, timeZone: 'Australia/Sydney' },
     extendedProperties: {

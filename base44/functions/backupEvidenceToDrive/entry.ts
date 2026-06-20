@@ -65,17 +65,27 @@ Deno.serve(async (req) => {
     formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     formData.append('file', new Blob([arrayBuffer], { type: fileResponse.headers.get('content-type') || 'application/octet-stream' }));
 
-    const uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      },
-      body: formData
-    });
+    // Retry logic for Google Drive upload (max 3 attempts)
+    let uploadResponse;
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      uploadResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: formData
+      });
+      
+      if (uploadResponse.ok) break;
+      
+      lastError = await uploadResponse.json();
+      console.warn(`Drive upload attempt ${attempt} failed:`, lastError);
+      if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // exponential backoff
+    }
 
-    if (!uploadResponse.ok) {
-      const error = await uploadResponse.json();
-      throw new Error(`Google Drive upload failed: ${JSON.stringify(error)}`);
+    if (!uploadResponse || !uploadResponse.ok) {
+      throw new Error(`Google Drive upload failed after 3 attempts: ${JSON.stringify(lastError)}`);
     }
 
     const driveFile = await uploadResponse.json();

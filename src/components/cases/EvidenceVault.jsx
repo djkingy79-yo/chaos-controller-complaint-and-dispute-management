@@ -16,6 +16,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import DocumentScanResult from "./DocumentScanResult";
 import DocumentScanner from "./DocumentScanner";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
+import { getActiveSubscription } from "@/lib/subscription";
+import { useQuery } from "@tanstack/react-query";
 
 const typeConfig = {
   email:         { icon: Mail,      label: "Email",           color: "bg-primary/10 text-primary" },
@@ -116,6 +119,7 @@ Return as JSON only.`;
 }
 
 export default function EvidenceVault({ caseId, evidence, caseItem }) {
+  const { user } = useAuth();
   const [showUpload, setShowUpload] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -124,6 +128,18 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   const [newEvidence, setNewEvidence] = useState({ file_type: "other", description: "", event_date: "", tags: [] });
   const [filterTag, setFilterTag] = useState(null);
   const { toast } = useToast();
+
+  // Get subscription for file limit checking
+  const { data: payments = [] } = useQuery({
+    queryKey: ["payments", user?.id],
+    queryFn: () => base44.entities.PaymentRequest.filter({ user_id: user?.id }),
+    enabled: !!user?.id,
+  });
+  const subscription = getActiveSubscription(user, payments);
+  const PLAN_FILE_LIMITS = { Starter: 25, Pro: 100, Command: 1000 };
+  const fileLimit = subscription ? PLAN_FILE_LIMITS[subscription.plan_name] || 25 : 25;
+  const currentFileCount = evidence.length;
+  const canUpload = currentFileCount < fileLimit;
 
   const TAGS = ["Bank Statement", "Email Chain", "Photo", "Contract", "Lease", "Invoice", "Receipt", "Correspondence", "Notice", "Report", "ID Document", "Other"];
 
@@ -170,6 +186,16 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   });
 
   const uploadAndProcess = async (files) => {
+    if (!canUpload) {
+      toast({
+        title: "File Limit Reached",
+        description: `Your ${subscription?.plan_name || 'Starter'} plan allows ${fileLimit} files per case. Upgrade to Pro for 100 files or Command for 1000 files.`,
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+    
     setUploading(true);
     
     for (const file of files) {
@@ -341,13 +367,13 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         <div className="flex items-center justify-between">
           <h3 className="font-heading font-semibold text-foreground">Evidence Vault</h3>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowScanner(true)}>
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowScanner(true)} disabled={!canUpload}>
               <Camera className="w-3.5 h-3.5" /> Scan Doc
             </Button>
 
             <Dialog open={showUpload} onOpenChange={setShowUpload}>
               <DialogTrigger asChild>
-                <Button size="sm" className="gap-1.5 text-xs">
+                <Button size="sm" className="gap-1.5 text-xs" disabled={!canUpload}>
                   <Plus className="w-3.5 h-3.5" /> Upload File
                 </Button>
               </DialogTrigger>
@@ -426,6 +452,20 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
               </DialogContent>
             </Dialog>
           </div>
+        </div>
+
+        {/* File limit indicator */}
+        <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-primary font-bold">Files: {currentFileCount} / {fileLimit}</span>
+            <span className="text-muted-foreground">{subscription?.plan_name || 'Starter'} Plan</span>
+          </div>
+          <div className="w-full bg-primary/10 rounded-full h-1.5 mt-2">
+            <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${Math.min((currentFileCount / fileLimit) * 100, 100)}%` }} />
+          </div>
+          {!canUpload && (
+            <p className="text-destructive text-xs font-bold mt-1">⚠️ File limit reached. Upgrade to upload more.</p>
+          )}
         </div>
 
         {allTags.length > 0 && (

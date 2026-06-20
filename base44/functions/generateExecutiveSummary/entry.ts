@@ -97,7 +97,8 @@ Generate a comprehensive executive summary with these sections:
 Keep it professional, actionable, and easy to scan. Use AUSTRALIAN ENGLISH spelling throughout (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence, summarise, analyse, prioritise, finalise). Focus on giving the user a complete picture of where they stand in 60 seconds or less.`;
 
     console.log("Invoking LLM for summary generation...");
-    const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    // Add timeout wrapper for LLM call (max 60 seconds)
+    const llmCall = base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: prompt,
       model: 'gpt_5_mini',
       response_json_schema: {
@@ -113,7 +114,9 @@ Keep it professional, actionable, and easy to scan. Use AUSTRALIAN ENGLISH spell
         },
         required: ["summary", "key_issues", "evidence_analysis", "next_steps", "case_strength_assessment"]
       }
-    });
+    }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('LLM timeout: Summary generation took too long')), 60000))
+    ]);
 
     console.log("Summary generated successfully");
     return Response.json({

@@ -1,28 +1,23 @@
 import { createClient } from 'npm:@base44/sdk@0.8.31';
 
+const SHARE_TOKEN_EXPIRY_HOURS = 72; // Share links expire after 72 hours
+
 Deno.serve(async (req) => {
   try {
-    // Use service role directly - no user auth needed for public share links
     const base44 = createClient({
       appId: Deno.env.get('BASE44_APP_ID'),
       serviceRoleKey: Deno.env.get('BASE44_SERVICE_ROLE_KEY')
     });
     
-    // Get token from query params (for direct URL access) or JSON body (for SDK calls)
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
-    
-    // Also check for 'share_token' as fallback
-    if (!token) {
-      token = url.searchParams.get('share_token');
-    }
+    let token = url.searchParams.get('token') || url.searchParams.get('share_token');
     
     if (!token) {
       try {
         const body = await req.json();
         token = body.token || body.share_token;
       } catch (e) {
-        // Ignore JSON parse error, token already null
+        // Ignore JSON parse error
       }
     }
 
@@ -31,7 +26,19 @@ Deno.serve(async (req) => {
     // Find active share by token
     const shares = await base44.entities.CaseShare.filter({ share_token: token });
     const share = shares.find(s => s.is_active);
+    
     if (!share) return Response.json({ error: 'Share not found or expired' }, { status: 404 });
+
+    // Validate token expiry (72 hours from creation)
+    const shareCreated = new Date(share.created_date);
+    const now = new Date();
+    const hoursSinceCreation = (now.getTime() - shareCreated.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursSinceCreation > SHARE_TOKEN_EXPIRY_HOURS) {
+      // Auto-deactivate expired share
+      await base44.entities.CaseShare.update(share.id, { is_active: false });
+      return Response.json({ error: 'This share link has expired. Please request a new link from the case owner.' }, { status: 410 });
+    }
 
     // Update last_viewed
     await base44.entities.CaseShare.update(share.id, { last_viewed: new Date().toISOString() });
