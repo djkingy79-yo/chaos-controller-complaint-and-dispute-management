@@ -1,5 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const GOOGLE_CONNECTOR_ID = '6a2f842ded0843ad5cb9ecb7';
+
+async function graphRequest(accessToken, path, options = {}) {
+  const res = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
+    ...options,
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
+  });
+  if (!res.ok) throw new Error(`Graph API error: ${res.status} ${await res.text()}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
 function buildMimeMessage({ to, from, subject, body }) {
   const message = [
     `From: ${from}`,
@@ -117,6 +129,49 @@ Support: chaoscontrollerapp@gmail.com`;
       urgency: isOffer || isDenial ? 'high' : 'medium',
       is_read: false
     });
+
+    // Push action-required merchant responses to both calendars
+    if (isOffer || isDenial) {
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const calSubject = `📬 [CC] Merchant ${isOffer ? 'Offer' : 'Denial'}: ${caseItem.title} — ${responseTypeLabel}`;
+
+      // Outlook
+      try {
+        const { accessToken: outlookToken } = await base44.asServiceRole.connectors.getConnection('outlook');
+        const startDt = new Date(today); startDt.setHours(9, 0, 0, 0);
+        const endDt = new Date(today); endDt.setHours(10, 0, 0, 0);
+        await graphRequest(outlookToken, '/me/events', {
+          method: 'POST',
+          body: JSON.stringify({
+            subject: calSubject,
+            body: { contentType: 'text', content: `Merchant: ${merchantName}\nResponse: ${responseTypeLabel}\n${isOffer ? `Offer Amount: ${response.offer_amount || 'N/A'}` : ''}\n\nResponse Preview:\n"${(response.response_text || '').slice(0, 300)}"\n\nView case: https://chaoscontroller.base44.app/case/${caseItem.id}` },
+            start: { dateTime: startDt.toISOString(), timeZone: 'Australia/Sydney' },
+            end: { dateTime: endDt.toISOString(), timeZone: 'Australia/Sydney' },
+            isReminderOn: true, reminderMinutesBeforeStart: 0,
+            importance: 'high', categories: ['Chaos Controller'],
+          })
+        });
+      } catch (_) {}
+
+      // Google Calendar
+      try {
+        const googleConn = await base44.asServiceRole.connectors.getAppUserConnection(GOOGLE_CONNECTOR_ID, caseItem.created_by_id);
+        if (googleConn?.accessToken) {
+          await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${googleConn.accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              summary: calSubject,
+              description: `Merchant: ${merchantName}\nResponse Type: ${responseTypeLabel}\n\nPreview: "${(response.response_text || '').slice(0, 200)}"\n\nManage: https://chaoscontroller.base44.app/case/${caseItem.id}`,
+              start: { date: todayStr }, end: { date: todayStr },
+              reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 0 }, { method: 'email', minutes: 30 }] },
+              colorId: '11',
+            })
+          });
+        }
+      } catch (_) {}
+    }
 
     return Response.json({ sent: true, to: owner.email, caseRef, responseType: response.response_type });
   } catch (error) {
