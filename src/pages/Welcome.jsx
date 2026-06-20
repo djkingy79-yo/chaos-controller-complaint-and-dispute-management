@@ -336,6 +336,14 @@ export default function Welcome() {
                   </div>
                 </div>
 
+                <div className="w-full overflow-hidden rounded-xl my-6">
+                  <img
+                    src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/75204b1fa_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png"
+                    alt="Chaos Controller — They Had Your Loyalty. Now You Deserve Their Accountability."
+                    style={{ display: "block", width: "100%", height: "auto" }}
+                  />
+                </div>
+
                 <div className="border-t border-gray-700 pt-8 mt-8">
                   <h3 className="text-xl font-display font-bold text-white mb-4 text-center">
                     EVERYTHING YOU NEED IN ONE PLACE
