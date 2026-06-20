@@ -11,7 +11,7 @@ const statusConfig = {
   awaiting_response: { label: "Awaiting Response", className: "bg-orange-500/15 text-orange-400 border-orange-500/30" },
   response_received: { label: "Response Received", className: "bg-purple-500/15 text-purple-400 border-purple-500/30" },
   escalation_ready: { label: "Ready to Escalate", className: "bg-red-500/15 text-red-400 border-red-500/30" },
-  escalated: { label: "Escalated", className: "bg-red-600/20 text-red-300 border-red-500/40" },
+  escalated: { label: "Escalated", className: "bg-red-600 text-white border-red-500" },
   resolved: { label: "Resolved", className: "bg-green-500/15 text-green-400 border-green-500/30" },
   closed: { label: "Closed", className: "bg-gray-700/15 text-gray-500 border-gray-700/30" },
 };

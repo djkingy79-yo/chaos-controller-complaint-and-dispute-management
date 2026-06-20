@@ -28,48 +28,50 @@ export function LetterheadHeader() {
 export function getLetterPageStyles() {
   return `
     @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
-    @page { margin: 0; size: A4; }
+    @page { margin: 1.5in; size: A4; }
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; }
 
     /* Page 1: FULL letterhead with header and footer */
     .letter-page {
       position: relative;
-      width: 210mm;
+      width: 100%;
       min-height: 297mm;
       background-image: url('${FULL_LETTERHEAD_URL}');
-      background-size: 100% 100%;
+      background-size: 100% auto;
       background-repeat: no-repeat;
-      background-position: top left;
+      background-position: top center;
     }
 
-    /* Letter body starts below the full letterhead header (~35% from top) */
+    /* Letter body with 1.5 inch margins - text spans full width between margins */
     .letter-content {
       position: relative;
-      padding: 35% 25mm 15mm 25mm;
+      padding: 38mm 0 25mm 0;
       font-family: 'Times New Roman', Times, serif;
       font-size: 10pt;
       color: #111;
       line-height: 1.6;
-      max-width: 160mm;
+      width: 100%;
+      max-width: none;
     }
 
     /* Continuation pages — MINIMAL header only, no footer */
     .letter-continuation {
       position: relative;
-      width: 210mm;
+      width: 100%;
       min-height: 297mm;
-      padding: 20mm 25mm 20mm 25mm;
+      padding: 25mm 0 25mm 0;
       page-break-before: always;
       background-image: url('${CONTINUATION_PAGE_URL}');
-      background-size: 100% 100%;
+      background-size: 100% auto;
       background-repeat: no-repeat;
-      background-position: top left;
+      background-position: top center;
       font-family: 'Times New Roman', Times, serif;
       font-size: 10pt;
       color: #111;
       line-height: 1.6;
-      max-width: 160mm;
+      width: 100%;
+      max-width: none;
     }
 
     h2.section-title {
