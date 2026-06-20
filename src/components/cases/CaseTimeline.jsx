@@ -18,6 +18,7 @@ import {
   Zap,
   Circle,
   Loader2,
+  CalendarPlus,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -35,6 +36,7 @@ const eventTypeConfig = {
 export default function CaseTimeline({ caseId, events }) {
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", event_type: "incident", event_date: new Date().toISOString().split("T")[0] });
+  const [addingToCalendar, setAddingToCalendar] = useState(null);
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -45,6 +47,46 @@ export default function CaseTimeline({ caseId, events }) {
       setForm({ title: "", description: "", event_type: "incident", event_date: new Date().toISOString().split("T")[0] });
     },
   });
+
+  const handleAddToCalendar = async (event) => {
+    if (!event.event_date) return;
+    
+    setAddingToCalendar(event.id);
+    try {
+      const caseData = await base44.entities.Case.get(caseId);
+      const eventDate = new Date(event.event_date);
+      const endDate = new Date(eventDate);
+      endDate.setHours(eventDate.getHours() + 1);
+
+      // Use Google Calendar connector to create event
+      const result = await base44.functions.invoke('syncCalendar', {
+        action: 'create',
+        event: {
+          summary: `[${caseData.title}] ${event.title}`,
+          description: `${event.description || ''}\n\nCase: ${caseData.title}\nOrganisation: ${caseData.organisation_name || 'N/A'}\nStatus: ${caseData.status}`,
+          start: {
+            dateTime: eventDate.toISOString(),
+            timeZone: 'Australia/Sydney'
+          },
+          end: {
+            dateTime: endDate.toISOString(),
+            timeZone: 'Australia/Sydney'
+          }
+        }
+      });
+
+      if (result.success) {
+        alert('✓ Event added to your Google Calendar!');
+      } else {
+        alert('Failed to add event. Please ensure Google Calendar is connected.');
+      }
+    } catch (error) {
+      console.error('Calendar error:', error);
+      alert('Error adding to calendar: ' + error.message);
+    } finally {
+      setAddingToCalendar(null);
+    }
+  };
 
   const sorted = [...events].sort((a, b) => {
     const da = a.event_date || a.created_date;
@@ -125,10 +167,26 @@ export default function CaseTimeline({ caseId, events }) {
                   <EvIcon className={`w-3.5 h-3.5 ${cfg.color}`} />
                 </div>
                 <div className="ml-5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="text-xs text-muted-foreground font-mono">
                       {ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : format(new Date(ev.created_date), "d MMM yyyy")}
                     </span>
+                    {ev.event_type === 'deadline' && ev.event_date && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => handleAddToCalendar(ev)}
+                        disabled={addingToCalendar === ev.id}
+                      >
+                        {addingToCalendar === ev.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <CalendarPlus className="w-3 h-3" />
+                        )}
+                        Add to Calendar
+                      </Button>
+                    )}
                   </div>
                   <p className="text-sm font-medium text-foreground mt-0.5">{ev.title}</p>
                   {ev.description && (
