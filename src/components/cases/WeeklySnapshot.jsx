@@ -34,7 +34,7 @@ function printSnapshot(caseItem, snapshot, generatedAt) {
       <div style="font-size:18pt;font-weight:bold;margin-bottom:4pt;">${caseItem.title}</div>
       <div style="font-size:10pt;color:#666;margin-bottom:16pt;">vs. ${caseItem.organisation_name || "Organisation"} &nbsp;|&nbsp; Ref: ${caseRef} &nbsp;|&nbsp; Generated: ${generatedAt}</div>
       <div>${snapshot.replace(/\n/g, "<br/>")}</div>
-      <div class="footer">www.chaoscontroller.com.au &nbsp;|&nbsp; ${caseRef} &nbsp;|&nbsp; ${generatedAt}</div>
+      <div class="footer">app.base44.com/6a2ac3b012e45642b1f94671 &nbsp;|&nbsp; ${caseRef} &nbsp;|&nbsp; ${generatedAt}</div>
     </div>
   </div>
   </body></html>`);
