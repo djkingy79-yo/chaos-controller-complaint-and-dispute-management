@@ -70,7 +70,7 @@ export default function AdminDashboard() {
   const resolved = cases.filter(c => c.status === "resolved");
   const overdueDeadlines = deadlines.filter(d => d.status === "pending" && new Date(d.deadline_date) < new Date());
   const verifiedPayments = allPayments.filter(p => p.status === "verified");
-  const totalRevenue = verifiedPayments.reduce((sum, p) => sum + ({ Starter: 25, Pro: 35, Command: 49 }[p.plan_name] || 0), 0);
+  const totalRevenue = verifiedPayments.reduce((sum, p) => sum + ({ Starter: 9.99, Pro: 15.99, Command: 19.99 }[p.plan_name] || 0), 0);
 
   const categoryData = ["banking", "insurance", "tenancy", "telco", "utilities", "other"]
     .map(cat => ({ name: cat.charAt(0).toUpperCase() + cat.slice(1), value: cases.filter(c => c.category === cat).length }))
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
         <StatsCard title="Active Cases" value={active.length} icon={FolderOpen} color="bg-accent/10 text-accent" subtitle={`${cases.length} total`} />
         <StatsCard title="Resolved" value={resolved.length} icon={CheckCircle2} color="bg-success/10 text-success" subtitle={`${cases.length > 0 ? Math.round((resolved.length / cases.length) * 100) : 0}% win rate`} />
         <StatsCard title="Overdue" value={overdueDeadlines.length} icon={AlertTriangle} color="bg-destructive/10 text-destructive" subtitle="deadlines past due" />
-        <StatsCard title="Revenue" value={`$${totalRevenue}`} icon={Wallet} color="bg-[#FFD700]/10 text-[#FFD700]" subtitle={`${pendingPayments.length > 0 ? `${pendingPayments.length} pending` : `${verifiedPayments.length} verified`}`} />
+        <StatsCard title="Revenue" value={`$${totalRevenue.toFixed(2)}`} icon={Wallet} color="bg-[#FFD700]/10 text-[#FFD700]" subtitle={`${verifiedPayments.length} verified · ${pendingPayments.length} pending`} />
       </div>
 
       <Tabs defaultValue="overview">

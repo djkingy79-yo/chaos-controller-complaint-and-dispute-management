@@ -95,12 +95,12 @@ export default function HeroSection({ onGetStarted, onSignIn }) {
           </p>
         </motion.div>
 
-        {/* Start Your Case CTA */}
+        {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.75, duration: 0.6 }}
-          className="text-center mb-10 sm:mb-12"
+          className="text-center mb-10 sm:mb-12 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Button
             size="lg"
@@ -108,6 +108,14 @@ export default function HeroSection({ onGetStarted, onSignIn }) {
             onClick={onGetStarted}
           >
             START YOUR CASE <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="border-2 border-white/40 text-white hover:bg-white/10 px-8 py-5 text-lg font-black w-full sm:w-auto max-w-xs sm:max-w-none mx-auto"
+            onClick={onSignIn}
+          >
+            SIGN IN
           </Button>
         </motion.div>
 

@@ -164,7 +164,7 @@ export default function Analytics() {
               <Tooltip />
               <Bar dataKey="value" fill="#2563eb">
                 {statusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name.toLowerCase().replace(" ", "_")] || "#6b7280"} />
+                  <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name.toLowerCase().replace(/ /g, "_")] || "#6b7280"} />
                 ))}
               </Bar>
             </BarChart>

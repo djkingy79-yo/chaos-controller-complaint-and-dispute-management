@@ -53,7 +53,7 @@ function printDeadlines(deadlines, cases) {
   <p style="font-size:11pt;color:#555;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
   <table><thead><tr><th>Deadline</th><th>Date</th><th>Urgency</th><th>Type</th><th>Case</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
-  <div class="footer">Chaos Controller™ — chaoscontrollerapp@gmail.com | chaoscontroller.com.au</div>
+  <div class="footer">Chaos Controller™ — djkingy79@gmail.com | chaoscontroller.com.au</div>
   </div></body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);

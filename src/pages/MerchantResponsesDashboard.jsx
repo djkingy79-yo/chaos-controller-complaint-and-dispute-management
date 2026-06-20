@@ -1,6 +1,6 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ const responseTypeConfig = {
 
 export default function MerchantResponsesDashboard() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: responses = [], isLoading } = useQuery({
     queryKey: ["merchant-responses", user?.id],
@@ -248,6 +249,7 @@ export default function MerchantResponsesDashboard() {
                       variant="outline"
                       onClick={async () => {
                         await base44.entities.MerchantResponse.update(response.id, { is_read: true });
+                        queryClient.invalidateQueries({ queryKey: ["merchant-responses"] });
                       }}
                     >
                       <CheckCircle2 className="w-4 h-4 mr-2" />

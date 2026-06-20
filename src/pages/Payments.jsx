@@ -157,7 +157,7 @@ export default function Payments() {
     return (
       <div className="min-h-screen bg-black">
         <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-          <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" className="w-24 h-24 mx-auto object-contain mb-6" />
+          <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/c59fd1d31_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png" alt="Chaos Controller" className="w-48 mx-auto object-contain mb-6" />
           <div className="bg-[#FFD700]/10 border-2 border-[#FFD700] rounded-2xl p-10">
             <div className="w-16 h-16 bg-[#FFD700] rounded-full flex items-center justify-center mx-auto mb-4">
               <ShieldCheck className="w-9 h-9 text-black" />
@@ -197,7 +197,7 @@ export default function Payments() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-white hover:bg-gray-800">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" className="w-10 h-10 object-contain" />
+          <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/c59fd1d31_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png" alt="Chaos Controller" className="w-10 h-10 object-contain" />
           <div>
             <h1 className="text-lg font-display font-black text-white">Choose Your Plan</h1>
             <p className="text-xs text-gray-400">Pay via PayID · No contracts · Cancel anytime</p>

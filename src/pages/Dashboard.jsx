@@ -15,8 +15,9 @@ export default function Dashboard() {
   const { user } = useAuth();
 
   const { data: cases = [], isLoading } = useQuery({
-    queryKey: ["cases"],
+    queryKey: ["cases", user?.id],
     queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }, "-created_date"),
+    enabled: !!user?.id,
   });
 
   const { data: payment } = useQuery({
