@@ -20,6 +20,8 @@ import ExportCaseZip from "@/components/cases/ExportCaseZip";
 import MerchantInvite from "@/components/cases/MerchantInvite";
 import WeeklySnapshot from "@/components/cases/WeeklySnapshot";
 import ExecutiveSummaryGenerator from "@/components/cases/ExecutiveSummaryGenerator";
+import AIChecklistGenerator from "@/components/cases/AIChecklistGenerator";
+import GeneratedChecklist from "@/components/cases/GeneratedChecklist";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
@@ -191,8 +193,9 @@ export default function CaseDetail() {
             <TabsContent value="timeline" className="mt-4">
               <CaseTimeline caseId={caseId} events={timelineEvents} />
             </TabsContent>
-            <TabsContent value="checklist" className="mt-4">
-              <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+            <TabsContent value="checklist" className="mt-4 space-y-4">
+              <AIChecklistGenerator caseItem={caseItem} />
+              <GeneratedChecklist caseId={caseId} caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="deadlines" className="mt-4">
               <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
