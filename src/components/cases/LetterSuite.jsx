@@ -223,9 +223,9 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
   const handlePrint = () => {
     const lines = text.split('\n');
-    // First page: ~42 lines (with wider margins), continuation: ~55 lines each
-    const firstPageLines = lines.slice(0, 42);
-    const remainingLines = lines.slice(42);
+    // First page: ~45 lines with 1.5 inch margins, continuation: ~55 lines
+    const firstPageLines = lines.slice(0, 45);
+    const remainingLines = lines.slice(45);
     const continuationPages = [];
     for (let i = 0; i < remainingLines.length; i += 55) {
       continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
@@ -238,6 +238,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     <style>${getLetterPageStyles()}</style>
     </head><body>
       <div class="letter-page">
+        <div class="letterhead-banner"></div>
         <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
       </div>
       ${continuationHTML}
@@ -295,22 +296,20 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
       {text ? (
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-          {/* Full letterhead header — page 1 only */}
-          <div style={{ position: "relative" }}>
-            <img src={LETTERHEAD_URL} alt="Chaos Controller Full Letterhead" style={{ width: "100%", display: "block" }} />
-          </div>
-          {/* Letter body — wider margins, starts immediately below letterhead */}
-          <div className="bg-white" style={{ padding: "12px 48px 18px 48px", marginTop: "-4px" }}>
+          {/* Smaller professional letterhead banner — page 1 only */}
+          <div className="letterhead-banner" style={{ height: '80px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', margin: '0 auto 20pt auto' }}></div>
+          {/* Letter body — 1.5 inch margins, Times New Roman 10pt, single spaced */}
+          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
             {editing ? (
               <Textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
                 rows={18}
-                className="font-body text-sm leading-relaxed bg-white text-slate-900 w-full"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6" }}
+                className="font-body bg-white text-slate-900 w-full"
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0" }}
               />
             ) : (
-              <pre className="whitespace-pre-wrap leading-relaxed text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6", margin: "0" }}>
+              <pre className="whitespace-pre-wrap text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", margin: 0, color: "#000" }}>
                 {text}
               </pre>
             )}

@@ -132,14 +132,14 @@ CASE DETAILS:
 
   const handlePrint = () => {
     const lines = letter.split('\n');
-    // First page holds ~40 lines (below full letterhead), continuation pages ~50 lines each
-    const firstPageLines = lines.slice(0, 40);
-    const remainingLines = lines.slice(40);
+    // First page: ~45 lines with 1.5 inch margins, continuation: ~55 lines
+    const firstPageLines = lines.slice(0, 45);
+    const remainingLines = lines.slice(45);
     const continuationPages = [];
-    for (let i = 0; i < remainingLines.length; i += 50) {
-      continuationPages.push(remainingLines.slice(i, i + 50).join('\n'));
+    for (let i = 0; i < remainingLines.length; i += 55) {
+      continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
     }
-    const continuationHTML = continuationPages.map(chunk => `
+    const continuationHTML = continuationPages.map((chunk, idx) => `
       <div class="letter-continuation"><pre>${chunk}</pre></div>
     `).join('');
     const win = window.open("", "_blank");
@@ -147,6 +147,7 @@ CASE DETAILS:
     <style>${getLetterPageStyles()}</style>
     </head><body>
       <div class="letter-page">
+        <div class="letterhead-banner"></div>
         <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
       </div>
       ${continuationHTML}
@@ -208,20 +209,18 @@ CASE DETAILS:
 
       {/* Letterhead Preview */}
       <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-        <div style={{ position: "relative" }}>
-          <img src={LETTERHEAD_URL} alt="Chaos Controller Full Letterhead" style={{ width: "100%", display: "block" }} />
-        </div>
-        <div className="px-8 pb-8 bg-white" style={{ marginTop: 0, paddingTop: "16px" }}>
+        <div className="letterhead-banner" style={{ height: '80px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', marginBottom: '20pt' }}></div>
+        <div className="px-12 pb-8 bg-white" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
           {editing ? (
             <Textarea
               value={letter}
               onChange={(e) => setLetter(e.target.value)}
               rows={22}
-              className="font-body text-sm leading-relaxed bg-white text-slate-900"
-              style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt" }}
+              className="font-body bg-white text-slate-900 w-full"
+              style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0" }}
             />
           ) : (
-            <pre className="whitespace-pre-wrap leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.7", paddingTop: "12px" }}>
+            <pre className="whitespace-pre-wrap text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", margin: 0, color: "#000" }}>
               {letter}
             </pre>
           )}
