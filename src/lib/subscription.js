@@ -28,7 +28,7 @@ export function getActiveSubscription(user, payments = []) {
 }
 
 export const PLAN_LEVELS = { Starter: 1, Pro: 2, Command: 3 };
-export const PLAN_PRICES = { Starter: 25, Pro: 35, Command: 49 };
+export const PLAN_PRICES = { Starter: 9.99, Pro: 15.99, Command: 19.99 };
 
 export function hasPlanAccess(subscription, requiredPlan) {
   if (!subscription?.subscription_active) return false;
