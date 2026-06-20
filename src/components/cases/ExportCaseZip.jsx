@@ -23,25 +23,25 @@ function buildSummaryHTML(caseItem, evidence, events) {
   return `<!DOCTYPE html><html><head>
     <title>Case Export — ${caseItem.title}</title>
     <style>
-      @page { margin: 0; size: A4; }
+      @page { margin: 1.5cm; size: A4; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-      body { margin: 0; padding: 20mm; background: #000; font-family: 'Courier New', Courier, monospace; font-size: 10pt; color: #A0A0A0; line-height: 1.6; }
-      .header { font-size: 9pt; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12pt; padding-bottom: 8pt; border-bottom: 1px solid #A0A0A0; }
+      body { margin: 0; padding: 20mm; background: #fff; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.6; }
+      .header { font-size: 11pt; font-weight: bold; text-transform: uppercase; margin-bottom: 12pt; padding-bottom: 8pt; border-bottom: 2px solid #000; }
       .section { margin-top: 20pt; }
-      .section-title { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-bottom: 8pt; padding-bottom: 4pt; border-bottom: 1px solid #A0A0A0; }
+      .section-title { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-bottom: 8pt; padding-bottom: 4pt; border-bottom: 1px solid #000; }
       .data-row { margin-bottom: 4pt; }
-      .data-label { display: inline-block; width: 140pt; color: #A0A0A0; }
-      .data-value { color: #E0E0E0; font-weight: bold; }
+      .data-label { display: inline-block; width: 140pt; color: #000; font-weight: bold; }
+      .data-value { color: #000; }
       .timeline-item { margin-bottom: 12pt; }
-      .timeline-date { color: #E0E0E0; font-weight: bold; }
-      .timeline-type { color: #888; font-size: 9pt; margin-top: 2pt; }
+      .timeline-date { color: #000; font-weight: bold; }
+      .timeline-type { color: #333; font-size: 9pt; margin-top: 2pt; }
       .evidence-item { margin-bottom: 12pt; }
-      .evidence-name { color: #E0E0E0; font-weight: bold; }
-      .evidence-type { color: #888; }
+      .evidence-name { color: #000; font-weight: bold; }
+      .evidence-type { color: #333; }
       .evidence-url { color: #666; font-size: 9pt; margin-top: 2pt; word-break: break-all; }
       .letter-section { margin-top: 24pt; page-break-before: always; }
-      .letter-content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #E0E0E0; margin-top: 8pt; }
-      .footer { margin-top: 30pt; padding-top: 8pt; border-top: 1px solid #A0A0A0; font-size: 9pt; color: #666; display: flex; justify-content: space-between; }
+      .letter-content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; margin-top: 8pt; }
+      .footer { margin-top: 30pt; padding-top: 8pt; border-top: 1px solid #000; font-size: 9pt; color: #333; display: flex; justify-content: space-between; }
     </style>
   </head><body>
     
@@ -74,17 +74,17 @@ function buildSummaryHTML(caseItem, evidence, events) {
 
     <div class="section">
       <div class="section-title">Issue Summary</div>
-      <div style="color: #E0E0E0; margin-top: 6pt;">${caseItem.issue_summary || "N/A"}</div>
+      <div style="margin-top: 6pt;">${caseItem.issue_summary || "N/A"}</div>
     </div>
 
     <div class="section">
       <div class="section-title">Issue Details</div>
-      <div style="color: #E0E0E0; margin-top: 6pt;">${caseItem.issue_details || "N/A"}</div>
+      <div style="margin-top: 6pt;">${caseItem.issue_details || "N/A"}</div>
     </div>
 
     <div class="section">
       <div class="section-title">Desired Outcome</div>
-      <div style="color: #E0E0E0; margin-top: 6pt;">${caseItem.desired_outcome || "N/A"}</div>
+      <div style="margin-top: 6pt;">${caseItem.desired_outcome || "N/A"}</div>
     </div>
 
     ${sorted.length > 0 ? `
@@ -94,7 +94,7 @@ function buildSummaryHTML(caseItem, evidence, events) {
         <div class="timeline-item">
           <div class="timeline-date">${i + 1}. [${e.event_date ? format(new Date(e.event_date), "yyyy-MM-dd") : "No date"}] ${e.title}</div>
           <div class="timeline-type">Type: ${e.event_type || "N/A"}</div>
-          ${e.description ? `<div style="color: #888; margin-top: 2pt;">${e.description}</div>` : ""}
+          ${e.description ? `<div style="color: #333; margin-top: 2pt;">${e.description}</div>` : ""}
         </div>`).join("")}
     </div>` : ""}
 
@@ -150,9 +150,9 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
       if (caseItem[ld.field]) {
         const letterHTML = `<!DOCTYPE html><html><head><title>${ld.label}</title>
         <style>
-          body { margin: 0; padding: 20mm; background: #000; font-family: 'Courier New', Courier, monospace; font-size: 10pt; color: #A0A0A0; }
-          .header { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-bottom: 12pt; padding-bottom: 8pt; border-bottom: 1px solid #A0A0A0; }
-          .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #E0E0E0; line-height: 1.6; }
+          body { margin: 0; padding: 20mm; background: #fff; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; }
+          .header { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-bottom: 12pt; padding-bottom: 8pt; border-bottom: 2px solid #000; }
+          .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.6; }
         </style>
         </head><body>
           <div class="header">${ld.label}</div>
@@ -193,55 +193,55 @@ WHAT'S INCLUDED
 ${"─".repeat(60)}
 
 1. CASE SUMMARY (01_case_summary.html)
-   Professional HTML export matching PDF bundle style:
-   - Dark theme (#000 background, #A0A0A0 text)
-   - Monospace font (Courier New, 10pt)
-   - Section headers with underline separators
-   - 12pt headings, 10pt body text
-   - Clean data layout with labels and values
-   - Complete timeline with dates and types
-   - Evidence index with direct file URLs
-   - All complaint letters in formatted sections
+    Professional HTML export matching standard correspondence:
+    - White background with black text
+    - Times New Roman font (10pt body, 12pt headings)
+    - Section headers with underline separators
+    - Clean data layout with labels and values
+    - Complete timeline with dates and types
+    - Evidence index with direct file URLs
+    - All complaint letters in formatted sections
+    - Print-ready with proper margins (1.5cm)
 
-2. LETTERS (letters/ folder)
-   Individual HTML files for each generated letter:
-   - Same dark theme styling
-   - Professional formatting preserved
-   - Easy to print or convert to PDF
+    2. LETTERS (letters/ folder)
+    Individual HTML files for each generated letter:
+    - Professional white background styling
+    - Standard business letter formatting
+    - Easy to print or convert to PDF
 
 3. TIMELINE (02_timeline.csv)
-   Chronological event log in CSV format:
-   - Event dates, types, titles, descriptions
-   - Action required flags
-   - Sortable in Excel/Google Sheets
+    Chronological event log in CSV format:
+    - Event dates, types, titles, descriptions
+    - Action required flags
+    - Sortable in Excel/Google Sheets
 
-4. EVIDENCE INDEX (03_evidence_index.csv)
-   Complete document register:
-   - File names, types, dates
-   - Descriptions and direct URLs
-   - Tag categories
+    4. EVIDENCE INDEX (03_evidence_index.csv)
+    Complete document register:
+    - File names, types, dates
+    - Descriptions and direct URLs
+    - Tag categories
 
-${"─".repeat(60)}
-HOW TO USE
-${"─".repeat(60)}
+    ${"─".repeat(60)}
+    HOW TO USE
+    ${"─".repeat(60)}
 
-1. Open 01_case_summary.html in any web browser
-2. Use browser's Print function (Ctrl/Cmd+P)
-3. Select "Save as PDF" for tribunal submissions
-4. Open individual letters from letters/ folder
-5. Use CSV files for data analysis in spreadsheets
+    1. Open 01_case_summary.html in any web browser
+    2. Use browser's Print function (Ctrl/Cmd+P)
+    3. Select "Save as PDF" for tribunal submissions
+    4. Open individual letters from letters/ folder
+    5. Use CSV files for data analysis in spreadsheets
 
-${"─".repeat(60)}
-FORMATTING
-${"─".repeat(60)}
+    ${"─".repeat(60)}
+    FORMATTING
+    ${"─".repeat(60)}
 
-All exports feature:
-✓ Professional dark theme (black background, light text)
-✓ Monospace font for data (Courier New, 10pt)
-✓ Clear section separators
-✓ 12pt headings, 10pt body text
-✓ Proper spacing and margins
-✓ Print-ready formatting
+    All exports feature:
+    ✓ Professional white background with black text
+    ✓ Times New Roman font (10pt body, 12pt headings)
+    ✓ Clear section separators
+    ✓ Standard business letter formatting
+    ✓ Proper margins (1.5cm / 20mm)
+    ✓ Print-ready for tribunal submissions
 
 ${"─".repeat(60)}
 CONTACT & SUPPORT

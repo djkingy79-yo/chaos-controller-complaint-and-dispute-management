@@ -90,30 +90,24 @@ export default function CaseDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4 flex-1">
-          <Link to="/cases">
-            <Button variant="ghost" size="icon" className="mt-0.5">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-display font-bold text-foreground truncate">
-              {caseItem.title}
-            </h1>
-            {caseItem.issue_summary && (
-              <p className="text-sm text-muted-foreground mt-1">{caseItem.issue_summary}</p>
-            )}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <ExecutiveSummaryGenerator caseItem={caseItem} />
-          <ExportCaseZip caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+      <div className="flex items-start gap-4">
+        <Link to="/cases">
+          <Button variant="ghost" size="icon" className="mt-0.5">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+        </Link>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-display font-bold text-foreground truncate">
+            {caseItem.title}
+          </h1>
+          {caseItem.issue_summary && (
+            <p className="text-sm text-muted-foreground mt-1">{caseItem.issue_summary}</p>
+          )}
         </div>
       </div>
 
       {/* Top Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <FolderOpen className="w-4 h-4" /> Evidence
@@ -142,6 +136,12 @@ export default function CaseDetail() {
           <div className="text-sm font-semibold text-foreground">{caseItem.priority?.toUpperCase()}</div>
           <div className="text-xs text-muted-foreground">case priority</div>
         </div>
+      </div>
+
+      {/* Action Buttons - Moved below case details */}
+      <div className="flex flex-wrap gap-3 justify-end border-t border-border pt-4 mb-4">
+        <ExecutiveSummaryGenerator caseItem={caseItem} />
+        <ExportCaseZip caseItem={caseItem} evidence={evidence} events={timelineEvents} />
       </div>
 
       {/* Main Grid Layout */}
