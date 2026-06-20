@@ -115,7 +115,7 @@ function buildSummaryHTML(caseItem, evidence, events) {
     </div>`).join("")}
 
     <div class="footer">
-      <span>Chaos Controller™</span>
+      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
       <span>${caseRef} · Page 1</span>
     </div>
 
@@ -247,8 +247,9 @@ ${"─".repeat(60)}
 CONTACT & SUPPORT
 ${"─".repeat(60)}
 
-Chaos Controller™ — The Complaint & Dispute App
-THAT'S GOT YOUR BACK
+Chaos Controller™
+app.base44.com/6a2ac3b012e45642b1f94671
+The Complaint & Dispute App THAT'S GOT YOUR BACK
 
 "They had your loyalty. Now you deserve their accountability."
 `);

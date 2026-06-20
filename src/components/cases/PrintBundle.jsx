@@ -49,8 +49,8 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
     continuationPages.push(remainingLines.slice(i, i + 50).join('\n'));
   }
   const continuationHTML = continuationPages.map((chunk, idx) => `
-    <div style="page-break-before:always;position:relative;width:210mm;min-height:297mm;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png');background-size:100% 100%;background-repeat:no-repeat;background-position:top left;padding:20mm 25mm 25mm 25mm;">
-      <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;margin:0;color:#111;">${chunk}</pre>
+    <div style="page-break-before:always;position:relative;width:100%;min-height:297mm;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png');background-size:100% auto;background-repeat:no-repeat;background-position:top center;padding:25mm 0 25mm 0;">
+      <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;margin:0;color:#111;width:100%;">${chunk}</pre>
     </div>
   `).join('');
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
@@ -58,14 +58,14 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
   <style>
-    @page { margin: 0; size: A4; }
+    @page { margin: 1.5in; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.7; }
   </style>
   </head><body>
-    <div style="position:relative;width:210mm;min-height:297mm;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png');background-size:100% 100%;background-repeat:no-repeat;background-position:top left;">
-      <div style="position:relative;padding:28% 25mm 25mm 25mm;">
-        <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;margin:0;color:#111;">${firstPageLines.join('\n')}</pre>
+    <div style="position:relative;width:100%;min-height:297mm;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png');background-size:100% auto;background-repeat:no-repeat;background-position:top center;">
+      <div style="position:relative;padding:38mm 0 25mm 0;width:100%;">
+        <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;margin:0;color:#111;width:100%;">${firstPageLines.join('\n')}</pre>
       </div>
     </div>
     ${continuationHTML}
@@ -108,7 +108,7 @@ function printTimeline(caseItem, events) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™</span>
+      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -168,7 +168,7 @@ function printEvidence(caseItem, evidence) {
       <tbody>${tableRows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™</span>
+      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -221,7 +221,7 @@ function printChecklist(caseItem, evidence, events) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™</span>
+      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -261,7 +261,7 @@ function printChecklistItems(caseItem, checklistItems) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™</span>
+      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -306,7 +306,7 @@ function printDeadlineItems(caseItem, deadlines) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>Chaos Controller™</span>
+      <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
       <span>${caseRef}</span>
     </div>
   </body></html>`);
@@ -433,7 +433,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       </div>
       
       <div class="footer">
-        <span>Chaos Controller™ — Formal Case Bundle</span>
+        <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
         <span>${caseRef} · Page 1</span>
       </div>
     </div>
@@ -450,7 +450,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           </div>`).join("")}
       </div>
       <div class="footer">
-        <span>Table of Contents</span>
+        <span>Table of Contents — app.base44.com/6a2ac3b012e45642b1f94671</span>
         <span>${caseRef} · Page 2</span>
       </div>
     </div>
@@ -463,7 +463,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       </table>
       ${caseItem.issue_details ? `<div style="margin-top:14pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Full Details</div><div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_details}</div></div>` : ""}
       <div class="footer">
-        <span>Case Summary</span>
+        <span>Case Summary — app.base44.com/6a2ac3b012e45642b1f94671</span>
         <span>${caseRef} · Page 3</span>
       </div>
     </div>
@@ -494,7 +494,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           </table>
         </div>` : ""}
       <div class="footer">
-        <span>Escalation Readiness Checklist</span>
+        <span>Escalation Readiness — app.base44.com/6a2ac3b012e45642b1f94671</span>
         <span>${caseRef} · Page 4</span>
       </div>
     </div>
@@ -513,7 +513,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>Chronological Timeline</span>
+        <span>Timeline — app.base44.com/6a2ac3b012e45642b1f94671</span>
         <span>${caseRef} · Page 5</span>
       </div>
     </div>
@@ -534,7 +534,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>Evidence Index</span>
+        <span>Evidence Index — app.base44.com/6a2ac3b012e45642b1f94671</span>
         <span>${caseRef} · Page 6</span>
       </div>
     </div>
@@ -554,7 +554,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>Smart Checklist</span>
+        <span>Smart Checklist — app.base44.com/6a2ac3b012e45642b1f94671</span>
         <span>${caseRef} · Page 7</span>
       </div>
     </div>
@@ -565,7 +565,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       <div class="section-title">${ld.label}</div>
       <pre style="margin-top:12pt;">${caseItem[ld.field]}</pre>
       <div class="footer">
-        <span>${ld.label}</span>
+        <span>${ld.label} — app.base44.com/6a2ac3b012e45642b1f94671</span>
         <span>${caseRef} · Page ${8 + idx}</span>
       </div>
     </div>`).join("")}
