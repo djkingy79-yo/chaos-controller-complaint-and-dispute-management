@@ -105,7 +105,7 @@ Keep it professional, actionable, and easy to scan. Use AUSTRALIAN ENGLISH spell
     
     const llmPromise = base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: prompt,
-      model: 'gpt_5_mini',
+      model: 'claude_sonnet_4_6',
       response_json_schema: {
         type: "object",
         properties: {

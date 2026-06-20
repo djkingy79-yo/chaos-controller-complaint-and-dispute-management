@@ -23,7 +23,6 @@ export default function UserSettings() {
     try {
       await base44.auth.updateMe({
         full_name: formData.full_name,
-        // Email cannot be changed via updateMe - it's managed by auth system
       });
       toast.success("Profile updated successfully");
       updateUser();

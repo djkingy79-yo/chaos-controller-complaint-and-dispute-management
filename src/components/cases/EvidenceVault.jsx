@@ -247,9 +247,9 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
             fileName: file.name
           });
           
-          if (result.success && result.converted && result.pdfUrl) {
-            fileUrl = result.pdfUrl;
-            fileName = result.pdfFileName;
+          if (result.data?.success && result.data?.converted && result.data?.pdfUrl) {
+            fileUrl = result.data.pdfUrl;
+            fileName = result.data.pdfFileName;
             fileType = 'other'; // PDF type
             
             toast({
