@@ -11,6 +11,7 @@ import ActionItems from "@/components/dashboard/ActionItems";
 import CommandCentre from "@/components/dashboard/CommandCentre";
 import LetterPreview from "@/components/dashboard/LetterPreview";
 import OnboardingDashboard from "@/components/dashboard/OnboardingDashboard";
+import GoogleTasksSync from "@/components/dashboard/GoogleTasksSync";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -145,6 +146,9 @@ export default function Dashboard() {
               color="bg-success/10 text-success"
             />
           </div>
+
+          {/* Google Tasks Integration */}
+          <GoogleTasksSync user={user} />
 
           {/* Victory Summary */}
           {(resolvedCases.length > 0 || escalatedCases.length > 0) && (
