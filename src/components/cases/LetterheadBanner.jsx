@@ -1,7 +1,7 @@
 // Full letterhead with header and footer - page 1 only
-const FULL_LETTERHEAD_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/786d83a7e_5596A320-E07C-48EE-8743-6D15F12CE701.png";
+const FULL_LETTERHEAD_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png";
 // Minimal continuation header - pages 2+
-const CONTINUATION_PAGE_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/0cbc19cc4_5596A320-E07C-48EE-8743-6D15F12CE701.png";
+const CONTINUATION_PAGE_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png";
 
 // Export for use in PrintBundle and other print contexts
 export { FULL_LETTERHEAD_URL as LETTERHEAD_URL, CONTINUATION_PAGE_URL };
@@ -88,22 +88,6 @@ export function getLetterPageStyles() {
       line-height: 1.7;
       margin: 0;
       color: #111;
-    }
-
-    /* Plain text footer on every printed page */
-    .letter-footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 6pt 22mm;
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 8pt;
-      color: #666;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-top: 0.5pt solid #ccc;
     }
 
     table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10.5pt; }

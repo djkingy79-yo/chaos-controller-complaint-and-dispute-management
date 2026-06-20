@@ -90,15 +90,17 @@ CASE DETAILS:
 - Today's Date: ${today}`;
 
   const formats = `
-STANDARD BUSINESS LETTER FORMAT:
-1. FIRST LINE: Date in bold - **${today}**
-2. RIGHT SIDE (below date): Sender's full name, address, email, phone (right-aligned positioning)
-3. LEFT SIDE (below date, opposite sender): Complaint handler, organisation, address, email
-4. Re: line referencing case/account
-5. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-6. Professional, firm Australian English tone — use Australian spelling (organise, recognise, behaviour, honour, colour)
-7. Close: "Yours faithfully," then complainant name (if provided)
-8. NEVER use bracket placeholders - omit lines if data not provided`;
+  PROFESSIONAL BUSINESS LETTER FORMAT - CRITICAL:
+  1. LINE 1: **${today}** (DATE IN BOLD, FIRST)
+  2. NEXT: Sender details RIGHT side (Name, Address, Email, Phone) - each on separate line
+  3. OPPOSITE LEFT: Recipient details (Complaint Handler, Organisation, Address, Email) - each on separate line
+  4. BLANK LINE
+  5. Re: [Account/Reference number]
+  6. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
+  7. Body paragraphs - professional Australian English (organise, recognise, behaviour, colour)
+  8. Close: "Yours faithfully," then blank line, then complainant name
+  9. NEVER use [brackets] for placeholders - if data missing, omit that line entirely
+  10. Keep formatting CLEAN and PROFESSIONAL - this is a legal document`;
 
   if (type === "letter1") {
     return `${base}
@@ -220,14 +222,14 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
   const handlePrint = () => {
     const lines = text.split('\n');
-    // Split: first page holds ~45 lines, continuation pages ~55 lines each
-    const firstPageLines = lines.slice(0, 45);
-    const remainingLines = lines.slice(45);
+    // First page: ~38 lines (accounting for letterhead), continuation: ~50 lines each
+    const firstPageLines = lines.slice(0, 38);
+    const remainingLines = lines.slice(38);
     const continuationPages = [];
-    for (let i = 0; i < remainingLines.length; i += 55) {
-      continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
+    for (let i = 0; i < remainingLines.length; i += 50) {
+      continuationPages.push(remainingLines.slice(i, i + 50).join('\n'));
     }
-    const continuationHTML = continuationPages.map(chunk => `
+    const continuationHTML = continuationPages.map((chunk, idx) => `
       <div class="letter-continuation"><pre>${chunk}</pre></div>
     `).join('');
     const win = window.open("", "_blank");

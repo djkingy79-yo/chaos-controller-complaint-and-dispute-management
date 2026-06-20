@@ -40,24 +40,35 @@ function buildClientContext(caseItem, evidence) {
 function printLetter(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
   const client = buildClientContext(caseItem, evidence);
   const content = caseItem[field] || `No ${label} generated yet.`;
+  const lines = content.split('\n');
+  // First page: ~38 lines (accounting for letterhead), continuation: ~50 lines each
+  const firstPageLines = lines.slice(0, 38);
+  const remainingLines = lines.slice(38);
+  const continuationPages = [];
+  for (let i = 0; i < remainingLines.length; i += 50) {
+    continuationPages.push(remainingLines.slice(i, i + 50).join('\n'));
+  }
+  const continuationHTML = continuationPages.map((chunk, idx) => `
+    <div style="page-break-before:always;position:relative;width:210mm;min-height:297mm;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png');background-size:100% 100%;background-repeat:no-repeat;background-position:top left;padding:20mm 25mm 25mm 25mm;">
+      <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;margin:0;color:#111;">${chunk}</pre>
+    </div>
+  `).join('');
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
   const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  const footerText = `www.chaoscontroller.com.au | chaoscontrollerapp@gmail.com | 0413 572 850 | ${caseRef} | ${now}`;
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+    @page { margin: 0; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.7; }
-    .letter-content { padding: 0 0 20pt 0; }
-    pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.7; margin: 0; }
-    .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; text-align: center; }
   </style>
   </head><body>
-    <div class="letter-content">
-      <pre>${content}</pre>
+    <div style="position:relative;width:210mm;min-height:297mm;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png');background-size:100% 100%;background-repeat:no-repeat;background-position:top left;">
+      <div style="position:relative;padding:28% 25mm 25mm 25mm;">
+        <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;margin:0;color:#111;">${firstPageLines.join('\n')}</pre>
+      </div>
     </div>
-    <div class="footer">${footerText}</div>
+    ${continuationHTML}
   </body></html>`);
   win.document.close();
   win.focus();
