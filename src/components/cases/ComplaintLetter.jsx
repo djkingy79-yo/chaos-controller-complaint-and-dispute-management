@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LetterheadHeader, buildFooterHTML } from "./LetterheadBanner";
+import { LETTERHEAD_URL, getLetterPageStyles } from "./LetterheadBanner";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -126,30 +126,12 @@ LETTER FORMAT INSTRUCTIONS:
   };
 
   const handlePrint = () => {
-    const client = buildClientContext(caseItem, evidence);
-    const today = format(new Date(), "d MMMM yyyy");
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
-    <style>
-      @page { margin: 0; }
-      * { box-sizing: border-box; }
-      body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; }
-      .page-header {
-        position: running(header);
-        width: 100%;
-      }
-      @page { @top-center { content: element(header); } }
-      .letter-header { width: 100%; display: block; margin-bottom: 0; }
-      .letter-header img { width: 100%; display: block; }
-      .letter-body { padding: 1.5cm 2cm 2cm 2cm; }
-      .footer { font-size: 9pt; font-style: italic; border-top: 1pt solid #ccc; margin-top: 24pt; padding-top: 6pt; color: #888; display: flex; justify-content: space-between; }
-      pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; }
-    </style>
+    <style>${getLetterPageStyles()}</style>
     </head><body>
-      <div class="letter-header"><img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" alt="Chaos Controller" style="width:100%;max-width:600px;height:auto;display:block;" /></div>
-      <div class="letter-body">
-        <pre>${letter}</pre>
-        ${buildFooterHTML(caseItem, client, 1, "")}
+      <div class="letter-page">
+        <div class="letter-content"><pre>${letter}</pre></div>
       </div>
     </body></html>`);
     win.document.close();
@@ -209,11 +191,7 @@ LETTER FORMAT INSTRUCTIONS:
 
       {/* Letterhead Preview */}
       <div className="border border-border rounded-lg overflow-hidden shadow-sm" style={{ background: "#fff" }}>
-
-        {/* Header: compact professional letterhead */}
-        <LetterheadHeader today={today} />
-
-        {/* Letter body */}
+        <img src={LETTERHEAD_URL} alt="Chaos Controller Letterhead" style={{ width: "100%", display: "block" }} />
         <div className="px-8 py-6" style={{ background: "#fff" }}>
           {editing ? (
             <Textarea
@@ -223,25 +201,10 @@ LETTER FORMAT INSTRUCTIONS:
               className="font-body text-sm leading-relaxed bg-white text-slate-900"
             />
           ) : (
-            <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+            <pre className="whitespace-pre-wrap leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt" }}>
               {letter}
             </pre>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-200 bg-white">
-          <div className="flex justify-between items-end">
-            <div>
-              <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555", margin: 0 }}>
-                This App Chaos Controller was designed and developed by Deb King {new Date().getFullYear()}
-              </p>
-              <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555", margin: "2px 0 0 0" }}>
-                {client.name ? `${client.name} vs ${caseItem.organisation_name || ""}` : caseItem.organisation_name || ""}{caseItem.title ? ` — ${caseItem.title}` : ""} {new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" })}
-              </p>
-            </div>
-            <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555", margin: 0, paddingLeft: "12pt", whiteSpace: "nowrap" }}>Page 1</p>
-          </div>
         </div>
       </div>
     </div>

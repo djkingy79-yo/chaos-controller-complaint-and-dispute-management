@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LetterheadHeader } from "./LetterheadBanner";
+import { LETTERHEAD_URL, getLetterPageStyles } from "./LetterheadBanner";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -203,25 +203,12 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handlePrint = () => {
-    const client = buildClientContext(caseItem, evidence);
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>${letterType.label}</title>
-    <style>
-      * { box-sizing: border-box; }
-      body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; }
-      .letter-header img { width: 100%; display: block; }
-      .letter-body { padding: 1.5cm 2cm 2cm 2cm; }
-      pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; }
-      .footer { font-size: 9pt; font-style: italic; border-top: 1pt solid #ccc; margin-top: 24pt; padding-top: 6pt; color: #888; display: flex; justify-content: space-between; }
-    </style>
+    <style>${getLetterPageStyles()}</style>
     </head><body>
-      <div class="letter-header"><img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/30cf714ae_IMG_6998.jpeg" alt="Chaos Controller" style="width:100%;max-width:600px;height:auto;display:block;" /></div>
-      <div class="letter-body">
-        <pre>${text}</pre>
-        <div class="footer">
-          <span>Chaos Controller™ — Designed &amp; Developed by Deb King ${new Date().getFullYear()}</span>
-          <span>Page 1</span>
-        </div>
+      <div class="letter-page">
+        <div class="letter-content"><pre>${text}</pre></div>
       </div>
     </body></html>`);
     win.document.close();
@@ -272,7 +259,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
       {text ? (
         <div className="border border-border rounded-lg overflow-hidden shadow-sm">
-          <LetterheadHeader today={format(new Date(), "d MMMM yyyy")} />
+          <img src={LETTERHEAD_URL} alt="Chaos Controller Letterhead" style={{ width: "100%", display: "block" }} />
           <div className="px-8 py-6 bg-white">
             {editing ? (
               <Textarea
@@ -282,16 +269,10 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                 className="font-body text-sm leading-relaxed bg-white text-slate-900"
               />
             ) : (
-              <pre className="whitespace-pre-wrap text-sm leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+              <pre className="whitespace-pre-wrap leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt" }}>
                 {text}
               </pre>
             )}
-          </div>
-          <div className="px-6 py-3 border-t border-slate-200 bg-white flex justify-between items-center">
-            <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555" }}>
-              Chaos Controller™ — Designed & Developed by Deb King {new Date().getFullYear()}
-            </p>
-            <p style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "9pt", fontStyle: "italic", color: "#555" }}>Page 1</p>
           </div>
         </div>
       ) : (
