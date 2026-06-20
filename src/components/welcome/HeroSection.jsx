@@ -67,20 +67,7 @@ export default function HeroSection({ onGetStarted, onSignIn }) {
           </p>
         </motion.div>
 
-        {/* Branding Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="text-center mb-8 sm:mb-10"
-        >
-          <div className="inline-block bg-black px-6 sm:px-10 py-4 sm:py-5 border-y-4 border-[#D4A017]">
-            <p className="text-[#D4A017] font-black tracking-wide text-sm sm:text-base md:text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase" }}>
-              THE ONLY COMPLAINT & DISPUTE APP <br className="hidden sm:block" />
-              THAT'S 100% GOT YOUR BACK
-            </p>
-          </div>
-        </motion.div>
+
 
         {/* Quick explainer */}
         <motion.div
