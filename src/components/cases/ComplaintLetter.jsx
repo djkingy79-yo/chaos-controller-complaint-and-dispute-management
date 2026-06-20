@@ -190,18 +190,21 @@ LETTER FORMAT INSTRUCTIONS:
       )}
 
       {/* Letterhead Preview */}
-      <div className="border border-border rounded-lg overflow-hidden shadow-sm" style={{ background: "#fff" }}>
-        <img src={LETTERHEAD_URL} alt="Chaos Controller Letterhead" style={{ width: "100%", display: "block" }} />
-        <div className="px-8 py-6" style={{ background: "#fff" }}>
+      <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
+        <div style={{ position: "relative" }}>
+          <img src={LETTERHEAD_URL} alt="Chaos Controller Letterhead" style={{ width: "100%", display: "block" }} />
+        </div>
+        <div className="px-8 pb-8 bg-white" style={{ marginTop: 0 }}>
           {editing ? (
             <Textarea
               value={letter}
               onChange={(e) => setLetter(e.target.value)}
               rows={22}
               className="font-body text-sm leading-relaxed bg-white text-slate-900"
+              style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt" }}
             />
           ) : (
-            <pre className="whitespace-pre-wrap leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt" }}>
+            <pre className="whitespace-pre-wrap leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.7", paddingTop: "12px" }}>
               {letter}
             </pre>
           )}

@@ -89,7 +89,8 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   const client = buildClientContext(caseItem, evidence);
   const content = caseItem[field] || `No ${label} generated yet.`;
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const docDate = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const footerText = `${LETTERHEAD_URL ? '' : ''}www.chaoscontroller.com.au | chaoscontrollerapp@gmail.com | 0413 572 850 &nbsp;|&nbsp; ${caseRef} &nbsp;|&nbsp; ${now}`;
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
   <style>${getLetterPageStyles()}</style>
@@ -99,6 +100,7 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
         <pre>${content}</pre>
       </div>
     </div>
+    <div class="letter-footer">${footerText}</div>
   </body></html>`);
   win.document.close();
   win.focus();
