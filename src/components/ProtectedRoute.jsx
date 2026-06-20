@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -22,15 +22,14 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
     return fallback;
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    }
-    return unauthenticatedElement;
+  // Only show UserNotRegisteredError for actual registration issues
+  // For session expiry (401/403), just redirect to login silently
+  if (authError && authError.type === 'user_not_registered') {
+    return <UserNotRegisteredError />;
   }
 
   if (!isAuthenticated) {
-    return unauthenticatedElement;
+    return unauthenticatedElement || <Navigate to="/login" replace />;
   }
 
   return <Outlet />;

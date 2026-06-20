@@ -51,7 +51,16 @@ export const AuthProvider = ({ children }) => {
         
         // Handle 401/403 as session expiry - clear token silently
         if (appError.status === 401 || appError.status === 403) {
-          base44.auth.logout();
+          try {
+            localStorage.removeItem('b44_token');
+            sessionStorage.removeItem('b44_token');
+          } catch (e) {
+            // Ignore storage errors
+          }
+          // Don't call base44.auth.logout() here - it triggers the error screen
+          // Just clear local state and let ProtectedRoute redirect to login
+          setUser(null);
+          setIsAuthenticated(false);
           setIsLoadingAuth(false);
           setIsLoadingPublicSettings(false);
           return;
@@ -93,10 +102,10 @@ export const AuthProvider = ({ children }) => {
       setAuthChecked(true);
       
       // If user auth fails due to expired session, clear token silently
+      // This happens on mobile when Safari blocks third-party cookies
       if (error.status === 401 || error.status === 403) {
-        // Clear the expired token without showing error
-        base44.auth.logout();
-        // Don't set authError - let the ProtectedRoute handle redirect
+        // Don't call base44.auth.logout() - it triggers the platform error screen
+        // Just clear local state and let ProtectedRoute redirect
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -108,10 +117,17 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setAuthError(null);
     
+    // Clear token from storage immediately
+    try {
+      localStorage.removeItem('b44_token');
+      sessionStorage.removeItem('b44_token');
+    } catch (e) {
+      // Storage might not be available
+    }
+    
     if (shouldRedirect) {
-      base44.auth.logout(window.location.href);
-    } else {
-      base44.auth.logout();
+      // Use window.location for cleaner redirect
+      window.location.href = '/login';
     }
   };
 
