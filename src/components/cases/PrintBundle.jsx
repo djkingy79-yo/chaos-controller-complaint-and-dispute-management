@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
-import { CONTACT } from "./LetterheadBanner";
+
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },
@@ -108,8 +108,8 @@ function printTimeline(caseItem, events) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>${CONTACT.website} | ${CONTACT.email}</span>
-      <span>${caseRef} | ${now}</span>
+      <span>Chaos Controller™</span>
+      <span>${caseRef}</span>
     </div>
   </body></html>`);
   win.document.close();
@@ -168,8 +168,8 @@ function printEvidence(caseItem, evidence) {
       <tbody>${tableRows}</tbody>
     </table>
     <div class="footer">
-      <span>${CONTACT.website} | ${CONTACT.email}</span>
-      <span>${caseRef} | ${now}</span>
+      <span>Chaos Controller™</span>
+      <span>${caseRef}</span>
     </div>
   </body></html>`);
   win.document.close();
@@ -221,8 +221,8 @@ function printChecklist(caseItem, evidence, events) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>${CONTACT.website} | ${CONTACT.email}</span>
-      <span>${caseRef} | ${now}</span>
+      <span>Chaos Controller™</span>
+      <span>${caseRef}</span>
     </div>
   </body></html>`);
   win.document.close();
@@ -261,8 +261,8 @@ function printChecklistItems(caseItem, checklistItems) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>${CONTACT.website} | ${CONTACT.email}</span>
-      <span>${caseRef} | ${now}</span>
+      <span>Chaos Controller™</span>
+      <span>${caseRef}</span>
     </div>
   </body></html>`);
   win.document.close();
@@ -306,8 +306,8 @@ function printDeadlineItems(caseItem, deadlines) {
       <tbody>${rows}</tbody>
     </table>
     <div class="footer">
-      <span>${CONTACT.website} | ${CONTACT.email}</span>
-      <span>${caseRef} | ${now}</span>
+      <span>Chaos Controller™</span>
+      <span>${caseRef}</span>
     </div>
   </body></html>`);
   win.document.close();
@@ -433,7 +433,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       </div>
       
       <div class="footer">
-        <span>${CONTACT.website} | ${CONTACT.email} | ${CONTACT.phone}</span>
+        <span>Chaos Controller™ — Formal Case Bundle</span>
         <span>${caseRef} · Page 1</span>
       </div>
     </div>
@@ -450,7 +450,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           </div>`).join("")}
       </div>
       <div class="footer">
-        <span>${CONTACT.website} | ${CONTACT.email}</span>
+        <span>Table of Contents</span>
         <span>${caseRef} · Page 2</span>
       </div>
     </div>
@@ -463,7 +463,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       </table>
       ${caseItem.issue_details ? `<div style="margin-top:14pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Full Details</div><div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_details}</div></div>` : ""}
       <div class="footer">
-        <span>${CONTACT.website} | ${CONTACT.email}</span>
+        <span>Case Summary</span>
         <span>${caseRef} · Page 3</span>
       </div>
     </div>
@@ -494,7 +494,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           </table>
         </div>` : ""}
       <div class="footer">
-        <span>${CONTACT.website} | ${CONTACT.email}</span>
+        <span>Escalation Readiness Checklist</span>
         <span>${caseRef} · Page 4</span>
       </div>
     </div>
@@ -513,7 +513,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>${CONTACT.website} | ${CONTACT.email}</span>
+        <span>Chronological Timeline</span>
         <span>${caseRef} · Page 5</span>
       </div>
     </div>
@@ -534,7 +534,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>${CONTACT.website} | ${CONTACT.email}</span>
+        <span>Evidence Index</span>
         <span>${caseRef} · Page 6</span>
       </div>
     </div>
@@ -554,7 +554,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         </tr>`).join("")}</tbody>
       </table>`}
       <div class="footer">
-        <span>${CONTACT.website} | ${CONTACT.email}</span>
+        <span>Smart Checklist</span>
         <span>${caseRef} · Page 7</span>
       </div>
     </div>
@@ -565,7 +565,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       <div class="section-title">${ld.label}</div>
       <pre style="margin-top:12pt;">${caseItem[ld.field]}</pre>
       <div class="footer">
-        <span>${CONTACT.website} | ${CONTACT.email}</span>
+        <span>${ld.label}</span>
         <span>${caseRef} · Page ${8 + idx}</span>
       </div>
     </div>`).join("")}

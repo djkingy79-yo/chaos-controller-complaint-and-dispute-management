@@ -101,17 +101,17 @@ Keep it professional, actionable, and easy to scan. Use Australian English spell
       prompt: prompt,
       model: 'gpt_5_mini',
       response_json_schema: {
-      type: "object",
-      properties: {
-        summary: { type: "string", description: "3-4 sentence comprehensive case overview" },
-        key_issues: { type: "array", items: { type: "string" }, description: "4-6 key issues as bullet points" },
-        evidence_analysis: { type: "array", items: { type: "string" }, description: "3-5 evidence highlights with analysis" },
-        correspondence_summary: { type: "string", description: "2-3 sentence summary of complaint history" },
-        next_steps: { type: "array", items: { type: "string" }, description: "4-6 recommended next steps" },
-        critical_deadlines: { type: "array", items: { type: "string" }, description: "Urgent deadlines within 14 days" },
-        case_strength_assessment: { type: "string", description: "2-3 sentence objective case assessment" }
-      },
-      required: ["summary", "key_issues", "evidence_analysis", "next_steps", "case_strength_assessment"]
+        type: "object",
+        properties: {
+          summary: { type: "string", description: "3-4 sentence comprehensive case overview" },
+          key_issues: { type: "array", items: { type: "string" }, description: "4-6 key issues as bullet points" },
+          evidence_analysis: { type: "array", items: { type: "string" }, description: "3-5 evidence highlights with analysis" },
+          correspondence_summary: { type: "string", description: "2-3 sentence summary of complaint history" },
+          next_steps: { type: "array", items: { type: "string" }, description: "4-6 recommended next steps" },
+          critical_deadlines: { type: "array", items: { type: "string" }, description: "Urgent deadlines within 14 days" },
+          case_strength_assessment: { type: "string", description: "2-3 sentence objective case assessment" }
+        },
+        required: ["summary", "key_issues", "evidence_analysis", "next_steps", "case_strength_assessment"]
       }
     });
 

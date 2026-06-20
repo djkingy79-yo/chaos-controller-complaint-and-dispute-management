@@ -87,25 +87,26 @@ function openPrintPreview(caseItem, evidence, events) {
 
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head>
-    <title>Case Bundle — ${caseItem.title}</title>
-    <style>
-      @page { margin: 0; size: A4; }
-      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-      body { font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; margin:0; padding:0; }
-      .cover-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
-      .toc-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
-      .section-page { width:210mm; min-height:297mm; page-break-before:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
-      .cover-body { padding:28% 25mm 25mm 25mm; }
-      .page-body { padding:20mm 25mm 25mm 25mm; }
-      table { width:100%; border-collapse:collapse; font-size:10.5pt; margin-top:8pt; }
-      th { background:#f4f4f4; text-align:left; padding:5pt 8pt; font-weight:bold; border-bottom:2px solid #ddd; }
-      td { padding:4.5pt 8pt; border-bottom:1px solid #eee; vertical-align:top; }
-      pre { white-space:pre-wrap; font-family:'Times New Roman',Times,serif; font-size:10.5pt; line-height:1.6; margin:0; }
-      .toc-row { display:flex; align-items:baseline; padding:7pt 0; border-bottom:1px dotted #ccc; }
-      .toc-num { font-weight:bold; color:#1a1a2e; min-width:28pt; font-size:11pt; }
-      .toc-title { font-size:11pt; font-weight:bold; flex:1; }
-      .toc-sub { font-size:9pt; color:#666; margin-top:1pt; }
-    </style>
+  <title>Case Bundle — ${caseItem.title}</title>
+  <style>
+    @page { margin: 0; size: A4; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    body { font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; margin:0; padding:0; }
+    .cover-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
+    .toc-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
+    .section-page { width:210mm; min-height:297mm; page-break-before:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
+    .cover-body { padding:28% 25mm 25mm 25mm; }
+    .page-body { padding:20mm 25mm 25mm 25mm; }
+    table { width:100%; border-collapse:collapse; font-size:10.5pt; margin-top:8pt; }
+    th { background:#f4f4f4; text-align:left; padding:5pt 8pt; font-weight:bold; border-bottom:2px solid #ddd; }
+    td { padding:4.5pt 8pt; border-bottom:1px solid #eee; vertical-align:top; }
+    pre { white-space:pre-wrap; font-family:'Times New Roman',Times,serif; font-size:10.5pt; line-height:1.6; margin:0; }
+    .toc-row { display:flex; align-items:baseline; padding:7pt 0; border-bottom:1px dotted #ccc; }
+    .toc-num { font-weight:bold; color:#1a1a2e; min-width:28pt; font-size:11pt; }
+    .toc-title { font-size:11pt; font-weight:bold; flex:1; }
+    .toc-sub { font-size:9pt; color:#666; margin-top:1pt; }
+    .footer { margin-top:25pt; padding-top:6pt; border-top:0.5pt solid #ccc; font-size:8pt; color:#666; display:flex; justify-content:space-between; font-family:'Times New Roman',Times,serif; }
+  </style>
   </head><body>
 
   <!-- COVER -->
@@ -265,7 +266,7 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
 
     // 5. README
     const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-    zip.file("README.txt", `CHAOS CONTROLLER™ — CASE EXPORT GUIDE\n${"=".repeat(60)}\nRef: ${caseRef}\nGenerated: ${new Date().toLocaleString("en-AU")}\n\nCASE: "${caseItem.title}"\nvs. ${caseItem.organisation_name || "Organisation"}\n\n${"─".repeat(60)}\nWHAT'S INCLUDED\n${"─".repeat(60)}\n\n1. CASE SUMMARY (01_case_summary.txt)\n   Complete text export including:\n   - Case details (category, status, priority, dates)\n   - Complainant information\n   - Issue summary and full details\n   - Desired outcome\n   - Complete timeline of events\n   - Evidence index with file URLs\n   - All complaint letters (1st, 2nd, 3rd, escalation)\n\n2. LETTERS (letters/ folder)\n   Individual text files for each generated letter:\n   - 1st Complaint Letter (initial formal complaint)\n   - 2nd Complaint Letter (follow-up)\n   - 3rd Complaint Letter (final notice)\n   - Acceptance of Offer Letter\n   - Rejection of Offer Letter\n   - Escalation Letter (to external body)\n   \n   All letters use professional business format:\n   - Date first in bold (e.g., **20 June 2026**)\n   - Sender details right-aligned\n   - Recipient details left-aligned\n   - Australian English spelling\n   - No placeholder brackets\n\n3. TIMELINE (02_timeline.csv)\n   Chronological event log in CSV format:\n   - Event dates, types, titles, descriptions\n   - Action required flags\n   - Sortable in Excel/Google Sheets\n\n4. EVIDENCE INDEX (03_evidence_index.csv)\n   Complete document register:\n   - File names, types, dates\n   - Descriptions and direct URLs\n   - Tag categories\n\n5. FORMATTED PDF BUNDLE\n   For tribunal-ready PDF with branded letterheads:\n   → Use "PDF Bundle" button on the case page\n   → Features full Chaos Controller letterhead (page 1)\n   → Continuation headers on subsequent pages\n   → Professional business letter formatting\n   → Proper page breaks (no footer overflow)\n\n${"─".repeat(60)}\nHOW TO USE\n${"─".repeat(60)}\n\n1. Review the case summary for a complete overview\n2. Open letters folder to see individual correspondence\n3. Use timeline CSV to track event chronology\n4. Reference evidence index for document locations\n5. For formal submissions, generate PDF bundle from the app\n\n${"─".repeat(60)}\nPRINT FORMATTING\n${"─".repeat(60)}\n\nAll printed letters now feature:\n✓ Professional business letter format (date first)\n✓ Correct sender/recipient alignment\n✓ Full branded letterhead on page 1\n✓ Minimal continuation header on pages 2+\n✓ Proper page breaks (headers/footers stay in place)\n✓ Australian English spelling throughout\n\n${"─".repeat(60)}\nCONTACT & SUPPORT\n${"─".repeat(60)}\n\nWebsite: app.base44.com/6a2ac3b012e45642b1f94671\nEmail: chaoscontrollerapp@gmail.com\n\nChaos Controller™ — The Complaint & Dispute App\nTHAT'S GOT YOUR BACK\n\n"They had your loyalty. Now you deserve their accountability."\n`);
+    zip.file("README.txt", `CHAOS CONTROLLER™ — CASE EXPORT GUIDE\n${"=".repeat(60)}\nRef: ${caseRef}\nGenerated: ${new Date().toLocaleString("en-AU")}\n\nCASE: "${caseItem.title}"\nvs. ${caseItem.organisation_name || "Organisation"}\n\n${"─".repeat(60)}\nWHAT'S INCLUDED\n${"─".repeat(60)}\n\n1. CASE SUMMARY (01_case_summary.txt)\n   Complete text export including:\n   - Case details (category, status, priority, dates)\n   - Complainant information\n   - Issue summary and full details\n   - Desired outcome\n   - Complete timeline of events\n   - Evidence index with file URLs\n   - All complaint letters (1st, 2nd, 3rd, escalation)\n\n2. LETTERS (letters/ folder)\n   Individual text files for each generated letter:\n   - 1st Complaint Letter (initial formal complaint)\n   - 2nd Complaint Letter (follow-up)\n   - 3rd Complaint Letter (final notice)\n   - Acceptance of Offer Letter\n   - Rejection of Offer Letter\n   - Escalation Letter (to external body)\n   \n   All letters use professional business format:\n   - Date first in bold (e.g., **20 June 2026**)\n   - Sender details right-aligned\n   - Recipient details left-aligned\n   - Australian English spelling\n   - No placeholder brackets\n\n3. TIMELINE (02_timeline.csv)\n   Chronological event log in CSV format:\n   - Event dates, types, titles, descriptions\n   - Action required flags\n   - Sortable in Excel/Google Sheets\n\n4. EVIDENCE INDEX (03_evidence_index.csv)\n   Complete document register:\n   - File names, types, dates\n   - Descriptions and direct URLs\n   - Tag categories\n\n5. FORMATTED PDF BUNDLE\n   For tribunal-ready PDF with branded letterheads:\n   → Use "PDF Bundle" button on the case page\n   → Features full Chaos Controller letterhead (page 1)\n   → Continuation headers on subsequent pages\n   → Professional business letter formatting\n   → Proper page breaks (no footer overflow)\n\n${"─".repeat(60)}\nHOW TO USE\n${"─".repeat(60)}\n\n1. Review the case summary for a complete overview\n2. Open letters folder to see individual correspondence\n3. Use timeline CSV to track event chronology\n4. Reference evidence index for document locations\n5. For formal submissions, generate PDF bundle from the app\n\n${"─".repeat(60)}\nPRINT FORMATTING\n${"─".repeat(60)}\n\nAll printed letters now feature:\n✓ Professional business letter format (date first)\n✓ Correct sender/recipient alignment\n✓ Full branded letterhead on page 1\n✓ Minimal continuation header on pages 2+\n✓ Proper page breaks (headers/footers stay in place)\n✓ Australian English spelling throughout\n\n${"─".repeat(60)}\nCONTACT & SUPPORT\n${"─".repeat(60)}\n\nChaos Controller™ — The Complaint & Dispute App\nTHAT'S GOT YOUR BACK\n\n"They had your loyalty. Now you deserve their accountability."\n`);
 
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);

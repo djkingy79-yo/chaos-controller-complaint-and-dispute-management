@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, differenceInDays, isPast, parseISO } from "date-fns";
 import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { buildLetterheadHTML, buildFooterHTML } from "./LetterheadBanner";
+
 
 const STATUS_LABELS = {
   draft: "Draft",
@@ -65,9 +65,8 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         }).join("")
       : `<tr><td colspan="4" style="padding:8pt;font-size:11pt;color:#888;font-style:italic;">No upcoming deadlines.</td></tr>`;
 
+    const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
     const html = `<div style="font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;line-height:1.6;">
-      ${buildLetterheadHTML(caseItem, client, today)}
-
       <h1 style="font-size:17pt;font-weight:bold;margin-bottom:4pt;">Case Summary</h1>
       <h2 style="font-size:14pt;font-style:italic;margin-bottom:16pt;">${caseItem.title}</h2>
 
@@ -139,7 +138,10 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         <tbody>${deadlineRows}</tbody>
       </table>
 
-      ${buildFooterHTML(caseItem, client, 1)}
+      <div style="margin-top:30pt;padding-top:6pt;border-top:0.5pt solid #ccc;font-size:8pt;color:#666;display:flex;justify-content:space-between;font-family:'Times New Roman',Times,serif;">
+        <span>Case Summary</span>
+        <span>${caseRef}</span>
+      </div>
     </div>`;
 
     if (!document.getElementById("cc-summary-print-style")) {

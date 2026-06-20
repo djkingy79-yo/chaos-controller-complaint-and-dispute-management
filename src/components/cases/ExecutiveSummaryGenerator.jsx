@@ -16,55 +16,32 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
     setGenerating(true);
     setElapsedTime(0);
     
-    // Start timer
     const timerInterval = setInterval(() => {
       setElapsedTime(prev => prev + 1);
     }, 1000);
     
     try {
-      console.log("Generating summary for case:", caseItem.id);
+      const response = await base44.functions.invoke('generateExecutiveSummary', {
+        caseId: caseItem.id
+      });
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 90000);
+      clearInterval(timerInterval);
       
-      try {
-        const response = await base44.functions.invoke('generateExecutiveSummary', {
-          caseId: caseItem.id
-        }, { signal: controller.signal });
-        
-        clearTimeout(timeoutId);
-        clearInterval(timerInterval);
-        
-        console.log("Response status:", response.status);
-        console.log("Response data:", response.data);
-        
-        if (response.status === 200 && response.data?.success && response.data?.summary) {
-          setSummary(response.data);
-          setShowDialog(true);
-          toast({
-            title: "✓ Summary Generated",
-            description: `AI analyzed your case in ${elapsedTime + 1} seconds.`,
-          });
-        } else if (response.data?.error) {
-          throw new Error(response.data.error);
-        } else {
-          throw new Error("AI did not return a summary - please try again");
-        }
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        clearInterval(timerInterval);
-        if (fetchError.name === 'AbortError') {
-          throw new Error("Request timed out. Please try again.");
-        }
-        throw fetchError;
+      if (response.data?.success && response.data?.summary) {
+        setSummary(response.data);
+        setShowDialog(true);
+        toast({
+          title: "✓ Summary Generated",
+          description: `AI analyzed your case in ${elapsedTime + 1} seconds.`,
+        });
+      } else {
+        throw new Error(response.data?.error || "AI did not return a summary");
       }
     } catch (error) {
-      console.error("Summary generation failed:", error);
       clearInterval(timerInterval);
-      const errorMsg = error.message || "Network error occurred";
       toast({
         title: "✗ Generation Failed",
-        description: errorMsg,
+        description: error.message || "Please try again",
         variant: "destructive",
       });
     } finally {
