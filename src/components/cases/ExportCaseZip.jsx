@@ -85,21 +85,18 @@ function openPrintPreview(caseItem, evidence, events) {
       <div style="font-size:15pt;font-weight:bold;">${title}</div>
     </div>`;
 
-  const foot = () => `<div style="position:fixed;bottom:0;left:0;right:0;font-size:8pt;color:#888;text-align:center;padding:4pt 0;border-top:1px solid #ddd;">
-    www.chaoscontroller.com.au | ${caseRef} | ${today}
-  </div>`;
-
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Case Bundle — ${caseItem.title}</title>
     <style>
-      ${getLetterPageStyles()}
+      @page { margin: 0; size: A4; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       body { font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; margin:0; padding:0; }
-      .cover-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('${LETTERHEAD_URL}'); background-size:100% 100%; background-repeat:no-repeat; }
-      .toc-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('${CONTINUATION_PAGE_URL}'); background-size:100% 100%; background-repeat:no-repeat; }
-      .section-page { width:210mm; min-height:297mm; page-break-before:always; background-image:url('${CONTINUATION_PAGE_URL}'); background-size:100% 100%; background-repeat:no-repeat; }
-      .cover-body { padding:76mm 22mm 38mm 22mm; }
-      .page-body { padding:38mm 22mm 32mm 22mm; }
+      .cover-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
+      .toc-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
+      .section-page { width:210mm; min-height:297mm; page-break-before:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
+      .cover-body { padding:28% 25mm 25mm 25mm; }
+      .page-body { padding:20mm 25mm 25mm 25mm; }
       table { width:100%; border-collapse:collapse; font-size:10.5pt; margin-top:8pt; }
       th { background:#f4f4f4; text-align:left; padding:5pt 8pt; font-weight:bold; border-bottom:2px solid #ddd; }
       td { padding:4.5pt 8pt; border-bottom:1px solid #eee; vertical-align:top; }
@@ -108,7 +105,6 @@ function openPrintPreview(caseItem, evidence, events) {
       .toc-num { font-weight:bold; color:#1a1a2e; min-width:28pt; font-size:11pt; }
       .toc-title { font-size:11pt; font-weight:bold; flex:1; }
       .toc-sub { font-size:9pt; color:#666; margin-top:1pt; }
-      @media print { @page { margin:0; } }
     </style>
   </head><body>
 
