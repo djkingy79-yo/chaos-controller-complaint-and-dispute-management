@@ -169,16 +169,24 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       const extracted = await scanDocument(created.file_url, created.file_name, created.file_type);
       
       // Extract full text for searchability (async, non-blocking)
-      base44.functions.invoke('extractTextFromEvidence', { evidenceId: created.id })
-        .then((result) => {
-          if (result.data?.text) {
-            base44.entities.Evidence.update(created.id, { 
-              extracted_text: result.data.text,
-              text_extracted_date: new Date().toISOString()
-            });
-          }
-        })
-        .catch(err => console.error('Text extraction failed:', err));
+      // Small delay to ensure record is fully committed before function access
+      setTimeout(() => {
+        base44.functions.invoke('extractTextFromEvidence', { evidenceId: created.id })
+          .then((result) => {
+            if (result.data?.success && result.data?.text) {
+              base44.entities.Evidence.update(created.id, { 
+                extracted_text: result.data.text,
+                text_extracted_date: new Date().toISOString()
+              });
+            }
+          })
+          .catch(err => {
+            // Ignore 404s - record might not be ready yet
+            if (err.status !== 404) {
+              console.error('Text extraction failed:', err);
+            }
+          });
+      }, 500);
       
       await base44.entities.Evidence.update(created.id, { 
         extracted_data: extracted, 
