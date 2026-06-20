@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import { format, isBefore, isAfter, differenceInDays } from "date-fns";
@@ -75,7 +76,7 @@ function Section({ title, icon: Icon, iconColor, children, defaultOpen = true, b
 }
 
 export default function SharedCasePortal() {
-  const token = window.location.pathname.split("/shared-case/")[1];
+  const { token } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
