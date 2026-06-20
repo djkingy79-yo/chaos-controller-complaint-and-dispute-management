@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import {
   AlertTriangle, Clock, CheckCircle2, Zap, Calendar,
-  ArrowUpRight, FolderOpen, LogOut, TrendingUp, ChevronDown,
+  ArrowUpRight, FolderOpen, LogOut, ChevronDown,
   ChevronUp, Flag, MessageSquare, AlertCircle, Shield,
-  FileText, Scale, Building2, Loader2, Bell, RefreshCw
+  FileText, Scale, Building2, Loader2, Bell, RefreshCw, Send
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const statusConfig = {
   draft:              { label: "Draft",                color: "#888",    bg: "#88888820" },
@@ -113,7 +114,135 @@ function CaseCard({ caseData, isSelected, onClick }) {
   );
 }
 
-function CaseDetail({ caseData }) {
+const RESPONSE_TYPES = [
+  { value: "general_response", label: "General Response" },
+  { value: "offer_settlement", label: "Offer Settlement" },
+  { value: "deny_claim", label: "Deny Claim" },
+  { value: "request_more_info", label: "Request More Information" },
+  { value: "escalation_response", label: "Response to Escalation" },
+];
+
+function MerchantResponsePanel({ caseData, session, onResponseSent }) {
+  const [responseType, setResponseType] = useState("general_response");
+  const [responseText, setResponseText] = useState("");
+  const [offerAmount, setOfferAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const responses = caseData.responses || [];
+
+  const handleSubmit = async () => {
+    if (!responseText.trim()) return;
+    setSubmitting(true);
+    await base44.functions.invoke("submitMerchantResponse", {
+      case_id: caseData.case.id,
+      share_id: caseData.share.id,
+      merchant_email: session.email,
+      merchant_name: session.name || session.email,
+      response_text: responseText.trim(),
+      response_type: responseType,
+      offer_amount: offerAmount.trim() || undefined,
+    });
+    setSubmitting(false);
+    setSubmitted(true);
+    setResponseText("");
+    setOfferAmount("");
+    onResponseSent();
+  };
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-800 flex items-center gap-2.5">
+        <MessageSquare className="w-5 h-5 text-[#FFD700]" />
+        <span className="font-display font-black text-white text-sm">Submit Your Response</span>
+        {responses.length > 0 && (
+          <span className="ml-auto text-[10px] text-gray-400">{responses.length} previous response{responses.length > 1 ? "s" : ""}</span>
+        )}
+      </div>
+      <div className="px-5 pb-5 pt-4 space-y-4">
+        {/* Previous responses */}
+        {responses.length > 0 && (
+          <div className="space-y-2">
+            {responses.map(r => (
+              <div key={r.id} className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold text-[#FFD700] uppercase">{(r.response_type||"").replace(/_/g," ")}</span>
+                  <span className="text-[10px] text-gray-500 ml-auto">{r.created_date ? new Date(r.created_date).toLocaleDateString("en-AU") : ""}</span>
+                </div>
+                <p className="text-sm text-gray-300 leading-relaxed">{r.response_text}</p>
+                {r.offer_amount && <p className="text-xs text-green-400 font-bold mt-1">Offer: {r.offer_amount}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {submitted ? (
+          <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-5 text-center">
+            <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-2" />
+            <p className="font-black text-white">Response Submitted</p>
+            <p className="text-sm text-gray-400 mt-1">The complainant has been notified.</p>
+            <button onClick={() => setSubmitted(false)} className="mt-3 text-xs text-[#FFD700] hover:underline font-bold">Submit Another Response</button>
+          </div>
+        ) : (
+          <>
+            <div>
+              <label className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-2 block">Response Type</label>
+              <div className="flex flex-wrap gap-2">
+                {RESPONSE_TYPES.map(rt => (
+                  <button
+                    key={rt.value}
+                    onClick={() => setResponseType(rt.value)}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-bold border transition-all ${
+                      responseType === rt.value
+                        ? "bg-[#FFD700] text-black border-[#FFD700]"
+                        : "bg-gray-800 text-gray-400 border-gray-700 hover:border-gray-500"
+                    }`}
+                  >
+                    {rt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {responseType === "offer_settlement" && (
+              <div>
+                <label className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-2 block">Offer Amount (AUD)</label>
+                <input
+                  type="text"
+                  value={offerAmount}
+                  onChange={e => setOfferAmount(e.target.value)}
+                  placeholder="e.g. $500.00"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#FFD700]"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-2 block">Your Response</label>
+              <textarea
+                value={responseText}
+                onChange={e => setResponseText(e.target.value)}
+                rows={5}
+                placeholder="Write your formal response to this dispute..."
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-[#FFD700] resize-none"
+              />
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || !responseText.trim()}
+              className="w-full flex items-center justify-center gap-2 bg-[#FFD700] hover:bg-[#FFD700]/90 disabled:opacity-50 text-black font-black py-3 rounded-xl text-sm transition-all"
+            >
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {submitting ? "Submitting…" : "Submit Response"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CaseDetail({ caseData, session, onResponseSent }) {
   const { case: caseItem, deadlines, timeline, checklist, evidence_count, evidence_types, summary } = caseData;
   const statusCfg = statusConfig[caseItem.status] || statusConfig.draft;
   const today = new Date();
@@ -389,6 +518,9 @@ function CaseDetail({ caseData }) {
           <p className="text-xs text-gray-500 mt-3">File contents are private — only the complainant can access documents.</p>
         </div>
       </CollapsibleSection>
+
+      {/* Merchant Response Panel */}
+      <MerchantResponsePanel caseData={caseData} session={session} onResponseSent={onResponseSent} />
     </motion.div>
   );
 }
@@ -531,7 +663,12 @@ export default function MerchantPortal() {
             <div>
               <AnimatePresence mode="wait">
                 {cases[selectedCaseIdx] && (
-                  <CaseDetail key={cases[selectedCaseIdx].case.id} caseData={cases[selectedCaseIdx]} />
+                  <CaseDetail
+                    key={cases[selectedCaseIdx].case.id}
+                    caseData={cases[selectedCaseIdx]}
+                    session={session}
+                    onResponseSent={() => loadCases(session, true)}
+                  />
                 )}
               </AnimatePresence>
             </div>

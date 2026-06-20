@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
         const timelineEvents = await base44.asServiceRole.entities.TimelineEvent.filter({ case_id: share.case_id });
         const checklistItems = await base44.asServiceRole.entities.ChecklistItem.filter({ case_id: share.case_id });
         const evidence = await base44.asServiceRole.entities.Evidence.filter({ case_id: share.case_id });
+        const responses = await base44.asServiceRole.entities.MerchantResponse.filter({ case_id: share.case_id, merchant_email: email });
 
         const today = new Date();
         const overdueDeadlines = deadlines.filter(d =>
@@ -81,6 +82,10 @@ Deno.serve(async (req) => {
           },
           evidence_count: evidence.length,
           evidence_types: [...new Set(evidence.map(e => e.file_type).filter(Boolean))],
+          responses: responses.map(r => ({
+            id: r.id, response_text: r.response_text, response_type: r.response_type,
+            offer_amount: r.offer_amount, created_date: r.created_date
+          })),
           summary: {
             overdue_count: overdueDeadlines.length,
             action_count: actionItems.length,

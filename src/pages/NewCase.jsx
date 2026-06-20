@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Shield, Loader2, CheckCircle2, ArrowLeft, Upload, DollarSign, Wallet, Lock } from "lucide-react";
+import { Shield, Loader2, CheckCircle2, ArrowLeft, Upload, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CategorySelector from "@/components/cases/CategorySelector";
 import GuidedQuestions from "@/components/cases/GuidedQuestions";
@@ -42,7 +42,7 @@ export default function NewCase() {
   const activeSub = getActiveSubscription(user, payments);
   const hasSubscription = !!activeSub;
 
-  // steps: 0=upload, 1=payment(if needed), 2=category, 3=questions, 4=generating, 5=review
+  // steps: 0=upload, 2=category, 3=questions, 4=generating, 5=review
   const [step, setStep] = useState(0);
   const [category, setCategory] = useState("");
   const [formData, setFormData] = useState({});
@@ -67,7 +67,7 @@ export default function NewCase() {
 
   const handleUploadComplete = (files) => {
     setUploadedFiles(files);
-    setStep(hasSubscription ? 2 : 1);
+    setStep(2);
   };
 
   const generateComplaint = async () => {
@@ -139,9 +139,44 @@ LETTER INSTRUCTIONS:
     });
   };
 
-  const stepLabels = hasSubscription
-    ? ["Upload", "Category", "Details", "Review"]
-    : ["Upload", "Payment", "Category", "Details", "Review"];
+  const stepLabels = ["Upload", "Category", "Details", "Review"];
+
+  // Hard gate — show plan selection if no active subscription
+  if (!hasSubscription && user) {
+    return (
+      <div className="max-w-lg mx-auto py-16 text-center space-y-6">
+        <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+          <Lock className="w-8 h-8 text-destructive" />
+        </div>
+        <div>
+          <h2 className="font-heading font-black text-2xl text-foreground mb-2">Subscription Required</h2>
+          <p className="text-muted-foreground text-sm">You need an active plan to create a new case. Choose a plan and complete your PayID payment to get started.</p>
+        </div>
+        <div className="grid gap-3">
+          {PLANS.map(plan => (
+            <button
+              key={plan.name}
+              onClick={() => navigate(`/payments?plan=${plan.name}`)}
+              className={`flex items-center gap-4 p-4 rounded-xl border-2 text-left hover:border-primary/50 transition-all bg-card ${plan.popular ? "border-yellow-500/50" : "border-border"}`}
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-foreground">{plan.name}</span>
+                  {plan.popular && <span className="text-xs bg-yellow-500 text-black font-bold px-2 py-0.5 rounded">POPULAR</span>}
+                  <span className="text-primary font-black ml-auto">{plan.price}<span className="text-xs font-normal text-muted-foreground">/mo</span></span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">{plan.desc}</p>
+              </div>
+              <ArrowLeft className="w-4 h-4 text-muted-foreground rotate-180 shrink-0" />
+            </button>
+          ))}
+        </div>
+        <Button variant="outline" onClick={() => navigate(-1)} className="gap-2">
+          <ArrowLeft className="w-4 h-4" /> Go Back
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -168,10 +203,7 @@ LETTER INSTRUCTIONS:
       {/* Progress Steps */}
       <div className="flex items-center gap-2 flex-wrap">
         {stepLabels.map((label, idx) => {
-          // map visual index to actual step number
-          const actualStep = hasSubscription
-            ? [0, 2, 3, 5][idx]
-            : [0, 1, 2, 3, 5][idx];
+          const actualStep = [0, 2, 3, 5][idx];
           const active = step >= actualStep;
           const done = step > actualStep;
           return (
@@ -193,60 +225,6 @@ LETTER INSTRUCTIONS:
         {step === 0 && (
           <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <DocumentUploadStep onContinue={handleUploadComplete} onBack={() => navigate(-1)} />
-          </motion.div>
-        )}
-
-        {/* Step 1: Payment Gate (only if no active subscription) */}
-        {step === 1 && (
-          <motion.div key="payment" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
-              <Lock className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold text-foreground">Subscription Required</p>
-                <p className="text-sm text-muted-foreground mt-0.5">Purchase a plan via PayID to create your case.</p>
-              </div>
-            </div>
-
-            {PLANS.map(plan => (
-              <div key={plan.name} className={`rounded-xl border-2 p-4 bg-card ${plan.popular ? "border-[#FFD700]" : "border-border"}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-foreground">{plan.name}</p>
-                      {plan.popular && <span className="text-xs bg-[#FFD700] text-black font-bold px-2 py-0.5 rounded">POPULAR</span>}
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-2">{plan.desc}</p>
-                    <ul className="space-y-1">
-                      {plan.features.map(f => (
-                        <li key={f} className="text-xs text-muted-foreground flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />{f}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <p className="text-xl font-black text-primary shrink-0">{plan.price}<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
-                </div>
-              </div>
-            ))}
-
-            <div className="bg-card border border-border rounded-xl p-5 space-y-2">
-              <h3 className="font-semibold text-foreground flex items-center gap-2 text-sm"><Wallet className="w-4 h-4 text-primary" /> Pay via PayID</h3>
-              <div className="flex items-center gap-3 text-sm">
-                <DollarSign className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-muted-foreground text-xs">PayID Email:</span>
-                <code className="flex-1 bg-secondary px-3 py-2 rounded font-mono text-foreground text-xs">{PAYID_EMAIL}</code>
-              </div>
-              <p className="text-xs text-muted-foreground">Send your chosen plan amount to this PayID. Use your email as the description. Our team verifies within a few hours.</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button variant="outline" asChild className="flex-1">
-                <Link to="/payments">Full Payment Details</Link>
-              </Button>
-              <Button onClick={() => setStep(2)} className="flex-1 gap-2">
-                <CheckCircle2 className="w-4 h-4" /> I've Sent Payment — Continue
-              </Button>
-            </div>
           </motion.div>
         )}
 
