@@ -61,111 +61,87 @@ export default function CaseSummary({ caseItem, evidence, events }) {
 
   const handlePrint = () => {
     const client = buildClientContext(caseItem, evidence);
+    const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
 
     const deadlineRows = upcomingDeadlines.length
       ? upcomingDeadlines.map((d) => {
           const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
           const overdue = daysLeft < 0;
           return `<tr style="border-bottom:1px solid #eee;">
-            <td style="padding:5pt 8pt;font-size:11pt;font-weight:bold;">${d.title}</td>
-            <td style="padding:5pt 8pt;font-size:11pt;">${format(new Date(d.deadline_date), "d MMM yyyy")}</td>
+            <td style="padding:5pt 8pt;font-size:10.5pt;font-weight:bold;">${d.title}</td>
+            <td style="padding:5pt 8pt;font-size:10.5pt;">${format(new Date(d.deadline_date), "d MMM yyyy")}</td>
             <td style="padding:5pt 8pt;font-size:10pt;text-transform:capitalize;">${(d.deadline_type || "").replace(/_/g, " ")}</td>
-            <td style="padding:5pt 8pt;font-size:11pt;font-weight:bold;color:${overdue ? "#c00" : daysLeft <= 7 ? "#d97706" : "#166534"};">
+            <td style="padding:5pt 8pt;font-size:10.5pt;font-weight:bold;color:${overdue ? "#c00" : daysLeft <= 7 ? "#d97706" : "#166534"};">
               ${overdue ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? "TODAY" : `${daysLeft} days`}
             </td>
           </tr>`;
         }).join("")
-      : `<tr><td colspan="4" style="padding:8pt;font-size:11pt;color:#888;font-style:italic;">No upcoming deadlines.</td></tr>`;
+      : `<tr><td colspan="4" style="padding:8pt;font-size:10.5pt;color:#888;font-style:italic;">No upcoming deadlines.</td></tr>`;
 
-    const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-    const html = `<div style="font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;line-height:1.6;">
-      <h1 style="font-size:17pt;font-weight:bold;margin-bottom:4pt;">Case Summary</h1>
-      <h2 style="font-size:14pt;font-style:italic;margin-bottom:16pt;">${caseItem.title}</h2>
-
-      <!-- Case Info Grid -->
-      <table style="width:100%;border-collapse:collapse;margin-bottom:18pt;">
-        <tr>
-          <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;width:30%;">Organisation</td>
-          <td style="padding:5pt 8pt;font-size:11pt;font-weight:bold;">${caseItem.organisation_name || "—"}</td>
-          <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;width:20%;">Status</td>
-          <td style="padding:5pt 8pt;font-size:11pt;font-weight:bold;">${STATUS_LABELS[caseItem.status] || caseItem.status}</td>
-        </tr>
-        <tr>
-          <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Category</td>
-          <td style="padding:5pt 8pt;font-size:11pt;text-transform:capitalize;">${caseItem.category}</td>
-          <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Priority</td>
-          <td style="padding:5pt 8pt;font-size:11pt;">${PRIORITY_LABELS[caseItem.priority] || caseItem.priority || "—"}</td>
-        </tr>
-        <tr>
-          <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Complainant</td>
-          <td style="padding:5pt 8pt;font-size:11pt;">${client.name || "—"}</td>
-          <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Account #</td>
-          <td style="padding:5pt 8pt;font-size:11pt;word-break:break-word;">${caseItem.account_number || "—"}</td>
-        </tr>
-        <tr>
-          <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Incident Date</td>
-          <td style="padding:5pt 8pt;font-size:11pt;">${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}</td>
-          <td style="padding:5pt 8pt;background:#f8fafc;font-size:10pt;color:#555;">Escalation Body</td>
-          <td style="padding:5pt 8pt;font-size:11pt;">${caseItem.escalation_body || "—"}</td>
-        </tr>
-      </table>
-
-      <!-- Stats Row -->
-      <div style="display:flex;gap:16pt;margin-bottom:18pt;">
-        <div style="flex:1;border:1pt solid #e2e8f0;border-radius:6pt;padding:10pt 14pt;text-align:center;">
-          <div style="font-size:22pt;font-weight:bold;color:#1d4ed8;">${evidence.length}</div>
-          <div style="font-size:9pt;color:#555;margin-top:2pt;">Evidence Files</div>
-        </div>
-        <div style="flex:1;border:1pt solid #e2e8f0;border-radius:6pt;padding:10pt 14pt;text-align:center;">
-          <div style="font-size:22pt;font-weight:bold;color:#7c3aed;">${events.length}</div>
-          <div style="font-size:9pt;color:#555;margin-top:2pt;">Timeline Events</div>
-        </div>
-        <div style="flex:1;border:1pt solid #e2e8f0;border-radius:6pt;padding:10pt 14pt;text-align:center;">
-          <div style="font-size:22pt;font-weight:bold;color:#d97706;">${upcomingDeadlines.length}</div>
-          <div style="font-size:9pt;color:#555;margin-top:2pt;">Upcoming Deadlines</div>
-        </div>
+    const html = `<!DOCTYPE html><html><head>
+      <title>Case Summary — ${caseItem.title}</title>
+      <style>
+        @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
+        .section-title { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
+        .summary-box { background: #f8f8f8; border: 1px solid #ddd; padding: 10pt 12pt; border-radius: 4pt; margin-bottom: 12pt; }
+        .summary-row td { border: none; padding: 2pt 10pt 2pt 0; font-size: 10pt; }
+        .summary-row td:first-child { color: #666; font-style: italic; white-space: nowrap; width: 35%; }
+        .summary-row td:last-child { font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
+        th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-weight: bold; border-bottom: 2px solid #ddd; font-size: 10pt; }
+        td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; font-size: 10pt; }
+        .footer { margin-top: 25pt; padding-top: 6pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
+      </style>
+    </head><body>
+      <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">Case Summary</div>
+      <div class="section-title" style="font-size:13pt;margin-bottom:16pt;">${caseItem.title}</div>
+      
+      <div class="summary-box">
+        <table class="summary-row">
+          <tbody>
+            <tr><td>Organisation</td><td>${caseItem.organisation_name || "—"}</td></tr>
+            <tr><td>Status</td><td>${STATUS_LABELS[caseItem.status] || caseItem.status}</td></tr>
+            <tr><td>Category</td><td>${caseItem.category}</td></tr>
+            <tr><td>Priority</td><td>${PRIORITY_LABELS[caseItem.priority] || caseItem.priority}</td></tr>
+            <tr><td>Complainant</td><td>${client.name || "—"}</td></tr>
+            <tr><td>Account #</td><td>${caseItem.account_number || "—"}</td></tr>
+            <tr><td>Incident Date</td><td>${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}</td></tr>
+            <tr><td>Escalation Body</td><td>${caseItem.escalation_body || "—"}</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Issue Summary -->
-      ${caseItem.issue_summary ? `
-      <h3 style="font-size:13pt;font-weight:bold;font-style:italic;margin-bottom:4pt;">Issue Summary</h3>
-      <p style="font-size:11pt;margin-bottom:16pt;">${caseItem.issue_summary}</p>` : ""}
+      ${caseItem.issue_summary ? `<div class="section" style="margin-top:14pt;">
+        <div class="section-title" style="font-size:11pt;">Issue Summary</div>
+        <div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_summary}</div>
+      </div>` : ""}
 
-      <!-- Desired Outcome -->
-      ${caseItem.desired_outcome ? `
-      <h3 style="font-size:13pt;font-weight:bold;font-style:italic;margin-bottom:4pt;">Desired Outcome</h3>
-      <p style="font-size:11pt;margin-bottom:16pt;">${caseItem.desired_outcome}</p>` : ""}
+      ${caseItem.desired_outcome ? `<div class="section" style="margin-top:14pt;">
+        <div class="section-title" style="font-size:11pt;">Desired Outcome</div>
+        <div style="font-size:10.5pt;line-height:1.6;">${caseItem.desired_outcome}</div>
+      </div>` : ""}
 
-      <!-- Upcoming Deadlines -->
-      <h3 style="font-size:13pt;font-weight:bold;font-style:italic;margin-bottom:6pt;">Upcoming Deadlines</h3>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:18pt;">
-        <thead>
-          <tr style="background:#f0f0f0;">
-            <th style="text-align:left;padding:5pt 8pt;font-size:10pt;">Title</th>
-            <th style="text-align:left;padding:5pt 8pt;font-size:10pt;">Due Date</th>
-            <th style="text-align:left;padding:5pt 8pt;font-size:10pt;">Type</th>
-            <th style="text-align:left;padding:5pt 8pt;font-size:10pt;">Days Remaining</th>
-          </tr>
-        </thead>
-        <tbody>${deadlineRows}</tbody>
-      </table>
-
-      <div style="margin-top:30pt;padding-top:6pt;border-top:0.5pt solid #ccc;font-size:8pt;color:#666;display:flex;justify-content:space-between;font-family:'Times New Roman',Times,serif;">
-        <span>Case Summary</span>
-        <span>${caseRef}</span>
+      <div class="section" style="margin-top:14pt;">
+        <div class="section-title" style="font-size:11pt;">Upcoming Deadlines (${upcomingDeadlines.length})</div>
+        <table>
+          <thead><tr><th>Title</th><th style="width:80pt;">Due Date</th><th style="width:80pt;">Type</th><th>Days Remaining</th></tr></thead>
+          <tbody>${deadlineRows}</tbody>
+        </table>
       </div>
-    </div>`;
 
-    if (!document.getElementById("cc-summary-print-style")) {
-      const s = document.createElement("style");
-      s.id = "cc-summary-print-style";
-      s.innerHTML = `@media print { body * { visibility:hidden !important; } #cc-summary-print, #cc-summary-print * { visibility:visible !important; } #cc-summary-print { position:fixed;left:0;top:0;width:100%; } @page { margin:2cm; } }`;
-      document.head.appendChild(s);
-    }
-    let area = document.getElementById("cc-summary-print");
-    if (!area) { area = document.createElement("div"); area.id = "cc-summary-print"; document.body.appendChild(area); }
-    area.innerHTML = html;
-    window.print();
+      <div class="footer">
+        <span>Chaos Controller™ — chaoscontroller.com.au</span>
+        <span>${caseRef} · Generated: ${today}</span>
+      </div>
+    </body></html>`;
+
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); win.close(); }, 500);
   };
 
   return (

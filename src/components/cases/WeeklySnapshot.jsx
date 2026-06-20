@@ -15,28 +15,27 @@ function printSnapshot(caseItem, snapshot, generatedAt) {
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Weekly Snapshot — ${caseItem.title}</title>
     <style>
-      ${getLetterPageStyles()}
-      body { font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.7; margin:0; }
-      .letter-page { background-image:url('${LETTERHEAD_URL}'); background-size:100% 100%; background-repeat:no-repeat; min-height:297mm; width:210mm; }
-      .page-body { padding:76mm 22mm 32mm 22mm; }
-      h2 { font-size:14pt; font-weight:bold; margin:14pt 0 4pt; }
-      h3 { font-size:12pt; font-weight:bold; margin:10pt 0 2pt; }
-      ul, ol { margin:4pt 0 8pt 18pt; }
-      li { margin-bottom:3pt; }
-      p { margin:4pt 0 8pt; }
-      .footer { font-size:8pt; color:#888; text-align:center; margin-top:20pt; border-top:1px solid #ddd; padding-top:6pt; }
-      @media print { @page { margin:0; } }
+      @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
+      .section-title { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
+      .header { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 10pt; }
+      h2 { font-size: 14pt; font-weight: bold; color: #1a1a2e; margin: 14pt 0 4pt; }
+      h3 { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin: 10pt 0 4pt; }
+      ul, ol { margin: 4pt 0 8pt 18pt; }
+      li { margin-bottom: 3pt; }
+      p { margin: 4pt 0 8pt; }
+      .footer { margin-top: 25pt; padding-top: 6pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
     </style>
   </head><body>
-  <div class="letter-page">
-    <div class="page-body">
-      <div style="font-size:9pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:10pt;">Chaos Controller™ — Weekly Case Snapshot</div>
-      <div style="font-size:18pt;font-weight:bold;margin-bottom:4pt;">${caseItem.title}</div>
-      <div style="font-size:10pt;color:#666;margin-bottom:16pt;">vs. ${caseItem.organisation_name || "Organisation"} &nbsp;|&nbsp; Ref: ${caseRef} &nbsp;|&nbsp; Generated: ${generatedAt}</div>
-      <div>${snapshot.replace(/\n/g, "<br/>")}</div>
-      <div class="footer">app.base44.com/6a2ac3b012e45642b1f94671 &nbsp;|&nbsp; ${caseRef} &nbsp;|&nbsp; ${generatedAt}</div>
+    <div class="header">Chaos Controller™ — Weekly Case Snapshot</div>
+    <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">${caseItem.title}</div>
+    <div style="font-size:10.5pt;color:#666;margin-bottom:16pt;">vs. ${caseItem.organisation_name || "Organisation"} &nbsp;|&nbsp; Ref: ${caseRef} &nbsp;|&nbsp; Generated: ${generatedAt}</div>
+    <div style="margin-top:14pt;">${snapshot.replace(/\n/g, "<br/>")}</div>
+    <div class="footer">
+      <span>Chaos Controller™ — chaoscontroller.com.au</span>
+      <span>${caseRef} · Generated: ${generatedAt}</span>
     </div>
-  </div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 500);
