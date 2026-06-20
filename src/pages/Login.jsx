@@ -28,12 +28,28 @@ export default function Login() {
     }
   };
 
-  const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/dashboard");
+  const handleGoogle = async () => {
+    try {
+      // Use hard redirect to ensure clean OAuth flow
+      const redirectUrl = `${window.location.origin}/dashboard`;
+      await base44.auth.loginWithProvider("google", redirectUrl);
+      // Fallback: if loginWithProvider doesn't redirect immediately
+      window.location.href = redirectUrl;
+    } catch (err) {
+      console.error('Google login failed:', err);
+      setError('Google login failed. Please try again.');
+    }
   };
 
-  const handleMicrosoft = () => {
-    base44.auth.loginWithProvider("microsoft", "/dashboard");
+  const handleMicrosoft = async () => {
+    try {
+      const redirectUrl = `${window.location.origin}/dashboard`;
+      await base44.auth.loginWithProvider("microsoft", redirectUrl);
+      window.location.href = redirectUrl;
+    } catch (err) {
+      console.error('Microsoft login failed:', err);
+      setError('Microsoft login failed. Please try again.');
+    }
   };
 
   return (
