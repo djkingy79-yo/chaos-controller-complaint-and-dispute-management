@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Shield, Loader2, CheckCircle2, ArrowLeft, Upload, Lock } from "lucide-react";
+import { Shield, Loader2, CheckCircle2, ArrowLeft, Upload, Lock, FolderOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CategorySelector from "@/components/cases/CategorySelector";
 import GuidedQuestions from "@/components/cases/GuidedQuestions";
@@ -190,13 +190,17 @@ LETTER INSTRUCTIONS:
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div>
-          <h1 className="font-heading font-bold text-2xl text-foreground">New Case</h1>
-          <p className="text-sm text-muted-foreground mt-1">Upload → {hasSubscription ? "AI builds your case" : "Pay → AI builds your case"}</p>
+      <div className="relative overflow-hidden bg-gradient-to-r from-primary/15 via-secondary/15 to-accent/15 border-2 border-primary/30 rounded-2xl p-6 mb-6">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full" />
+        <div className="relative flex items-center gap-4">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="h-12 w-12 rounded-xl border-2">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <p className="text-xs font-black text-primary uppercase tracking-wider mb-1">Create New Case</p>
+            <h1 className="font-heading font-black text-3xl sm:text-4xl text-foreground leading-tight">New Case</h1>
+            <p className="text-base text-muted-foreground mt-1 font-bold">Upload → AI builds your case → You take control</p>
+          </div>
         </div>
       </div>
 
@@ -210,20 +214,26 @@ LETTER INSTRUCTIONS:
       )}
 
       {/* Progress Steps */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap bg-card border-2 border-border rounded-2xl p-4">
         {stepLabels.map((label, idx) => {
           const actualStep = [0, 2, 3, 5][idx];
           const active = step >= actualStep;
           const done = step > actualStep;
           return (
             <React.Fragment key={label}>
-              <div className="flex items-center gap-1.5">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${active ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-                  {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
+              <div className="flex items-center gap-2">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg border-2 ${
+                  done ? "bg-primary text-white border-primary" :
+                  active ? "bg-primary/10 text-primary border-primary" :
+                  "bg-secondary text-muted-foreground border-border"
+                }`}>
+                  {done ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
                 </div>
-                <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
+                <span className={`text-sm font-black ${active ? "text-foreground" : "text-muted-foreground"}`}>{label.toUpperCase()}</span>
               </div>
-              {idx < stepLabels.length - 1 && <div className={`w-6 h-0.5 ${done ? "bg-primary" : "bg-secondary"}`} />}
+              {idx < stepLabels.length - 1 && (
+                <div className={`w-8 h-1 rounded-full ${done ? "bg-primary" : "bg-border"}`} />
+              )}
             </React.Fragment>
           );
         })}
@@ -284,28 +294,33 @@ LETTER INSTRUCTIONS:
 
         {/* Step 5: Review */}
         {step === 5 && (
-          <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-            <div className="bg-card rounded-xl border border-border p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-success">
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="font-heading font-semibold text-sm">Complaint Letter Generated</span>
+          <motion.div key="review" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8">
+            <div className="relative overflow-hidden bg-gradient-to-br from-success/15 to-green-500/10 border-2 border-success/40 rounded-2xl p-8">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-success/10 rounded-bl-full" />
+              <div className="relative flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-success/30 to-success/40 rounded-xl shadow-lg">
+                  <CheckCircle2 className="w-8 h-8 text-white" />
                 </div>
-                {uploadedFiles.length > 0 && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Upload className="w-3.5 h-3.5" />
-                    {uploadedFiles.length} doc{uploadedFiles.length !== 1 ? "s" : ""} ready
-                  </div>
-                )}
+                <div>
+                  <h2 className="font-heading font-black text-foreground text-3xl">Complaint Letter Generated</h2>
+                  <p className="text-base text-foreground font-bold mt-1">Review your professional complaint letter</p>
+                </div>
               </div>
-              <pre className="whitespace-pre-wrap text-sm font-body bg-secondary/50 rounded-lg p-4 leading-relaxed">
-                {complaintLetter}
-              </pre>
+              <div className="bg-white border-2 border-border rounded-xl p-6 shadow-inner">
+                <pre className="whitespace-pre-wrap text-base font-body leading-relaxed text-foreground">
+                  {complaintLetter}
+                </pre>
+              </div>
             </div>
 
-            <div className="bg-card rounded-xl border border-border p-5 space-y-3">
-              <h3 className="font-heading font-semibold text-sm text-foreground">Case Summary</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="bg-card border-2 border-border rounded-2xl p-8 shadow-xl">
+              <h3 className="font-heading font-black text-2xl text-foreground mb-6 flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <FolderOpen className="w-6 h-6 text-primary" />
+                </div>
+                Case Summary
+              </h3>
+              <div className="grid sm:grid-cols-2 gap-6">
                 {[
                   { label: "Complainant", value: formData.complainant_name },
                   { label: "Organisation", value: formData.organisation_name },
@@ -314,20 +329,20 @@ LETTER INSTRUCTIONS:
                   { label: "Account No.", value: formData.account_number },
                   { label: "Incident Date", value: formData.incident_date },
                 ].filter(item => item.value).map(({ label, value }) => (
-                  <div key={label}>
-                    <span className="text-muted-foreground text-xs">{label}</span>
-                    <p className="font-medium capitalize">{value}</p>
+                  <div key={label} className="p-4 bg-secondary/30 rounded-xl border border-border">
+                    <span className="text-sm font-black text-muted-foreground uppercase tracking-wider">{label}</span>
+                    <p className="text-lg font-black text-foreground mt-1 capitalize">{value}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(3)} className="gap-2">
-                <ArrowLeft className="w-4 h-4" /> Edit Answers
+            <div className="flex gap-4">
+              <Button variant="outline" onClick={() => setStep(3)} className="gap-2 h-14 px-8 text-lg font-black border-2">
+                <ArrowLeft className="w-5 h-5" /> Edit Answers
               </Button>
-              <Button onClick={handleCreate} disabled={createCaseMutation.isPending} className="flex-1 gap-2">
-                {createCaseMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              <Button onClick={handleCreate} disabled={createCaseMutation.isPending} className="flex-1 gap-2 h-14 text-lg font-black bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg shadow-primary/30">
+                {createCaseMutation.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
                 Create Case
               </Button>
             </div>

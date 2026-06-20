@@ -34,34 +34,38 @@ export default function CaseList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-black text-foreground">My Cases</h1>
-          <p className="text-sm text-foreground mt-0.5 font-black">{cases.length} total cases</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-muted rounded-lg p-1 gap-1">
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-card shadow text-foreground" : "text-foreground hover:text-foreground"}`}
-              title="List view"
-            >
-              <List className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode("kanban")}
-              className={`p-1.5 rounded-md transition-all ${viewMode === "kanban" ? "bg-card shadow text-foreground" : "text-foreground hover:text-foreground"}`}
-              title="Kanban view"
-            >
-              <Kanban className="w-4 h-4" />
-            </button>
+      <div className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-2 border-primary/30 rounded-2xl p-6 sm:p-8">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-sm font-black text-primary mb-1 uppercase tracking-wider">Case Management</p>
+            <h1 className="text-3xl sm:text-4xl font-display font-black text-foreground leading-tight">My Cases</h1>
+            <p className="text-base text-foreground font-bold mt-1">{cases.length} total cases</p>
           </div>
-          <Link to="/new-case">
-            <Button className="gap-2 font-medium">
-              <Plus className="w-4 h-4" />
-              New Case
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <div className="flex bg-card border-2 border-border rounded-xl p-1.5 gap-1 shadow-lg">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-3 rounded-lg transition-all ${viewMode === "list" ? "bg-primary text-white shadow-md" : "text-foreground hover:bg-secondary/50"}`}
+                title="List view"
+              >
+                <List className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode("kanban")}
+                className={`p-3 rounded-lg transition-all ${viewMode === "kanban" ? "bg-primary text-white shadow-md" : "text-foreground hover:bg-secondary/50"}`}
+                title="Kanban view"
+              >
+                <Kanban className="w-5 h-5" />
+              </button>
+            </div>
+            <Link to="/new-case">
+              <Button size="lg" className="gap-2 font-bold text-lg px-6 h-12 bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg shadow-primary/30">
+                <Plus className="w-5 h-5" />
+                New Case
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -72,46 +76,48 @@ export default function CaseList() {
       {!isLoading && cases.length > 0 && <CategoryMetrics cases={cases} />}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
-          <Input
-            placeholder="Search cases..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 font-bold"
-          />
+      <div className="bg-card border-2 border-border rounded-2xl p-6 shadow-xl">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Search cases..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-12 h-14 text-lg font-bold border-2"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-48 h-14 text-lg font-bold border-2">
+              <SelectValue placeholder="Filter by Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="complaint_sent">Complaint Sent</SelectItem>
+              <SelectItem value="awaiting_response">Awaiting Response</SelectItem>
+              <SelectItem value="response_received">Response Received</SelectItem>
+              <SelectItem value="escalation_ready">Escalation Ready</SelectItem>
+              <SelectItem value="escalated">Escalated</SelectItem>
+              <SelectItem value="resolved">Resolved</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full sm:w-44 h-14 text-lg font-bold border-2">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="banking">Banking</SelectItem>
+              <SelectItem value="insurance">Insurance</SelectItem>
+              <SelectItem value="tenancy">Tenancy</SelectItem>
+              <SelectItem value="telco">Telco</SelectItem>
+              <SelectItem value="utilities">Utilities</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-44 font-bold">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="complaint_sent">Complaint Sent</SelectItem>
-            <SelectItem value="awaiting_response">Awaiting Response</SelectItem>
-            <SelectItem value="response_received">Response Received</SelectItem>
-            <SelectItem value="escalation_ready">Escalation Ready</SelectItem>
-            <SelectItem value="escalated">Escalated</SelectItem>
-            <SelectItem value="resolved">Resolved</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-40 font-bold">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="banking">Banking</SelectItem>
-            <SelectItem value="insurance">Insurance</SelectItem>
-            <SelectItem value="tenancy">Tenancy</SelectItem>
-            <SelectItem value="telco">Telco</SelectItem>
-            <SelectItem value="utilities">Utilities</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Kanban Board */}

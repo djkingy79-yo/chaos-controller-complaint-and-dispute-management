@@ -77,20 +77,23 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="font-heading font-semibold text-lg text-foreground mb-2">
-          Upload Your Evidence
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Upload all documents related to your dispute. AI will extract key information automatically.
-        </p>
+    <div className="space-y-8">
+      <div className="relative overflow-hidden bg-gradient-to-r from-primary/15 via-secondary/15 to-accent/15 border-2 border-primary/30 rounded-2xl p-6">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full" />
+        <div>
+          <h2 className="font-heading font-black text-3xl text-foreground mb-2">
+            Upload Your Evidence
+          </h2>
+          <p className="text-lg text-muted-foreground font-bold">
+            Upload all documents related to your dispute. AI will extract key information automatically.
+          </p>
+        </div>
       </div>
 
       {/* Upload Area */}
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/30"
+        className="relative overflow-hidden border-3 border-dashed border-primary/40 rounded-2xl p-10 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group"
       >
         <input
           ref={fileInputRef}
@@ -100,40 +103,49 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
         />
-        <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-sm font-medium text-foreground mb-2">
-          Click to upload or drag and drop
-        </p>
-        <p className="text-xs text-muted-foreground">
-          PDF, JPG, PNG, DOC, DOCX (max 25MB per file)
-        </p>
-        {uploading && (
-          <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Uploading...
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <Upload className="w-10 h-10 text-primary" />
           </div>
-        )}
+          <p className="text-xl font-black text-foreground mb-2">
+            Click to upload or drag and drop
+          </p>
+          <p className="text-base text-muted-foreground font-bold">
+            PDF, JPG, PNG, DOC, DOCX (max 25MB per file)
+          </p>
+          {uploading && (
+            <div className="flex items-center justify-center gap-3 mt-6 text-base text-muted-foreground font-bold">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              Uploading...
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Uploaded Files List */}
       {uploadedFiles.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-foreground">Uploaded Files ({uploadedFiles.length})</h3>
-          <div className="space-y-2">
+        <div className="space-y-4">
+          <h3 className="text-xl font-black text-foreground">
+            Uploaded Files <span className="text-primary">({uploadedFiles.length})</span>
+          </h3>
+          <div className="space-y-3">
             {uploadedFiles.map((file, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
-                <FileText className="w-5 h-5 text-primary shrink-0" />
+              <div key={idx} className="flex items-center gap-4 p-5 bg-card border-2 border-border rounded-xl hover:border-primary/30 transition-all">
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <FileText className="w-6 h-6 text-primary" />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
-                  <p className="text-xs text-muted-foreground">Ready for AI extraction</p>
+                  <p className="text-base font-black text-foreground truncate">{file.file_name}</p>
+                  <p className="text-sm font-bold text-primary mt-0.5">Ready for AI extraction</p>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handleRemoveFile(idx)}
-                  className="shrink-0"
+                  className="shrink-0 h-10 w-10 rounded-xl hover:bg-destructive/10"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5 text-destructive" />
                 </Button>
               </div>
             ))}
@@ -165,31 +177,31 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
       )}
 
       {/* Navigation */}
-      <div className="flex gap-3">
+      <div className="flex gap-4 pt-4">
         {onBack && (
-          <Button variant="outline" onClick={onBack} className="gap-2">
+          <Button variant="outline" onClick={onBack} className="gap-2 h-14 px-8 text-lg font-black border-2">
             Back
           </Button>
         )}
         <Button 
           onClick={handleContinue} 
           disabled={uploadedFiles.length === 0 || uploading || detectingCategory}
-          className="flex-1 gap-2"
+          className="flex-1 gap-3 h-14 px-8 text-lg font-black bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg shadow-primary/30 disabled:opacity-50"
         >
           {uploading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
               Uploading...
             </>
           ) : detectingCategory ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Detecting...
+              <Loader2 className="w-5 h-5 animate-spin" />
+              AI Detecting...
             </>
           ) : (
             <>
               Continue
-              <CheckCircle className="w-4 h-4" />
+              <CheckCircle className="w-5 h-5" />
             </>
           )}
         </Button>

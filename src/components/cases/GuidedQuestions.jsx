@@ -146,30 +146,32 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
   const sectionLabel = isPersonalSection ? "Your Details" : "Case Details";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Section indicator */}
-      <div className="flex items-center gap-2 mb-1">
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isPersonalSection ? "bg-accent/20 text-accent" : "bg-primary/20 text-primary"}`}>
-          {sectionLabel}
+      <div className="flex items-center gap-3">
+        <span className={`text-sm font-black px-4 py-2 rounded-xl ${isPersonalSection ? "bg-gradient-to-r from-accent/30 to-accent/40 text-accent border-2 border-accent/40" : "bg-gradient-to-r from-primary/30 to-primary/40 text-primary border-2 border-primary/40"}`}>
+          {sectionLabel.toUpperCase()}
         </span>
-        <span className="text-xs text-muted-foreground">{step + 1} of {allQuestions.length}</span>
+        <span className="text-base font-black text-foreground">
+          Question {step + 1} of {allQuestions.length}
+        </span>
       </div>
 
       {/* Progress */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         {allQuestions.map((_, i) => (
           <div
             key={i}
-            className={`h-1.5 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-border"}`}
+            className={`h-2 flex-1 rounded-full transition-all ${i <= step ? "bg-gradient-to-r from-primary to-secondary" : "bg-border"}`}
           />
         ))}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label className="text-base font-heading font-semibold">
+          <Label className="text-2xl font-heading font-black">
             {current.label}
-            {current.required && <span className="text-destructive ml-1">*</span>}
+            {current.required && <span className="text-destructive ml-2">*</span>}
           </Label>
           {current.key === "organisation_name" && (
             <button
@@ -189,7 +191,7 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
             value={data[current.key] || ""}
             onChange={(e) => handleChange(e.target.value)}
             placeholder={current.placeholder}
-            className="text-base"
+            className="text-lg font-bold h-14"
           />
         )}
         {current.type === "date" && (
@@ -197,7 +199,7 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
             type="date"
             value={data[current.key] || ""}
             onChange={(e) => handleChange(e.target.value)}
-            className="text-base"
+            className="text-lg font-bold h-14"
           />
         )}
         {current.type === "textarea" && (
@@ -205,8 +207,8 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
             value={data[current.key] || ""}
             onChange={(e) => handleChange(e.target.value)}
             placeholder={current.placeholder}
-            rows={5}
-            className="text-base"
+            rows={6}
+            className="text-lg font-bold leading-relaxed"
           />
         )}
         {current.type === "select" && (
@@ -226,13 +228,13 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
         )}
       </div>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={handleBack} className="gap-2">
-          <ArrowLeft className="w-4 h-4" /> Back
+      <div className="flex justify-between gap-4 pt-4">
+        <Button variant="outline" onClick={handleBack} className="gap-2 h-14 px-8 text-lg font-black border-2">
+          <ArrowLeft className="w-5 h-5" /> Back
         </Button>
-        <Button onClick={handleNext} disabled={!canProceed} className="gap-2">
+        <Button onClick={handleNext} disabled={!canProceed} className="gap-2 h-14 px-8 text-lg font-black bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg shadow-primary/30">
           {step < allQuestions.length - 1 ? "Continue" : "Review Case"}
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-5 h-5" />
         </Button>
       </div>
     </div>
