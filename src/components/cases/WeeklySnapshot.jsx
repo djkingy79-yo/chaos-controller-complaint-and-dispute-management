@@ -15,17 +15,18 @@ function printSnapshot(caseItem, snapshot, generatedAt) {
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Weekly Snapshot — ${caseItem.title}</title>
     <style>
-      @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+      @page { margin: 1.5in; size: A4; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
-      .section-title { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
-      .header { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 10pt; }
-      h2 { font-size: 14pt; font-weight: bold; color: #1a1a2e; margin: 14pt 0 4pt; }
-      h3 { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin: 10pt 0 4pt; }
-      ul, ol { margin: 4pt 0 8pt 18pt; }
-      li { margin-bottom: 3pt; }
-      p { margin: 4pt 0 8pt; }
-      .footer { margin-top: 25pt; padding-top: 6pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
+      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+      h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; }
+      h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
+      .header { font-size: 8pt; letter-spacing: 2px; text-transform: uppercase; color: #000; margin-bottom: 10pt; font-weight: bold; }
+      h2 { font-size: 13pt; font-weight: bold; color: #000; margin: 12pt 0 6pt; }
+      h3 { font-size: 12pt; font-weight: bold; color: #000; margin: 10pt 0 6pt; }
+      ul, ol { margin: 4pt 0 6pt 18pt; }
+      li { margin-bottom: 2pt; line-height: 1.0; }
+      p { margin: 4pt 0 6pt; line-height: 1.0; }
+      .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
     </style>
   </head><body>
     <div class="header">Chaos Controller™ — Weekly Case Snapshot</div>

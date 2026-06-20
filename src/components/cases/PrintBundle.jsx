@@ -41,32 +41,33 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   const client = buildClientContext(caseItem, evidence);
   const content = caseItem[field] || `No ${label} generated yet.`;
   const lines = content.split('\n');
-  // First page: ~38 lines (accounting for letterhead), continuation: ~50 lines each
-  const firstPageLines = lines.slice(0, 38);
-  const remainingLines = lines.slice(38);
+  // First page: ~45 lines with 1.5 inch margins, continuation: ~55 lines
+  const firstPageLines = lines.slice(0, 45);
+  const remainingLines = lines.slice(45);
   const continuationPages = [];
-  for (let i = 0; i < remainingLines.length; i += 50) {
-    continuationPages.push(remainingLines.slice(i, i + 50).join('\n'));
+  for (let i = 0; i < remainingLines.length; i += 55) {
+    continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
   }
   const continuationHTML = continuationPages.map((chunk, idx) => `
-    <div style="page-break-before:always;position:relative;width:100%;min-height:297mm;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png');background-size:100% auto;background-repeat:no-repeat;background-position:top center;padding:25mm 0 25mm 0;">
-      <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;margin:0;color:#111;width:100%;">${chunk}</pre>
-    </div>
+    <div class="letter-continuation"><pre>${chunk}</pre></div>
   `).join('');
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
   <style>
     @page { margin: 1.5in; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.7; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    .letterhead-banner { width: 100%; height: 80px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png'); background-size: contain; background-repeat: no-repeat; background-position: center top; margin-bottom: 20pt; }
+    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
+    .letter-content { position: relative; padding: 0; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; width: 100%; }
+    .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.0; margin: 0; color: #000; }
   </style>
   </head><body>
-    <div style="position:relative;width:100%;min-height:297mm;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png');background-size:100% auto;background-repeat:no-repeat;background-position:top center;">
-      <div style="position:relative;padding:38mm 0 25mm 0;width:100%;">
-        <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;margin:0;color:#111;width:100%;">${firstPageLines.join('\n')}</pre>
-      </div>
+    <div class="letter-page">
+      <div class="letterhead-banner"></div>
+      <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
     </div>
     ${continuationHTML}
   </body></html>`);
@@ -91,14 +92,15 @@ function printTimeline(caseItem, events) {
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>Timeline — ${caseItem.title}</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #111; }
-    h1 { font-size: 12pt; font-weight: bold; margin-bottom: 4pt; }
-    h2 { font-size: 12pt; font-style: italic; color: #666; margin-bottom: 12pt; font-weight: normal; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-    th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; font-size: 10pt; }
-    .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
+    @page { margin: 1.5in; size: A4; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
+    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Case Timeline</h1>
@@ -150,19 +152,20 @@ function printEvidence(caseItem, evidence) {
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>Evidence — ${caseItem.title}</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; }
-    h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4pt; }
-    h2 { font-size: 12pt; font-style: italic; color: #666; margin-bottom: 12pt; font-weight: normal; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-    th { text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; }
-    .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
+    @page { margin: 1.5in; size: A4; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
+    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Evidence Index ${allTags.length > 0 ? "— Grouped by Tags" : ""}</h1>
     <h2>${caseItem.title} — ${caseItem.organisation_name || ""}</h2>
-    <p style="font-size:10pt;color:#666;margin-bottom:12pt;">Total: <strong>${evidence.length}</strong> documents ${allTags.length > 0 ? `· ${allTags.length} categories` : ""}</p>
+    <p style="font-size:10pt;color:#000;margin-bottom:10pt;font-weight:bold;">Total: <strong>${evidence.length}</strong> documents ${allTags.length > 0 ? `· ${allTags.length} categories` : ""}</p>
     <table>
       <thead><tr><th style="width:25pt;">#</th><th>File Name</th><th style="width:80pt;">Type</th><th style="width:70pt;">Date</th><th>Description / Tags</th></tr></thead>
       <tbody>${tableRows}</tbody>
@@ -204,14 +207,15 @@ function printChecklist(caseItem, evidence, events) {
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>Checklist — ${caseItem.title}</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; }
-    h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4pt; }
-    h2 { font-size: 12pt; font-style: italic; color: #666; margin-bottom: 12pt; font-weight: normal; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-    th { text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; }
-    .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
+    @page { margin: 1.5in; size: A4; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
+    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Case Checklist</h1>
@@ -244,14 +248,15 @@ function printChecklistItems(caseItem, checklistItems) {
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist — ${caseItem.title}</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; }
-    h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4pt; }
-    h2 { font-size: 12pt; font-style: italic; color: #666; margin-bottom: 12pt; font-weight: normal; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-    th { text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; }
-    .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
+    @page { margin: 1.5in; size: A4; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
+    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Smart Checklist</h1>
@@ -289,14 +294,15 @@ function printDeadlineItems(caseItem, deadlines) {
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Deadlines — ${caseItem.title}</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; }
-    h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4pt; }
-    h2 { font-size: 12pt; font-style: italic; color: #666; margin-bottom: 12pt; font-weight: normal; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-    th { text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; }
-    .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
+    @page { margin: 1.5in; size: A4; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
+    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
   </style>
   </head><body>
     <h1>Deadline War Room</h1>

@@ -34,19 +34,20 @@ function buildSummaryHTML(caseItem, evidence, events) {
   return `<!DOCTYPE html><html><head>
     <title>Case Export — ${caseItem.title}</title>
     <style>
-      @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+      @page { margin: 1.5in; size: A4; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
-      .section-title { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
-      .summary-box { background: #f8f8f8; border: 1px solid #ddd; padding: 10pt 12pt; border-radius: 4pt; margin-bottom: 12pt; }
-      .summary-row td { border: none; padding: 2pt 10pt 2pt 0; font-size: 10pt; }
-      .summary-row td:first-child { color: #666; font-style: italic; white-space: nowrap; width: 35%; }
-      .summary-row td:last-child { font-weight: bold; }
-      .section { margin-top: 14pt; }
-      table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
-      th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-weight: bold; border-bottom: 2px solid #ddd; font-size: 10pt; }
-      td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; font-size: 10pt; }
-      .footer { margin-top: 25pt; padding-top: 6pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
+      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+      h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; border-bottom: 1px solid #000; padding-bottom: 4pt; }
+      h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
+      .summary-box { background: white; border: none; padding: 0; margin-bottom: 10pt; }
+      .summary-row td { border: none; padding: 3pt 6pt 3pt 0; font-size: 10pt; color: #000; }
+      .summary-row td:first-child { color: #000; font-style: normal; white-space: nowrap; width: 35%; font-weight: bold; }
+      .summary-row td:last-child { font-weight: normal; }
+      .section { margin-top: 10pt; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 10pt; }
+      th { background: white; text-align: left; padding: 4pt 6pt; font-weight: bold; border-bottom: 1px solid #000; font-size: 10pt; color: #000; }
+      td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 10pt; color: #000; }
+      .footer { margin-top: 20pt; padding-top: 6pt; border-top: 1px solid #000; font-size: 8pt; color: #000; display: flex; justify-content: space-between; }
     </style>
   </head><body>
     
@@ -156,10 +157,10 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
       if (caseItem[ld.field]) {
         const letterHTML = `<!DOCTYPE html><html><head><title>${ld.label}</title>
         <style>
-          @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-          body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
-          .header { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
-          .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; color: #111; line-height: 1.6; margin-top: 8pt; }
+          @page { margin: 1.5in; size: A4; }
+          body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+          .header { font-size: 12pt; font-weight: bold; color: #000; margin-bottom: 10pt; border-bottom: 1px solid #000; padding-bottom: 4pt; }
+          .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; margin-top: 8pt; }
         </style>
         </head><body>
           <div class="header">${ld.label}</div>
