@@ -51,12 +51,8 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: ownerEmail,
           subject: `New Response to Your Case: ${caseItem.title}`,
-          body: `<h2>New Merchant Response</h2>
-<p><strong>${merchant_name || merchant_email}</strong> has submitted a response to your case: <strong>${caseItem.title}</strong></p>
-<p><strong>Response Type:</strong> ${(response_type || 'general_response').replace(/_/g, ' ')}</p>
-${offer_amount ? `<p><strong>Settlement Offer:</strong> ${offer_amount}</p>` : ''}
-<blockquote style="border-left:4px solid #1d4ed8;padding-left:16px;color:#333;">${response_text}</blockquote>
-<p><a href="https://chaoscontroller.base44.app/case/${case_id}">View your case →</a></p>`,
+          body: `${merchant_name || merchant_email} has submitted a response to your case: ${caseItem.title}\n\nResponse Type: ${(response_type || 'general_response').replace(/_/g, ' ')}\n${offer_amount ? `Settlement Offer: ${offer_amount}\n` : ''}\nResponse:\n${response_text}\n\nView your case: https://chaoscontroller.com.au/case/${case_id}`,
+          from_name: "Chaos Controller™"
         });
       }
     }

@@ -131,6 +131,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = () => checkUserAuth();
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -142,7 +144,8 @@ export const AuthProvider = ({ children }) => {
       authChecked,
       logout,
       checkUserAuth,
-      checkAppState
+      checkAppState,
+      updateUser
     }}>
       {children}
     </AuthContext.Provider>

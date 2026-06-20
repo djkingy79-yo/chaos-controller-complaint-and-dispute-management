@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
 
     // Get Gmail access token
     const gmailConn = await base44.asServiceRole.connectors.getConnection('gmail');
-    const accessToken = gmailConn?.access_token;
+    const accessToken = gmailConn?.accessToken;
 
     const results = [];
 
