@@ -82,18 +82,23 @@ export default function SharedCasePortal() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!token) { setError("No share token found."); setLoading(false); return; }
+    if (!token) { setError("No share token found. Please check your email link."); setLoading(false); return; }
+    
+    // Call the backend function with the token
     base44.functions.invoke("getSharedCase", { token })
       .then(res => {
         if (res.data?.error) {
+          console.error("Backend error:", res.data.error);
           setError(res.data.error || "Invalid share link");
-        } else {
+        } else if (res.data?.success) {
           setData(res.data);
+        } else {
+          setError("Invalid response from server");
         }
       })
       .catch(err => {
-        console.error("Error loading shared case:", err);
-        setError(err.message || "This share link is invalid or has expired. Please contact the sender.");
+        console.error("Network error loading shared case:", err);
+        setError("This share link is invalid or has expired. Please contact the sender.");
       })
       .finally(() => setLoading(false));
   }, [token]);

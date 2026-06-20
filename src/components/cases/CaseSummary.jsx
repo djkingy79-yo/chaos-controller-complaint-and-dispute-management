@@ -36,8 +36,9 @@ function buildClientContext(caseItem, evidence) {
 
 export default function CaseSummary({ caseItem, evidence, events }) {
   const { data: deadlines = [] } = useQuery({
-    queryKey: ["deadlines", caseItem.id],
+    queryKey: ["deadlines", caseItem?.id],
     queryFn: () => base44.entities.Deadline.filter({ case_id: caseItem.id }),
+    enabled: !!caseItem?.id,
   });
 
   const today = format(new Date(), "d MMMM yyyy");

@@ -8,20 +8,25 @@ Deno.serve(async (req) => {
       serviceRoleKey: Deno.env.get('BASE44_SERVICE_ROLE_KEY')
     });
     
-    // Get token from query params or JSON body
+    // Get token from query params (for direct URL access) or JSON body (for SDK calls)
     const url = new URL(req.url);
     let token = url.searchParams.get('token');
+    
+    // Also check for 'share_token' as fallback
+    if (!token) {
+      token = url.searchParams.get('share_token');
+    }
     
     if (!token) {
       try {
         const body = await req.json();
-        token = body.token;
+        token = body.token || body.share_token;
       } catch (e) {
         // Ignore JSON parse error, token already null
       }
     }
 
-    if (!token) return Response.json({ error: 'Token required' }, { status: 400 });
+    if (!token) return Response.json({ error: 'Token required. Please use the full share link.' }, { status: 400 });
 
     // Find active share by token
     const shares = await base44.entities.CaseShare.filter({ share_token: token });
