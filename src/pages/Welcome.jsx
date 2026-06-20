@@ -144,9 +144,9 @@ export default function Welcome() {
             className="text-center mb-8 sm:mb-12"
           >
             <img
-              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/46dd15b0d_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png"
               alt="Chaos Controller Logo"
-              className="w-48 h-48 sm:w-72 sm:h-72 md:w-96 md:h-96 mx-auto object-contain drop-shadow-2xl"
+              className="w-full max-w-md mx-auto object-contain drop-shadow-2xl"
             />
           </motion.div>
 

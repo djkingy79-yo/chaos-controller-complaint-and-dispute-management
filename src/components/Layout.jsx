@@ -80,15 +80,10 @@ export default function Layout() {
               {/* Logo */}
               <Link to="/dashboard" className="flex items-center gap-2">
                 <img
-                  src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
+                  src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/46dd15b0d_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png"
                   alt="Chaos Controller"
-                  className="w-9 h-9 object-contain rounded-lg"
+                  className="h-8 object-contain rounded-lg"
                 />
-                <div className="hidden sm:block">
-                  <span className="font-display text-lg font-bold tracking-tight text-foreground">CHAOS</span>
-                  <span className="font-display text-lg font-bold tracking-tight text-primary ml-1">CONTROLLER</span>
-                  <span className="text-[10px] font-mono text-muted-foreground align-super ml-0.5">™</span>
-                </div>
               </Link>
             </div>
 
@@ -142,9 +137,9 @@ export default function Layout() {
               <div className="flex items-center justify-between p-4 border-b border-border bg-secondary/50">
                 <div className="flex items-center gap-3">
                   <img
-                    src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
+                    src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/46dd15b0d_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png"
                     alt="Chaos Controller"
-                    className="w-10 h-10 object-contain rounded-lg"
+                    className="h-10 object-contain rounded-lg"
                   />
                   <div>
                     <h2 className="font-display font-black text-foreground">Menu</h2>

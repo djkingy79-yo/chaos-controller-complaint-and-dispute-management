@@ -76,6 +76,18 @@ const caseFields = {
     { key: "issue_details", label: "Full details", type: "textarea", placeholder: "Include account numbers, billing periods, amounts, conversations...", required: true },
     { key: "desired_outcome", label: "What outcome do you want?", type: "textarea", placeholder: "e.g. Correct billing based on actual meter reads, refund of excess", required: true },
   ],
+  government: [
+    { key: "organisation_name", label: "Which government department?", type: "text", placeholder: "e.g. Services Australia (Centrelink), Australian Taxation Office", required: true },
+    { key: "organisation_complaints_address", label: "Department's complaints postal address (if known)", type: "text", placeholder: "e.g. GPO Box 9820, Sydney NSW 2001", required: false },
+    { key: "organisation_complaints_email", label: "Department's complaints email (if known)", type: "text", placeholder: "e.g. complaints@servicesaustralia.gov.au", required: false },
+    { key: "complaint_handler_name", label: "Name of the person handling your matter (if known)", type: "text", placeholder: "e.g. Sarah Jones — Case Officer", required: false },
+    { key: "account_number", label: "Reference number (CRN, TFN, or file number)", type: "text", placeholder: "e.g. CRN: 123456789", required: false },
+    { key: "incident_date", label: "Date the issue started", type: "date", placeholder: "", required: false },
+    { key: "issue_type", label: "What type of issue?", type: "select", options: ["Payment delay", "Decision review", "Communication failure", "Incorrect assessment", "Service access", "Compliance issue", "Other"], required: true },
+    { key: "issue_summary", label: "Briefly describe the issue", type: "text", placeholder: "e.g. Centrelink payment not received despite eligibility", required: true },
+    { key: "issue_details", label: "Full details", type: "textarea", placeholder: "Include reference numbers, dates, decisions made, conversations with the department...", required: true },
+    { key: "desired_outcome", label: "What outcome do you want?", type: "textarea", placeholder: "e.g. Payment released, decision reviewed, apology", required: true },
+  ],
   other: [
     { key: "organisation_name", label: "Which organisation?", type: "text", placeholder: "Company or organisation name", required: true },
     { key: "organisation_complaints_address", label: "Their complaints postal address (if known)", type: "text", placeholder: "e.g. 100 Main Street, Sydney NSW 2000", required: false },

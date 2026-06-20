@@ -33,8 +33,9 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (uploadedFiles.length > 0) {
+      // Pass files to parent - it will handle auto-generation
       onContinue(uploadedFiles);
     }
   };
@@ -123,11 +124,16 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
             </>
           ) : (
             <>
-              Continue to Case Setup
+              Continue
               <CheckCircle className="w-4 h-4" />
             </>
           )}
         </Button>
+      </div>
+
+      <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
+        <p className="text-xs text-primary font-semibold">⚡ Fast Track Enabled</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">AI will auto-generate your complaint letter after you provide case details</p>
       </div>
 
       <p className="text-xs text-muted-foreground text-center">

@@ -19,6 +19,7 @@ const escalationBodies = {
   tenancy: "NSW Civil and Administrative Tribunal (NCAT)",
   telco: "Telecommunications Industry Ombudsman (TIO)",
   utilities: "Energy & Water Ombudsman",
+  government: "Commonwealth Ombudsman",
   other: "Relevant ombudsman or tribunal",
 };
 
@@ -65,9 +66,11 @@ export default function NewCase() {
     },
   });
 
-  const handleUploadComplete = (files) => {
+  const handleUploadComplete = async (files) => {
     setUploadedFiles(files);
-    setStep(2);
+    // Auto-trigger AI generation immediately after upload
+    setStep(4);
+    await generateComplaint();
   };
 
   const generateComplaint = async () => {
@@ -228,7 +231,7 @@ LETTER INSTRUCTIONS:
           </motion.div>
         )}
 
-        {/* Step 2: Category */}
+        {/* Step 2: Category (auto-skip if already selected) */}
         {step === 2 && (
           <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <CategorySelector selected={category} onSelect={(val) => { setCategory(val); setStep(3); }} />
@@ -244,10 +247,20 @@ LETTER INSTRUCTIONS:
 
         {/* Step 4: Generating */}
         {step === 4 && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-16">
-            <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
-            <h3 className="font-heading font-semibold text-foreground">Preparing Your Complaint</h3>
-            <p className="text-sm text-muted-foreground mt-1">Our AI is drafting a professional letter...</p>
+          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-12">
+            <div className="relative mb-6">
+              <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-primary/20 animate-pulse" />
+              </div>
+            </div>
+            <h3 className="font-heading font-bold text-lg text-foreground mb-2">AI Is Building Your Case</h3>
+            <p className="text-sm text-muted-foreground font-medium">Generating professional complaint letter...</p>
+            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
           </motion.div>
         )}
 
