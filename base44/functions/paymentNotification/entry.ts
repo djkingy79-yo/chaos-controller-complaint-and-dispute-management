@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     // Send email using Core integration
     const sendEmail = async (to, subject, body) => {
       try {
-        await base44.asServiceRole.integrations.Core.SendEmail({
+        await base44.integrations.Core.SendEmail({
           to,
           subject,
           body,
