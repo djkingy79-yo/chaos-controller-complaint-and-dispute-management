@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Calendar, Shield, ArrowUpRight } from "lucide-react";
+import OutcomeTracker from "@/components/cases/OutcomeTracker";
 import { format } from "date-fns";
 
 const statusConfig = {
@@ -75,6 +76,8 @@ export default function CaseStatusControl({ caseItem }) {
           </div>
         )}
       </div>
+
+      <OutcomeTracker caseItem={caseItem} />
 
       <div className="pt-2 border-t border-border">
         <label className="text-xs text-muted-foreground mb-1.5 block">Update Status</label>

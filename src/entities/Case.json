@@ -1,0 +1,55 @@
+{
+  "name": "Case",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string", "description": "Short title for the case" },
+    "category": {
+      "type": "string",
+      "enum": ["banking", "insurance", "tenancy", "telco", "utilities", "other"],
+      "description": "Industry category of the dispute"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "complaint_sent", "awaiting_response", "response_received", "escalation_ready", "escalated", "resolved", "closed"],
+      "default": "draft",
+      "description": "Current status of the case"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["won", "settled", "lost"],
+      "description": "Final outcome of the dispute (for resolved/closed cases)"
+    },
+    "financial_recovery": {
+      "type": "string",
+      "description": "Final financial recovery amount e.g. $1,200.00"
+    },
+    "organisation_name": { "type": "string" },
+    "organisation_complaints_address": { "type": "string" },
+    "organisation_complaints_email": { "type": "string" },
+    "complaint_handler_name": { "type": "string" },
+    "complainant_name": { "type": "string" },
+    "complainant_address": { "type": "string" },
+    "complainant_email": { "type": "string" },
+    "complainant_phone": { "type": "string" },
+    "account_number": { "type": "string" },
+    "incident_date": { "type": "string", "format": "date" },
+    "issue_summary": { "type": "string" },
+    "issue_details": { "type": "string" },
+    "desired_outcome": { "type": "string" },
+    "complaint_letter": { "type": "string", "description": "1st formal complaint letter" },
+    "complaint_letter_2": { "type": "string", "description": "2nd complaint letter (follow-up)" },
+    "complaint_letter_3": { "type": "string", "description": "3rd and final internal complaint letter" },
+    "letter_accept_offer": { "type": "string", "description": "Letter accepting a settlement offer" },
+    "letter_deny_offer": { "type": "string", "description": "Letter rejecting an unsatisfactory offer" },
+    "letter_escalation": { "type": "string", "description": "Escalation letter to external body" },
+    "response_deadline": { "type": "string", "format": "date" },
+    "escalation_body": { "type": "string" },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "urgent"],
+      "default": "medium"
+    },
+    "notes": { "type": "string" }
+  },
+  "required": ["title", "category"]
+}
