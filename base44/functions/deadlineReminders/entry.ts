@@ -27,7 +27,7 @@ async function pushToOutlook(accessToken, deadline, caseItem, daysUntil) {
   } catch (_) {}
   const event = {
     subject,
-    body: { contentType: 'text', content: `DEADLINE REMINDER\n\nCase: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nDeadline: ${deadline.title}\nStatus: ${urgencyLabel}\n\nView case: https://chaoscontroller.base44.app/case/${caseItem.id}` },
+    body: { contentType: 'text', content: `DEADLINE REMINDER\n\nCase: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nDeadline: ${deadline.title}\nStatus: ${urgencyLabel}\n\nView case: https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseItem.id}` },
     start: { dateTime: startDate.toISOString(), timeZone: 'Australia/Sydney' },
     end: { dateTime: endDate.toISOString(), timeZone: 'Australia/Sydney' },
     isReminderOn: true,
@@ -51,8 +51,8 @@ async function pushToGoogleCalendar(accessToken, deadline, caseItem, daysUntil) 
     if (existing.items?.length > 0) return; // already has reminder event
   }
   const event = {
-    summary: `⚠️ ${urgencyLabel}: ${deadline.title} — ${caseItem.title}`,
-    description: `Case: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nDeadline: ${deadline.title}\n\nManage: https://chaoscontroller.base44.app/case/${caseItem.id}`,
+  summary: `⚠️ ${urgencyLabel}: ${deadline.title} — ${caseItem.title}`,
+  description: `Case: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nDeadline: ${deadline.title}\n\nManage: https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseItem.id}`,
     start: { date: deadline.deadline_date, timeZone: 'Australia/Sydney' },
     end: { date: deadline.deadline_date, timeZone: 'Australia/Sydney' },
     extendedProperties: { private: { deadlineId: deadline.id, source: 'ChaosController', type: 'reminder' } },
@@ -124,7 +124,7 @@ ${daysUntil === 0 ? "⚠️ This deadline is DUE TODAY. Take action immediately.
   `This is an advance reminder that your deadline is due in ${daysUntil} days. Please plan accordingly.`}
 
 Log in to Chaos Controller™ to review your case and take action:
-https://chaoscontroller.base44.app/case/${caseItem.id}
+https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseItem.id}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Never Fear. Control Starts Here.

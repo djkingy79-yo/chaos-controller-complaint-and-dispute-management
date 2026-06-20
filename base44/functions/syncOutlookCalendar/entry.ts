@@ -52,7 +52,7 @@ async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItem
       subject: `⚖️ [Chaos Controller] Deadline: ${dl.title}`,
       body: {
         contentType: 'text',
-        content: `Case: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nDeadline Type: ${dl.deadline_type || 'other'}\n${dl.notes ? 'Notes: ' + dl.notes : ''}\n\nView case: https://chaoscontroller.base44.app/case/${caseId}`
+        content: `Case: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nDeadline Type: ${dl.deadline_type || 'other'}\n${dl.notes ? 'Notes: ' + dl.notes : ''}\n\nView case: https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseId}`
       },
       start: { dateTime: startDate.toISOString(), timeZone: 'Australia/Sydney' },
       end: { dateTime: endDate.toISOString(), timeZone: 'Australia/Sydney' },
@@ -100,7 +100,7 @@ async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItem
       subject: `🚨 [Chaos Controller] Action: ${ev.title}`,
       body: {
         contentType: 'text',
-        content: `${ev.description || ''}\n\nCase: ${caseItem.title}\nView: https://chaoscontroller.base44.app/case/${caseId}`
+        content: `${ev.description || ''}\n\nCase: ${caseItem.title}\nView: https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseId}`
       },
       start: { dateTime: startDate.toISOString(), timeZone: 'Australia/Sydney' },
       end: { dateTime: endDate.toISOString(), timeZone: 'Australia/Sydney' },

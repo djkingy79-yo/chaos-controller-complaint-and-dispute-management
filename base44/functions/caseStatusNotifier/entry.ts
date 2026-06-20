@@ -97,7 +97,7 @@ ${newStatus === "resolved" ? "Congratulations! Your case has been marked as reso
 ${newStatus === "response_received" ? "A response has been received. Log in to review and decide your next steps." : ""}
 
 View your case:
-https://chaoscontroller.base44.app/case/${caseItem.id}
+https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseItem.id}
 
 Never Fear. Control Starts Here.
 Chaos Controller - AI-Powered Consumer Advocacy
@@ -114,7 +114,7 @@ Support: chaoscontrollerapp@gmail.com`;
     const shares = await base44.asServiceRole.entities.CaseShare.filter({ case_id: caseItem.id });
     const activeShare = shares.find(s => s.is_active && s.notify_on_update && s.recipient_email);
     if (activeShare) {
-      const portalUrl = `https://chaoscontroller.base44.app/shared-case/${activeShare.share_token}`;
+      const portalUrl = `https://app.base44.com/6a2ac3b012e45642b1f94671/shared-case/${activeShare.share_token}`;
       await sendGmail(accessToken, {
         to: activeShare.recipient_email,
         from: "Chaos Controller™ <chaoscontrollerapp@gmail.com>",
