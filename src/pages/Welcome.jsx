@@ -252,11 +252,11 @@ export default function Welcome() {
 
           {/* Big Bold CTA Button */}
           <Button
-            className="w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-black px-8 py-6 text-lg border-2 border-[#FFD700]"
+            className="w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-black px-8 py-6 text-base sm:text-lg border-2 border-[#FFD700] whitespace-normal h-auto min-h-[60px]"
             size="lg"
             onClick={() => navigate("/payments")}
           >
-            UPLOAD YOUR STORY. BUILD YOUR EVIDENCE. TAKE BACK CONTROL.
+            UPLOAD YOUR STORY. BUILD EVIDENCE. TAKE BACK CONTROL.
           </Button>
         </div>
       </div>
