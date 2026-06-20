@@ -78,7 +78,7 @@ export default function ChaosScore({ caseItem, evidence, events }) {
     if (caseItem.category === "banking" || caseItem.category === "insurance") {
       window.open("https://www.afca.org.au/make-a-complaint/", "_blank");
     } else if (caseItem.category === "telco") {
-      window.open("https://www.tio.com.au/make-a-complaint", "_blank");
+      window.open("https://www.tio.com.au/complaints", "_blank");
     } else if (caseItem.category === "utilities") {
       window.open("https://www.ewon.com.au/make-a-complaint", "_blank");
     } else if (caseItem.category === "tenancy") {
