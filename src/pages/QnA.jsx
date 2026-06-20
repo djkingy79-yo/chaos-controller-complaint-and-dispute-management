@@ -122,7 +122,7 @@ const faqs = [
       },
       {
         q: "How do I contact support?",
-        a: "You can reach our support team by email at chaoscontrollerapp@gmail.com, by phone at 0413 572 850 (call to discuss any chaos!), or through the 'Contact Support' link in the Help & Guide section. We typically respond within 24-48 hours."
+        a: "You can reach our support team by email at chaoscontrollerapp@gmail.com or through the 'Contact Support' link in the Help & Guide section. We typically respond within 24-48 hours."
       },
       {
         q: "Can I use Chaos Controller offline?",
@@ -230,12 +230,6 @@ export default function QnA() {
                   className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
                 >
                   chaoscontrollerapp@gmail.com →
-                </a>
-                <a 
-                  href="tel:0413572850"
-                  className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
-                >
-                  📞 0413 572 850
                 </a>
               </div>
             </div>

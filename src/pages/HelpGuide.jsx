@@ -621,12 +621,6 @@ export default function HelpGuide() {
               <Send className="w-4 h-4" />
               chaoscontrollerapp@gmail.com
             </a>
-            <a 
-              href="tel:0413572850"
-              className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
-            >
-              📞 0413 572 850
-            </a>
           </div>
         </div>
       </div>
