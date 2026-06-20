@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
-import { buildLetterheadHTML, buildFooterHTML, getLetterPageStyles, LETTERHEAD_URL, CONTINUATION_PAGE_URL } from "./LetterheadBanner";
+import { buildLetterheadHTML, buildFooterHTML, getLetterPageStyles, LETTERHEAD_URL, CONTINUATION_PAGE_URL, CONTACT } from "./LetterheadBanner";
 
 // Times New Roman print styles injected once
 const PRINT_STYLES = `
@@ -329,36 +329,51 @@ function printBundle(caseItem, evidence, events, checklistItems) {
   const readinessPct = Math.round((readinessChecks.filter(c => c.done).length / readinessChecks.length) * 100);
 
   const sectionHeader = (num, title) => `
-    <div style="background:#1a1a2e;color:white;padding:10pt 18pt;margin-bottom:16pt;border-left:5px solid #FFD700;">
-      <div style="font-size:9pt;color:#FFD700;font-family:'Times New Roman',Times,serif;letter-spacing:2px;text-transform:uppercase;margin-bottom:2pt;">Section ${num}</div>
-      <div style="font-size:15pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">${title}</div>
+    <div style="border-left:4pt solid #1a1a2e;padding:4pt 0 4pt 12pt;margin-bottom:16pt;">
+      <div style="font-size:8pt;color:#999;font-family:'Times New Roman',Times,serif;letter-spacing:2px;text-transform:uppercase;margin-bottom:2pt;">Section ${num}</div>
+      <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;color:#1a1a2e;">${title}</div>
     </div>`;
 
-  const foot = (pg) => buildFooterHTML(caseItem, client, pg, "");
+  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const foot = (pg) => `<div class="sec-footer"><span>${CONTACT.website} | ${CONTACT.email} | ${CONTACT.phone}</span><span>${caseRef} | ${now} | Page ${pg}</span></div>`;
 
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Case Bundle — ${caseItem.title}</title>
     <style>
-      ${getLetterPageStyles()}
+      @page { margin: 18mm 20mm 22mm 20mm; size: A4; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
+
+      /* Cover page: full letterhead background, fixed A4 height */
       .cover-page {
-        width: 210mm; min-height: 297mm; page-break-after: always;
+        width: 210mm; height: 297mm; page-break-after: always;
         background-image: url('${LETTERHEAD_URL}');
         background-size: 100% 100%; background-repeat: no-repeat;
-        display: flex; flex-direction: column;
+        position: relative; overflow: hidden;
       }
-      .toc-page {
-        width: 210mm; min-height: 297mm; page-break-after: always;
-        background-image: url('${CONTINUATION_PAGE_URL}');
-        background-size: 100% 100%; background-repeat: no-repeat;
+      .cover-body {
+        position: absolute; top: 38%; left: 0; right: 0; bottom: 0;
+        padding: 0 22mm 18mm 22mm;
+        font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6;
+        display: flex; flex-direction: column; justify-content: space-between;
       }
-      .section-page {
-        width: 210mm; min-height: 297mm; page-break-before: always;
-        background-image: url('${CONTINUATION_PAGE_URL}');
-        background-size: 100% 100%; background-repeat: no-repeat;
+
+      /* All other sections: plain white, natural height, page break before */
+      .section-page { page-break-before: always; padding: 0; }
+      .toc-page { page-break-before: always; padding: 0; }
+
+      /* Thin branded top bar on each non-cover section */
+      .section-bar {
+        background: #1a1a2e; color: #FFD700;
+        padding: 4pt 14pt; font-size: 8pt; letter-spacing: 2px;
+        text-transform: uppercase; font-family: 'Times New Roman', Times, serif;
+        margin-bottom: 16pt;
+        display: flex; justify-content: space-between; align-items: center;
       }
-      .page-body { padding: 38mm 22mm 32mm 22mm; font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; }
-      .cover-body { padding: 76mm 22mm 38mm 22mm; font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; }
+
+      .page-body { padding: 0 0 16pt 0; }
+
       table { width:100%; border-collapse:collapse; font-size:10.5pt; margin-top:8pt; }
       th { background:#f4f4f4; text-align:left; padding:5pt 8pt; font-weight:bold; border-bottom:2px solid #ddd; }
       td { padding:4.5pt 8pt; border-bottom:1px solid #eee; vertical-align:top; }
@@ -367,12 +382,21 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       .toc-num { font-weight:bold; color:#1a1a2e; min-width:28pt; font-size:11pt; }
       .toc-title { font-size:11pt; font-weight:bold; flex:1; }
       .toc-sub { font-size:9pt; color:#666; margin-top:1pt; }
+
+      /* Footer — printed once at the bottom of every logical section (not fixed) */
+      .sec-footer {
+        margin-top: 24pt; padding-top: 6pt;
+        border-top: 0.5pt solid #ccc;
+        font-size: 8pt; color: #888;
+        display: flex; justify-content: space-between;
+        font-family: 'Times New Roman', Times, serif;
+      }
     </style>
   </head><body>
 
   <!-- ═══════════════════ TITLE PAGE ═══════════════════ -->
   <div class="cover-page">
-    <div class="cover-body" style="display:flex;flex-direction:column;justify-content:space-between;min-height:183mm;">
+    <div class="cover-body">
       <!-- Top: case title block -->
       <div>
         <div style="font-size:9pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:12pt;font-family:'Times New Roman',Times,serif;">Chaos Controller™ — Formal Case Bundle</div>
@@ -405,6 +429,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
 
   <!-- ═══════════════════ TABLE OF CONTENTS ═══════════════════ -->
   <div class="toc-page">
+    <div class="section-bar"><span>CHAOS CONTROLLER™ — Formal Case Bundle</span><span>${caseRef}</span></div>
     <div class="page-body">
       <div style="font-size:18pt;font-weight:bold;margin-bottom:4pt;font-family:'Times New Roman',Times,serif;">Table of Contents</div>
       <div style="font-size:10pt;color:#888;margin-bottom:20pt;">${caseItem.title} — ${today}</div>
@@ -424,6 +449,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
 
   <!-- ═══════════════════ SECTION 1: CASE SUMMARY ═══════════════════ -->
   <div class="section-page">
+    <div class="section-bar"><span>CHAOS CONTROLLER™ — Formal Case Bundle</span><span>${caseRef} | ${today}</span></div>
     <div class="page-body">
       ${sectionHeader(1, "Case Summary")}
       <table>
@@ -438,6 +464,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
 
   <!-- ═══════════════════ SECTION 2: READINESS CHECKLIST ═══════════════════ -->
   <div class="section-page">
+    <div class="section-bar"><span>CHAOS CONTROLLER™ — Formal Case Bundle</span><span>${caseRef} | ${today}</span></div>
     <div class="page-body">
       ${sectionHeader(2, "Escalation Readiness Checklist")}
       <p style="font-size:10pt;color:#555;margin-bottom:10pt;">Readiness: <strong>${readinessPct}%</strong> — ${readinessChecks.filter(c=>c.done).length} of ${readinessChecks.length} steps complete</p>
@@ -468,6 +495,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
 
   <!-- ═══════════════════ SECTION 3: TIMELINE ═══════════════════ -->
   <div class="section-page">
+    <div class="section-bar"><span>CHAOS CONTROLLER™ — Formal Case Bundle</span><span>${caseRef} | ${today}</span></div>
     <div class="page-body">
       ${sectionHeader(3, "Chronological Timeline")}
       ${sorted.length === 0 ? `<p style="color:#888;">No timeline events recorded.</p>` : `
@@ -486,6 +514,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
 
   <!-- ═══════════════════ SECTION 4: EVIDENCE INDEX ═══════════════════ -->
   <div class="section-page">
+    <div class="section-bar"><span>CHAOS CONTROLLER™ — Formal Case Bundle</span><span>${caseRef} | ${today}</span></div>
     <div class="page-body">
       ${sectionHeader(4, "Evidence Index")}
       <p style="font-size:10pt;color:#555;margin-bottom:10pt;">Total documents on file: <strong>${evidence.length}</strong></p>
@@ -507,6 +536,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
   <!-- ═══════════════════ SECTIONS 5+: LETTERS ═══════════════════ -->
   ${presentLetters.map((ld, idx) => `
   <div class="section-page">
+    <div class="section-bar"><span>CHAOS CONTROLLER™ — Formal Case Bundle</span><span>${caseRef} | ${today}</span></div>
     <div class="page-body">
       ${sectionHeader(5 + idx, ld.label)}
       <pre>${caseItem[ld.field]}</pre>
