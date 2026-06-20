@@ -274,8 +274,7 @@ export default function Privacy() {
           <div className="bg-secondary/30 border border-border rounded-lg p-4 mt-4">
             <p className="text-foreground font-medium">Chaos Controller</p>
             <p className="text-foreground">Email: chaoscontrollerapp@gmail.com</p>
-            <p className="text-foreground">Website: app.base44.com/6a2ac3b012e45642b1f94671</p>
-            <p className="text-foreground">Phone: 0413 572 850</p>
+            <p className="text-foreground">Website: chaoscontroller.com.au</p>
           </div>
         </section>
 
