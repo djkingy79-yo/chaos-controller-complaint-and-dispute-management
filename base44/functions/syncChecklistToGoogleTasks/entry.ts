@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
                        checklistItem.status === 'missing' ? '❌' : '⚠️';
     const categoryLabel = checklistItem.category ? `[${checklistItem.category.toUpperCase()}]` : '[ACTION]';
     const taskTitle = `${statusLabel} ${categoryLabel} ${checklistItem.label}`;
-    const taskNotes = `Case: ${caseItem.title}\nCaseID:${caseItem.case_id}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nChecklistItemID:${checklistItem.id}\nCategory: ${checklistItem.category || 'general'}\nStatus: ${checklistItem.status}\n${checklistItem.notes ? 'Notes: ' + checklistItem.notes : ''}`;
+    const taskNotes = `Case: ${caseItem.title}\nCaseID:${caseItem.id}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nChecklistItemID:${checklistItem.id}\nCategory: ${checklistItem.category || 'general'}\nStatus: ${checklistItem.status}\n${checklistItem.notes ? 'Notes: ' + checklistItem.notes : ''}`;
 
     if (existingTask) {
       // Update existing task
