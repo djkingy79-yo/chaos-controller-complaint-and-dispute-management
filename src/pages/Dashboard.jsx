@@ -102,7 +102,7 @@ export default function Dashboard() {
           )}
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-display font-black text-foreground">
                 Welcome back{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
@@ -111,10 +111,10 @@ export default function Dashboard() {
                 Control starts here. Here's your dispute command centre.
               </p>
             </div>
-            <Link to="/new-case">
-              <Button className="gap-2 font-medium">
-                <Plus className="w-4 h-4" />
-                New Case
+            <Link to="/new-case" className="w-full sm:w-auto">
+              <Button className="gap-2 font-bold h-14 px-6 text-base w-full sm:w-auto">
+                <Plus className="w-5 h-5" />
+                Start New Case
               </Button>
             </Link>
           </div>
@@ -204,16 +204,16 @@ export default function Dashboard() {
           )}
 
           {/* Action Items & Recent Cases */}
-          <div className="grid lg:grid-cols-5 gap-6">
+          <div className="flex flex-col lg:grid lg:grid-cols-5 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <h2 className="text-3xl font-heading font-black text-foreground">Action Required</h2>
+              <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground">Action Required</h2>
               <ActionItems cases={cases} />
             </div>
             <div className="lg:col-span-3 space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-heading font-black text-foreground">Recent Cases</h2>
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-2xl sm:text-3xl font-heading font-black text-foreground">Recent Cases</h2>
                 {cases.length > 3 && (
-                  <Link to="/cases" className="text-lg text-primary hover:underline font-black">
+                  <Link to="/cases" className="text-base sm:text-lg text-primary hover:underline font-black whitespace-nowrap">
                     View all →
                   </Link>
                 )}

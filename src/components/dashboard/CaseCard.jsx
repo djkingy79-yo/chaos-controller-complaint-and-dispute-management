@@ -43,7 +43,7 @@ export default function CaseCard({ caseItem, index }) {
     >
       <Link
         to={`/case/${caseItem.id}`}
-        className="block relative overflow-hidden bg-card rounded-2xl border-2 border-border p-6 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all group hover:-translate-y-1"
+        className="block relative overflow-hidden bg-card rounded-2xl border-2 border-border p-4 sm:p-6 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all group active:scale-[0.98] touch-manipulation"
       >
         {/* Status indicator bar on left edge */}
         <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
@@ -54,41 +54,41 @@ export default function CaseCard({ caseItem, index }) {
           'bg-gradient-to-b from-blue-500 to-blue-600'
         }`} />
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-bl-full" />
-        <div className="relative flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
-              <Badge className={`${status.className} border-2 font-black text-sm px-3 py-1 shadow-lg`}>
+        <div className="relative flex flex-col sm:flex-row items-start gap-4">
+          <div className="flex-1 min-w-0 w-full">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 flex-wrap">
+              <Badge className={`${status.className} border-2 font-black text-xs sm:text-sm px-3 py-1.5 sm:py-1 shadow-lg min-h-[32px]`}>
                 {status.label}
               </Badge>
-              <span className={`text-sm font-black uppercase tracking-wide px-2 py-0.5 rounded-md ${
+              <span className={`text-xs sm:text-sm font-black uppercase tracking-wide px-2 py-0.5 rounded-md ${
                 caseItem.status === 'resolved' || caseItem.status === 'closed' 
                   ? 'bg-gray-700/20 text-gray-500' 
                   : 'bg-primary/10 text-primary'
               }`}>
                 {caseItem.status === 'resolved' || caseItem.status === 'closed' ? 'INACTIVE' : categoryLabels[caseItem.category] || caseItem.category}
               </span>
-              <span className={`w-3 h-3 rounded-full ${priorityDot[caseItem.priority] || priorityDot.medium} animate-pulse`} />
+              <span className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${priorityDot[caseItem.priority] || priorityDot.medium} animate-pulse shrink-0`} />
             </div>
-            <h3 className="font-heading font-black text-foreground truncate group-hover:text-primary transition-colors text-2xl leading-tight">
+            <h3 className="font-heading font-black text-foreground truncate group-hover:text-primary transition-colors text-lg sm:text-2xl leading-tight">
               {caseItem.title}
             </h3>
             {caseItem.organisation_name && (
-              <div className="flex items-center gap-2 mt-2 text-lg text-foreground font-black">
-                <Building2 className="w-5 h-5" />
+              <div className="flex items-center gap-2 mt-2 text-sm sm:text-lg text-foreground font-black">
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>{caseItem.organisation_name}</span>
               </div>
             )}
             {caseItem.issue_summary && (
-              <p className="text-base text-foreground font-bold mt-3 line-clamp-2 leading-relaxed">
+              <p className="text-sm sm:text-base text-foreground font-bold mt-2 sm:mt-3 line-clamp-2 leading-relaxed">
                 {caseItem.issue_summary}
               </p>
             )}
-            <div className="flex items-center gap-2 mt-3 text-base text-foreground font-black">
+            <div className="flex items-center gap-2 mt-3 text-sm text-foreground font-black">
               <Calendar className="w-4 h-4" />
               <span>{format(new Date(caseItem.created_date), "d MMMM yyyy")}</span>
             </div>
           </div>
-          <div className="p-3 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
+          <div className="p-3 sm:p-3 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors shrink-0">
             <ChevronRight className="w-6 h-6 text-primary group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
