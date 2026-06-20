@@ -35,10 +35,19 @@
         "create",
         "update"
       ]
+    },
+    {
+      "function_name": "syncCalendar",
+      "description": ""
     }
   ],
   "context_files": [],
-  "app_user_connector_configs": [],
+  "app_user_connector_configs": [
+    {
+      "connector_id": "6a2f842ded0843ad5cb9ecb7",
+      "enabled": true
+    }
+  ],
   "selected_skill_names": [],
   "selected_workspace_skill_ids": [],
   "model": "automatic",
