@@ -11,6 +11,15 @@ export default function Terms() {
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
+          {/* Logo */}
+          <div className="mb-6">
+            <img
+              src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/4dacc98be_67B5CC10-D393-47DF-871D-C5B37790EF8E.png"
+              alt="Chaos Controller Logo"
+              className="w-full max-w-md mx-auto block"
+            />
+          </div>
+          
           <div className="flex items-center gap-4 mb-4">
             <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-4 h-4" />
