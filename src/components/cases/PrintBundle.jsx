@@ -95,18 +95,8 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   <style>${getLetterPageStyles()}</style>
   </head><body>
     <div class="letter-page">
-      <div class="letter-header">
-        <img src="${LETTERHEAD_URL}" alt="Chaos Controller" />
-      </div>
       <div class="letter-content">
         <pre>${content}</pre>
-        <div class="letter-footer">
-          <div>
-            <div>Chaos Controller™ — chaoscontrollerapp@gmail.com | 0413 572 850</div>
-            <div style="color:#999;">${caseItem.title} — Ref: ${caseRef}</div>
-          </div>
-          <div style="white-space:nowrap;padding-left:10pt;">${docDate}</div>
-        </div>
       </div>
     </div>
   </body></html>`);
