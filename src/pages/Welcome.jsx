@@ -217,7 +217,7 @@ export default function Welcome() {
           
           {/* Disclaimer */}
           <div className="mt-8 bg-white border-2 border-[#FFD700] rounded-lg px-4 py-3 max-w-2xl mx-auto">
-            <p className="text-[#FFD700] font-bold italic text-xs" style={{ fontSize: '9pt' }}>
+            <p className="text-[#C0392B] font-bold italic text-xs" style={{ fontSize: '9pt' }}>
               ⚠️⚠️IMPORTANT DISCLAIMER⚠️⚠️<br />
               All content provided is for educational and informational purposes only. It does not constitute formal legal advice and should not be relied upon.
             </p>
