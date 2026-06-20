@@ -69,6 +69,19 @@ export default function Login() {
           </svg>
           Continue with Facebook
         </Button>
+        <Button
+          variant="outline"
+          className="w-full h-12 text-sm font-medium"
+          onClick={() => base44.auth.loginWithProvider("microsoft", "/dashboard")}
+        >
+          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#F25022" d="M0 0h11.5v11.5H0z"/>
+            <path fill="#00A4EF" d="M12.5 0H24v11.5H12.5z"/>
+            <path fill="#7FBA00" d="M0 12.5h11.5V24H0z"/>
+            <path fill="#FFB900" d="M12.5 12.5H24V24H12.5z"/>
+          </svg>
+          Continue with Microsoft
+        </Button>
       </div>
 
       <div className="relative mb-6">
