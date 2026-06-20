@@ -3,26 +3,25 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    let body = {};
+    try { body = await req.json(); } catch { /* entity automation — no explicit body */ }
 
-    const body = await req.json();
-    const { evidenceId } = body;
+    const { evidenceId, event: automationEvent, data: automationData } = body;
 
-    if (!evidenceId) {
+    // Support both entity automation trigger and direct call
+    const resolvedEvidenceId = evidenceId || automationEvent?.entity_id || automationData?.id;
+    if (!resolvedEvidenceId) {
       return Response.json({ error: 'Missing evidenceId' }, { status: 400 });
     }
 
-    // Get evidence record
-    const evidence = await base44.entities.Evidence.get(evidenceId);
+    // Get evidence record using service role (works in automation context)
+    const evidence = await base44.asServiceRole.entities.Evidence.get(resolvedEvidenceId);
     if (!evidence) {
       return Response.json({ error: 'Evidence not found' }, { status: 404 });
     }
 
     // Get case to determine category
-    const caseItem = await base44.entities.Case.get(evidence.case_id);
+    const caseItem = await base44.asServiceRole.entities.Case.get(evidence.case_id);
     if (!caseItem) {
       return Response.json({ error: 'Case not found' }, { status: 404 });
     }
@@ -91,8 +90,7 @@ Deno.serve(async (req) => {
     const driveFile = await uploadResponse.json();
 
     // Update evidence record with Drive backup reference
-    await base44.entities.Evidence.update(evidenceId, {
-      description: evidence.description || `Backed up to Google Drive: ${driveFile.webViewLink}`,
+    await base44.asServiceRole.entities.Evidence.update(resolvedEvidenceId, {
       drive_backup_url: driveFile.webViewLink,
       drive_backup_id: driveFile.id
     });

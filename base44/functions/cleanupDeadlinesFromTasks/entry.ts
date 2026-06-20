@@ -1,75 +1,59 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const GOOGLE_CONNECTOR_ID = '6a2f842ded0843ad5cb9ecb7';
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    let body = {};
+    try { body = await req.json(); } catch { /* entity automation — no explicit body needed */ }
 
-    // Get Google Tasks connection
-    const { accessToken } = await base44.asServiceRole.connectors.getConnection('googletasks');
+    const { event: automationEvent, data: automationData } = body;
 
-    // Find the task list
-    const taskListId = await findTaskList(accessToken, 'Chaos Controller Deadlines');
-    if (!taskListId) {
-      return Response.json({ success: true, message: 'No task list found' });
-    }
-
-    // Get all completed/missed deadlines
-    const completedDeadlines = await base44.entities.Deadline.filter(
-      { created_by_id: user.id, status: 'completed' }
-    );
-    const missedDeadlines = await base44.entities.Deadline.filter(
-      { created_by_id: user.id, status: 'missed' }
-    );
-
-    const removedTasks = [];
-
-    // Remove tasks for completed/missed deadlines
-    for (const deadline of [...completedDeadlines, ...missedDeadlines]) {
-      const caseData = await base44.entities.Case.get(deadline.case_id);
-      const taskTitle = `[${caseData?.title || 'Case'}] ${deadline.title}`;
-      
-      const task = await findTaskByTitle(accessToken, taskListId, taskTitle);
-      if (task) {
-        await deleteTask(accessToken, taskListId, task.id);
-        removedTasks.push({ deadline_id: deadline.id, task_id: task.id });
+    // Entity automation path — deadline updated to completed/missed
+    if (automationEvent?.entity_name === 'Deadline') {
+      const deadline = automationData;
+      if (!deadline || !['completed', 'missed'].includes(deadline.status)) {
+        return Response.json({ skipped: 'deadline not completed or missed' });
       }
+
+      const cases = await base44.asServiceRole.entities.Case.filter({ id: deadline.case_id });
+      const caseItem = cases[0];
+      if (!caseItem) return Response.json({ skipped: 'case not found' });
+
+      const conn = await base44.asServiceRole.connectors.getAppUserConnection(GOOGLE_CONNECTOR_ID, caseItem.created_by_id).catch(() => null);
+      if (!conn?.accessToken) return Response.json({ skipped: 'user has no Google connection' });
+
+      const accessToken = conn.accessToken;
+
+      // Find the task list
+      const taskListsRes = await fetch('https://www.googleapis.com/tasks/v1/users/@me/lists', {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      const taskLists = await taskListsRes.json();
+      const chaosList = taskLists.items?.find(l => l.title === 'Chaos Controller Deadlines');
+      if (!chaosList) return Response.json({ skipped: 'task list not found' });
+
+      // Find the task by DeadlineID in notes
+      const tasksRes = await fetch(`https://www.googleapis.com/tasks/v1/lists/${chaosList.id}/tasks`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      const tasks = await tasksRes.json();
+      const task = tasks.items?.find(t => t.notes?.includes(`DeadlineID:${deadline.id}`));
+
+      if (task) {
+        await fetch(`https://www.googleapis.com/tasks/v1/lists/${chaosList.id}/tasks/${task.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        return Response.json({ success: true, removed: 1, deadlineId: deadline.id });
+      }
+
+      return Response.json({ success: true, removed: 0, message: 'Task not found in Google Tasks' });
     }
 
-    return Response.json({ 
-      success: true, 
-      removed: removedTasks.length,
-      details: removedTasks 
-    });
+    return Response.json({ skipped: 'not a deadline automation event' });
   } catch (error) {
-    console.error('Google Tasks cleanup failed:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
-
-async function findTaskList(accessToken, listName) {
-  const response = await fetch('https://www.googleapis.com/tasks/v1/users/@me/lists', {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  });
-  const data = await response.json();
-  const list = data.items?.find(list => list.title === listName);
-  return list?.id;
-}
-
-async function findTaskByTitle(accessToken, taskListId, title) {
-  const response = await fetch(`https://www.googleapis.com/tasks/v1/lists/${taskListId}/tasks`, {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  });
-  const data = await response.json();
-  return data.items?.find(task => task.title === title);
-}
-
-async function deleteTask(accessToken, taskListId, taskId) {
-  await fetch(`https://www.googleapis.com/tasks/v1/lists/${taskListId}/tasks/${taskId}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  });
-}
