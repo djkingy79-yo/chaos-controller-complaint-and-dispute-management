@@ -46,11 +46,12 @@ export function getLetterPageStyles() {
     /* Letter body starts below the full letterhead header (~35% from top) */
     .letter-content {
       position: relative;
-      padding: 35% 22mm 20mm 22mm;
+      padding: 35% 12mm 15mm 12mm;
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
       color: #111;
-      line-height: 1.7;
+      line-height: 1.6;
+      max-width: 186mm;
     }
 
     /* Continuation pages — MINIMAL header only, no footer */
@@ -58,7 +59,7 @@ export function getLetterPageStyles() {
       position: relative;
       width: 210mm;
       min-height: 297mm;
-      padding: 25mm 22mm 28mm 22mm;
+      padding: 20mm 12mm 20mm 12mm;
       page-break-before: always;
       background-image: url('${CONTINUATION_PAGE_URL}');
       background-size: 100% 100%;
@@ -67,7 +68,8 @@ export function getLetterPageStyles() {
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
       color: #111;
-      line-height: 1.7;
+      line-height: 1.6;
+      max-width: 186mm;
     }
 
     h2.section-title {

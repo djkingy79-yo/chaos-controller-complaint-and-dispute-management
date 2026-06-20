@@ -223,12 +223,12 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
   const handlePrint = () => {
     const lines = text.split('\n');
-    // First page: ~38 lines (accounting for letterhead), continuation: ~50 lines each
-    const firstPageLines = lines.slice(0, 38);
-    const remainingLines = lines.slice(38);
+    // First page: ~42 lines (with wider margins), continuation: ~55 lines each
+    const firstPageLines = lines.slice(0, 42);
+    const remainingLines = lines.slice(42);
     const continuationPages = [];
-    for (let i = 0; i < remainingLines.length; i += 50) {
-      continuationPages.push(remainingLines.slice(i, i + 50).join('\n'));
+    for (let i = 0; i < remainingLines.length; i += 55) {
+      continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
     }
     const continuationHTML = continuationPages.map((chunk, idx) => `
       <div class="letter-continuation"><pre>${chunk}</pre></div>
@@ -299,18 +299,18 @@ function LetterEditor({ letterType, caseItem, evidence }) {
           <div style={{ position: "relative" }}>
             <img src={LETTERHEAD_URL} alt="Chaos Controller Full Letterhead" style={{ width: "100%", display: "block" }} />
           </div>
-          {/* Letter body — starts immediately below letterhead with minimal spacing */}
-          <div className="px-8 pb-6 bg-white" style={{ marginTop: "-8px", paddingTop: "8px" }}>
+          {/* Letter body — wider margins, starts immediately below letterhead */}
+          <div className="bg-white" style={{ padding: "12px 48px 18px 48px", marginTop: "-4px" }}>
             {editing ? (
               <Textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                rows={20}
-                className="font-body text-sm leading-relaxed bg-white text-slate-900"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt" }}
+                rows={18}
+                className="font-body text-sm leading-relaxed bg-white text-slate-900 w-full"
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6" }}
               />
             ) : (
-              <pre className="whitespace-pre-wrap leading-relaxed text-slate-900" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", marginTop: "0" }}>
+              <pre className="whitespace-pre-wrap leading-relaxed text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: "0" }}>
                 {text}
               </pre>
             )}
