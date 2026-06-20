@@ -57,6 +57,8 @@ function buildPrompt(type, caseItem, client, today) {
 
 CRITICAL RULE: NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
 
+FORMATTING: Use standard business letter layout with DATE FIRST in bold at top, sender's address on RIGHT, merchant's address on LEFT.
+
 COMPLAINANT DETAILS:
 - Name: ${client.name || "not provided — omit name line"}
 - Address: ${client.address || "not provided — omit address block"}
@@ -82,14 +84,15 @@ CASE DETAILS:
 - Today's Date: ${today}`;
 
   const formats = `
-LETTER FORMAT:
-1. Top right: complainant address (if known), then date (${today})
-2. Left block: complaint handler, organisation name, address
-3. Re: line referencing case/account
-4. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-5. Professional, firm Australian English tone — use Australian spelling throughout (e.g. organise, recognise, behaviour, honour, colour)
-6. Close: "Yours faithfully," then complainant name (if provided)
-7. NEVER use bracket placeholders`;
+LETTER FORMAT (STANDARD BUSINESS LETTER LAYOUT):
+1. DATE FIRST at the very top in BOLD: **${today}**
+2. TOP RIGHT block (below date): complainant's full name, address lines, email, phone
+3. LEFT block (below date, opposite the right block): complaint handler name, organisation name, complaints address, complaints email
+4. Re: line referencing case/account
+5. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
+6. Professional, firm Australian English tone — use Australian spelling throughout (e.g. organise, recognise, behaviour, honour, colour)
+7. Close: "Yours faithfully," then complainant name (if provided)
+8. NEVER use bracket placeholders`;
 
   if (type === "letter1") {
     return `${base}

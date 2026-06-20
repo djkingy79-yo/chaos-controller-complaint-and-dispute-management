@@ -108,16 +108,17 @@ CASE DETAILS:
 - Escalation Body: ${caseItem.escalation_body || "the relevant ombudsman"}
 
 LETTER FORMAT INSTRUCTIONS:
-1. Top right block: complainant's address (if provided), then today's date (${today}).
-2. Left block: complaint handler name/title, organisation name, organisation complaints address.
-3. Re: line — e.g. "Re: Formal Complaint — ${caseItem.account_number ? "Account " + caseItem.account_number : caseItem.title}"
-4. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-5. Opening paragraph references account number and incident date if available.
-6. Firm but professional tone. Include a 21-day response deadline.
-7. Mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step if unresolved.
-8. Close with "Yours faithfully," then the complainant's full name (if provided).
-9. NEVER write bracket placeholders — use real data or omit the line entirely.
-10. If account numbers are very long, format them on separate lines for readability.`;
+1. FIRST line (centered or top): TODAY'S DATE in bold: **${today}**
+2. TOP RIGHT block (below date): complainant's name, then address lines, then email, then phone
+3. LEFT block (below date, opposite the right block): complaint handler name, organisation name, complaints address, complaints email
+4. Re: line — e.g. "Re: Formal Complaint — ${caseItem.account_number ? "Account " + caseItem.account_number : caseItem.title}"
+5. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
+6. Opening paragraph references account number and incident date if available.
+7. Firm but professional tone. Include a 21-day response deadline.
+8. Mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step if unresolved.
+9. Close with "Yours faithfully," then the complainant's full name (if provided).
+10. NEVER write bracket placeholders — use real data or omit the line entirely.
+11. If account numbers are very long, format them on separate lines for readability.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);
