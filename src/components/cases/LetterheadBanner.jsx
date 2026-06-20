@@ -1,8 +1,10 @@
-const NEW_LETTERHEAD_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/d7c82de93_9E8BA4FC-02D7-4B9E-809C-6A24FA7522B1.png";
+// Full letterhead with header and footer - page 1 only
+const FULL_LETTERHEAD_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/786d83a7e_5596A320-E07C-48EE-8743-6D15F12CE701.png";
+// Minimal continuation header - pages 2+
 const CONTINUATION_PAGE_URL = "https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/0cbc19cc4_5596A320-E07C-48EE-8743-6D15F12CE701.png";
 
 // Export for use in PrintBundle and other print contexts
-export { NEW_LETTERHEAD_URL as LETTERHEAD_URL, CONTINUATION_PAGE_URL };
+export { FULL_LETTERHEAD_URL as LETTERHEAD_URL, CONTINUATION_PAGE_URL };
 
 export const CONTACT = {
   website: "www.chaoscontroller.com.au",
@@ -16,7 +18,7 @@ export function LetterheadHeader() {
   return (
     <div style={{ lineHeight: 0 }}>
       <img
-        src={NEW_LETTERHEAD_URL}
+        src={FULL_LETTERHEAD_URL}
         alt="Chaos Controller Letterhead"
         style={{ width: "100%", display: "block" }}
       />
@@ -24,7 +26,7 @@ export function LetterheadHeader() {
   );
 }
 
-// Print styles — letterhead as background on page 1 only; overflow pages are plain white with a text footer
+// Print styles — full letterhead on page 1 only (with header and footer), minimal header on subsequent pages
 export function getLetterPageStyles() {
   return `
     @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
@@ -32,33 +34,33 @@ export function getLetterPageStyles() {
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; }
 
-    /* Page 1: full letterhead background */
+    /* Page 1: FULL letterhead with header and footer */
     .letter-page {
       position: relative;
       width: 210mm;
       min-height: 297mm;
-      background-image: url('${NEW_LETTERHEAD_URL}');
+      background-image: url('${FULL_LETTERHEAD_URL}');
       background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: top left;
     }
-    .letter-header { display: none; }
 
-    /* Letter body starts below the letterhead image (~40% from top = ~119mm) */
+    /* Letter body starts below the full letterhead header (~35% from top) */
     .letter-content {
       position: relative;
-      padding: 40% 22mm 20mm 22mm;
+      padding: 35% 22mm 20mm 22mm;
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
       color: #111;
       line-height: 1.7;
     }
 
-    /* Continuation pages — continuation letterhead background */
+    /* Continuation pages — MINIMAL header only, no footer */
     .letter-continuation {
+      position: relative;
       width: 210mm;
       min-height: 297mm;
-      padding: 38mm 22mm 28mm 22mm;
+      padding: 25mm 22mm 28mm 22mm;
       page-break-before: always;
       background-image: url('${CONTINUATION_PAGE_URL}');
       background-size: 100% 100%;

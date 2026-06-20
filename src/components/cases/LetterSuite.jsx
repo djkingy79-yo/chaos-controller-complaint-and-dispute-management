@@ -55,9 +55,15 @@ const LETTER_TYPES = [
 function buildPrompt(type, caseItem, client, today) {
   const base = `You are a professional consumer advocacy assistant in Australia. Generate a formal letter for a consumer dispute.
 
-CRITICAL RULE: NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
+CRITICAL RULES:
+1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
+2. Use STANDARD BUSINESS LETTER FORMAT with DATE FIRST.
 
-FORMATTING: Use standard business letter layout with DATE FIRST in bold at top, sender's address on RIGHT, merchant's address on LEFT.
+FORMATTING REQUIREMENTS:
+- FIRST LINE: Today's date in BOLD: **${today}**
+- TOP RIGHT (below date): Sender's (complainant's) full name, address lines, email, phone
+- LEFT SIDE (below date, opposite sender): Merchant's complaint handler name, organisation name, complaints address, complaints email
+- Then: Re: line, salutation, body, closing
 
 COMPLAINANT DETAILS:
 - Name: ${client.name || "not provided — omit name line"}
@@ -84,15 +90,15 @@ CASE DETAILS:
 - Today's Date: ${today}`;
 
   const formats = `
-LETTER FORMAT (STANDARD BUSINESS LETTER LAYOUT):
-1. DATE FIRST at the very top in BOLD: **${today}**
-2. TOP RIGHT block (below date): complainant's full name, address lines, email, phone
-3. LEFT block (below date, opposite the right block): complaint handler name, organisation name, complaints address, complaints email
+STANDARD BUSINESS LETTER FORMAT:
+1. FIRST LINE: Date in bold - **${today}**
+2. RIGHT SIDE (below date): Sender's full name, address, email, phone (right-aligned positioning)
+3. LEFT SIDE (below date, opposite sender): Complaint handler, organisation, address, email
 4. Re: line referencing case/account
 5. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-6. Professional, firm Australian English tone — use Australian spelling throughout (e.g. organise, recognise, behaviour, honour, colour)
+6. Professional, firm Australian English tone — use Australian spelling (organise, recognise, behaviour, honour, colour)
 7. Close: "Yours faithfully," then complainant name (if provided)
-8. NEVER use bracket placeholders`;
+8. NEVER use bracket placeholders - omit lines if data not provided`;
 
   if (type === "letter1") {
     return `${base}
@@ -286,12 +292,12 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
       {text ? (
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-          {/* Letterhead as background — text overlaid on top */}
+          {/* Full letterhead header — page 1 only */}
           <div style={{ position: "relative" }}>
-            <img src={LETTERHEAD_URL} alt="Chaos Controller Letterhead" style={{ width: "100%", display: "block" }} />
+            <img src={LETTERHEAD_URL} alt="Chaos Controller Full Letterhead" style={{ width: "100%", display: "block" }} />
           </div>
-          {/* Letter body — sits directly below letterhead, no gap */}
-          <div className="px-8 pb-8 bg-white" style={{ marginTop: 0 }}>
+          {/* Letter body — sits directly below letterhead */}
+          <div className="px-8 pb-8 bg-white" style={{ marginTop: 0, paddingTop: "16px" }}>
             {editing ? (
               <Textarea
                 value={text}

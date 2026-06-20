@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LETTERHEAD_URL, getLetterPageStyles } from "./LetterheadBanner";
+import { LETTERHEAD_URL, CONTINUATION_PAGE_URL, getLetterPageStyles } from "./LetterheadBanner";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -82,9 +82,17 @@ export default function ComplaintLetter({ caseItem }) {
 
   const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute.
 
-CRITICAL RULE: Never use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely or write naturally around it.
+  CRITICAL RULES:
+  1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
+  2. Use STANDARD BUSINESS LETTER FORMAT with DATE FIRST.
 
-COMPLAINANT DETAILS:
+  FORMATTING REQUIREMENTS:
+  1. FIRST line: TODAY'S DATE in bold - **${today}**
+  2. RIGHT SIDE (below date): Sender's full name, address lines, email, phone (each on separate lines, right-aligned in your mind)
+  3. LEFT SIDE (below date, opposite sender): Complaint handler name, organisation name, complaints address, complaints email
+  4. Then: Re: line, salutation, body, closing
+
+  COMPLAINANT DETAILS:
 - Name: ${client.name || "not provided — omit name line"}
 - Address: ${client.address || "not provided — omit address block"}
 - Email: ${client.email || "not provided"}
@@ -107,18 +115,14 @@ CASE DETAILS:
 - Desired Outcome: ${caseItem.desired_outcome}
 - Escalation Body: ${caseItem.escalation_body || "the relevant ombudsman"}
 
-LETTER FORMAT INSTRUCTIONS:
-1. FIRST line (centered or top): TODAY'S DATE in bold: **${today}**
-2. TOP RIGHT block (below date): complainant's name, then address lines, then email, then phone
-3. LEFT block (below date, opposite the right block): complaint handler name, organisation name, complaints address, complaints email
-4. Re: line — e.g. "Re: Formal Complaint — ${caseItem.account_number ? "Account " + caseItem.account_number : caseItem.title}"
-5. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-6. Opening paragraph references account number and incident date if available.
-7. Firm but professional tone. Include a 21-day response deadline.
-8. Mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step if unresolved.
-9. Close with "Yours faithfully," then the complainant's full name (if provided).
-10. NEVER write bracket placeholders — use real data or omit the line entirely.
-11. If account numbers are very long, format them on separate lines for readability.`;
+5. Re: line — e.g. "Re: Formal Complaint — ${caseItem.account_number ? "Account " + caseItem.account_number : caseItem.title}"
+6. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
+7. Opening paragraph references account number and incident date if available.
+8. Firm but professional tone. Include a 21-day response deadline.
+9. Mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step if unresolved.
+10. Close with "Yours faithfully," then the complainant's full name (if provided).
+11. NEVER write bracket placeholders — use real data or omit the line entirely.
+12. If account numbers are very long, format them on separate lines for readability.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);
@@ -127,13 +131,25 @@ LETTER FORMAT INSTRUCTIONS:
   };
 
   const handlePrint = () => {
+    const lines = letter.split('\n');
+    // First page holds ~40 lines (below full letterhead), continuation pages ~50 lines each
+    const firstPageLines = lines.slice(0, 40);
+    const remainingLines = lines.slice(40);
+    const continuationPages = [];
+    for (let i = 0; i < remainingLines.length; i += 50) {
+      continuationPages.push(remainingLines.slice(i, i + 50).join('\n'));
+    }
+    const continuationHTML = continuationPages.map(chunk => `
+      <div class="letter-continuation"><pre>${chunk}</pre></div>
+    `).join('');
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
     <style>${getLetterPageStyles()}</style>
     </head><body>
       <div class="letter-page">
-        <div class="letter-content"><pre>${letter}</pre></div>
+        <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
       </div>
+      ${continuationHTML}
     </body></html>`);
     win.document.close();
     win.focus();
@@ -193,9 +209,9 @@ LETTER FORMAT INSTRUCTIONS:
       {/* Letterhead Preview */}
       <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
         <div style={{ position: "relative" }}>
-          <img src={LETTERHEAD_URL} alt="Chaos Controller Letterhead" style={{ width: "100%", display: "block" }} />
+          <img src={LETTERHEAD_URL} alt="Chaos Controller Full Letterhead" style={{ width: "100%", display: "block" }} />
         </div>
-        <div className="px-8 pb-8 bg-white" style={{ marginTop: 0 }}>
+        <div className="px-8 pb-8 bg-white" style={{ marginTop: 0, paddingTop: "16px" }}>
           {editing ? (
             <Textarea
               value={letter}
