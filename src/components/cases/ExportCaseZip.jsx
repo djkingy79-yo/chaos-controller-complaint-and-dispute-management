@@ -17,106 +17,112 @@ const LETTER_DEFS = [
 function buildSummaryHTML(caseItem, evidence, events) {
   const sorted = [...events].sort((a, b) => new Date(a.event_date || 0) - new Date(b.event_date || 0));
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const today = format(new Date(), "d MMMM yyyy");
   const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  const summaryRows = [
+    { label: "Title", value: caseItem.title },
+    { label: "Category", value: caseItem.category ? caseItem.category.charAt(0).toUpperCase() + caseItem.category.slice(1) : null },
+    { label: "Status", value: (caseItem.status || "").replace(/_/g, " ").toUpperCase() },
+    { label: "Priority", value: (caseItem.priority || "").toUpperCase() },
+    { label: "Organisation", value: caseItem.organisation_name },
+    { label: "Account No.", value: caseItem.account_number },
+    { label: "Incident Date", value: caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : null },
+    { label: "Response Due", value: caseItem.response_deadline ? format(new Date(caseItem.response_deadline), "d MMMM yyyy") : null },
+    { label: "Escalation Body", value: caseItem.escalation_body },
+  ].filter(r => r.value);
 
   return `<!DOCTYPE html><html><head>
     <title>Case Export — ${caseItem.title}</title>
     <style>
-      @page { margin: 1.5cm; size: A4; }
+      @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-      body { margin: 0; padding: 20mm; background: #fff; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.6; }
-      .header { font-size: 11pt; font-weight: bold; text-transform: uppercase; margin-bottom: 12pt; padding-bottom: 8pt; border-bottom: 2px solid #000; }
-      .section { margin-top: 20pt; }
-      .section-title { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-bottom: 8pt; padding-bottom: 4pt; border-bottom: 1px solid #000; }
-      .data-row { margin-bottom: 4pt; }
-      .data-label { display: inline-block; width: 140pt; color: #000; font-weight: bold; }
-      .data-value { color: #000; }
-      .timeline-item { margin-bottom: 12pt; }
-      .timeline-date { color: #000; font-weight: bold; }
-      .timeline-type { color: #333; font-size: 9pt; margin-top: 2pt; }
-      .evidence-item { margin-bottom: 12pt; }
-      .evidence-name { color: #000; font-weight: bold; }
-      .evidence-type { color: #333; }
-      .evidence-url { color: #666; font-size: 9pt; margin-top: 2pt; word-break: break-all; }
-      .letter-section { margin-top: 24pt; page-break-before: always; }
-      .letter-content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; margin-top: 8pt; }
-      .footer { margin-top: 30pt; padding-top: 8pt; border-top: 1px solid #000; font-size: 9pt; color: #333; display: flex; justify-content: space-between; }
+      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
+      .section-title { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
+      .summary-box { background: #f8f8f8; border: 1px solid #ddd; padding: 10pt 12pt; border-radius: 4pt; margin-bottom: 12pt; }
+      .summary-row td { border: none; padding: 2pt 10pt 2pt 0; font-size: 10pt; }
+      .summary-row td:first-child { color: #666; font-style: italic; white-space: nowrap; width: 35%; }
+      .summary-row td:last-child { font-weight: bold; }
+      .section { margin-top: 14pt; }
+      table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
+      th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-weight: bold; border-bottom: 2px solid #ddd; font-size: 10pt; }
+      td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; font-size: 10pt; }
+      .footer { margin-top: 25pt; padding-top: 6pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
     </style>
   </head><body>
     
-    <div class="header">
-      <div>CHAOS CONTROLLER™ — CASE EXPORT</div>
-      <div>Generated: ${now}</div>
-      <div>Ref: ${caseRef}</div>
+    <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">CHAOS CONTROLLER™ — CASE EXPORT</div>
+    
+    <div class="summary-box">
+      <table class="summary-row">
+        <tbody>${summaryRows.map(r => `<tr><td>${r.label}</td><td>${r.value}</td></tr>`).join("")}</tbody>
+      </table>
     </div>
 
     <div class="section">
-      <div class="section-title">Case Details</div>
-      <div class="data-row"><span class="data-label">Title:</span><span class="data-value">${caseItem.title || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Category:</span><span class="data-value">${caseItem.category || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Status:</span><span class="data-value">${caseItem.status || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Priority:</span><span class="data-value">${caseItem.priority || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Organisation:</span><span class="data-value">${caseItem.organisation_name || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Account No:</span><span class="data-value">${caseItem.account_number || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Incident Date:</span><span class="data-value">${caseItem.incident_date || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Response Due:</span><span class="data-value">${caseItem.response_deadline || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Escalation Body:</span><span class="data-value">${caseItem.escalation_body || "N/A"}</span></div>
+      <div class="section-title">Complainant Details</div>
+      <table class="summary-row">
+        <tbody>
+          ${caseItem.complainant_name ? `<tr><td>Name</td><td>${caseItem.complainant_name}</td></tr>` : ""}
+          ${caseItem.complainant_address ? `<tr><td>Address</td><td>${caseItem.complainant_address}</td></tr>` : ""}
+          ${caseItem.complainant_email ? `<tr><td>Email</td><td>${caseItem.complainant_email}</td></tr>` : ""}
+          ${caseItem.complainant_phone ? `<tr><td>Phone</td><td>${caseItem.complainant_phone}</td></tr>` : ""}
+        </tbody>
+      </table>
     </div>
 
-    <div class="section">
-      <div class="section-title">Complainant</div>
-      <div class="data-row"><span class="data-label">Name:</span><span class="data-value">${caseItem.complainant_name || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Address:</span><span class="data-value">${caseItem.complainant_address || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Email:</span><span class="data-value">${caseItem.complainant_email || "N/A"}</span></div>
-      <div class="data-row"><span class="data-label">Phone:</span><span class="data-value">${caseItem.complainant_phone || "N/A"}</span></div>
-    </div>
-
-    <div class="section">
+    ${caseItem.issue_summary ? `<div class="section">
       <div class="section-title">Issue Summary</div>
-      <div style="margin-top: 6pt;">${caseItem.issue_summary || "N/A"}</div>
-    </div>
+      <div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_summary}</div>
+    </div>` : ""}
 
-    <div class="section">
-      <div class="section-title">Issue Details</div>
-      <div style="margin-top: 6pt;">${caseItem.issue_details || "N/A"}</div>
-    </div>
+    ${caseItem.issue_details ? `<div class="section">
+      <div class="section-title">Full Issue Details</div>
+      <div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_details}</div>
+    </div>` : ""}
 
-    <div class="section">
+    ${caseItem.desired_outcome ? `<div class="section">
       <div class="section-title">Desired Outcome</div>
-      <div style="margin-top: 6pt;">${caseItem.desired_outcome || "N/A"}</div>
-    </div>
+      <div style="font-size:10.5pt;line-height:1.6;">${caseItem.desired_outcome}</div>
+    </div>` : ""}
 
     ${sorted.length > 0 ? `
     <div class="section">
-      <div class="section-title">Timeline (${sorted.length} events)</div>
-      ${sorted.map((e, i) => `
-        <div class="timeline-item">
-          <div class="timeline-date">${i + 1}. [${e.event_date ? format(new Date(e.event_date), "yyyy-MM-dd") : "No date"}] ${e.title}</div>
-          <div class="timeline-type">Type: ${e.event_type || "N/A"}</div>
-          ${e.description ? `<div style="color: #333; margin-top: 2pt;">${e.description}</div>` : ""}
-        </div>`).join("")}
+      <div class="section-title">Chronological Timeline (${sorted.length} events)</div>
+      <table>
+        <thead><tr><th style="width:70pt;">Date</th><th style="width:80pt;">Type</th><th>Event</th><th>Details</th></tr></thead>
+        <tbody>${sorted.map(ev=>`<tr>
+          <td style="white-space:nowrap;">${ev.event_date?format(new Date(ev.event_date),"d MMM yyyy"):"—"}</td>
+          <td style="text-transform:capitalize;">${(ev.event_type||"").replace(/_/g," ")}</td>
+          <td style="font-weight:bold;">${ev.title}</td>
+          <td style="color:#555;">${ev.description||""}</td>
+        </tr>`).join("")}</tbody>
+      </table>
     </div>` : ""}
 
     ${evidence.length > 0 ? `
     <div class="section">
       <div class="section-title">Evidence Index (${evidence.length} files)</div>
-      ${evidence.map((ev, i) => `
-        <div class="evidence-item">
-          <div class="evidence-name">${i + 1}. ${ev.file_name} <span class="evidence-type">[${ev.file_type || "other"}]</span></div>
-          <div class="evidence-url">URL: ${ev.file_url}</div>
-        </div>`).join("")}
+      <table>
+        <thead><tr><th style="width:25pt;">#</th><th>File Name</th><th style="width:70pt;">Type</th><th style="width:60pt;">Date</th><th>Description</th></tr></thead>
+        <tbody>${evidence.map((ev,i)=>`<tr>
+          <td style="font-weight:bold;text-align:center;">${i+1}</td>
+          <td style="font-weight:bold;word-break:break-word;">${ev.file_name}</td>
+          <td style="text-transform:capitalize;">${(ev.file_type||"").replace(/_/g," ")}</td>
+          <td>${ev.event_date?format(new Date(ev.event_date),"d MMM yyyy"):"—"}</td>
+          <td style="color:#555;">${ev.description||"—"}</td>
+        </tr>`).join("")}</tbody>
+      </table>
     </div>` : ""}
 
     ${LETTER_DEFS.filter(ld => caseItem[ld.field]).map((ld, idx) => `
-    <div class="letter-section">
+    <div class="section" style="page-break-before:always;margin-top:20pt;">
       <div class="section-title">${ld.label}</div>
-      <div class="letter-content">${caseItem[ld.field]}</div>
+      <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10.5pt;line-height:1.6;margin:0;">${caseItem[ld.field]}</pre>
     </div>`).join("")}
 
     <div class="footer">
       <span>Chaos Controller™ — chaoscontroller.com.au</span>
-      <span>${caseRef} · Page 1</span>
+      <span>${caseRef} · Generated: ${now}</span>
     </div>
 
   </body></html>`;
@@ -150,9 +156,10 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
       if (caseItem[ld.field]) {
         const letterHTML = `<!DOCTYPE html><html><head><title>${ld.label}</title>
         <style>
-          body { margin: 0; padding: 20mm; background: #fff; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; }
-          .header { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-bottom: 12pt; padding-bottom: 8pt; border-bottom: 2px solid #000; }
-          .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.6; }
+          @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+          body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
+          .header { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
+          .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10.5pt; color: #111; line-height: 1.6; margin-top: 8pt; }
         </style>
         </head><body>
           <div class="header">${ld.label}</div>
