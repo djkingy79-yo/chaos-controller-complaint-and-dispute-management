@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, Printer } from "lucide-react";
 import { format } from "date-fns";
-import { LETTERHEAD_URL, CONTINUATION_PAGE_URL, getLetterPageStyles } from "./LetterheadBanner";
+import { LETTERHEAD_URL, CONTINUATION_PAGE_URL } from "./LetterheadBanner";
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },
@@ -14,218 +14,121 @@ const LETTER_DEFS = [
   { field: "letter_escalation", label: "Escalation Letter" },
 ];
 
-function buildSummaryText(caseItem, evidence, events) {
-  const sorted = [...events].sort((a, b) => (a.event_date || "").localeCompare(b.event_date || ""));
+function buildSummaryHTML(caseItem, evidence, events) {
+  const sorted = [...events].sort((a, b) => new Date(a.event_date || 0) - new Date(b.event_date || 0));
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
+  const today = format(new Date(), "d MMMM yyyy");
+  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
-  let txt = `CHAOS CONTROLLER™ — CASE EXPORT\nGenerated: ${new Date().toLocaleString("en-AU")}\nRef: ${caseRef}\n${"=".repeat(60)}\n\n`;
-  txt += `CASE DETAILS\n${"─".repeat(60)}\n`;
-  txt += `Title:           ${caseItem.title || "N/A"}\n`;
-  txt += `Category:        ${caseItem.category || "N/A"}\n`;
-  txt += `Status:          ${caseItem.status || "N/A"}\n`;
-  txt += `Priority:        ${caseItem.priority || "N/A"}\n`;
-  txt += `Organisation:    ${caseItem.organisation_name || "N/A"}\n`;
-  txt += `Account No:      ${caseItem.account_number || "N/A"}\n`;
-  txt += `Incident Date:   ${caseItem.incident_date || "N/A"}\n`;
-  txt += `Response Due:    ${caseItem.response_deadline || "N/A"}\n`;
-  txt += `Escalation Body: ${caseItem.escalation_body || "N/A"}\n\n`;
-  txt += `COMPLAINANT\n${"─".repeat(60)}\n`;
-  txt += `Name:    ${caseItem.complainant_name || "N/A"}\n`;
-  txt += `Address: ${caseItem.complainant_address || "N/A"}\n`;
-  txt += `Email:   ${caseItem.complainant_email || "N/A"}\n`;
-  txt += `Phone:   ${caseItem.complainant_phone || "N/A"}\n\n`;
-  txt += `ISSUE SUMMARY\n${"─".repeat(60)}\n${caseItem.issue_summary || "N/A"}\n\n`;
-  txt += `ISSUE DETAILS\n${"─".repeat(60)}\n${caseItem.issue_details || "N/A"}\n\n`;
-  txt += `DESIRED OUTCOME\n${"─".repeat(60)}\n${caseItem.desired_outcome || "N/A"}\n\n`;
+  return `<!DOCTYPE html><html><head>
+    <title>Case Export — ${caseItem.title}</title>
+    <style>
+      @page { margin: 0; size: A4; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      body { margin: 0; padding: 20mm; background: #000; font-family: 'Courier New', Courier, monospace; font-size: 10pt; color: #A0A0A0; line-height: 1.6; }
+      .header { font-size: 9pt; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12pt; padding-bottom: 8pt; border-bottom: 1px solid #A0A0A0; }
+      .section { margin-top: 20pt; }
+      .section-title { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-bottom: 8pt; padding-bottom: 4pt; border-bottom: 1px solid #A0A0A0; }
+      .data-row { margin-bottom: 4pt; }
+      .data-label { display: inline-block; width: 140pt; color: #A0A0A0; }
+      .data-value { color: #E0E0E0; font-weight: bold; }
+      .timeline-item { margin-bottom: 12pt; }
+      .timeline-date { color: #E0E0E0; font-weight: bold; }
+      .timeline-type { color: #888; font-size: 9pt; margin-top: 2pt; }
+      .evidence-item { margin-bottom: 12pt; }
+      .evidence-name { color: #E0E0E0; font-weight: bold; }
+      .evidence-type { color: #888; }
+      .evidence-url { color: #666; font-size: 9pt; margin-top: 2pt; word-break: break-all; }
+      .letter-section { margin-top: 24pt; page-break-before: always; }
+      .letter-content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #E0E0E0; margin-top: 8pt; }
+      .footer { margin-top: 30pt; padding-top: 8pt; border-top: 1px solid #A0A0A0; font-size: 9pt; color: #666; display: flex; justify-content: space-between; }
+    </style>
+  </head><body>
+    
+    <div class="header">
+      <div>CHAOS CONTROLLER™ — CASE EXPORT</div>
+      <div>Generated: ${now}</div>
+      <div>Ref: ${caseRef}</div>
+    </div>
 
-  if (sorted.length > 0) {
-    txt += `TIMELINE (${sorted.length} events)\n${"─".repeat(60)}\n`;
-    sorted.forEach((e, i) => {
-      txt += `${i + 1}. [${e.event_date || "No date"}] ${e.title}\n   Type: ${e.event_type || "N/A"}\n`;
-      if (e.description) txt += `   ${e.description}\n`;
-      txt += "\n";
-    });
-  }
+    <div class="section">
+      <div class="section-title">Case Details</div>
+      <div class="data-row"><span class="data-label">Title:</span><span class="data-value">${caseItem.title || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Category:</span><span class="data-value">${caseItem.category || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Status:</span><span class="data-value">${caseItem.status || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Priority:</span><span class="data-value">${caseItem.priority || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Organisation:</span><span class="data-value">${caseItem.organisation_name || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Account No:</span><span class="data-value">${caseItem.account_number || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Incident Date:</span><span class="data-value">${caseItem.incident_date || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Response Due:</span><span class="data-value">${caseItem.response_deadline || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Escalation Body:</span><span class="data-value">${caseItem.escalation_body || "N/A"}</span></div>
+    </div>
 
-  if (evidence.length > 0) {
-    txt += `EVIDENCE INDEX (${evidence.length} files)\n${"─".repeat(60)}\n`;
-    evidence.forEach((ev, i) => {
-      txt += `${i + 1}. ${ev.file_name} [${ev.file_type || "N/A"}]`;
-      if (ev.event_date) txt += ` — ${ev.event_date}`;
-      if (ev.description) txt += `\n   ${ev.description}`;
-      txt += `\n   URL: ${ev.file_url}\n\n`;
-    });
-  }
+    <div class="section">
+      <div class="section-title">Complainant</div>
+      <div class="data-row"><span class="data-label">Name:</span><span class="data-value">${caseItem.complainant_name || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Address:</span><span class="data-value">${caseItem.complainant_address || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Email:</span><span class="data-value">${caseItem.complainant_email || "N/A"}</span></div>
+      <div class="data-row"><span class="data-label">Phone:</span><span class="data-value">${caseItem.complainant_phone || "N/A"}</span></div>
+    </div>
 
-  LETTER_DEFS.forEach(ld => {
-    if (caseItem[ld.field]) {
-      txt += `${ld.label.toUpperCase()}\n${"─".repeat(60)}\n${caseItem[ld.field]}\n\n`;
-    }
-  });
+    <div class="section">
+      <div class="section-title">Issue Summary</div>
+      <div style="color: #E0E0E0; margin-top: 6pt;">${caseItem.issue_summary || "N/A"}</div>
+    </div>
 
-  return txt;
+    <div class="section">
+      <div class="section-title">Issue Details</div>
+      <div style="color: #E0E0E0; margin-top: 6pt;">${caseItem.issue_details || "N/A"}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Desired Outcome</div>
+      <div style="color: #E0E0E0; margin-top: 6pt;">${caseItem.desired_outcome || "N/A"}</div>
+    </div>
+
+    ${sorted.length > 0 ? `
+    <div class="section">
+      <div class="section-title">Timeline (${sorted.length} events)</div>
+      ${sorted.map((e, i) => `
+        <div class="timeline-item">
+          <div class="timeline-date">${i + 1}. [${e.event_date ? format(new Date(e.event_date), "yyyy-MM-dd") : "No date"}] ${e.title}</div>
+          <div class="timeline-type">Type: ${e.event_type || "N/A"}</div>
+          ${e.description ? `<div style="color: #888; margin-top: 2pt;">${e.description}</div>` : ""}
+        </div>`).join("")}
+    </div>` : ""}
+
+    ${evidence.length > 0 ? `
+    <div class="section">
+      <div class="section-title">Evidence Index (${evidence.length} files)</div>
+      ${evidence.map((ev, i) => `
+        <div class="evidence-item">
+          <div class="evidence-name">${i + 1}. ${ev.file_name} <span class="evidence-type">[${ev.file_type || "other"}]</span></div>
+          <div class="evidence-url">URL: ${ev.file_url}</div>
+        </div>`).join("")}
+    </div>` : ""}
+
+    ${LETTER_DEFS.filter(ld => caseItem[ld.field]).map((ld, idx) => `
+    <div class="letter-section">
+      <div class="section-title">${ld.label}</div>
+      <div class="letter-content">${caseItem[ld.field]}</div>
+    </div>`).join("")}
+
+    <div class="footer">
+      <span>Chaos Controller™</span>
+      <span>${caseRef} · Page 1</span>
+    </div>
+
+  </body></html>`;
 }
 
 function openPrintPreview(caseItem, evidence, events) {
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const today = format(new Date(), "d MMMM yyyy");
-  const sorted = [...events].sort((a, b) => new Date(a.event_date || 0) - new Date(b.event_date || 0));
-  const presentLetters = LETTER_DEFS.filter(ld => caseItem[ld.field]);
-
-  const tocSections = [
-    { num: 1, title: "Case Summary", sub: "Parties, incident details & desired outcome" },
-    { num: 2, title: "Chronological Timeline", sub: `${events.length} recorded events` },
-    { num: 3, title: "Evidence Index", sub: `${evidence.length} documents on file` },
-    ...presentLetters.map((ld, i) => ({ num: 4 + i, title: ld.label, sub: "Formal correspondence" })),
-  ];
-
-  const sectionHeader = (num, title) => `
-    <div style="background:#1a1a2e;color:white;padding:10pt 18pt;margin-bottom:16pt;border-left:5px solid #FFD700;">
-      <div style="font-size:9pt;color:#FFD700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2pt;">Section ${num}</div>
-      <div style="font-size:15pt;font-weight:bold;">${title}</div>
-    </div>`;
-
+  const htmlContent = buildSummaryHTML(caseItem, evidence, events);
   const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head>
-  <title>Case Bundle — ${caseItem.title}</title>
-  <style>
-    @page { margin: 0; size: A4; }
-    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { font-family:'Times New Roman',Times,serif; font-size:11pt; color:#111; line-height:1.6; margin:0; padding:0; }
-    .cover-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
-    .toc-page { width:210mm; min-height:297mm; page-break-after:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
-    .section-page { width:210mm; min-height:297mm; page-break-before:always; background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/08578d6a5_25C3D2EB-1058-4DE4-B540-D512DF00D788.png'); background-size:100% 100%; background-repeat:no-repeat; background-position:top left; }
-    .cover-body { padding:28% 25mm 25mm 25mm; }
-    .page-body { padding:20mm 25mm 25mm 25mm; }
-    table { width:100%; border-collapse:collapse; font-size:10.5pt; margin-top:8pt; }
-    th { background:#f4f4f4; text-align:left; padding:5pt 8pt; font-weight:bold; border-bottom:2px solid #ddd; }
-    td { padding:4.5pt 8pt; border-bottom:1px solid #eee; vertical-align:top; }
-    pre { white-space:pre-wrap; font-family:'Times New Roman',Times,serif; font-size:10.5pt; line-height:1.6; margin:0; }
-    .toc-row { display:flex; align-items:baseline; padding:7pt 0; border-bottom:1px dotted #ccc; }
-    .toc-num { font-weight:bold; color:#1a1a2e; min-width:28pt; font-size:11pt; }
-    .toc-title { font-size:11pt; font-weight:bold; flex:1; }
-    .toc-sub { font-size:9pt; color:#666; margin-top:1pt; }
-    .footer { margin-top:25pt; padding-top:6pt; border-top:0.5pt solid #ccc; font-size:8pt; color:#666; display:flex; justify-content:space-between; font-family:'Times New Roman',Times,serif; }
-  </style>
-  </head><body>
-
-  <!-- COVER -->
-  <div class="cover-page">
-    <div class="cover-body">
-      <div style="font-size:9pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:12pt;">Chaos Controller™ — Formal Case Bundle</div>
-      <div style="border-left:5px solid #1a1a2e;padding-left:14pt;margin-bottom:20pt;">
-        <div style="font-size:22pt;font-weight:bold;line-height:1.2;margin-bottom:6pt;">${caseItem.title}</div>
-        <div style="font-size:13pt;color:#444;font-style:italic;">vs. ${caseItem.organisation_name || "Organisation"}</div>
-      </div>
-      <table style="margin-bottom:16pt;">
-        ${[
-          ["Case Reference", caseRef],
-          ["Complainant", caseItem.complainant_name],
-          ["Organisation", caseItem.organisation_name],
-          ["Category", caseItem.category],
-          ["Status", (caseItem.status || "").replace(/_/g, " ").toUpperCase()],
-          ["Incident Date", caseItem.incident_date],
-          ["Response Deadline", caseItem.response_deadline],
-          ["Generated", today],
-        ].filter(r => r[1]).map(r => `<tr><td style="border:none;padding:2pt 12pt 2pt 0;color:#666;font-style:italic;width:35%;">${r[0]}</td><td style="border:none;font-weight:bold;">${r[1]}</td></tr>`).join("")}
-      </table>
-      ${caseItem.issue_summary ? `<div style="margin-bottom:12pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Issue Summary</div><div>${caseItem.issue_summary}</div></div>` : ""}
-      ${caseItem.desired_outcome ? `<div><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Desired Outcome</div><div>${caseItem.desired_outcome}</div></div>` : ""}
-    </div>
-  </div>
-
-  <!-- TOC -->
-  <div class="toc-page">
-    <div class="page-body">
-      <div style="font-size:18pt;font-weight:bold;margin-bottom:4pt;">Table of Contents</div>
-      <div style="font-size:10pt;color:#888;margin-bottom:20pt;">${caseItem.title} — ${today}</div>
-      ${tocSections.map(s => `
-        <div class="toc-row">
-          <div class="toc-num">${s.num}.</div>
-          <div style="flex:1;">
-            <div class="toc-title">${s.title}</div>
-            <div class="toc-sub">${s.sub}</div>
-          </div>
-        </div>`).join("")}
-    </div>
-  </div>
-
-  <!-- SECTION 1: SUMMARY -->
-  <div class="section-page">
-    <div class="page-body">
-      ${sectionHeader(1, "Case Summary")}
-      <table><tbody>
-        ${[
-          ["Complainant Name", caseItem.complainant_name],
-          ["Complainant Address", caseItem.complainant_address],
-          ["Complainant Email", caseItem.complainant_email],
-          ["Complainant Phone", caseItem.complainant_phone],
-          ["Organisation", caseItem.organisation_name],
-          ["Complaints Email", caseItem.organisation_complaints_email],
-          ["Account / Reference No.", caseItem.account_number],
-          ["Category", caseItem.category],
-          ["Incident Date", caseItem.incident_date],
-          ["Status", (caseItem.status || "").replace(/_/g, " ").toUpperCase()],
-          ["Priority", (caseItem.priority || "").toUpperCase()],
-          ["Response Deadline", caseItem.response_deadline],
-          ["Escalation Body", caseItem.escalation_body],
-        ].filter(r => r[1]).map(r => `<tr><td style="color:#666;font-style:italic;width:35%;">${r[0]}</td><td style="font-weight:bold;">${r[1]}</td></tr>`).join("")}
-      </tbody></table>
-      ${caseItem.issue_summary ? `<div style="margin-top:14pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Issue Summary</div><div>${caseItem.issue_summary}</div></div>` : ""}
-      ${caseItem.desired_outcome ? `<div style="margin-top:10pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Desired Outcome</div><div>${caseItem.desired_outcome}</div></div>` : ""}
-      ${caseItem.issue_details ? `<div style="margin-top:10pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Full Details</div><div>${caseItem.issue_details}</div></div>` : ""}
-    </div>
-  </div>
-
-  <!-- SECTION 2: TIMELINE -->
-  <div class="section-page">
-    <div class="page-body">
-      ${sectionHeader(2, "Chronological Timeline")}
-      ${sorted.length === 0 ? `<p style="color:#888;">No timeline events recorded.</p>` : `
-      <table>
-        <thead><tr><th style="width:80pt;">Date</th><th style="width:90pt;">Type</th><th>Event</th><th>Details</th></tr></thead>
-        <tbody>${sorted.map(ev => `<tr>
-          <td style="white-space:nowrap;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-          <td style="text-transform:capitalize;">${(ev.event_type || "").replace(/_/g, " ")}</td>
-          <td style="font-weight:bold;">${ev.title}</td>
-          <td style="color:#555;">${ev.description || ""}</td>
-        </tr>`).join("")}</tbody>
-      </table>`}
-    </div>
-  </div>
-
-  <!-- SECTION 3: EVIDENCE -->
-  <div class="section-page">
-    <div class="page-body">
-      ${sectionHeader(3, "Evidence Index")}
-      <p style="font-size:10pt;color:#555;margin-bottom:10pt;">Total documents on file: <strong>${evidence.length}</strong></p>
-      ${evidence.length === 0 ? `<p style="color:#888;">No evidence uploaded.</p>` : `
-      <table>
-        <thead><tr><th style="width:22pt;">#</th><th>File Name</th><th style="width:90pt;">Type</th><th style="width:80pt;">Date</th><th>Description</th></tr></thead>
-        <tbody>${evidence.map((ev, i) => `<tr>
-          <td style="font-weight:bold;text-align:center;">${i + 1}</td>
-          <td style="font-weight:bold;word-break:break-word;">${ev.file_name}</td>
-          <td style="text-transform:capitalize;">${(ev.file_type || "").replace(/_/g, " ")}</td>
-          <td>${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-          <td style="color:#555;">${ev.description || "—"}</td>
-        </tr>`).join("")}</tbody>
-      </table>`}
-    </div>
-  </div>
-
-  <!-- LETTER SECTIONS -->
-  ${presentLetters.map((ld, idx) => `
-  <div class="section-page">
-    <div class="page-body">
-      ${sectionHeader(4 + idx, ld.label)}
-      <pre>${caseItem[ld.field]}</pre>
-    </div>
-  </div>`).join("")}
-
-  </body></html>`);
+  win.document.write(htmlContent);
   win.document.close();
   win.focus();
-  setTimeout(() => { win.print(); }, 600);
+  setTimeout(() => { win.print(); win.close(); }, 500);
 }
 
 export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) {
@@ -235,15 +138,27 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
     setExporting(true);
     const zip = new JSZip();
     const safeName = (caseItem.title || "case").replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
+    const now = new Date().toLocaleString("en-AU");
 
-    // 1. Full text summary
-    zip.file("01_case_summary.txt", buildSummaryText(caseItem, evidence, events));
+    // 1. HTML summary (PDF-style view)
+    zip.file("01_case_summary.html", buildSummaryHTML(caseItem, evidence, events));
 
-    // 2. Individual letters
+    // 2. Individual letters as HTML
     const lettersFolder = zip.folder("letters");
     LETTER_DEFS.forEach((ld, i) => {
       if (caseItem[ld.field]) {
-        lettersFolder.file(`${i + 1}_${ld.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.txt`, caseItem[ld.field]);
+        const letterHTML = `<!DOCTYPE html><html><head><title>${ld.label}</title>
+        <style>
+          body { margin: 0; padding: 20mm; background: #000; font-family: 'Courier New', Courier, monospace; font-size: 10pt; color: #A0A0A0; }
+          .header { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-bottom: 12pt; padding-bottom: 8pt; border-bottom: 1px solid #A0A0A0; }
+          .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #E0E0E0; line-height: 1.6; }
+        </style>
+        </head><body>
+          <div class="header">${ld.label}</div>
+          <div class="content">${caseItem[ld.field]}</div>
+        </body></html>`;
+        lettersFolder.file(`${i + 1}_${ld.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.html`, letterHTML);
       }
     });
 
@@ -265,8 +180,78 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
     }
 
     // 5. README
-    const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-    zip.file("README.txt", `CHAOS CONTROLLER™ — CASE EXPORT GUIDE\n${"=".repeat(60)}\nRef: ${caseRef}\nGenerated: ${new Date().toLocaleString("en-AU")}\n\nCASE: "${caseItem.title}"\nvs. ${caseItem.organisation_name || "Organisation"}\n\n${"─".repeat(60)}\nWHAT'S INCLUDED\n${"─".repeat(60)}\n\n1. CASE SUMMARY (01_case_summary.txt)\n   Complete text export including:\n   - Case details (category, status, priority, dates)\n   - Complainant information\n   - Issue summary and full details\n   - Desired outcome\n   - Complete timeline of events\n   - Evidence index with file URLs\n   - All complaint letters (1st, 2nd, 3rd, escalation)\n\n2. LETTERS (letters/ folder)\n   Individual text files for each generated letter:\n   - 1st Complaint Letter (initial formal complaint)\n   - 2nd Complaint Letter (follow-up)\n   - 3rd Complaint Letter (final notice)\n   - Acceptance of Offer Letter\n   - Rejection of Offer Letter\n   - Escalation Letter (to external body)\n   \n   All letters use professional business format:\n   - Date first in bold (e.g., **20 June 2026**)\n   - Sender details right-aligned\n   - Recipient details left-aligned\n   - Australian English spelling\n   - No placeholder brackets\n\n3. TIMELINE (02_timeline.csv)\n   Chronological event log in CSV format:\n   - Event dates, types, titles, descriptions\n   - Action required flags\n   - Sortable in Excel/Google Sheets\n\n4. EVIDENCE INDEX (03_evidence_index.csv)\n   Complete document register:\n   - File names, types, dates\n   - Descriptions and direct URLs\n   - Tag categories\n\n5. FORMATTED PDF BUNDLE\n   For tribunal-ready PDF with branded letterheads:\n   → Use "PDF Bundle" button on the case page\n   → Features full Chaos Controller letterhead (page 1)\n   → Continuation headers on subsequent pages\n   → Professional business letter formatting\n   → Proper page breaks (no footer overflow)\n\n${"─".repeat(60)}\nHOW TO USE\n${"─".repeat(60)}\n\n1. Review the case summary for a complete overview\n2. Open letters folder to see individual correspondence\n3. Use timeline CSV to track event chronology\n4. Reference evidence index for document locations\n5. For formal submissions, generate PDF bundle from the app\n\n${"─".repeat(60)}\nPRINT FORMATTING\n${"─".repeat(60)}\n\nAll printed letters now feature:\n✓ Professional business letter format (date first)\n✓ Correct sender/recipient alignment\n✓ Full branded letterhead on page 1\n✓ Minimal continuation header on pages 2+\n✓ Proper page breaks (headers/footers stay in place)\n✓ Australian English spelling throughout\n\n${"─".repeat(60)}\nCONTACT & SUPPORT\n${"─".repeat(60)}\n\nChaos Controller™ — The Complaint & Dispute App\nTHAT'S GOT YOUR BACK\n\n"They had your loyalty. Now you deserve their accountability."\n`);
+    zip.file("README.txt", `CHAOS CONTROLLER™ — CASE EXPORT GUIDE
+${"=".repeat(60)}
+Ref: ${caseRef}
+Generated: ${now}
+
+CASE: "${caseItem.title}"
+vs. ${caseItem.organisation_name || "Organisation"}
+
+${"─".repeat(60)}
+WHAT'S INCLUDED
+${"─".repeat(60)}
+
+1. CASE SUMMARY (01_case_summary.html)
+   Professional HTML export matching PDF bundle style:
+   - Dark theme (#000 background, #A0A0A0 text)
+   - Monospace font (Courier New, 10pt)
+   - Section headers with underline separators
+   - 12pt headings, 10pt body text
+   - Clean data layout with labels and values
+   - Complete timeline with dates and types
+   - Evidence index with direct file URLs
+   - All complaint letters in formatted sections
+
+2. LETTERS (letters/ folder)
+   Individual HTML files for each generated letter:
+   - Same dark theme styling
+   - Professional formatting preserved
+   - Easy to print or convert to PDF
+
+3. TIMELINE (02_timeline.csv)
+   Chronological event log in CSV format:
+   - Event dates, types, titles, descriptions
+   - Action required flags
+   - Sortable in Excel/Google Sheets
+
+4. EVIDENCE INDEX (03_evidence_index.csv)
+   Complete document register:
+   - File names, types, dates
+   - Descriptions and direct URLs
+   - Tag categories
+
+${"─".repeat(60)}
+HOW TO USE
+${"─".repeat(60)}
+
+1. Open 01_case_summary.html in any web browser
+2. Use browser's Print function (Ctrl/Cmd+P)
+3. Select "Save as PDF" for tribunal submissions
+4. Open individual letters from letters/ folder
+5. Use CSV files for data analysis in spreadsheets
+
+${"─".repeat(60)}
+FORMATTING
+${"─".repeat(60)}
+
+All exports feature:
+✓ Professional dark theme (black background, light text)
+✓ Monospace font for data (Courier New, 10pt)
+✓ Clear section separators
+✓ 12pt headings, 10pt body text
+✓ Proper spacing and margins
+✓ Print-ready formatting
+
+${"─".repeat(60)}
+CONTACT & SUPPORT
+${"─".repeat(60)}
+
+Chaos Controller™ — The Complaint & Dispute App
+THAT'S GOT YOUR BACK
+
+"They had your loyalty. Now you deserve their accountability."
+`);
 
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
