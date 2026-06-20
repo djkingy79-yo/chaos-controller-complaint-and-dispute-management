@@ -93,6 +93,7 @@ Deno.serve(async (req) => {
       const deadlineDate = new Date(deadline.deadline_date);
       const daysUntil = Math.ceil((deadlineDate - now) / 86400000);
 
+      // Send reminders at 7 days, 3 days, 2 days, 1 day (24-hour), and 0 days (due today)
       if (![7, 3, 2, 1, 0].includes(daysUntil)) continue;
 
       const caseItem = caseMap[deadline.case_id];
@@ -103,9 +104,10 @@ Deno.serve(async (req) => {
 
       const urgencyLabel = daysUntil === 0 ? "TODAY" : daysUntil === 1 ? "TOMORROW" : daysUntil === 2 ? "in 48 HOURS" : `in ${daysUntil} days`;
 
-      // 1. Send email reminder
-      const subject = `⚠️ Deadline ${urgencyLabel}: ${deadline.title}`;
-      const body = `Hi ${caseOwner.full_name || "there"},
+      // 1. Send Gmail reminder (24-hour priority)
+      if (daysUntil <= 1) {
+        const subject = `⚠️ URGENT: Deadline ${urgencyLabel} — ${deadline.title}`;
+        const body = `Hi ${caseOwner.full_name || "there"},
 
 This is an automated reminder from Chaos Controller™.
 
@@ -117,7 +119,7 @@ Organisation: ${caseItem.organisation_name || "N/A"}
 Deadline: ${deadline.title}
 Due Date: ${new Date(deadline.deadline_date).toLocaleDateString("en-AU", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
 
-${daysUntil === 0 ? "⚠️ This deadline is DUE TODAY. Take action immediately." : `You have ${daysUntil} day${daysUntil === 1 ? "" : "s"} to act.`}
+${daysUntil === 0 ? "⚠️ This deadline is DUE TODAY. Take action immediately." : "⚠️ This deadline is due TOMORROW. Please take action today."}
 
 Log in to Chaos Controller™ to review your case and take action:
 https://chaoscontroller.base44.app/case/${caseItem.id}
@@ -126,12 +128,40 @@ https://chaoscontroller.base44.app/case/${caseItem.id}
 Never Fear. Control Starts Here.
 Chaos Controller™ — AI-Powered Consumer Advocacy`;
 
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: caseOwner.email,
-        subject,
-        body,
-        from_name: "Chaos Controller™",
-      });
+        try {
+          const gmailConn = await base44.asServiceRole.connectors.getConnection('gmail');
+          if (gmailConn?.accessToken) {
+            const rawMessage = `From: Chaos Controller <${gmailConn.connectionConfig?.email || 'noreply@chaoscontroller.com.au'}>\r\n` +
+              `To: ${caseOwner.email}\r\n` +
+              `Subject: ${subject}\r\n` +
+              `Content-Type: text/plain; charset=UTF-8\r\n\r\n${body}`;
+            await fetch('https://www.googleapis.com/gmail/v1/users/me/messages/send', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${gmailConn.accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                raw: btoa(rawMessage).replace(/\+/g, '-').replace(/\//g, '_'),
+              }),
+            });
+          } else {
+            await base44.asServiceRole.integrations.Core.SendEmail({
+              to: caseOwner.email,
+              subject,
+              body,
+              from_name: "Chaos Controller™",
+            });
+          }
+        } catch (_) {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: caseOwner.email,
+            subject,
+            body,
+            from_name: "Chaos Controller™",
+          });
+        }
+      }
 
       // 2. In-app notification
       await base44.asServiceRole.entities.Notification.create({
