@@ -640,7 +640,6 @@ export default function Welcome() {
           
           <h2 className="text-3xl font-display font-black text-white mb-2">CHAOS CONTROLLER</h2>
           <p className="text-[#FFD700] font-bold text-lg mb-6">Designed & Developed by Deb King</p>
-          <p className="text-white font-bold text-base mb-6">Glenmore Park 2025</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-base font-bold">
             <a href="/terms" className="text-white hover:text-[#FFD700] transition-colors">Terms & Conditions</a>
             <a href="/privacy" className="text-white hover:text-[#FFD700] transition-colors">Privacy Policy</a>
