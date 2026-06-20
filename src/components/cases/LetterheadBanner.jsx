@@ -7,7 +7,7 @@ const CONTINUATION_PAGE_URL = "https://media.base44.com/images/public/6a2ac3b012
 export { FULL_LETTERHEAD_URL as LETTERHEAD_URL, CONTINUATION_PAGE_URL };
 
 export const CONTACT = {
-  website: "app.base44.com/6a2ac3b012e45642b1f94671",
+  website: "chaoscontroller.com.au",
   email: "chaoscontrollerapp@gmail.com",
 };
 

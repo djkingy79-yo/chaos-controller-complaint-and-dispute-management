@@ -433,7 +433,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       </div>
       
       <div class="footer">
-        <span>Chaos Controller™ — app.base44.com/6a2ac3b012e45642b1f94671</span>
+        <span>Chaos Controller™ — chaoscontroller.com.au</span>
         <span>${caseRef} · Page 1</span>
       </div>
     </div>
