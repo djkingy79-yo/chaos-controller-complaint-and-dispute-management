@@ -1,8 +1,12 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClient } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
+    // Use service role directly - no user auth needed for public share links
+    const base44 = createClient({
+      appId: Deno.env.get('BASE44_APP_ID'),
+      serviceRoleKey: Deno.env.get('BASE44_SERVICE_ROLE_KEY')
+    });
     
     // Get token from query params or JSON body
     const url = new URL(req.url);
@@ -20,23 +24,23 @@ Deno.serve(async (req) => {
     if (!token) return Response.json({ error: 'Token required' }, { status: 400 });
 
     // Find active share by token
-    const shares = await base44.asServiceRole.entities.CaseShare.filter({ share_token: token });
+    const shares = await base44.entities.CaseShare.filter({ share_token: token });
     const share = shares.find(s => s.is_active);
     if (!share) return Response.json({ error: 'Share not found or expired' }, { status: 404 });
 
     // Update last_viewed
-    await base44.asServiceRole.entities.CaseShare.update(share.id, { last_viewed: new Date().toISOString() });
+    await base44.entities.CaseShare.update(share.id, { last_viewed: new Date().toISOString() });
 
     // Fetch case
-    const cases = await base44.asServiceRole.entities.Case.filter({ id: share.case_id });
+    const cases = await base44.entities.Case.filter({ id: share.case_id });
     const caseItem = cases[0];
     if (!caseItem) return Response.json({ error: 'Case not found' }, { status: 404 });
 
     // Fetch related data (read-only, no sensitive details)
-    const deadlines = await base44.asServiceRole.entities.Deadline.filter({ case_id: share.case_id });
-    const timelineEvents = await base44.asServiceRole.entities.TimelineEvent.filter({ case_id: share.case_id });
-    const checklistItems = await base44.asServiceRole.entities.ChecklistItem.filter({ case_id: share.case_id });
-    const evidence = await base44.asServiceRole.entities.Evidence.filter({ case_id: share.case_id });
+    const deadlines = await base44.entities.Deadline.filter({ case_id: share.case_id });
+    const timelineEvents = await base44.entities.TimelineEvent.filter({ case_id: share.case_id });
+    const checklistItems = await base44.entities.ChecklistItem.filter({ case_id: share.case_id });
+    const evidence = await base44.entities.Evidence.filter({ case_id: share.case_id });
 
     // Return safe subset — no complaint letter, no complainant personal details
     return Response.json({
