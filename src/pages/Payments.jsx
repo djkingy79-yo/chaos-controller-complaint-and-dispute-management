@@ -221,6 +221,22 @@ export default function Payments() {
           </motion.div>
         )}
 
+        {/* Logo */}
+        <div className="mb-8">
+          <img
+            src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/c59fd1d31_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png"
+            alt="Chaos Controller Logo"
+            className="w-full max-w-2xl mx-auto block"
+          />
+        </div>
+
+        {/* Our Chaos Packages Heading */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl sm:text-4xl font-display font-black text-white">
+            Our Chaos Packages
+          </h2>
+        </div>
+
         {/* Hero Value */}
         <div className="text-center mb-14">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -289,7 +305,7 @@ export default function Payments() {
                       <Icon className="w-6 h-6" style={{ color: plan.color }} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-display font-black text-white">{plan.name}</h3>
+                      <h3 className="text-xl font-display font-black" style={{ color: plan.name === "Starter" ? "#C0392B" : plan.color }}>{plan.name}</h3>
                       <p className="text-xs text-gray-400 font-medium">{plan.tagline}</p>
                     </div>
                   </div>
@@ -297,7 +313,7 @@ export default function Payments() {
                   {/* Price */}
                   <div className="mb-4">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-5xl font-display font-black" style={{ color: plan.color }}>{plan.price}</span>
+                      <span className="text-5xl font-display font-black" style={{ color: plan.name === "Starter" ? "#C0392B" : plan.color }}>{plan.price}</span>
                       <span className="text-gray-400 text-sm font-medium">{plan.period}</span>
                     </div>
                   </div>
@@ -323,10 +339,10 @@ export default function Payments() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan); }}
-                    className="w-full py-3 rounded-xl font-black text-sm tracking-wide transition-all duration-200"
+                    className="w-full py-4 rounded-xl font-black text-lg tracking-wide transition-all duration-200"
                     style={isSelected
-                      ? { background: plan.color, color: plan.color === "#FFD700" ? "#000" : "#fff" }
-                      : { background: `${plan.color}18`, color: plan.color, border: `1.5px solid ${plan.color}40` }
+                      ? { background: plan.name === "Starter" ? "#C0392B" : plan.color, color: "#fff" }
+                      : { background: `${plan.color}18`, color: plan.name === "Starter" ? "#C0392B" : plan.color, border: `1.5px solid ${plan.name === "Starter" ? "#C0392B" : plan.color}40` }
                     }
                   >
                     {isSelected ? `✓ ${plan.name} Selected` : plan.cta}
