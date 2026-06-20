@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
-import { buildLetterheadHTML, buildFooterHTML } from "./LetterheadBanner";
+import { buildLetterheadHTML, buildFooterHTML, getLetterPageStyles, LETTERHEAD_URL } from "./LetterheadBanner";
 
 // Times New Roman print styles injected once
 const PRINT_STYLES = `
@@ -91,22 +91,13 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   const content = caseItem[field] || `No ${label} generated yet.`;
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
-  <style>
-    @page { margin: 2cm; }
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; }
-    .letterhead { background:#000;padding:12px 20px;display:flex;align-items:center; }
-    .letterhead img { width:40px;height:40px;object-fit:contain; }
-    .letterhead-text { flex:1;padding-left:12px;color:#FFD700;font-size:14pt;font-weight:bold;font-family:'Times New Roman',serif; }
-    .letterhead-sub { color:#888;font-size:8pt;font-family:'Times New Roman',serif; }
-    pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.75; margin: 0; padding: 2cm 2cm 1cm 2cm; }
-    .footer { font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;display:flex;justify-content:space-between; }
-  </style></head><body>
-    <div class="letterhead">
-      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/9d65d2d51_IMG_6994.jpeg" alt="Chaos Controller" style="width:100%;display:block;max-height:100px;object-fit:cover;" />
+  <style>${getLetterPageStyles()}</style>
+  </head><body>
+    <div class="letter-page">
+      <div class="letter-content">
+        <pre>${content}</pre>
+      </div>
     </div>
-    <pre>${content}</pre>
-    <div style="padding:0 2cm;">${buildFooterHTML(caseItem, client, 1, "")}</div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -233,19 +224,15 @@ function printChecklistItems(caseItem, checklistItems) {
   const client = buildClientContext(caseItem, []);
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist — ${caseItem.title}</title>
-  <style>@page{margin:2cm;}body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;}
-  .header{background:#7c3aed;color:white;padding:16pt 24pt;}
-  table{width:100%;border-collapse:collapse;margin-top:16pt;}
-  th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
+  <style>${getLetterPageStyles()}table{width:100%;border-collapse:collapse;margin-top:16pt;}th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
   </head><body>
-  <div class="header"><div style="font-size:20pt;font-weight:bold;">Smart Checklist</div>
-  <div style="font-size:13pt;font-style:italic;">${caseItem.title}</div></div>
-  <div style="padding:16pt 0;">
-  <p style="font-size:11pt;color:#555;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <div class="letter-page"><div class="letter-content">
+  <div style="font-size:18pt;font-weight:bold;margin-bottom:4pt;">Smart Checklist</div>
+  <div style="font-size:13pt;font-style:italic;margin-bottom:12pt;">${caseItem.title}</div>
+  <p style="font-size:11pt;color:#555;margin-bottom:8pt;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
   <table><thead><tr><th></th><th>Item</th><th>Category</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
-  <div style="font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;">Chaos Controller™ — chaoscontrollerapp@gmail.com | 0413 572 850</div>
-  </div></body></html>`);
+  </div></div></body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);
 }
@@ -266,19 +253,15 @@ function printDeadlineItems(caseItem, deadlines) {
   }).join('');
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Deadlines — ${caseItem.title}</title>
-  <style>@page{margin:2cm;}body{font-family:'Times New Roman',serif;font-size:12pt;color:#000;}
-  .header{background:#b91c1c;color:white;padding:16pt 24pt;}
-  table{width:100%;border-collapse:collapse;margin-top:16pt;}
-  th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
+  <style>${getLetterPageStyles()}table{width:100%;border-collapse:collapse;margin-top:16pt;}th{background:#f0f0f0;text-align:left;padding:6pt 8pt;font-size:11pt;}</style>
   </head><body>
-  <div class="header"><div style="font-size:20pt;font-weight:bold;">Deadline War Room</div>
-  <div style="font-size:13pt;font-style:italic;">${caseItem.title}</div></div>
-  <div style="padding:16pt 0;">
-  <p style="font-size:11pt;color:#555;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <div class="letter-page"><div class="letter-content">
+  <div style="font-size:18pt;font-weight:bold;margin-bottom:4pt;">Deadline War Room</div>
+  <div style="font-size:13pt;font-style:italic;margin-bottom:12pt;">${caseItem.title}</div>
+  <p style="font-size:11pt;color:#555;margin-bottom:8pt;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
   <table><thead><tr><th>Deadline</th><th>Date</th><th>Urgency</th><th>Type</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
-  <div style="font-size:8pt;border-top:1pt solid #ccc;margin-top:24pt;padding-top:6pt;color:#666;">Chaos Controller™ — chaoscontrollerapp@gmail.com | 0413 572 850</div>
-  </div></body></html>`);
+  </div></div></body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);
 }
@@ -453,14 +436,12 @@ function printBundle(caseItem, evidence, events) {
       if (!content) return "";
       const sectionNum = idx + 4;
       return `${pageBreak}
-    <div style="background:#000;line-height:0;">
-      <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/9d65d2d51_IMG_6994.jpeg" style="width:100%;display:block;max-height:120px;object-fit:cover;" />
-    </div>
-    <div style="background:#1d4ed8;color:white;padding:12pt 2cm;margin:0;">
-      <div style="font-size:16pt;font-weight:bold;font-family:'Times New Roman',Times,serif;">Section ${sectionNum} — ${ld.label}</div>
-    </div>
-    <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin:0;padding:2cm 2cm 1cm 2cm;">${content}</pre>
-    <div style="padding:0 2cm;">${buildFooterHTML(caseItem, client, sectionNum, "")}</div>`;
+    <div style="position:relative;width:210mm;min-height:297mm;background-image:url('${LETTERHEAD_URL}');background-size:100% 100%;background-repeat:no-repeat;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;">
+      <div style="padding:52mm 18mm 42mm 18mm;min-height:297mm;">
+        <div style="font-size:14pt;font-weight:bold;margin-bottom:16pt;color:#1d4ed8;">Section ${sectionNum} — ${ld.label}</div>
+        <pre style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:12pt;line-height:1.75;margin:0;">${content}</pre>
+      </div>
+    </div>`;
     }).join("")}
   </div>`;
   setPrintArea(html);
