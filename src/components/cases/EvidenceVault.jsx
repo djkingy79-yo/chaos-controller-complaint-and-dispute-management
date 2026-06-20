@@ -696,7 +696,7 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">{ev.description}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -708,8 +708,13 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive"
-                      onClick={() => deleteMutation.mutate(ev.id)}
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        if (window.confirm(`Delete "${ev.file_name}"? This cannot be undone.`)) {
+                          deleteMutation.mutate(ev.id);
+                        }
+                      }}
+                      disabled={deleteMutation.isPending}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
