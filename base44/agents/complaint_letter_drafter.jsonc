@@ -24,13 +24,16 @@
       "entity_name": "LetterTemplate",
       "allowed_operations": [
         "read",
-        "create"
+        "create",
+        "update"
       ]
     },
     {
       "entity_name": "Organisation",
       "allowed_operations": [
-        "read"
+        "read",
+        "create",
+        "update"
       ]
     }
   ],
