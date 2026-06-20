@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderOpen, AlertTriangle, CheckCircle2, Clock, Shield, Flame, Trophy, TrendingUp, Scale } from "lucide-react";
+import { Plus, FolderOpen, AlertTriangle, CheckCircle2, Clock, Shield, Flame, Trophy, TrendingUp, Scale, CreditCard } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import CaseCard from "@/components/dashboard/CaseCard";
 import ActionItems from "@/components/dashboard/ActionItems";
@@ -18,6 +18,15 @@ export default function Dashboard() {
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.Case.filter({ created_by_id: user?.id }, "-created_date"),
+  });
+
+  const { data: payment } = useQuery({
+    queryKey: ["payment", user?.id],
+    queryFn: async () => {
+      const payments = await base44.entities.PaymentRequest.filter({ user_id: user?.id }, "-created_date", 1);
+      return payments[0];
+    },
+    enabled: !!user?.id,
   });
 
   const activeCases = cases.filter((c) => !["resolved", "closed"].includes(c.status));
@@ -34,6 +43,62 @@ export default function Dashboard() {
         <OnboardingDashboard />
       ) : (
         <>
+          {/* Subscription Status Banner */}
+          {payment && (
+            <div className={`rounded-xl border-2 p-4 ${
+              payment.status === 'verified' && payment.subscription_active
+                ? 'bg-green-500/10 border-green-500/30'
+                : payment.status === 'pending'
+                ? 'bg-warning/10 border-warning/30'
+                : 'bg-destructive/10 border-destructive/30'
+            }`}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    payment.status === 'verified' && payment.subscription_active
+                      ? 'bg-green-500/15'
+                      : 'bg-warning/15'
+                  }`}>
+                    {payment.status === 'verified' && payment.subscription_active ? (
+                      <CheckCircle2 className="w-6 h-6 text-green-500" />
+                    ) : (
+                      <Clock className="w-6 h-6 text-warning" />
+                    )}
+                  </div>
+                  <div>
+                    <p className={`font-bold ${
+                      payment.status === 'verified' && payment.subscription_active
+                        ? 'text-green-500'
+                        : 'text-warning'
+                    }`}>
+                      {payment.status === 'verified' && payment.subscription_active
+                        ? `${payment.plan_name} Plan — Active`
+                        : payment.status === 'pending'
+                        ? 'Payment Pending Verification'
+                        : 'Payment Status Unknown'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {payment.status === 'verified' && payment.subscription_active
+                        ? payment.subscription_expiry
+                          ? `Expires: ${new Date(payment.subscription_expiry).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
+                          : 'Unlimited access'
+                        : payment.status === 'pending'
+                        ? 'We will verify your payment within a few hours'
+                        : 'Contact support for assistance'}
+                    </p>
+                  </div>
+                </div>
+                {payment.status === 'pending' && (
+                  <Link to="/payments">
+                    <Button variant="outline" size="sm" className="border-warning/30 text-warning hover:bg-warning/10">
+                      View Status
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

@@ -1,0 +1,232 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { paymentId, status } = body;
+
+    if (!paymentId || !status) {
+      return Response.json({ error: 'Missing paymentId or status' }, { status: 400 });
+    }
+
+    const payment = await base44.entities.PaymentRequest.get(paymentId);
+    if (!payment) {
+      return Response.json({ error: 'Payment not found' }, { status: 404 });
+    }
+
+    // Get Gmail connection
+    const gmailConn = await base44.asServiceRole.connectors.getConnection('gmail');
+    
+    const sendGmail = async (to, subject, body) => {
+      if (!gmailConn?.accessToken) {
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to,
+          subject,
+          body,
+          from_name: "Chaos Controller™",
+        });
+        return;
+      }
+
+      const rawMessage = `From: Chaos Controller <${gmailConn.connectionConfig?.email || 'chaoscontrollerapp@gmail.com'}>\r\n` +
+        `To: ${to}\r\n` +
+        `Subject: ${subject}\r\n` +
+        `Content-Type: text/html; charset=UTF-8\r\n\r\n${body}`;
+      
+      // Encode to base64 properly for Unicode characters
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(rawMessage);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_');
+      
+      await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${gmailConn.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          raw: base64,
+        }),
+      });
+    };
+
+    // Send email to admin (chaoscontrollerapp@gmail.com) for new payments
+    if (status === 'pending') {
+      const adminEmail = 'chaoscontrollerapp@gmail.com';
+      const adminSubject = `🔔 New Payment Notification — ${payment.plan_name} Plan`;
+      const adminBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: 'Inter', Arial, sans-serif; background: #0a0a0f; color: #fff; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #1a1a2e; border-radius: 12px; padding: 30px; border: 2px solid #FFD700; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .logo { width: 60px; height: 60px; margin-bottom: 15px; }
+            h1 { color: #FFD700; font-size: 24px; margin: 0 0 10px 0; }
+            .badge { background: #FFD700; color: #000; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
+            .section { background: #0a0a0f; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+            .value { color: #fff; font-size: 16px; font-weight: bold; }
+            .highlight { color: #FFD700; font-size: 20px; }
+            .cta { text-align: center; margin-top: 30px; }
+            .button { background: #FFD700; color: #000; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; }
+            .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" class="logo" />
+              <h1>🔔 New Payment Received</h1>
+              <span class="badge">${payment.plan_name} Plan</span>
+            </div>
+            
+            <div class="section">
+              <div class="label">Customer Name</div>
+              <div class="value">${payment.user_name || 'N/A'}</div>
+            </div>
+            
+            <div class="section">
+              <div class="label">Customer Email</div>
+              <div class="value">${payment.user_email}</div>
+            </div>
+            
+            <div class="section">
+              <div class="label">Plan Selected</div>
+              <div class="value highlight">${payment.plan_name} — ${payment.amount} AUD</div>
+            </div>
+            
+            ${payment.payid_reference ? `
+            <div class="section">
+              <div class="label">Payment Reference</div>
+              <div class="value">${payment.payid_reference}</div>
+            </div>
+            ` : ''}
+            
+            <div class="section">
+              <div class="label">Submitted Date</div>
+              <div class="value">${new Date(payment.created_date).toLocaleString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+            </div>
+            
+            <div class="cta">
+              <a href="https://chaoscontroller.com.au/admin" class="button">Verify Payment in Admin Dashboard</a>
+            </div>
+            
+            <div class="footer">
+              <p>Chaos Controller™ — Professional Dispute Management</p>
+              <p>This is an automated notification from your payment system.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      await sendGmail(adminEmail, adminSubject, adminBody);
+    }
+
+    // Send email to customer when payment is verified
+    if (status === 'verified') {
+      const customerEmail = payment.user_email;
+      const customerSubject = `✅ Payment Verified — ${payment.plan_name} Plan Activated!`;
+      const customerBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: 'Inter', Arial, sans-serif; background: #0a0a0f; color: #fff; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #1a1a2e; border-radius: 12px; padding: 30px; border: 2px solid #00ff88; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .logo { width: 60px; height: 60px; margin-bottom: 15px; }
+            h1 { color: #00ff88; font-size: 24px; margin: 0 0 10px 0; }
+            .badge { background: #00ff88; color: #000; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
+            .section { background: #0a0a0f; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+            .value { color: #fff; font-size: 16px; font-weight: bold; }
+            .highlight { color: #FFD700; font-size: 20px; }
+            .success { color: #00ff88; font-size: 18px; font-weight: bold; }
+            .cta { text-align: center; margin-top: 30px; }
+            .button { background: #00ff88; color: #000; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; }
+            .features { background: #FFD700/10; border: 1px solid #FFD700/30; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .feature-item { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+            .check { color: #00ff88; font-weight: bold; }
+            .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png" alt="Chaos Controller" class="logo" />
+              <h1>✅ Payment Verified!</h1>
+              <span class="badge">${payment.plan_name} Activated</span>
+            </div>
+            
+            <div class="section">
+              <p class="success">Your ${payment.plan_name} subscription has been successfully activated!</p>
+            </div>
+            
+            <div class="section">
+              <div class="label">Subscription Period</div>
+              <div class="value">
+                ${payment.subscription_expiry 
+                  ? `Until ${new Date(payment.subscription_expiry).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
+                  : 'Active'
+                }
+              </div>
+            </div>
+            
+            <div class="features">
+              <div class="label" style="color: #FFD700;">What's Included in ${payment.plan_name}:</div>
+              ${payment.plan_name === 'Starter' ? `
+                <div class="feature-item"><span class="check">✓</span> 3 active cases</div>
+                <div class="feature-item"><span class="check">✓</span> Evidence vault — 25 files per case</div>
+                <div class="feature-item"><span class="check">✓</span> AI document scanning & data extraction</div>
+                <div class="feature-item"><span class="check">✓</span> 1st Complaint Letter generator</div>
+                <div class="feature-item"><span class="check">✓</span> Automated case timeline builder</div>
+              ` : payment.plan_name === 'Pro' ? `
+                <div class="feature-item"><span class="check">✓</span> Unlimited active cases</div>
+                <div class="feature-item"><span class="check">✓</span> Unlimited evidence files</div>
+                <div class="feature-item"><span class="check">✓</span> All 6 professional letters</div>
+                <div class="feature-item"><span class="check">✓</span> Tribunal-ready escalation bundles</div>
+                <div class="feature-item"><span class="check">✓</span> Google Calendar & Outlook auto-sync</div>
+                <div class="feature-item"><span class="check">✓</span> Smart checklist with proof tracking</div>
+              ` : `
+                <div class="feature-item"><span class="check">✓</span> Everything in Pro — unlimited</div>
+                <div class="feature-item"><span class="check">✓</span> Full ZIP case bundle export</div>
+                <div class="feature-item"><span class="check">✓</span> Chaos Score & case strength analytics</div>
+                <div class="feature-item"><span class="check">✓</span> Priority email support</div>
+                <div class="feature-item"><span class="check">✓</span> Merchant shared case portals</div>
+              `}
+            </div>
+            
+            <div class="cta">
+              <a href="https://chaoscontroller.com.au/dashboard" class="button">Go to Dashboard</a>
+            </div>
+            
+            <div class="footer">
+              <p>Chaos Controller™ — Professional Dispute Management</p>
+              <p>Questions? Reply to this email or contact chaoscontrollerapp@gmail.com</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      await sendGmail(customerEmail, customerSubject, customerBody);
+    }
+
+    return Response.json({ success: true, message: `Email sent for ${status} payment` });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
