@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Upload, FileText, Image, Mail, FileCheck, Loader2,
   Trash2, ExternalLink, Plus, ScanLine, Camera, Tag, FileDigit,
-  HardDrive,
+  HardDrive, Search,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -127,6 +127,8 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   const [converting, setConverting] = useState(false);
   const [newEvidence, setNewEvidence] = useState({ file_type: "other", description: "", event_date: "", tags: [] });
   const [filterTag, setFilterTag] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
   const { toast } = useToast();
 
   // Get subscription for file limit checking
@@ -165,7 +167,23 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       setScanResult(null);
       setScanning(true);
       const extracted = await scanDocument(created.file_url, created.file_name, created.file_type);
-      await base44.entities.Evidence.update(created.id, { extracted_data: extracted, scan_status: "complete" });
+      
+      // Extract full text for searchability (async, non-blocking)
+      base44.functions.invoke('extractTextFromEvidence', { evidenceId: created.id })
+        .then((result) => {
+          if (result.data?.text) {
+            base44.entities.Evidence.update(created.id, { 
+              extracted_text: result.data.text,
+              text_extracted_date: new Date().toISOString()
+            });
+          }
+        })
+        .catch(err => console.error('Text extraction failed:', err));
+      
+      await base44.entities.Evidence.update(created.id, { 
+        extracted_data: extracted, 
+        scan_status: "complete" 
+      });
       await autoApplyExtracted(extracted, created.id);
       setScanResult({ evidenceId: created.id, data: extracted });
       
@@ -350,7 +368,22 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   };
 
   const allTags = [...new Set(evidence.flatMap((ev) => ev.tags || []))];
-  const filtered = filterTag ? evidence.filter((ev) => ev.tags?.includes(filterTag)) : evidence;
+  
+  // Filter by tag and search query
+  let filtered = filterTag ? evidence.filter((ev) => ev.tags?.includes(filterTag)) : evidence;
+  
+  // Full-text search across file names, descriptions, and extracted text
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase();
+    filtered = filtered.filter((ev) => {
+      const fileNameMatch = ev.file_name?.toLowerCase().includes(query);
+      const descriptionMatch = ev.description?.toLowerCase().includes(query);
+      const textMatch = ev.extracted_text?.toLowerCase().includes(query);
+      const summaryMatch = ev.extracted_data?.document_summary?.toLowerCase().includes(query);
+      return fileNameMatch || descriptionMatch || textMatch || summaryMatch;
+    });
+  }
+  
   const sorted = [...filtered].sort((a, b) => {
     if (a.event_date && b.event_date) return new Date(a.event_date) - new Date(b.event_date);
     return new Date(a.created_date) - new Date(b.created_date);
@@ -469,6 +502,26 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
           )}
         </div>
 
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search across all documents (file names, content, summaries)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs text-muted-foreground">Filter by tag:</span>
@@ -534,22 +587,51 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         <div className="bg-secondary/30 rounded-lg border-2 border-dashed border-border p-8 text-center">
           <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground mb-1">
-            {filterTag ? `No documents tagged "${filterTag}"` : "DROP THE EVIDENCE"}
+            {searchQuery 
+              ? `No matches for "${searchQuery}"`
+              : filterTag 
+                ? `No documents tagged "${filterTag}"`
+                : "DROP THE EVIDENCE"
+            }
           </p>
           <p className="text-xs text-muted-foreground">
-            {filterTag ? "Try selecting a different tag or upload new evidence." : "Leases, bank statements, emails, letters, photos."}
+            {searchQuery
+              ? "Try a different search term or clear the search filter."
+              : filterTag
+                ? "Try selecting a different tag or upload new evidence."
+                : "Leases, bank statements, emails, letters, photos."
+            }
           </p>
-          {!filterTag && <p className="text-xs text-muted-foreground mt-0.5">AI scans every document and builds your timeline automatically.</p>}
+          {!filterTag && !searchQuery && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              AI scans every document and builds your timeline automatically.
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
-          {/* Category Info Banner */}
-          <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
-            <div className="flex items-center gap-2 text-xs text-primary">
-              <HardDrive className="w-3.5 h-3.5" />
-              <span className="font-medium">Files are automatically organized in Google Drive by category: <strong>{caseItem?.category || 'other'}</strong></span>
+          {/* Search Results Banner */}
+          {searchQuery && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <Search className="w-3.5 h-3.5" />
+                <span className="font-medium">
+                  Found <strong>{filtered.length}</strong> document{filtered.length !== 1 ? 's' : ''} matching "<strong>{searchQuery}</strong>"
+                  {filtered.length > 0 && ` — searching file names, descriptions, and full document content`}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Category Info Banner */}
+          {!searchQuery && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <HardDrive className="w-3.5 h-3.5" />
+                <span className="font-medium">Files are automatically organized in Google Drive by category: <strong>{caseItem?.category || 'other'}</strong></span>
+              </div>
+            </div>
+          )}
           
           {filtered.map((ev) => {
             const cfg = typeConfig[ev.file_type] || typeConfig.other;
@@ -580,6 +662,11 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                       {ev.scan_status === "complete" && (
                         <span className="text-[10px] text-success flex items-center gap-1">
                           <ScanLine className="w-2.5 h-2.5" /> Scanned
+                        </span>
+                      )}
+                      {ev.extracted_text && (
+                        <span className="text-[10px] text-primary flex items-center gap-1">
+                          <FileText className="w-2.5 h-2.5" /> Searchable
                         </span>
                       )}
                       {ev.drive_backup_url && (

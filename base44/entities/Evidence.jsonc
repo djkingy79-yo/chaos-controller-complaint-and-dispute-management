@@ -114,6 +114,15 @@
         }
       }
     },
+    "extracted_text": {
+      "type": "string",
+      "description": "Full text content extracted from the document for searchability"
+    },
+    "text_extracted_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When text extraction was performed"
+    },
     "scan_status": {
       "type": "string",
       "enum": [
