@@ -82,7 +82,7 @@ export default function MerchantInvite({ caseItem }) {
     }
   };
 
-  const getShareUrl = (token) => `https://chaoscontroller.base44.app/shared-case/${token}`;
+  const getShareUrl = (token) => `${window.location.origin}/shared-case/${token}`;
 
   return (
     <div className="bg-card rounded-xl border border-border p-4 space-y-4">

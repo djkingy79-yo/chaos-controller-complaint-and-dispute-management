@@ -84,8 +84,17 @@ export default function SharedCasePortal() {
   useEffect(() => {
     if (!token) { setError("No share token found."); setLoading(false); return; }
     base44.functions.invoke("getSharedCase", { token })
-      .then(res => setData(res.data))
-      .catch(err => setError(err.message || "Failed to load case."))
+      .then(res => {
+        if (res.data?.error) {
+          setError(res.data.error || "Invalid share link");
+        } else {
+          setData(res.data);
+        }
+      })
+      .catch(err => {
+        console.error("Error loading shared case:", err);
+        setError(err.message || "This share link is invalid or has expired. Please contact the sender.");
+      })
       .finally(() => setLoading(false));
   }, [token]);
 

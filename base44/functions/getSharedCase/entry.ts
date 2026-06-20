@@ -3,7 +3,19 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { token } = await req.json();
+    
+    // Get token from query params or JSON body
+    const url = new URL(req.url);
+    let token = url.searchParams.get('token');
+    
+    if (!token) {
+      try {
+        const body = await req.json();
+        token = body.token;
+      } catch (e) {
+        // Ignore JSON parse error, token already null
+      }
+    }
 
     if (!token) return Response.json({ error: 'Token required' }, { status: 400 });
 
