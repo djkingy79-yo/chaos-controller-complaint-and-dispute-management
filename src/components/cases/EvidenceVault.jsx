@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Upload, FileText, Image, Mail, FileCheck, Loader2,
   Trash2, ExternalLink, Plus, ScanLine, Camera, Tag, FileDigit,
+  HardDrive,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -507,7 +508,7 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{ev.file_name}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <Badge variant="secondary" className="text-[10px]">{cfg.label}</Badge>
                       {ev.event_date && (
                         <span className="text-[10px] text-muted-foreground">
@@ -523,6 +524,11 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                         <span className="text-[10px] text-success flex items-center gap-1">
                           <ScanLine className="w-2.5 h-2.5" /> Scanned
                         </span>
+                      )}
+                      {ev.drive_backup_url && (
+                        <a href={ev.drive_backup_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary flex items-center gap-1 hover:underline">
+                          <HardDrive className="w-2.5 h-2.5" /> Backup
+                        </a>
                       )}
                     </div>
                     {ev.tags?.length > 0 && (

@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download, BarChart2, CalendarDays, CheckSquare, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download, BarChart2, CalendarDays, CheckSquare, AlertTriangle, Sparkles } from "lucide-react";
 import CaseStatusControl from "@/components/cases/CaseStatusControl";
 import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
@@ -19,6 +19,7 @@ import DisputeProgressTracker from "@/components/cases/DisputeProgressTracker";
 import ExportCaseZip from "@/components/cases/ExportCaseZip";
 import MerchantInvite from "@/components/cases/MerchantInvite";
 import WeeklySnapshot from "@/components/cases/WeeklySnapshot";
+import ExecutiveSummaryGenerator from "@/components/cases/ExecutiveSummaryGenerator";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
@@ -103,7 +104,10 @@ export default function CaseDetail() {
             )}
           </div>
         </div>
-        <ExportCaseZip caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+        <div className="flex gap-2">
+          <ExecutiveSummaryGenerator caseItem={caseItem} />
+          <ExportCaseZip caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+        </div>
       </div>
 
       {/* Top Stats Grid */}

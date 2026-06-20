@@ -69,7 +69,9 @@ Deno.serve(async (req) => {
 
     // Update evidence record with Drive backup reference
     await base44.entities.Evidence.update(evidenceId, {
-      description: evidence.description || `Backed up to Google Drive: ${driveFile.webViewLink}`
+      description: evidence.description || `Backed up to Google Drive: ${driveFile.webViewLink}`,
+      drive_backup_url: driveFile.webViewLink,
+      drive_backup_id: driveFile.id
     });
 
     return Response.json({

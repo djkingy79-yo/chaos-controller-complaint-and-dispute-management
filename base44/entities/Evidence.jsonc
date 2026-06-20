@@ -124,6 +124,14 @@
       ],
       "default": "pending",
       "description": "Status of AI scan"
+    },
+    "drive_backup_url": {
+      "type": "string",
+      "description": "Google Drive backup link for this evidence file"
+    },
+    "drive_backup_id": {
+      "type": "string",
+      "description": "Google Drive file ID for backup verification"
     }
   },
   "required": [
