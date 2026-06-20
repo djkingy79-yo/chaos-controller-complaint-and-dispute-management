@@ -167,7 +167,7 @@ Payment is via **PayID** to `djkingy79@gmail.com`. Admin manually verifies and a
 ## Branding & Contact
 
 - **Domain:** chaoscontroller.com.au
-- **Support email:** djkingy79@gmail.com
+- **Support email:** chaoscontrollerapp@gmail.com
 - **PayID:** djkingy79@gmail.com
 - **Disclaimer:** All content is for educational/informational purposes only. Not formal legal advice.
 - **Fonts:** Space Grotesk (headings) + Inter (body)
