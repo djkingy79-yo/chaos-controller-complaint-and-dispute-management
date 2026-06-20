@@ -12,7 +12,7 @@ import {
   HardDrive,
 } from "lucide-react";
 import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import DocumentScanResult from "./DocumentScanResult";
 import DocumentScanner from "./DocumentScanner";
 import { useToast } from "@/components/ui/use-toast";
@@ -153,6 +153,7 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   const [pendingScan, setPendingScan] = useState(null);
   const [scanResult, setScanResult] = useState(null);
   const [appliedIds, setAppliedIds] = useState(new Set());
+  const [previewFile, setPreviewFile] = useState(null);
   const fileRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -601,11 +602,14 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
                     )}
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <a href={ev.file_url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </Button>
-                    </a>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setPreviewFile({ url: ev.file_url, name: ev.file_name, type: ev.file_type })}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -629,6 +633,44 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
           })}
         </div>
       )}
+
+      {/* Document Preview Modal */}
+      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
+        <DialogContent className="max-w-5xl h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Document Preview — {previewFile?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Review the document layout and formatting before printing
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-hidden bg-secondary/30 rounded-lg border border-border">
+            {previewFile?.url && (
+              <iframe
+                src={previewFile.url}
+                className="w-full h-full rounded-lg"
+                title="Document Preview"
+                style={{ minHeight: '600px' }}
+              />
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPreviewFile(null)}>
+              Close
+            </Button>
+            <a href={previewFile?.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+              <Button variant="outline" className="gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Open in New Tab
+              </Button>
+            </a>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
