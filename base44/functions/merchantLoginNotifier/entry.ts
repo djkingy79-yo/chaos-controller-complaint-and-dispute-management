@@ -83,7 +83,7 @@ Access Time: ${viewedAt} (Sydney)
 📋 The merchant has logged into the portal and is reviewing your case. You may receive a response shortly.
 
 View your case:
-https://chaoscontroller.base44.app/case/${caseItem.id}
+https://chaoscontroller.com.au/case/${caseItem.id}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Never Fear. Control Starts Here.

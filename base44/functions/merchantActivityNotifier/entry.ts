@@ -105,7 +105,7 @@ ${isDenial ? '🚨 ACTION REQUIRED: The merchant has denied your claim. Consider
 ${!isOffer && !isDenial ? '📋 Log in to review the full response and update your case accordingly.' : ''}
 
 View your case:
-https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseItem.id}
+https://chaoscontroller.com.au/case/${caseItem.id}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Never Fear. Control Starts Here.
@@ -145,7 +145,7 @@ Support: chaoscontrollerapp@gmail.com`;
           method: 'POST',
           body: JSON.stringify({
             subject: calSubject,
-            body: { contentType: 'text', content: `Merchant: ${merchantName}\nResponse: ${responseTypeLabel}\n${isOffer ? `Offer Amount: ${response.offer_amount || 'N/A'}` : ''}\n\nResponse Preview:\n"${(response.response_text || '').slice(0, 300)}"\n\nView case: https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseItem.id}` },
+            body: { contentType: 'text', content: `Merchant: ${merchantName}\nResponse: ${responseTypeLabel}\n${isOffer ? `Offer Amount: ${response.offer_amount || 'N/A'}` : ''}\n\nResponse Preview:\n"${(response.response_text || '').slice(0, 300)}"\n\nView case: https://chaoscontroller.com.au/case/${caseItem.id}` },
             start: { dateTime: startDt.toISOString(), timeZone: 'Australia/Sydney' },
             end: { dateTime: endDt.toISOString(), timeZone: 'Australia/Sydney' },
             isReminderOn: true, reminderMinutesBeforeStart: 0,
@@ -163,7 +163,7 @@ Support: chaoscontrollerapp@gmail.com`;
             headers: { 'Authorization': `Bearer ${googleConn.accessToken}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
               summary: calSubject,
-              description: `Merchant: ${merchantName}\nResponse Type: ${responseTypeLabel}\n\nPreview: "${(response.response_text || '').slice(0, 200)}"\n\nManage: https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseItem.id}`,
+              description: `Merchant: ${merchantName}\nResponse Type: ${responseTypeLabel}\n\nPreview: "${(response.response_text || '').slice(0, 200)}"\n\nManage: https://chaoscontroller.com.au/case/${caseItem.id}`,
               start: { date: todayStr }, end: { date: todayStr },
               reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 0 }, { method: 'email', minutes: 30 }] },
               colorId: '11',

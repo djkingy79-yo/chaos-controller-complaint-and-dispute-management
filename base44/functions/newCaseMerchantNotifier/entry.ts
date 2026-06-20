@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       const orgName = caseItem.organisation_name || 'your organisation';
       const category = (caseItem.category || 'general').charAt(0).toUpperCase() + (caseItem.category || 'general').slice(1);
       const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-      const portalUrl = `https://app.base44.com/6a2ac3b012e45642b1f94671/shared-case/${share.share_token}`;
+      const portalUrl = `https://chaoscontroller.com.au/shared-case/${share.share_token}`;
 
       const subject = `[${caseRef}] New Dispute Case Filed Against ${orgName}`;
 

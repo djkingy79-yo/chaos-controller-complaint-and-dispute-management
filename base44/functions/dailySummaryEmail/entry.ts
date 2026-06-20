@@ -80,7 +80,7 @@ TODAY'S DEADLINES — ${today.toLocaleDateString('en-AU', { weekday: 'long', day
    Case: ${item.caseItem.title}
    Organisation: ${item.caseItem.organisation_name || 'N/A'}
    Type: ${item.deadline.deadline_type || 'Deadline'}
-   → https://app.base44.com/6a2ac3b012e45642b1f94671/case/${item.caseItem.id}
+   → https://chaoscontroller.com.au/case/${item.caseItem.id}
 `;
         }
       }
@@ -97,7 +97,7 @@ TOMORROW — ${tomorrow.toLocaleDateString('en-AU', { weekday: 'long', day: 'num
 📅 ${item.deadline.title}
    Case: ${item.caseItem.title}
    Organisation: ${item.caseItem.organisation_name || 'N/A'}
-   → https://app.base44.com/6a2ac3b012e45642b1f94671/case/${item.caseItem.id}
+   → https://chaoscontroller.com.au/case/${item.caseItem.id}
 `;
         }
       }

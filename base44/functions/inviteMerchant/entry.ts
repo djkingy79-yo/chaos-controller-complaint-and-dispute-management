@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     });
 
     // Use the correct app domain
-    const portalUrl = `https://app.base44.com/6a2ac3b012e45642b1f94671/shared-case/${token}`;
+    const portalUrl = `https://chaoscontroller.com.au/shared-case/${token}`;
 
     // Send invite email to merchant
     await base44.asServiceRole.integrations.Core.SendEmail({

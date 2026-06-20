@@ -60,7 +60,7 @@ ${evidence.event_date ? `Dated: ${new Date(evidence.event_date).toLocaleDateStri
 Your evidence vault is growing stronger. Log in to review and continue building your case.
 
 View your case:
-https://app.base44.com/6a2ac3b012e45642b1f94671/case/${caseItem.id}
+https://chaoscontroller.com.au/case/${caseItem.id}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Never Fear. Control Starts Here.
