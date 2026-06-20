@@ -34,9 +34,11 @@ Deno.serve(async (req) => {
     const folderName = 'Chaos Controller Evidence Backup';
     let folderId = await getOrCreateFolder(accessToken, folderName);
 
-    // Create category-specific subfolder (banking, insurance, tenancy, telco, utilities, other)
+    // Create category-specific subfolder (banking, insurance, tenancy, telco, utilities, government, other)
     const categoryName = caseItem.category || 'other';
-    const categoryFolderName = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+    const categoryFolderName = categoryName === 'government' 
+      ? 'Government Agencies' 
+      : categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
     const categoryFolderId = await getOrCreateFolder(accessToken, categoryFolderName, folderId);
 
     // Create case-specific subfolder within category
