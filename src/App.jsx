@@ -34,6 +34,7 @@ import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import SharedCasePortal from '@/pages/SharedCasePortal';
 import SamplePreviews from '@/pages/SamplePreviews';
+import EscalatedCases from '@/pages/EscalatedCases';
 import MerchantLogin from '@/pages/MerchantLogin';
 import MerchantPortal from '@/pages/MerchantPortal';
 
@@ -83,6 +84,7 @@ const AuthenticatedApp = () => {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/sample-previews" element={<SamplePreviews />} />
+          <Route path="/escalation" element={<EscalatedCases />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

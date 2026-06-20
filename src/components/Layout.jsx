@@ -32,6 +32,7 @@ const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/cases", label: "My Cases", icon: FolderOpen },
   { path: "/new-case", label: "New Case", icon: Plus },
+  { path: "/escalation", label: "Escalation Command", icon: Scale },
   { path: "/calendar", label: "Calendar", icon: CalendarDays },
   { path: "/deadlines", label: "Deadlines", icon: Siren },
   { path: "/calendar-sync", label: "Calendar Sync", icon: Calendar },

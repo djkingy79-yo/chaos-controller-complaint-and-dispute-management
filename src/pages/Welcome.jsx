@@ -107,18 +107,18 @@ export default function Welcome() {
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-black to-red-500/5" />
         
-        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24">
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 py-10 sm:py-16 md:py-24">
           {/* Logo - FIRST */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
             <img
               src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/2aa91345d_image.png"
               alt="Chaos Controller Logo"
-              className="w-72 h-72 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] mx-auto object-contain drop-shadow-2xl"
+              className="w-48 h-48 sm:w-72 sm:h-72 md:w-96 md:h-96 mx-auto object-contain drop-shadow-2xl"
             />
           </motion.div>
 
@@ -127,11 +127,11 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-center mb-6"
+            className="text-center mb-5"
           >
-            <h1 className="text-4xl sm:text-6xl font-display font-bold tracking-tighter">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-bold tracking-tighter leading-tight">
               <span className="text-white drop-shadow-lg">Welcome to</span>
-              <span className="text-[#FFD700] ml-3 drop-shadow-lg" style={{ textShadow: "0 0 30px rgba(255, 215, 0, 0.5)" }}>Chaos!</span>
+              <span className="text-[#FFD700] ml-2 sm:ml-3 drop-shadow-lg" style={{ textShadow: "0 0 30px rgba(255, 215, 0, 0.5)" }}>Chaos!</span>
             </h1>
           </motion.div>
 
@@ -140,10 +140,10 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <div className="inline-block bg-[#C0392B] px-8 py-3 rounded-sm">
-              <p className="text-white font-bold tracking-widest text-sm sm:text-base">
+            <div className="inline-block bg-[#C0392B] px-5 sm:px-8 py-2.5 sm:py-3 rounded-sm">
+              <p className="text-white font-bold tracking-widest text-xs sm:text-sm md:text-base">
                 NEVER FEAR. CONTROL STARTS HERE.
               </p>
             </div>
@@ -154,9 +154,9 @@ export default function Welcome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-center mb-8"
+            className="text-center mb-6 sm:mb-8"
           >
-            <p className="text-base sm:text-lg text-white max-w-xl mx-auto leading-relaxed font-black">
+            <p className="text-sm sm:text-base md:text-lg text-white max-w-xl mx-auto leading-relaxed font-black px-2">
               Chaos Controller is an AI-powered app that helps everyday Australians fight back against banks, insurers, landlords, and telcos — by organising your evidence, writing your complaints, and tracking every deadline for you.
             </p>
           </motion.div>
@@ -166,9 +166,9 @@ export default function Welcome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="text-center mb-8"
+            className="text-center mb-6 sm:mb-8"
           >
-            <p className="text-lg sm:text-xl text-white max-w-3xl mx-auto leading-relaxed font-black">
+            <p className="text-base sm:text-lg md:text-xl text-white max-w-3xl mx-auto leading-relaxed font-black px-2">
               <span className="text-[#FFD700] font-black">THEY HAD YOUR LOYALTY.</span>
               {" "}NOW YOU DESERVE THEIR{" "}
               <span className="text-[#FFD700] font-black">ACCOUNTABILITY.</span>
@@ -180,14 +180,14 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.75, duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-10 sm:mb-12"
           >
             <Button
               size="lg"
-              className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black px-10 py-6 text-xl font-black gap-2 border-2 border-[#FFD700] shadow-lg shadow-yellow-500/30"
+              className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black px-8 sm:px-10 py-5 sm:py-6 text-lg sm:text-xl font-black gap-2 border-2 border-[#FFD700] shadow-lg shadow-yellow-500/30 w-full sm:w-auto max-w-xs sm:max-w-none mx-auto"
               onClick={() => navigate("/register")}
             >
-              START YOUR CASE <ArrowRight className="w-6 h-6" />
+              START YOUR CASE <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </Button>
           </motion.div>
 
@@ -245,12 +245,13 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.78, duration: 0.8 }}
-            className="max-w-7xl mx-auto px-4 mb-10"
+            className="w-full mb-8 sm:mb-10 overflow-hidden"
           >
             <img
               src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/d6fa8007a_1494D044-1ED5-4BFF-9EF4-C2A80D01A494.png"
               alt="Chaos Controller — They Had Your Loyalty. Now You Deserve Their Accountability."
-              className="w-full rounded-2xl shadow-2xl border-2 border-[#FFD700]/30"
+              className="w-full rounded-xl sm:rounded-2xl shadow-2xl border border-[#FFD700]/30"
+              style={{ maxWidth: "100%", height: "auto", display: "block" }}
             />
           </motion.div>
 
@@ -438,12 +439,13 @@ export default function Welcome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0, duration: 0.8 }}
-            className="max-w-4xl mx-auto px-4 mb-0"
+            className="w-full mb-0 overflow-hidden"
           >
             <img
               src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/0b99217c2_CF9B071E-D876-484A-95EA-29F9621FB84C.png"
               alt="Chaos Controller - Never Fear. Control Starts Here."
-              className="w-full rounded-2xl shadow-2xl border-2 border-[#FFD700]/30"
+              className="w-full rounded-xl sm:rounded-2xl shadow-2xl border border-[#FFD700]/30"
+              style={{ maxWidth: "100%", height: "auto", display: "block" }}
             />
           </motion.div>
         </div>
