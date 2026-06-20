@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, List, Kanban } from "lucide-react";
 import CaseCard from "@/components/dashboard/CaseCard";
 import KanbanBoard from "@/components/cases/KanbanBoard";
+import ResolutionMetrics from "@/components/cases/ResolutionMetrics";
 
 export default function CaseList() {
   const { user } = useAuth();
@@ -62,6 +63,9 @@ export default function CaseList() {
           </Link>
         </div>
       </div>
+
+      {/* Resolution Metrics */}
+      {!isLoading && cases.length > 0 && <ResolutionMetrics cases={cases} />}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
