@@ -114,7 +114,7 @@ export default function Welcome() {
               )}
               
               <div className="text-center mb-6">
-                <h3 className="font-heading font-black text-2xl mb-2 text-white">{plan.name}</h3>
+                <h3 className="font-heading font-black text-2xl mb-2" style={{ color: plan.themeColor }}>{plan.name}</h3>
                 <p className="text-base text-white font-bold mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center">
                   <span className="text-4xl font-display font-black" style={{ color: plan.themeColor }}>{plan.price}</span>
@@ -174,22 +174,56 @@ export default function Welcome() {
 
         {/* CTA */}
         <div className="bg-[#FFD700]/10 border border-[#FFD700]/30 rounded-xl p-6 mt-12 text-center">
-          <h3 className="text-xl font-display font-bold text-white mb-2">Ready to fight back?</h3>
-          <p className="text-gray-400 text-sm mb-4">Get started with your first case today — pay via PayID in minutes.</p>
+          <h3 className="text-xl font-display font-black text-white mb-2">Ready to fight back?</h3>
+          <p className="text-gray-400 text-sm font-black mb-4">Get started with your first case today — pay via PayID in minutes.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
-              className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-bold px-8"
+              className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-black px-8"
               onClick={() => navigate("/payments")}
             >
               View Plans & Pay
             </Button>
             <Button
               variant="outline"
-              className="border-gray-600 text-white hover:bg-gray-800"
+              className="border-gray-600 text-white hover:bg-gray-800 font-black"
               onClick={() => navigate("/register")}
             >
               Create Free Account
             </Button>
+          </div>
+        </div>
+
+        {/* Success Stories */}
+        <div className="mt-16">
+          <h2 className="text-3xl sm:text-4xl font-display font-black text-center mb-4 text-white">
+            SUCCESS STORIES
+          </h2>
+          <div className="w-24 h-1 bg-[#FFD700] mx-auto mb-8" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { name: "Sarah M.", category: "Banking Dispute", outcome: "$2,847 refunded", story: "Chaos Controller helped me fight my bank's unfair fees. The AI-generated letters were professional and got results within 3 weeks." },
+              { name: "James T.", category: "Insurance Claim", outcome: "$18,500 settled", story: "After my insurer denied my claim, I used Chaos Controller to escalate. The tribunal bundle PDF made everything crystal clear." },
+              { name: "Lisa K.", category: "Tenancy Dispute", outcome: "Full bond returned", story: "My landlord tried to keep my bond unfairly. The evidence vault and timeline features helped me win at NCAT." },
+              { name: "Michael R.", category: "Telco Dispute", outcome: "$890 credited", story: "Telstra wouldn't budge on incorrect charges. Chaos Controller's escalation letter got me a full refund plus credit." },
+              { name: "Amanda P.", category: "Utilities Dispute", outcome: "$1,200 adjustment", story: "Energy Australia overcharged me for months. The automated deadline tracking kept me organised throughout." },
+              { name: "David W.", category: "Banking Fraud", outcome: "$5,400 recovered", story: "Unauthorised transactions destroyed my savings. Chaos Controller built my case and I got every dollar back." },
+            ].map((story, idx) => (
+              <div key={idx} className="bg-gradient-to-br from-black to-gray-900 border-2 border-[#FFD700]/30 rounded-xl p-6 hover:border-[#FFD700]/60 transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-[#FFD700]/20 rounded-full flex items-center justify-center">
+                    <span className="text-[#FFD700] font-black text-lg">{story.name.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-black text-sm">{story.name}</p>
+                    <p className="text-[#FFD700] font-bold text-xs">{story.category}</p>
+                  </div>
+                </div>
+                <div className="bg-[#FFD700]/10 border border-[#FFD700]/20 rounded-lg px-3 py-2 mb-3">
+                  <p className="text-[#FFD700] font-black text-sm">✓ {story.outcome}</p>
+                </div>
+                <p className="text-gray-300 font-bold text-sm leading-relaxed">"{story.story}"</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
