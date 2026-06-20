@@ -103,9 +103,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Welcome />} />
             <Route path="/shared-case/:token" element={<SharedCasePortal />} />
-                  <Route path="/merchant-login" element={<MerchantLogin />} />
-                  <Route path="/merchant-portal" element={<MerchantPortal />} />
-                <Route path="/*" element={<AuthenticatedApp />} />
+            <Route path="/merchant-login" element={<MerchantLogin />} />
+            <Route path="/merchant-portal" element={<MerchantPortal />} />
+            <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
         </Router>
         <Toaster />

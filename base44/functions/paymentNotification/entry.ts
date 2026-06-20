@@ -20,44 +20,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Payment not found' }, { status: 404 });
     }
 
-    // Get Gmail connection
-    const gmailConn = await base44.asServiceRole.connectors.getConnection('gmail');
-    
-    const sendGmail = async (to, subject, body) => {
-      if (!gmailConn?.accessToken) {
+    // Send email using Core integration
+    const sendEmail = async (to, subject, body) => {
+      try {
         await base44.asServiceRole.integrations.Core.SendEmail({
           to,
           subject,
           body,
           from_name: "Chaos Controller™",
         });
-        return;
+      } catch (emailError) {
+        console.error('Email send failed:', emailError);
+        // Silently fail - don't block payment processing
       }
-
-      const rawMessage = `From: Chaos Controller <${gmailConn.connectionConfig?.email || 'chaoscontrollerapp@gmail.com'}>\r\n` +
-        `To: ${to}\r\n` +
-        `Subject: ${subject}\r\n` +
-        `Content-Type: text/html; charset=UTF-8\r\n\r\n${body}`;
-      
-      // Encode to base64 properly for Unicode characters
-      const encoder = new TextEncoder();
-      const bytes = encoder.encode(rawMessage);
-      let binary = '';
-      for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      const base64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_');
-      
-      await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${gmailConn.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          raw: base64,
-        }),
-      });
     };
 
     // Send email to admin (chaoscontrollerapp@gmail.com) for new payments
@@ -132,7 +107,7 @@ Deno.serve(async (req) => {
         </html>
       `;
 
-      await sendGmail(adminEmail, adminSubject, adminBody);
+      await sendEmail(adminEmail, adminSubject, adminBody);
     }
 
     // Send email to customer when payment is verified
@@ -222,7 +197,7 @@ Deno.serve(async (req) => {
         </html>
       `;
 
-      await sendGmail(customerEmail, customerSubject, customerBody);
+      await sendEmail(customerEmail, customerSubject, customerBody);
     }
 
     return Response.json({ success: true, message: `Email sent for ${status} payment` });

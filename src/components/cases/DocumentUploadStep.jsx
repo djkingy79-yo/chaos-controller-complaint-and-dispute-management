@@ -113,11 +113,20 @@ export default function DocumentUploadStep({ onContinue, onBack }) {
         )}
         <Button 
           onClick={handleContinue} 
-          disabled={uploadedFiles.length === 0}
+          disabled={uploadedFiles.length === 0 || uploading}
           className="flex-1 gap-2"
         >
-          Continue to Case Setup
-          <CheckCircle className="w-4 h-4" />
+          {uploading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              Continue to Case Setup
+              <CheckCircle className="w-4 h-4" />
+            </>
+          )}
         </Button>
       </div>
 
