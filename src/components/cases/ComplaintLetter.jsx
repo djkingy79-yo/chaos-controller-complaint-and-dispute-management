@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LETTERHEAD_URL, CONTINUATION_PAGE_URL, getLetterPageStyles } from "./LetterheadBanner";
+import { printLetter, cleanContentForPrint, LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -119,31 +119,7 @@ CRITICAL RULES:
   };
 
   const handlePrint = () => {
-    const cleanText = letter.replace(/<[^>]*>/g, '');
-    const win = window.open("", "_blank");
-    win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
-    <style>
-      @page { margin: 0; size: A4; }
-      @media print { 
-        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-      }
-      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; }
-      .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
-      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-      .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-      .letter-content { padding: 8pt 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; white-space: pre-wrap; }
-    </style>
-    </head><body>
-      <div class="letter-page">
-        <div class="letterhead-header"></div>
-        <div class="letter-content" style="padding:8pt 25mm 20mm 25mm">${cleanText}</div>
-        <div class="letterhead-footer"></div>
-      </div>
-    </body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => { win.print(); win.close(); }, 500);
+    printLetter('Complaint Letter', letter);
   };
 
   const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[NRMA Address\]|\[.*?\]/.test(letter);
