@@ -111,78 +111,114 @@ CASE DETAILS:
   if (type === "letter1") {
     return `${base}
 
-LETTER TYPE: First Formal Complaint Letter
-- This is the INITIAL formal complaint to the organisation
-- Include a clear 21-day response deadline
-- Mention ${caseItem.escalation_body || "the relevant ombudsman"} as next step if unresolved
-- Reference the incident date and account number
-- State the desired outcome clearly
-${formats}`;
+  LETTER TYPE: First Formal Complaint Letter
+  - This is the INITIAL formal complaint to the organisation
+  - Include a clear 21-day response deadline
+  - Mention ${caseItem.escalation_body || "the relevant ombudsman"} as next step if unresolved
+  - Reference the incident date and account number
+  - State the desired outcome clearly
+  ${formats}
+
+  CRITICAL FORMAT:
+  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
+  - Line 2: Blank
+  - Lines 3+: Sender address RIGHT aligned (tight single-spaced)
+  - Then: Recipient address LEFT aligned (tight single-spaced)`;
   }
 
   if (type === "letter2") {
     return `${base}
 
-LETTER TYPE: Second Formal Complaint Letter (Follow-Up)
-- The organisation has either NOT responded within 21 days, or gave an unsatisfactory response
-- Reference that a previous complaint letter was sent and the deadline has passed (or response was inadequate)
-- Escalate the tone — firm, assertive, professional
-- Provide a FINAL 14-day deadline before escalation to ${caseItem.escalation_body || "the relevant ombudsman"}
-- Mention you have documented evidence ready for external submission
-${formats}`;
+  LETTER TYPE: Second Formal Complaint Letter (Follow-Up)
+  - The organisation has either NOT responded within 21 days, or gave an unsatisfactory response
+  - Reference that a previous complaint letter was sent and the deadline has passed (or response was inadequate)
+  - Escalate the tone — firm, assertive, professional
+  - Provide a FINAL 14-day deadline before escalation to ${caseItem.escalation_body || "the relevant ombudsman"}
+  - Mention you have documented evidence ready for external submission
+  ${formats}
+
+  CRITICAL FORMAT:
+  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
+  - Line 2: Blank
+  - Lines 3+: Sender address RIGHT aligned (tight single-spaced)
+  - Then: Recipient address LEFT aligned (tight single-spaced)`;
   }
 
   if (type === "letter3") {
     return `${base}
 
-LETTER TYPE: Third and Final Complaint Letter (Final Notice)
-- This is the LAST internal letter before escalating to ${caseItem.escalation_body || "the external ombudsman/tribunal"}
-- Reference that TWO prior letters have been sent with no satisfactory resolution
-- Give a FINAL 7-day ultimatum
-- State clearly you will be lodging a formal complaint with ${caseItem.escalation_body || "the relevant external body"} and/or seeking legal advice
-- Very firm, professional, evidence-focused tone
-${formats}`;
+  LETTER TYPE: Third and Final Complaint Letter (Final Notice)
+  - This is the LAST internal letter before escalating to ${caseItem.escalation_body || "the external ombudsman/tribunal"}
+  - Reference that TWO prior letters have been sent with no satisfactory resolution
+  - Give a FINAL 7-day ultimatum
+  - State clearly you will be lodging a formal complaint with ${caseItem.escalation_body || "the relevant external body"} and/or seeking legal advice
+  - Very firm, professional, evidence-focused tone
+  ${formats}
+
+  CRITICAL FORMAT:
+  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
+  - Line 2: Blank
+  - Lines 3+: Sender address RIGHT aligned (tight single-spaced)
+  - Then: Recipient address LEFT aligned (tight single-spaced)`;
   }
 
   if (type === "accept_offer") {
     return `${base}
 
-LETTER TYPE: Acceptance of Settlement Offer
-- The organisation has made a settlement offer in response to the complaint
-- Formally accept the offer and state the terms being accepted
-- Request written confirmation and a timeline for fulfilment
-- State that if the offer is not fulfilled by the agreed date, the matter will be escalated
-- Professional, clear, binding language
-- Use Australian English spelling throughout
-${formats}`;
+  LETTER TYPE: Acceptance of Settlement Offer
+  - The organisation has made a settlement offer in response to the complaint
+  - Formally accept the offer and state the terms being accepted
+  - Request written confirmation and a timeline for fulfilment
+  - State that if the offer is not fulfilled by the agreed date, the matter will be escalated
+  - Professional, clear, binding language
+  - Use Australian English spelling throughout
+  ${formats}
+
+  CRITICAL FORMAT:
+  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
+  - Line 2: Blank
+  - Lines 3+: Sender address RIGHT aligned (tight single-spaced)
+  - Then: Recipient address LEFT aligned (tight single-spaced)`;
   }
 
   if (type === "deny_offer") {
     return `${base}
 
-LETTER TYPE: Rejection of Settlement Offer
-- The organisation has made an offer but it is UNSATISFACTORY
-- Formally REJECT the offer with clear reasons why it does not address the dispute
-- Counter with the desired outcome stated in the case: "${caseItem.desired_outcome}"
-- Give a 14-day deadline to reconsider or provide an improved offer
-- State that failure to respond acceptably will result in escalation to ${caseItem.escalation_body || "the relevant ombudsman"}
-- Firm, reasoned, professional tone
-${formats}`;
+  LETTER TYPE: Rejection of Settlement Offer
+  - The organisation has made an offer but it is UNSATISFACTORY
+  - Formally REJECT the offer with clear reasons why it does not address the dispute
+  - Counter with the desired outcome stated in the case: "${caseItem.desired_outcome}"
+  - Give a 14-day deadline to reconsider or provide an improved offer
+  - State that failure to respond acceptably will result in escalation to ${caseItem.escalation_body || "the relevant ombudsman"}
+  - Firm, reasoned, professional tone
+  ${formats}
+
+  CRITICAL FORMAT:
+  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
+  - Line 2: Blank
+  - Lines 3+: Sender address RIGHT aligned (tight single-spaced)
+  - Then: Recipient address LEFT aligned (tight single-spaced)`;
   }
 
   if (type === "escalation") {
     return `${base}
 
-LETTER TYPE: External Escalation Complaint Letter
-- This letter is addressed TO ${caseItem.escalation_body || "the external ombudsman/tribunal"}, NOT the organisation
-- Summarise the entire dispute: what happened, when, what was sought, what the organisation did or didn't do
-- Attach a chronology of complaint letters sent (mention 1st, 2nd, 3rd letters and dates if known)
-- State the desired outcome clearly
-- Reference all key evidence: account numbers, dates, amounts
-- Request the external body investigate and order appropriate remedy
-- Address to: The Complaints Officer, ${caseItem.escalation_body || "External Dispute Resolution Body"}
-- Professional, comprehensive, factual tone
-${formats}`;
+  LETTER TYPE: External Escalation Complaint Letter
+  - This letter is addressed TO ${caseItem.escalation_body || "the external ombudsman/tribunal"}, NOT the organisation
+  - Summarise the entire dispute: what happened, when, what was sought, what the organisation did or didn't do
+  - Attach a chronology of complaint letters sent (mention 1st, 2nd, 3rd letters and dates if known)
+  - State the desired outcome clearly
+  - Reference all key evidence: account numbers, dates, amounts
+  - Request the external body investigate and order appropriate remedy
+  - Address to: The Complaints Officer, ${caseItem.escalation_body || "External Dispute Resolution Body"}
+  - Professional, comprehensive, factual tone
+  ${formats}
+
+  CRITICAL FORMAT:
+  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
+  - Line 2: Blank
+  - Lines 3+: Sender address RIGHT aligned (tight single-spaced)
+  - Then: Recipient address LEFT aligned (tight single-spaced)`;
   }
 
   return base;
