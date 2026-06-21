@@ -168,7 +168,7 @@ CASE DETAILS:
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content" style="padding-top:25mm">${firstPageLines.map(line => `<p style="margin:10pt 0;min-height:18pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="letter-content" style="padding-top:0">${firstPageLines.map(line => `<p style="margin:10pt 0;min-height:18pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
         <div class="letterhead-footer"></div>
       </div>
       ${continuationHTML}
@@ -298,7 +298,7 @@ CASE DETAILS:
               backgroundColor: '#ffffff'
             }}
           ></div>
-          <div className="bg-white" style={{ padding: '25mm 25mm 20mm 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", color: "#000" }}>
+          <div className="bg-white" style={{ padding: '0 25mm 20mm 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", color: "#000" }}>
             {editing ? (
               <Textarea
                 value={letter}
