@@ -355,6 +355,13 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
       setEditing(false);
+      toast.success("Letter saved successfully");
+    },
+    onError: (error) => {
+      console.error("Failed to save letter:", error);
+      toast.error("Failed to save letter. Please try again.");
+      // Revert local state to match database
+      setText(caseItem[field] || "");
     },
   });
 
@@ -365,12 +372,20 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today);
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
-      setText(result);
-      updateMutation.mutate({ [field]: result });
-      toast.success(`${letterType.label} generated`);
+      // Only update local state after successful save
+      updateMutation.mutate({ [field]: result }, {
+        onSuccess: () => {
+          setText(result);
+          toast.success(`${letterType.label} generated and saved`);
+          setGenerating(false);
+        },
+        onError: () => {
+          toast.error("Letter generated but failed to save. Please try again.");
+          setGenerating(false);
+        }
+      });
     } catch (e) {
       toast.error("Generation failed: " + e.message);
-    } finally {
       setGenerating(false);
     }
   };

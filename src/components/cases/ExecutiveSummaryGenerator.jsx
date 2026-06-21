@@ -32,14 +32,23 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
         setShowDialog(true);
         
         // Save summary to case entity for persistent storage
-        await base44.entities.Case.update(caseItem.id, {
-          executive_summary: JSON.stringify(response.data.summary)
-        });
-        
-        toast({
-          title: "✓ Summary Generated",
-          description: `AI analyzed your case in ${elapsedTime + 1} seconds.`,
-        });
+        try {
+          await base44.entities.Case.update(caseItem.id, {
+            executive_summary: JSON.stringify(response.data.summary)
+          });
+          console.log("Executive summary saved to database successfully");
+          toast({
+            title: "✓ Summary Generated & Saved",
+            description: `AI analyzed your case in ${elapsedTime + 1} seconds. Summary persisted.`,
+          });
+        } catch (saveError) {
+          console.error("Failed to save executive summary to database:", saveError);
+          toast({
+            title: "⚠ Summary Generated (Not Saved)",
+            description: "Summary displayed but failed to save. Refresh may lose it.",
+            variant: "destructive",
+          });
+        }
       } else {
         throw new Error(response.data?.error || "AI did not return a summary");
       }

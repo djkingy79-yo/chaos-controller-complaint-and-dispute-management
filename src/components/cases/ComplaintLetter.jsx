@@ -54,6 +54,13 @@ export default function ComplaintLetter({ caseItem }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
       setEditing(false);
+      toast.success("Letter saved successfully");
+    },
+    onError: (error) => {
+      console.error("Failed to save letter:", error);
+      toast.error("Failed to save letter. Please try again.");
+      // Revert local state to match database
+      setLetter(caseItem.complaint_letter || "");
     },
   });
 
@@ -114,9 +121,16 @@ CRITICAL RULES:
 - Case: ${caseItem.issue_summary}. Desired: ${caseItem.desired_outcome}.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
-    setLetter(result);
-    updateMutation.mutate({ complaint_letter: result });
-    setRegenerating(false);
+    // Only update local state after successful save
+    updateMutation.mutate({ complaint_letter: result }, {
+      onSuccess: () => {
+        setLetter(result);
+        setRegenerating(false);
+      },
+      onError: () => {
+        setRegenerating(false);
+      }
+    });
   };
 
   const handlePrint = () => {
