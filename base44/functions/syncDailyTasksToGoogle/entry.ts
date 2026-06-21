@@ -107,39 +107,14 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Load all cases, deadlines, checklist items via service role (scheduled — no user session)
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection('googletasks');
+
     const allCases = await base44.asServiceRole.entities.Case.list();
     const allDeadlines = await base44.asServiceRole.entities.Deadline.filter({ status: { $in: ['pending', 'extended'] } });
     const allChecklists = await base44.asServiceRole.entities.ChecklistItem.filter({ status: { $in: ['missing', 'needs_review'] } });
 
-    // Group by case owner
-    const userCases = {};
-    allCases.forEach(c => {
-      if (!userCases[c.created_by_id]) userCases[c.created_by_id] = [];
-      userCases[c.created_by_id].push(c);
-    });
-
-    let totalCreated = 0;
-    let totalUpdated = 0;
-    let totalRemoved = 0;
-    let usersSync = 0;
-
-    for (const [userId, cases] of Object.entries(userCases)) {
-      const conn = await base44.asServiceRole.connectors.getAppUserConnection(CONNECTOR_ID, userId).catch(() => null);
-      if (!conn?.accessToken) continue;
-
-      const caseIds = cases.map(c => c.id);
-      const userDeadlines = allDeadlines.filter(d => caseIds.includes(d.case_id));
-      const userChecklists = allChecklists.filter(i => caseIds.includes(i.case_id));
-
-      const result = await syncUserTasks(conn.accessToken, cases, userDeadlines, userChecklists);
-      totalCreated += result.tasksCreated;
-      totalUpdated += result.tasksUpdated;
-      totalRemoved += result.tasksRemoved;
-      usersSync++;
-    }
-
-    return Response.json({ success: true, usersSync, totalCreated, totalUpdated, totalRemoved });
+    const result = await syncUserTasks(accessToken, allCases, allDeadlines, allChecklists);
+    return Response.json({ success: true, ...result });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

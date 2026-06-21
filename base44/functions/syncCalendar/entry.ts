@@ -2,24 +2,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const CONNECTOR_ID = '6a2f842ded0843ad5cb9ecb7';
 
-async function createCalendarEvent(accessToken, deadline, caseInfo) {
-  const event = buildEventPayload(deadline, caseInfo);
-  const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(event)
-  });
-  return res.ok;
-}
-
-async function updateCalendarEvent(accessToken, googleEventId, deadline, caseInfo) {
-  const event = buildEventPayload(deadline, caseInfo);
-  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${googleEventId}`, {
-    method: 'PUT',
-    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(event)
-  });
-  return res.ok;
+async function getToken(base44) {
+  const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
+  return accessToken;
 }
 
 function buildEventPayload(deadline, caseInfo) {
@@ -44,7 +29,7 @@ function buildEventPayload(deadline, caseInfo) {
 }
 
 async function findExistingEvent(accessToken, deadlineId) {
-  const timeMin = new Date(Date.now() - 365 * 86400000).toISOString(); // look back 1 year
+  const timeMin = new Date(Date.now() - 365 * 86400000).toISOString();
   const res = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=250&timeMin=${timeMin}&privateExtendedProperty=deadlineId%3D${deadlineId}&privateExtendedProperty=source%3DChaosController`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -54,6 +39,24 @@ async function findExistingEvent(accessToken, deadlineId) {
   return data.items?.[0] || null;
 }
 
+async function createCalendarEvent(accessToken, deadline, caseInfo) {
+  const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(buildEventPayload(deadline, caseInfo))
+  });
+  return res.ok;
+}
+
+async function updateCalendarEvent(accessToken, googleEventId, deadline, caseInfo) {
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${googleEventId}`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(buildEventPayload(deadline, caseInfo))
+  });
+  return res.ok;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -61,43 +64,28 @@ Deno.serve(async (req) => {
     const { action = 'sync', data: automationData, event: automationEvent } = payload;
 
     // --- AUTOMATION PATH: Deadline create/update ---
-    const isDeadlineAutomation = !!automationEvent && automationEvent.entity_name === 'Deadline';
-    if (isDeadlineAutomation) {
+    if (automationEvent?.entity_name === 'Deadline') {
       const deadlineId = automationEvent?.entity_id || automationData?.id;
       if (!deadlineId) return Response.json({ error: 'No deadline ID' }, { status: 400 });
 
       const deadlines = await base44.asServiceRole.entities.Deadline.filter({ id: deadlineId });
       const deadline = deadlines[0];
-      if (!deadline || !deadline.deadline_date) return Response.json({ skipped: 'No deadline date' });
+      if (!deadline?.deadline_date) return Response.json({ skipped: 'No deadline date' });
 
       const cases = await base44.asServiceRole.entities.Case.filter({ id: deadline.case_id });
       const caseInfo = cases[0];
       if (!caseInfo) return Response.json({ skipped: 'Case not found' });
 
-      let connToken;
-      try {
-        connToken = await base44.asServiceRole.connectors.getAppUserConnection(CONNECTOR_ID, caseInfo.created_by_id);
-      } catch (_) {
-        return Response.json({ skipped: 'User calendar not connected' });
-      }
-      if (!connToken?.accessToken) return Response.json({ skipped: 'No access token' });
-
-      const { accessToken } = connToken;
-
-      // Check if event already exists — update it, otherwise create
+      const accessToken = await getToken(base44);
       const existing = await findExistingEvent(accessToken, deadline.id);
-      let ok;
-      if (existing) {
-        ok = await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo);
-      } else {
-        ok = await createCalendarEvent(accessToken, deadline, caseInfo);
-      }
-      return Response.json({ success: ok, deadlineId, caseId: caseInfo.id, action: existing ? 'updated' : 'created' });
+      const ok = existing
+        ? await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo)
+        : await createCalendarEvent(accessToken, deadline, caseInfo);
+      return Response.json({ success: ok, deadlineId, action: existing ? 'updated' : 'created' });
     }
 
-    // --- AUTOMATION PATH: Case status/deadline field update ---
-    const isCaseAutomation = !!automationEvent && automationEvent.entity_name === 'Case';
-    if (isCaseAutomation) {
+    // --- AUTOMATION PATH: Case status update ---
+    if (automationEvent?.entity_name === 'Case') {
       const caseId = automationEvent?.entity_id || automationData?.id;
       if (!caseId) return Response.json({ skipped: 'No case ID' });
 
@@ -105,43 +93,22 @@ Deno.serve(async (req) => {
       const caseInfo = cases[0];
       if (!caseInfo) return Response.json({ skipped: 'Case not found' });
 
-      let connToken;
-      try {
-        connToken = await base44.asServiceRole.connectors.getAppUserConnection(CONNECTOR_ID, caseInfo.created_by_id);
-      } catch (_) {
-        return Response.json({ skipped: 'User calendar not connected' });
-      }
-      if (!connToken?.accessToken) return Response.json({ skipped: 'No access token' });
-
-      const { accessToken } = connToken;
-
-      // Update all calendar events for this case's deadlines
+      const accessToken = await getToken(base44);
       const deadlines = await base44.asServiceRole.entities.Deadline.filter({ case_id: caseId });
       let updatedCount = 0;
       for (const deadline of deadlines) {
         if (!deadline.deadline_date) continue;
         const existing = await findExistingEvent(accessToken, deadline.id);
-        if (existing) {
-          const ok = await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo);
-          if (ok) updatedCount++;
-        }
+        if (existing && await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo)) updatedCount++;
       }
       return Response.json({ success: true, caseId, updatedCount });
     }
 
-    // --- FRONTEND PATH: requires user auth ---
+    // --- FRONTEND PATH ---
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    let connToken;
-    try {
-      connToken = await base44.asServiceRole.connectors.getAppUserConnection(CONNECTOR_ID, user.id);
-    } catch (_) {
-      return Response.json({ error: 'Calendar not connected' }, { status: 403 });
-    }
-    if (!connToken?.accessToken) return Response.json({ error: 'Calendar not connected' }, { status: 403 });
-
-    const { accessToken } = connToken;
+    const accessToken = await getToken(base44);
 
     if (action === 'sync') {
       const allCases = await base44.entities.Case.filter({ created_by_id: user.id });
@@ -158,9 +125,8 @@ Deno.serve(async (req) => {
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       const calData = calRes.ok ? await calRes.json() : { items: [] };
-      const existingEvents = calData.items || [];
       const existingByDeadlineId = {};
-      for (const e of existingEvents) {
+      for (const e of calData.items || []) {
         const did = e.extendedProperties?.private?.deadlineId;
         if (did) existingByDeadlineId[did] = e;
       }
@@ -171,13 +137,11 @@ Deno.serve(async (req) => {
         if (!caseInfo) continue;
         if (existingByDeadlineId[deadline.id]) {
           await updateCalendarEvent(accessToken, existingByDeadlineId[deadline.id].id, deadline, caseInfo);
-        } else {
-          const ok = await createCalendarEvent(accessToken, deadline, caseInfo);
-          if (ok) syncedCount++;
+        } else if (await createCalendarEvent(accessToken, deadline, caseInfo)) {
+          syncedCount++;
         }
       }
-
-      return Response.json({ success: true, events: existingEvents, syncedCount, totalDeadlines: pendingDeadlines.length });
+      return Response.json({ success: true, events: calData.items || [], syncedCount, totalDeadlines: pendingDeadlines.length });
     }
 
     if (action === 'delete') {
