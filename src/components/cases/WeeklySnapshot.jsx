@@ -9,30 +9,47 @@ import { LETTERHEAD_URL, getLetterPageStyles } from "./LetterheadBanner";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
+function renderMarkdownToHtml(md) {
+  if (!md) return "";
+  let html = md
+    .replace(/^## (.*$)/gm, '<h2 style="font-size:12pt;font-weight:bold;margin:10pt 0 6pt 0;color:#000;">$1</h2>')
+    .replace(/^### (.*$)/gm, '<h3 style="font-size:11pt;font-weight:bold;margin:8pt 0 4pt 0;color:#000;">$1</h3>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^- (.*$)/gm, '<li style="margin-bottom:3pt;line-height:1.2;">$1</li>')
+    .replace(/^\d+\. (.*$)/gm, '<li style="margin-bottom:3pt;line-height:1.2;">$1</li>')
+    .replace(/\n\n/g, '</p><p style="margin:4pt 0 6pt;line-height:1.2;">')
+    .replace(/\n/g, '<br/>');
+  // Wrap consecutive <li> tags in <ul>
+  html = html.replace(/(<li.*>.*<\/li>(<br\/>)?)+/g, (match) => '<ul style="margin:4pt 0 6pt 18pt;padding:0;">' + match + '</ul>');
+  return '<p style="margin:4pt 0 6pt;line-height:1.2;">' + html + '</p>';
+}
+
 function printSnapshot(caseItem, snapshot, generatedAt) {
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
+  const htmlContent = renderMarkdownToHtml(snapshot);
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Weekly Snapshot — ${caseItem.title}</title>
     <style>
-      @page { margin: 1.5in; size: A4; }
+      @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-      h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; }
-      h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
+      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
       .header { font-size: 8pt; letter-spacing: 2px; text-transform: uppercase; color: #000; margin-bottom: 10pt; font-weight: bold; }
-      h2 { font-size: 13pt; font-weight: bold; color: #000; margin: 12pt 0 6pt; }
-      h3 { font-size: 12pt; font-weight: bold; color: #000; margin: 10pt 0 6pt; }
-      ul, ol { margin: 4pt 0 6pt 18pt; }
-      li { margin-bottom: 2pt; line-height: 1.0; }
-      p { margin: 4pt 0 6pt; line-height: 1.0; }
-
+      h2 { font-size: 12pt; font-weight: bold; color: #000; margin: 10pt 0 6pt 0; }
+      h3 { font-size: 11pt; font-weight: bold; color: #000; margin: 8pt 0 4pt 0; }
+      ul, ol { margin: 4pt 0 6pt 18pt; padding: 0; }
+      li { margin-bottom: 3pt; line-height: 1.2; }
+      p { margin: 4pt 0 6pt; line-height: 1.2; }
+      .letterhead-header { width: 100%; height: 80px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
     </style>
   </head><body>
-    <div class="header">Chaos Controller™ — Weekly Case Snapshot</div>
-    <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">${caseItem.title}</div>
-    <div style="font-size:10.5pt;color:#666;margin-bottom:16pt;">vs. ${caseItem.organisation_name || "Organisation"} &nbsp;|&nbsp; Ref: ${caseRef} &nbsp;|&nbsp; Generated: ${generatedAt}</div>
-    <div style="margin-top:14pt;">${snapshot.replace(/\n/g, "<br/>")}</div>
+    <div class="letterhead-header"></div>
+    <div style="padding:0 25mm 20mm 25mm;">
+      <div class="header">Chaos Controller™ — Weekly Case Snapshot</div>
+      <div style="font-size:14pt;font-weight:bold;margin-bottom:10pt;color:#000;">${caseItem.title}</div>
+      <div style="font-size:10pt;color:#666;margin-bottom:12pt;">vs. ${caseItem.organisation_name || "Organisation"} &nbsp;|&nbsp; Ref: ${caseRef} &nbsp;|&nbsp; Generated: ${generatedAt}</div>
+      <div style="margin-top:10pt;">${htmlContent}</div>
+    </div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 500);
