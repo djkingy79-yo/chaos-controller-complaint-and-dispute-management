@@ -85,9 +85,9 @@ export default function ComplaintLetter({ caseItem }) {
   OUTPUT FORMAT (EXACT ORDER):
   Line 1: ${today} (plain text only, no bold, no asterisks)
   Line 2: [blank]
-  Lines 3-7: SENDER ADDRESS RIGHT-ALIGNED (name, street, city, email, phone - NO gaps between lines)
+  Lines 3-7: SENDER ADDRESS LEFT-ALIGNED (name, street, city, email, phone - NO gaps between lines)
   Line 8: [blank]
-  Lines 9-12: RECIPIENT ADDRESS LEFT-ALIGNED (handler, org, address, email - NO gaps)
+  Lines 9-12: RECIPIENT ADDRESS LEFT-ALIGNED under sender (handler, org, address, email - NO gaps)
   Line 13: [blank]
   Line 14: Re: line
   Line 15: Dear Sir/Madam,
@@ -95,8 +95,8 @@ export default function ComplaintLetter({ caseItem }) {
   Final: Yours faithfully, [blank line] Sender name
 
   CRITICAL RULES:
-  1. SENDER ADDRESS ON RIGHT SIDE - THIS IS NON-NEGOTIABLE
-  2. RECIPIENT ADDRESS ON LEFT SIDE
+  1. SENDER ADDRESS ON LEFT SIDE
+  2. RECIPIENT ADDRESS ON LEFT SIDE (directly under sender)
   3. NO BLANK LINES WITHIN ADDRESS BLOCKS - TIGHT SINGLE SPACING
   4. NO PLACEHOLDER BRACKETS - omit lines if data missing
   5. COMPACT PARAGRAPH SPACING - professional density
