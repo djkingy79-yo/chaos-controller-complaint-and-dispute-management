@@ -89,9 +89,9 @@ export default function CaseDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-full" style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '0' }}>
       {/* Header */}
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 w-full" style={{ wordBreak: 'break-word' }}>
         <Link to="/cases">
           <Button variant="ghost" size="icon" className="mt-0.5">
             <ArrowLeft className="w-5 h-5" />
@@ -108,29 +108,29 @@ export default function CaseDetail() {
       </div>
 
       {/* Top Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-card rounded-xl border border-border p-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 w-full" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="bg-card rounded-xl border border-border p-4 w-full" style={{ wordBreak: 'break-word' }}>
           <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <FolderOpen className="w-4 h-4" /> Evidence
           </div>
           <div className="text-2xl font-bold text-foreground">{evidence.length}</div>
           <div className="text-xs text-muted-foreground">files uploaded</div>
         </div>
-        <div className="bg-card rounded-xl border border-border p-4">
+        <div className="bg-card rounded-xl border border-border p-4 w-full" style={{ wordBreak: 'break-word' }}>
           <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <Clock className="w-4 h-4" /> Timeline
           </div>
           <div className="text-2xl font-bold text-foreground">{timelineEvents.length}</div>
           <div className="text-xs text-muted-foreground">events recorded</div>
         </div>
-        <div className="bg-card rounded-xl border border-border p-4">
+        <div className="bg-card rounded-xl border border-border p-4 w-full" style={{ wordBreak: 'break-word' }}>
           <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <CheckSquare className="w-4 h-4" /> Status
           </div>
           <div className="text-sm font-semibold text-foreground">{caseItem.status?.replace(/_/g, ' ').toUpperCase()}</div>
           <div className="text-xs text-muted-foreground">current state</div>
         </div>
-        <div className="bg-card rounded-xl border border-border p-4">
+        <div className="bg-card rounded-xl border border-border p-4 w-full" style={{ wordBreak: 'break-word' }}>
           <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <AlertTriangle className="w-4 h-4" /> Priority
           </div>
@@ -146,9 +146,9 @@ export default function CaseDetail() {
       </div>
 
       {/* Main Grid Layout */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="w-full" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Left Sidebar - Case Controls */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="w-full space-y-4" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <CaseStatusControl caseItem={caseItem} />
           <DisputeProgressTracker caseItem={caseItem} />
           <ChaosScore caseItem={caseItem} evidence={evidence} events={timelineEvents} />
@@ -156,7 +156,7 @@ export default function CaseDetail() {
         </div>
 
         {/* Right - Tabbed Content */}
-        <div className="lg:col-span-2">
+        <div className="w-full">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="flex w-full overflow-x-auto gap-1 h-auto flex-nowrap bg-transparent p-0">
               <TabsTrigger value="summary" className="gap-1.5 px-3 py-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">

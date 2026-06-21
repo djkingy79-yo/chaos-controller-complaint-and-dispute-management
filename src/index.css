@@ -96,6 +96,22 @@
   body {
     @apply bg-background text-foreground font-body;
   }
+  /* Mobile document layout enforcement */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 24px !important;
+    word-break: break-word;
+    margin-bottom: 16px;
+  }
+  p, span, div, li, td, th, label, input, textarea {
+    font-size: 16px !important;
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  input, textarea {
+    max-width: 100%;
+    word-break: break-word;
+    white-space: normal;
+  }
 }
 
 @layer utilities {

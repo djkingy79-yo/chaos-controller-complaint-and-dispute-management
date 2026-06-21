@@ -202,8 +202,10 @@ export default function Layout() {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <Outlet />
+      <main className="w-full max-w-full mx-auto px-6 py-6" style={{ maxWidth: '100%', padding: '24px' }}>
+        <div className="w-full" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );
