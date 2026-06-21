@@ -175,8 +175,50 @@ CASE DETAILS:
 
   if (!caseItem.complaint_letter && !letter) {
     return (
-      <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-8 text-center">
-        <p className="text-sm text-muted-foreground">No complaint letter generated yet.</p>
+      <div className="space-y-4">
+        <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-8 text-center">
+          <p className="text-sm text-muted-foreground mb-4">No complaint letter generated yet.</p>
+          <Button onClick={handleRegenerate} disabled={regenerating} className="gap-2">
+            {regenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            Generate First Complaint Letter
+          </Button>
+        </div>
+        
+        {/* Sample format preview */}
+        <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
+          <div className="letterhead-header" style={{ height: '180px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top' }}></div>
+          <div className="px-12 pb-8 bg-white" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
+            <div style={{ padding: '1.5in 0 0 0' }}>
+              <p style={{ fontSize: '13pt', fontWeight: 'bold', marginBottom: '12pt', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
+              <div style={{ textAlign: 'left', marginBottom: '12pt', lineHeight: '1.0' }}>
+                <p style={{ margin: '0' }}>Mick Gallagher</p>
+                <p style={{ margin: '0' }}>14 The Road</p>
+                <p style={{ margin: '0' }}>Penrith 2750</p>
+                <p style={{ margin: '0' }}>Email: Djkingy79@gmail.com</p>
+                <p style={{ margin: '0' }}>Mobile: 0413572850</p>
+              </div>
+              <div style={{ textAlign: 'right', marginBottom: '12pt', lineHeight: '1.0' }}>
+                <p style={{ margin: '0' }}>The Complaints Manager</p>
+                <p style={{ margin: '0' }}>NRMA Insurance</p>
+                <p style={{ margin: '0' }}>GPO Box 438</p>
+                <p style={{ margin: '0' }}>Sydney NSW 2001</p>
+              </div>
+              <p style={{ margin: '12pt 0', fontWeight: 'bold' }}>Re: Formal Complaint — Account NRMA09887</p>
+              <p style={{ margin: '12pt 0' }}>Dear Sir/Madam,</p>
+              <p style={{ margin: '6pt 0' }}>I am writing to formally lodge a complaint regarding...</p>
+              <p style={{ margin: '6pt 0', color: '#666', fontStyle: 'italic' }}>[Letter body continues...]</p>
+              <p style={{ margin: '12pt 0' }}>Yours faithfully,</p>
+              <p style={{ margin: '6pt 0' }}>Mick Gallagher</p>
+            </div>
+          </div>
+          <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
+        </div>
+        
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+          <p className="text-xs text-muted-foreground">
+            <strong>Format shown:</strong> Date (13pt bold, left) · Sender address (left) · Recipient address (right) · Re line · Body · Closing
+          </p>
+        </div>
       </div>
     );
   }
