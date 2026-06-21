@@ -4,12 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText, Lock } from "lucide-react";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, Download, FileText, Lock } from "lucide-react";
 import LetterTemplateManager from "./LetterTemplateManager";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { printLetter as printLetterUniversal, buildFormalLetter, printDocument } from "@/lib/documentFormatEngine";
-import { LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
+import { generateChaosDocumentPDF, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -390,8 +389,52 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     }
   };
 
-  const handlePrint = () => {
-    printLetterUniversal({ title: letterType.label, letterContent: text });
+  const handlePrintPDF = async () => {
+    try {
+      const cleanContent = text.replace(/<[^>]*>/g, '');
+      const pdfBlob = await generateChaosDocumentPDF({
+        documentType: 'letter',
+        title: letterType.label,
+        body: cleanContent,
+        includeHeader: true,
+        includeFooter: true,
+      });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const win = window.open(pdfUrl, '_blank');
+      if (win) {
+        win.onload = () => {
+          setTimeout(() => {
+            win.print();
+          }, 500);
+        };
+      }
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    } catch (error) {
+      console.error('[LetterSuite] PDF print failed:', error);
+      toast.error('PDF generation failed: ' + error.message);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const cleanContent = text.replace(/<[^>]*>/g, '');
+      const pdfBlob = await generateChaosDocumentPDF({
+        documentType: 'letter',
+        title: letterType.label,
+        body: cleanContent,
+        includeHeader: true,
+        includeFooter: true,
+      });
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('[LetterSuite] PDF download failed:', error);
+      toast.error('PDF download failed: ' + error.message);
+    }
   };
 
   const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[.*?\]/.test(text);
@@ -414,8 +457,11 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(text); toast.success("Copied"); }} className="gap-1.5 text-xs">
                 <Copy className="w-3.5 h-3.5" /> Copy
               </Button>
-              <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 text-xs">
-                <Printer className="w-3.5 h-3.5" /> Print
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 text-xs">
+                <Download className="w-3.5 h-3.5" /> Download PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handlePrintPDF} className="gap-1.5 text-xs">
+                <Printer className="w-3.5 h-3.5" /> Print PDF
               </Button>
               <Button
                 variant="outline" size="sm"
