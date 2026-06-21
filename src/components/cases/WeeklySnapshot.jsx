@@ -163,42 +163,33 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
   const handlePrintPDF = async () => {
     setPdfGenerating(true);
     try {
-      console.log('[WeeklySnapshot] Print PDF clicked');
-      console.log('[WeeklySnapshot] Snapshot exists:', !!snapshot);
-      console.log('[WeeklySnapshot] Case exists:', !!caseItem);
+      const html = `<!DOCTYPE html><html><head>
+        <title>Weekly Snapshot - ${caseItem.title}</title>
+        <style>
+          @page { margin: 25mm; size: A4; }
+          body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; }
+          h1 { font-size: 14pt; font-weight: bold; }
+          h2 { font-size: 12pt; font-weight: bold; margin-top: 10pt; }
+          p { line-height: 1.3; }
+        </style>
+      </head><body>
+        <h1>WEEKLY CASE SNAPSHOT</h1>
+        <p><strong>Matter:</strong> ${caseItem.title}</p>
+        <p><strong>Date:</strong> ${format(new Date(), "d MMMM yyyy")}</p>
+        <hr/>
+        ${(() => {
+          const { sections } = cleanSnapshotContent(snapshot);
+          return sections.map(s => `<h2>${s.title}</h2><p>${s.content.replace(/\n/g, '<br/>')}</p>`).join('');
+        })()}
+      </body></html>`;
       
-      const { sections } = cleanSnapshotContent(snapshot);
-      const pdfBlob = await generateChaosDocumentPDF({
-        documentType: 'snapshot',
-        title: 'WEEKLY CASE SNAPSHOT',
-        matter: caseItem.title,
-        date: format(new Date(), "d MMMM yyyy"),
-        sections: sections,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      
-      console.log('[WeeklySnapshot] PDF blob generated:', !!pdfBlob);
-      
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const win = window.open(pdfUrl, '_blank');
-      
-      if (win) {
-        win.onload = () => {
-          setTimeout(() => { win.print(); }, 500);
-        };
-        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
-      } else {
-        // Popup blocked - download fallback
-        const a = document.createElement('a');
-        a.href = pdfUrl;
-        a.download = `Weekly_Snapshot_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-        a.click();
-        alert('Popup blocked - PDF downloaded instead');
-        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
-      }
+      const win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); win.close(); }, 500);
     } catch (error) {
-      console.error('[WeeklySnapshot] PDF print failed:', error);
+      console.error('[WeeklySnapshot] Print failed:', error);
       alert('Print failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
@@ -208,29 +199,33 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
   const handleDownloadPDF = async () => {
     setPdfGenerating(true);
     try {
-      console.log('[WeeklySnapshot] Download PDF clicked');
+      const html = `<!DOCTYPE html><html><head>
+        <title>Weekly Snapshot - ${caseItem.title}</title>
+        <style>
+          @page { margin: 25mm; size: A4; }
+          body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; }
+          h1 { font-size: 14pt; font-weight: bold; }
+          h2 { font-size: 12pt; font-weight: bold; margin-top: 10pt; }
+          p { line-height: 1.3; }
+        </style>
+      </head><body>
+        <h1>WEEKLY CASE SNAPSHOT</h1>
+        <p><strong>Matter:</strong> ${caseItem.title}</p>
+        <p><strong>Date:</strong> ${format(new Date(), "d MMMM yyyy")}</p>
+        <hr/>
+        ${(() => {
+          const { sections } = cleanSnapshotContent(snapshot);
+          return sections.map(s => `<h2>${s.title}</h2><p>${s.content.replace(/\n/g, '<br/>')}</p>`).join('');
+        })()}
+      </body></html>`;
       
-      const { sections } = cleanSnapshotContent(snapshot);
-      const pdfBlob = await generateChaosDocumentPDF({
-        documentType: 'snapshot',
-        title: 'WEEKLY CASE SNAPSHOT',
-        matter: caseItem.title,
-        date: format(new Date(), "d MMMM yyyy"),
-        sections: sections,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Weekly_Snapshot_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); win.close(); }, 500);
     } catch (error) {
-      console.error('[WeeklySnapshot] PDF download failed:', error);
+      console.error('[WeeklySnapshot] Download failed:', error);
       alert('Download failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
