@@ -66,10 +66,10 @@ export function getLetterPageStyles() {
       background-position: center bottom;
     }
 
-    /* Letter body with EXACT 1.5 inch margins all sides */
+    /* Letter body - ZERO top padding, 1.5 inch sides/bottom */
     .letter-content {
       position: relative;
-      padding: 1.5in 1.5in 1.5in 1.5in;
+      padding: 0 1.5in 1.5in 1.5in;
       margin: 0;
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
@@ -125,11 +125,12 @@ export function getLetterPageStyles() {
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center top;
-      margin-bottom: 10pt;
+      margin-bottom: 0;
     }
     
     .continuation-content {
       padding: 0 1.5in 1.5in 1.5in;
+      margin-top: 0;
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
       color: #000;
