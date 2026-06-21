@@ -80,46 +80,36 @@ export default function ComplaintLetter({ caseItem }) {
       }, []).join("\n    ")
     : accountNumbers;
 
-  const prompt = `CRITICAL: GENERATE HTML WITH INLINE STYLES FOR PROPER ALIGNMENT - NO PLAIN TEXT:
+  const prompt = `AUSTRALIAN BUSINESS LETTER FORMAT - PLAIN TEXT ONLY (no HTML tags):
 
-OUTPUT EXACT HTML STRUCTURE (copy this format exactly):
+${today}
 
-<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">${today}</div>
-<div style="height:8pt"></div>
-<div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">
-<div style="margin:0;line-height:1.1">${client.name || ""}</div>
-<div style="margin:0;line-height:1.1">${client.address || ""}</div>
-<div style="margin:0;line-height:1.1">${client.email || ""}</div>
-<div style="margin:0;line-height:1.1">${client.phone || ""}</div>
-</div>
-<div style="height:8pt"></div>
-<div style="text-align:left;line-height:1.1;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">
-<div style="margin:0;line-height:1.1">${caseItem.complaint_handler_name || "The Complaints Manager"}</div>
-<div style="margin:0;line-height:1.1">${caseItem.organisation_name || ""}</div>
-<div style="margin:0;line-height:1.1">${caseItem.organisation_complaints_address || ""}</div>
-<div style="margin:0;line-height:1.1">${caseItem.organisation_complaints_email || ""}</div>
-</div>
-<div style="height:8pt"></div>
-<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif"><strong>Re:</strong> Formal Complaint - ${caseItem.account_number || client.accounts?.[0] || "Account Dispute"}</div>
-<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">Dear Sir/Madam,</div>
-<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">[First paragraph - professional Australian English]</div>
-<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">[Second paragraph]</div>
-<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">[Third paragraph]</div>
-<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">Yours faithfully,</div>
-<div style="height:12pt"></div>
-<div style="text-align:left;margin:0;font-size:10pt;font-family:'Times New Roman',Times,serif">${client.name || ""}</div>
+${client.name || ""}
+${client.address || ""}
+${client.email || ""}
+${client.phone || ""}
 
-CRITICAL RULES:
-1. Use EXACT HTML structure above - NO plain text lines
-2. SENDER ADDRESS: text-align:right with line-height:1.1 (ZERO gaps between lines)
-3. RECIPIENT ADDRESS: text-align:left with line-height:1.1
-4. 8pt margins between all sections
-5. NO [brackets] for real data - use actual values or omit the line entirely
-6. Body paragraphs should have proper content about the case
+${caseItem.complaint_handler_name || "The Complaints Manager"}
+${caseItem.organisation_name || ""}
+${caseItem.organisation_complaints_address || ""}
+${caseItem.organisation_complaints_email || ""}
 
-CASE DETAILS: ${caseItem.issue_summary}. Desired outcome: ${caseItem.desired_outcome}. Escalate to: ${caseItem.escalation_body || "ombudsman"}.
+Re: Formal Complaint - ${caseItem.account_number || client.accounts?.[0] || "Account Dispute"}
 
-Generate the complete HTML letter NOW with proper inline styles.`;
+Dear Sir/Madam,
+
+[Write professional complaint letter body here - Australian English spelling]
+
+Yours faithfully,
+${client.name || ""}
+
+CRITICAL:
+- Plain text ONLY - NO HTML tags, NO <div>, NO <br>
+- Sender address (lines after date) will be RIGHT aligned by our CSS
+- Recipient address will be LEFT aligned
+- Use actual data, NO [brackets] except for body content
+- Tight spacing - one blank line between sections
+- Case: ${caseItem.issue_summary}. Desired: ${caseItem.desired_outcome}.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);
@@ -274,11 +264,24 @@ Generate the complete HTML letter NOW with proper inline styles.`;
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2" }}
               />
             ) : (
-              <div 
-                className="text-slate-900 w-full" 
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, color: "#000" }}
-                dangerouslySetInnerHTML={{ __html: letter.replace(/\n/g, '<br/>') }}
-              />
+              <div className="letter-content" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", color: "#000" }}>
+                {(() => {
+                  const lines = letter.split('\n').filter(l => l.trim());
+                  const senderEnd = lines.findIndex(l => !l.trim()) || 4;
+                  const senderLines = lines.slice(0, senderEnd > 0 ? senderEnd : 4);
+                  const restLines = lines.slice(senderEnd > 0 ? senderEnd + 1 : 4);
+                  return (
+                    <>
+                      <div style={{ textAlign: 'right', lineHeight: '1.1', marginBottom: '8pt' }}>
+                        {senderLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.1' }}>{line}</div>)}
+                      </div>
+                      <div style={{ textAlign: 'left', lineHeight: '1.1', marginBottom: '8pt' }}>
+                        {restLines.map((line, i) => <p key={i} style={{ margin: '0 0 8pt 0', lineHeight: '1.2' }}>{line}</p>)}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             )}
           </div>
           {/* Extended footer banner */}

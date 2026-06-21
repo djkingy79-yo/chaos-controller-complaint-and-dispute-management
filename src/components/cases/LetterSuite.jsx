@@ -113,21 +113,18 @@ CASE DETAILS:
 - Today's Date: ${today}`;
 
   const formats = `
-  PROFESSIONAL AUSTRALIAN BUSINESS LETTER FORMAT - CRITICAL:
-  1. LINE 1: ${today} (DATE FIRST, LEFT ALIGNED, PLAIN TEXT - NO ASTERISKS, NO BOLD, NO ** MARKERS)
-  2. BLANK LINE
-  3. SENDER ADDRESS BLOCK: Output as HTML with RIGHT ALIGNMENT using inline style: <div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;">
-     Each address line as: <div style="margin:0;line-height:1.1;">Line content</div>
-     Close with </div>
-  4. BLANK LINE after sender address
-  5. RECIPIENT ADDRESS LEFT SIDE (Complaint Handler, Organisation, Address, Email) - TIGHT single-spaced, NO gaps
-  6. BLANK LINE
-  7. Re: line with account/reference
-  8. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-  9. Body paragraphs - professional AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence)
-  10. Close: "Yours faithfully," then blank line, then complainant name
-  11. NEVER use [brackets] for placeholders - if data missing, omit that line entirely
-  12. Keep formatting CLEAN and PROFESSIONAL - this is a legal document`;
+  PLAIN TEXT FORMAT - NO HTML TAGS:
+  1. Line 1: ${today} (plain text)
+  2. Blank line
+  3. Sender address lines (will be RIGHT aligned by CSS)
+  4. Blank line
+  5. Recipient address lines (LEFT aligned)
+  6. Blank line
+  7. Re: line
+  8. Salutation
+  9. Body paragraphs
+  10. Closing
+  NO HTML, NO <div>, NO <br> - plain text only with line breaks.`;
 
   if (type === "letter1") {
     return `${base}
@@ -414,11 +411,24 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5" }}
               />
             ) : (
-              <div 
-                className="text-slate-900 w-full" 
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, color: "#000" }}
-                dangerouslySetInnerHTML={{ __html: text }}
-              />
+              <div className="letter-content" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", color: "#000" }}>
+                {(() => {
+                  const lines = text.split('\n').filter(l => l.trim());
+                  const senderEnd = lines.findIndex(l => !l.trim()) || 4;
+                  const senderLines = lines.slice(0, senderEnd > 0 ? senderEnd : 4);
+                  const restLines = lines.slice(senderEnd > 0 ? senderEnd + 1 : 4);
+                  return (
+                    <>
+                      <div style={{ textAlign: 'right', lineHeight: '1.1', marginBottom: '8pt' }}>
+                        {senderLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.1' }}>{line}</div>)}
+                      </div>
+                      <div style={{ textAlign: 'left', lineHeight: '1.2' }}>
+                        {restLines.map((line, i) => <p key={i} style={{ margin: '0 0 8pt 0' }}>{line}</p>)}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             )}
           </div>
           {/* Extended footer banner */}
