@@ -61,7 +61,7 @@ CRITICAL RULES:
 3. ALWAYS use AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence).
 
 FORMATTING REQUIREMENTS:
-- FIRST LINE: Today's date with asterisks: **${today}**
+- FIRST LINE: Today's date: ${today} - NO asterisks or bold markers, plain text only
 - TOP RIGHT (below date): Sender's (complainant's) full name, address lines, email, phone
 - LEFT SIDE (below date, opposite sender): Merchant's complaint handler name, organisation name, complaints address, complaints email
 - Then: Re: line, salutation, body, closing
@@ -92,7 +92,7 @@ CASE DETAILS:
 
   const formats = `
   PROFESSIONAL BUSINESS LETTER FORMAT - CRITICAL:
-  1. LINE 1: **${today}** (DATE IN BOLD WITH ASTERISKS, FIRST)
+  1. LINE 1: ${today} (DATE FIRST, PLAIN TEXT - NO ASTERISKS)
   2. NEXT: Sender details RIGHT side (Name, Address, Email, Phone) - each on separate line
   3. OPPOSITE LEFT: Recipient details (Complaint Handler, Organisation, Address, Email) - each on separate line
   4. BLANK LINE
