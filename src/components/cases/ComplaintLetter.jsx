@@ -159,7 +159,7 @@ CASE DETAILS:
     const continuationHTML = continuationPages.map((chunk) => `
       <div class="letter-continuation">
         <div class="continuation-header"></div>
-        <div class="continuation-content">${chunk.split('\n').map(line => `<p style="margin:8pt 0;min-height:16pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="continuation-content">${chunk.split('\n').map(line => `<p style="margin:10pt 0;min-height:18pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
       </div>
     `).join('');
     const win = window.open("", "_blank");
@@ -168,7 +168,7 @@ CASE DETAILS:
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content">${firstPageLines.map(line => `<p style="margin:8pt 0;min-height:16pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="letter-content">${firstPageLines.map(line => `<p style="margin:10pt 0;min-height:18pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
         <div class="letterhead-footer"></div>
       </div>
       ${continuationHTML}
@@ -223,12 +223,12 @@ CASE DETAILS:
                   <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>Mobile: 0413572850</p>
                 </div>
               </div>
-              <p style={{ margin: '10pt 0 6pt 0', fontWeight: 'bold', fontSize: '11pt' }}>Re: Formal Complaint — Account NRMA09887</p>
-              <p style={{ margin: '6pt 0', fontSize: '11pt' }}>Dear Sir/Madam,</p>
-              <p style={{ margin: '6pt 0', fontSize: '11pt' }}>I am writing to formally lodge a complaint regarding...</p>
-              <p style={{ margin: '6pt 0', fontSize: '11pt', color: '#666', fontStyle: 'italic' }}>Letter body continues...</p>
-              <p style={{ margin: '10pt 0 6pt 0', fontSize: '11pt' }}>Yours faithfully,</p>
-              <p style={{ margin: '6pt 0', fontSize: '11pt' }}>Mick Gallagher</p>
+              <p style={{ margin: '12pt 0 8pt 0', fontWeight: 'bold', fontSize: '11pt' }}>Re: Formal Complaint — Account NRMA09887</p>
+              <p style={{ margin: '10pt 0', fontSize: '11pt' }}>Dear Sir/Madam,</p>
+              <p style={{ margin: '10pt 0', fontSize: '11pt' }}>I am writing to formally lodge a complaint regarding...</p>
+              <p style={{ margin: '10pt 0', fontSize: '11pt', color: '#666', fontStyle: 'italic' }}>Letter body continues...</p>
+              <p style={{ margin: '14pt 0 10pt 0', fontSize: '11pt' }}>Yours faithfully,</p>
+              <p style={{ margin: '10pt 0', fontSize: '11pt' }}>Mick Gallagher</p>
             </div>
             <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
           </div>
@@ -310,7 +310,7 @@ CASE DETAILS:
             ) : (
               <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: 0, color: "#000" }}>
                 {letter.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '8pt 0', minHeight: '16pt' }}>{line || '\u00A0'}</p>
+                  <p key={i} style={{ margin: '10pt 0', minHeight: '18pt' }}>{line || '\u00A0'}</p>
                 ))}
               </div>
             )}
