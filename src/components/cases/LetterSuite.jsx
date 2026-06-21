@@ -401,7 +401,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
           {/* Thinner, longer header banner */}
           <div className="letterhead-banner" style={{ height: '60px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', margin: '0 auto 0 auto' }}></div>
-          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", color: "#000", marginTop: '0', paddingTop: '8pt' }}>
+          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000", marginTop: '0', paddingTop: '8pt' }}>
             {editing ? (
               <Textarea
                 value={text}
@@ -411,20 +411,46 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5" }}
               />
             ) : (
-              <div className="letter-content" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", color: "#000" }}>
+              <div className="letter-content" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000" }}>
                 {(() => {
-                  const lines = text.split('\n').filter(l => l.trim());
-                  const senderEnd = lines.findIndex(l => !l.trim()) || 4;
-                  const senderLines = lines.slice(0, senderEnd > 0 ? senderEnd : 4);
-                  const restLines = lines.slice(senderEnd > 0 ? senderEnd + 1 : 4);
+                  const lines = text.split('\n');
+                  let senderLines = [];
+                  let recipientLines = [];
+                  let bodyLines = [];
+                  let inSender = true;
+                  let foundBlank = false;
+                  
+                  for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (inSender) {
+                      if (line.trim() === '' && foundBlank) {
+                        inSender = false;
+                        continue;
+                      }
+                      if (line.trim() === '') {
+                        foundBlank = true;
+                        continue;
+                      }
+                      senderLines.push(line);
+                    } else if (bodyLines.length === 0 && line.trim() === '') {
+                      continue;
+                    } else {
+                      bodyLines.push(line);
+                    }
+                  }
+                  
                   return (
                     <>
-                      <div style={{ textAlign: 'right', lineHeight: '1.1', marginBottom: '8pt' }}>
-                        {senderLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.1' }}>{line}</div>)}
+                      <div style={{ textAlign: 'right', lineHeight: '1.0', marginBottom: '6pt' }}>
+                        {senderLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.0', fontSize: '10pt' }}>{line}</div>)}
                       </div>
-                      <div style={{ textAlign: 'left', lineHeight: '1.2' }}>
-                        {restLines.map((line, i) => <p key={i} style={{ margin: '0 0 8pt 0' }}>{line}</p>)}
+                      <div style={{ textAlign: 'left', lineHeight: '1.0', marginBottom: '6pt' }}>
+                        {recipientLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.0', fontSize: '10pt' }}>{line}</div>)}
                       </div>
+                      {bodyLines.map((line, i) => {
+                        if (line.trim() === '') return <div key={i} style={{ height: '4pt' }} />;
+                        return <p key={i} style={{ margin: '0 0 4pt 0', lineHeight: '1.2', fontSize: '10pt' }}>{line}</p>;
+                      })}
                     </>
                   );
                 })()}

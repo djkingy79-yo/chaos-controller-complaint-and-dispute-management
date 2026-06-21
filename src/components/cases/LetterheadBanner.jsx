@@ -79,11 +79,11 @@ export function getLetterPageStyles() {
     }
     
     .letter-content p {
-      margin: 0 0 8pt 0;
+      margin: 0 0 4pt 0;
       line-height: 1.2;
     }
     .letter-content div {
-      line-height: 1.1;
+      line-height: 1.0;
     }
     
     /* Date line - left aligned at top */
