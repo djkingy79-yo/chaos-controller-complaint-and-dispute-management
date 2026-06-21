@@ -360,7 +360,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
           {/* Thinner, longer header banner */}
           <div className="letterhead-banner" style={{ height: '60px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', margin: '0 auto 0 auto' }}></div>
-          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", color: "#000", marginTop: '0', paddingTop: '0' }}>
+          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", color: "#000", marginTop: '0', paddingTop: '8pt' }}>
             {editing ? (
               <Textarea
                 value={text}

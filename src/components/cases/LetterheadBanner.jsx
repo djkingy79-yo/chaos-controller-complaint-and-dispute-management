@@ -66,10 +66,10 @@ export function getLetterPageStyles() {
       background-position: center bottom;
     }
 
-    /* Letter body - compact spacing, left-aligned addresses */
+    /* Letter body - compact spacing, left-aligned addresses, date at top */
     .letter-content {
       position: relative;
-      padding: 0 25mm 20mm 25mm;
+      padding: 8pt 25mm 20mm 25mm;
       margin: 0;
       font-family: 'Times New Roman', Times, serif;
       font-size: 10pt;

@@ -275,7 +275,7 @@ export default function ComplaintLetter({ caseItem }) {
               marginBottom: '0'
             }}
           ></div>
-          <div className="bg-white" style={{ padding: '0 25mm 20mm 25mm', marginTop: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", color: "#000" }}>
+          <div className="bg-white" style={{ padding: '8pt 25mm 20mm 25mm', marginTop: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", color: "#000" }}>
             {editing ? (
               <Textarea
                 value={letter}
