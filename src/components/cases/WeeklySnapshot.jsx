@@ -26,7 +26,7 @@ function renderMarkdownToHtml(md) {
 
 function printSnapshot(caseItem, snapshot, generatedAt) {
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const htmlContent = renderMarkdownToHtml(snapshot);
+  const cleanSnapshot = snapshot.replace(/<[^>]*>/g, '');
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Weekly Snapshot — ${caseItem.title}</title>
@@ -39,17 +39,19 @@ function printSnapshot(caseItem, snapshot, generatedAt) {
       h3 { font-size: 11pt; font-weight: bold; color: #000; margin: 8pt 0 4pt 0; }
       ul, ol { margin: 4pt 0 6pt 18pt; padding: 0; }
       li { margin-bottom: 3pt; line-height: 1.2; }
-      p { margin: 4pt 0 6pt; line-height: 1.2; }
-      .letterhead-header { width: 100%; height: 80px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
+      p { margin: 4pt 0 6pt; line-height: 1.2; white-space: pre-wrap; }
+      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+      .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
     </style>
   </head><body>
     <div class="letterhead-header"></div>
     <div style="padding:0 25mm 20mm 25mm;">
       <div class="header">Chaos Controller™ — Weekly Case Snapshot</div>
       <div style="font-size:14pt;font-weight:bold;margin-bottom:10pt;color:#000;">${caseItem.title}</div>
-      <div style="font-size:10pt;color:#666;margin-bottom:12pt;">vs. ${caseItem.organisation_name || "Organisation"} &nbsp;|&nbsp; Ref: ${caseRef} &nbsp;|&nbsp; Generated: ${generatedAt}</div>
-      <div style="margin-top:10pt;">${htmlContent}</div>
+      <div style="font-size:10pt;color:#666;margin-bottom:12pt;">vs. ${caseItem.organisation_name || "Organisation"} | Ref: ${caseRef} | Generated: ${generatedAt}</div>
+      <div style="margin-top:10pt; white-space: pre-wrap;">${cleanSnapshot}</div>
     </div>
+    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 500);
