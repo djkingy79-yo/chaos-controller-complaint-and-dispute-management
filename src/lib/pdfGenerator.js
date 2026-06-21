@@ -24,15 +24,36 @@ function loadImageAsDataURL(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    
+    // Timeout after 10 seconds
+    const timeout = setTimeout(() => {
+      console.error('[loadImageAsDataURL] Timeout loading:', url);
+      reject(new Error('Image load timeout'));
+    }, 10000);
+    
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg'));
+      clearTimeout(timeout);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        console.log('[loadImageAsDataURL] Success, size:', dataUrl.length, 'bytes');
+        resolve(dataUrl);
+      } catch (err) {
+        console.error('[loadImageAsDataURL] Canvas conversion failed:', err);
+        reject(err);
+      }
     };
-    img.onerror = reject;
+    img.onerror = (e) => {
+      clearTimeout(timeout);
+      console.error('[loadImageAsDataURL] Image load error:', e, 'URL:', url);
+      reject(new Error('Failed to load image: ' + url));
+    };
+    
+    console.log('[loadImageAsDataURL] Loading:', url);
     img.src = url;
   });
 }
@@ -95,7 +116,12 @@ export async function generateChaosDocumentPDF({
   includeFooter = true,
 }) {
   console.log('[PDF Generator] Starting:', documentType, title);
-  console.log('[PDF Generator] Params:', { documentType, hasLetterContent: !!letterContent, hasBody: !!body });
+  console.log('[PDF Generator] Params:', { documentType, hasLetterContent: !!letterContent, hasBody: !!body, letterContentLength: letterContent?.length });
+  
+  // CRITICAL: Validate letterContent
+  if (documentType === 'letter' && !letterContent) {
+    console.error('[PDF Generator] ERROR: letterContent is required for letter type');
+  }
   
   const pdf = new jsPDF({
     orientation: 'portrait',
@@ -142,9 +168,10 @@ export async function generateChaosDocumentPDF({
     
     // If letterContent is provided (pre-formatted), use it directly
     if (letterContent) {
-      console.log('[PDF Generator] Raw letterContent length:', letterContent.length);
-      console.log('[PDF Generator] Raw letterContent (first 200 chars):', letterContent.substring(0, 200));
+      console.log('[PDF Generator] ✅ letterContent provided, length:', letterContent.length);
+      console.log('[PDF Generator] First 300 chars:', letterContent.substring(0, 300));
       const cleanContent = cleanForPDF(letterContent);
+      console.log('[PDF Generator] After cleaning, length:', cleanContent.length);
       console.log('[PDF Generator] Clean content length:', cleanContent.length);
       console.log('[PDF Generator] Clean content (first 200 chars):', cleanContent.substring(0, 200));
       const lines = cleanContent.split('\n');
@@ -180,30 +207,16 @@ export async function generateChaosDocumentPDF({
         }
         
         const trimmed = line.trim();
-        console.log('[PDF Generator] Processing line:', trimmed.substring(0, 80), 'length:', trimmed.length);
         if (trimmed && typeof trimmed === 'string' && trimmed.length > 0) {
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(10);
           pdf.setTextColor(0, 0, 0); // FORCE BLACK TEXT
-          console.log('[PDF Generator] Text color set to BLACK, yPos:', yPos);
-          try {
-            const textLines = pdf.splitTextToSize(trimmed, contentWidth);
-            console.log('[PDF Generator] splitTextToSize result:', textLines);
-            if (textLines && Array.isArray(textLines) && textLines.length > 0) {
-              console.log('[PDF Generator] About to call pdf.text() with', textLines.length, 'lines');
-              pdf.text(textLines, leftMargin, yPos);
-              console.log('[PDF Generator] ✅ text() SUCCESS - rendered at y:', yPos);
-              yPos += textLines.length * 4.5;
-            } else {
-              console.log('[PDF Generator] ⚠️ No text lines to render (empty array)');
-              yPos += 3;
-            }
-          } catch (textErr) {
-            console.error('[PDF Generator] text() failed on line:', trimmed.substring(0, 50), textErr);
-            yPos += 3;
+          const textLines = pdf.splitTextToSize(trimmed, contentWidth);
+          if (textLines && Array.isArray(textLines) && textLines.length > 0) {
+            pdf.text(textLines, leftMargin, yPos);
+            yPos += textLines.length * 4.5;
           }
         } else {
-          console.log('[PDF Generator] Skipping empty/invalid line');
           yPos += 3;
         }
       }
@@ -384,9 +397,7 @@ export async function generateChaosDocumentPDF({
   // Add footer - ALWAYS add on last page
   if (includeFooter) {
     try {
-      console.log('[PDF Generator] Loading footer image...');
       const footerImg = await loadImageAsDataURL(FOOTER_URL);
-      console.log('[PDF Generator] Footer loaded, adding to PDF...');
       const footerProps = pdf.getImageProperties(footerImg);
       const footerHeight = footerProps.h * (175 / footerProps.w);
       console.log('[PDF Generator] Footer height:', footerHeight, 'mm at Y:', pageHeight - bottomMargin - footerHeight);
