@@ -1,9 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+function encodeSubject(subject) {
+  // RFC 2047 encoded-word for UTF-8 subject (handles emoji, em dash, etc.)
+  const encoded = btoa(unescape(encodeURIComponent(subject)));
+  return `=?UTF-8?B?${encoded}?=`;
+}
+
 function buildMimeMessage({ to, subject, body }) {
   const message = [
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeSubject(subject)}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset=UTF-8`,
     ``,

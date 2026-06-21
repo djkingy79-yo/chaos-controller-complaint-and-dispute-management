@@ -1,5 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+function encodeSubject(subject) {
+  return `=?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
+}
+
 const GOOGLE_CONNECTOR_ID = '6a2f842ded0843ad5cb9ecb7';
 
 async function graphRequest(accessToken, path, options = {}) {
@@ -136,7 +140,7 @@ Chaos Controller™ — AI-Powered Consumer Advocacy`;
         if (gmailConn?.accessToken) {
           const rawMessage = `From: Chaos Controller <${gmailConn.connectionConfig?.email || 'noreply@chaoscontroller.com.au'}>\r\n` +
             `To: ${caseOwner.email}\r\n` +
-            `Subject: ${emailSubject}\r\n` +
+            `Subject: ${encodeSubject(emailSubject)}\r\n` +
             `Content-Type: text/plain; charset=UTF-8\r\n\r\n${emailBody}`;
           await fetch('https://www.googleapis.com/gmail/v1/users/me/messages/send', {
             method: 'POST',

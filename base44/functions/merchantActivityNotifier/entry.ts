@@ -12,11 +12,15 @@ async function graphRequest(accessToken, path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+function encodeSubject(subject) {
+  return `=?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
+}
+
 function buildMimeMessage({ to, from, subject, body }) {
   const message = [
     `From: ${from}`,
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeSubject(subject)}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset=UTF-8`,
     ``,
