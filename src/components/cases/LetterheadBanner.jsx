@@ -69,13 +69,19 @@ export function getLetterPageStyles() {
     /* Letter body - ZERO top padding, compact spacing */
     .letter-content {
       position: relative;
-      padding: 0 1.5in 1.5in 1.5in;
+      padding: 0 25mm 20mm 25mm;
       margin: 0;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 10pt;
+      font-size: 11pt;
       color: #000;
       line-height: 1.3;
       width: 100%;
+    }
+    
+    .letter-content p {
+      margin: 0 0 3pt 0;
+      line-height: 1.2;
+      min-height: 11pt;
     }
     
     /* Date line - Heading 1 style - bold, left aligned at top */
@@ -87,19 +93,23 @@ export function getLetterPageStyles() {
       text-align: left;
     }
     
-    /* Sender address - left aligned */
+    /* Sender address - RIGHT aligned, tight spacing */
     .sender-address {
-      text-align: left;
-      line-height: 1.6;
-      margin: 0 0 12pt 0;
+      text-align: right;
+      line-height: 1.1;
+      margin: 0 0 10pt 0;
     }
     
-    /* Receiver address - right aligned */
+    /* Receiver address - LEFT aligned, tight spacing */
     .receiver-address {
-      text-align: right;
-      line-height: 1.6;
-      margin: 0 0 12pt 0;
+      text-align: left;
+      line-height: 1.1;
+      margin: 0 0 10pt 0;
     }
+    
+    /* Address blocks - single spaced, no gaps */
+    .address-block { line-height: 1.1; margin: 0 0 8pt 0; }
+    .address-line { line-height: 1.1; margin: 0; }
     
     /* Section headings - Heading 2 style */
     h2.section-title, .section-heading {
@@ -129,19 +139,25 @@ export function getLetterPageStyles() {
     }
     
     .continuation-content {
-      padding: 0 1.5in 1.5in 1.5in;
+      padding: 0 25mm 20mm 25mm;
       margin-top: 0;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 10pt;
+      font-size: 11pt;
       color: #000;
-      line-height: 1.3;
+      line-height: 1.2;
+    }
+    
+    .continuation-content p {
+      margin: 0 0 3pt 0;
+      line-height: 1.2;
+      min-height: 11pt;
     }
 
     pre {
       white-space: pre-wrap;
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
-      line-height: 1.6;
+      line-height: 1.2;
       margin: 0;
       color: #000;
     }
@@ -149,11 +165,6 @@ export function getLetterPageStyles() {
     table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 11pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 11pt; font-weight: bold; border-bottom: 1px solid #000; }
     td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 11pt; }
-    p { margin: 0 0 4pt 0; line-height: 1.3; }
-    
-    /* Address blocks - single spaced */
-    .address-block { line-height: 1.6; margin: 0 0 10pt 0; }
-    .address-line { line-height: 1.6; margin: 0; }
   `;
 }
 

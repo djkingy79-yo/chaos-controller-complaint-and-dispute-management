@@ -86,29 +86,19 @@ export default function ComplaintLetter({ caseItem }) {
   1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
   2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
   3. The DATE must be the VERY FIRST line at the TOP of the page.
-  4. Address lines must be TIGHT single-spaced with NO gaps.
+  4. Address lines must be TIGHT single-spaced with NO gaps between lines.
+  5. Paragraph spacing must be TIGHT - no large gaps.
 
   FORMATTING REQUIREMENTS:
   1. FIRST LINE: TODAY'S DATE - ${today} - PLAIN TEXT ONLY, no asterisks, no bold, no **, just "21 June 2026"
   2. BLANK LINE after date
-  3. SENDER ADDRESS (RIGHT SIDE, aligned right) - TIGHT SPACING: Full name, address lines, email, phone - each on separate line, NO gaps
+  3. SENDER ADDRESS (RIGHT SIDE) - TIGHT SPACING, NO GAPS: Full name on line 1, street address line 2, city/state/postcode line 3, email line 4, phone line 5 - ALL RIGHT ALIGNED
   4. BLANK LINE
-  5. RECIPIENT ADDRESS (LEFT SIDE) - TIGHT SPACING: Complaint handler name, organisation name, complaints address, complaints email - each on separate line, NO gaps
+  5. RECIPIENT ADDRESS (LEFT SIDE) - TIGHT SPACING, NO GAPS: Complaint handler name, organisation name, complaints address, complaints email - each on separate line, NO gaps
   6. BLANK LINE
-  7. Then: Re: line, salutation, body paragraphs, closing
+  7. Then: Re: line, salutation, body paragraphs (tight spacing), closing
   
-  STRUCTURE:
-  - Date (FIRST line at top, left aligned)
-  - Blank line
-  - Sender address (RIGHT aligned - name, street, city, email, phone)
-  - Blank line
-  - Recipient address (LEFT aligned - handler, org, address, email)
-  - Blank line
-  - Re: line
-  - Salutation
-  - Body paragraphs (proper spacing between paragraphs)
-  - Closing (Yours faithfully,)
-  - Sender name
+  CRITICAL: SENDER ADDRESS MUST BE ON THE RIGHT SIDE. RECIPIENT ADDRESS ON LEFT SIDE.
 
   COMPLAINANT DETAILS:
 - Name: ${client.name || "not provided — omit name line"}
@@ -141,7 +131,8 @@ CASE DETAILS:
 10. Close with "Yours faithfully," then the complainant's full name (if provided).
 11. NEVER write bracket placeholders — use real data or omit the line entirely.
 12. If account numbers are very long, format them on separate lines for readability.
-13. NO BLANK LINES within sender or recipient address blocks.`;
+13. NO BLANK LINES within sender or recipient address blocks - keep them tight.
+14. Body paragraphs should have minimal spacing - compact and professional.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);
@@ -160,7 +151,7 @@ CASE DETAILS:
     const continuationHTML = continuationPages.map((chunk) => `
       <div class="letter-continuation">
         <div class="continuation-header"></div>
-        <div class="continuation-content">${chunk.split('\n').map(line => `<p style="margin:0 0 4pt 0;min-height:12pt;line-height:1.3;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="continuation-content">${chunk.split('\n').map(line => `<p style="margin:0 0 3pt 0;min-height:11pt;line-height:1.2;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
       </div>
     `).join('');
     const win = window.open("", "_blank");
@@ -169,7 +160,7 @@ CASE DETAILS:
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content" style="padding:0 25mm 20mm 25mm">${firstPageLines.map(line => `<p style="margin:0 0 4pt 0;min-height:12pt;line-height:1.3;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="letter-content" style="padding:0 25mm 20mm 25mm">${firstPageLines.map(line => `<p style="margin:0 0 3pt 0;min-height:11pt;line-height:1.2;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
         <div class="letterhead-footer"></div>
       </div>
       ${continuationHTML}
@@ -208,27 +199,27 @@ CASE DETAILS:
               }}
             ></div>
             <div style={{ padding: '0 25mm 0 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3", color: "#000" }}>
-              <p style={{ fontSize: '11pt', margin: '0 0 8pt 0', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14pt' }}>
+              <p style={{ fontSize: '11pt', margin: '0 0 6pt 0', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10pt' }}>
+                <div style={{ textAlign: 'right', minWidth: '45%' }}>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Mick Gallagher</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>14 The Road</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Penrith 2750</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Djkingy79@gmail.com</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>0413572850</p>
+                </div>
                 <div style={{ textAlign: 'left', minWidth: '45%' }}>
                   <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>The Complaints Manager</p>
                   <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>NRMA Insurance</p>
                   <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>GPO Box 438</p>
                   <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Sydney NSW 2001</p>
                 </div>
-                <div style={{ textAlign: 'right', minWidth: '45%' }}>
-                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Mick Gallagher</p>
-                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>14 The Road</p>
-                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Penrith 2750</p>
-                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Email: Djkingy79@gmail.com</p>
-                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Mobile: 0413572850</p>
-                </div>
               </div>
-              <p style={{ margin: '8pt 0 6pt 0', fontWeight: 'bold', fontSize: '11pt' }}>Re: Formal Complaint — Account NRMA09887</p>
-              <p style={{ margin: '6pt 0', fontSize: '11pt' }}>Dear Sir/Madam,</p>
-              <p style={{ margin: '6pt 0', fontSize: '11pt' }}>I am writing to formally lodge a complaint regarding...</p>
-              <p style={{ margin: '6pt 0', fontSize: '11pt', color: '#666', fontStyle: 'italic' }}>Letter body continues...</p>
-              <p style={{ margin: '0 0 8pt 0', fontSize: '11pt' }}>Yours faithfully,</p>
+              <p style={{ margin: '6pt 0 4pt 0', fontWeight: 'bold', fontSize: '11pt' }}>Re: Formal Complaint — Account NRMA09887</p>
+              <p style={{ margin: '4pt 0', fontSize: '11pt' }}>Dear Sir/Madam,</p>
+              <p style={{ margin: '4pt 0', fontSize: '11pt' }}>I am writing to formally lodge a complaint regarding...</p>
+              <p style={{ margin: '4pt 0', fontSize: '11pt', color: '#666', fontStyle: 'italic' }}>Letter body continues...</p>
+              <p style={{ margin: '0 0 4pt 0', fontSize: '11pt' }}>Yours faithfully,</p>
               <p style={{ margin: '0', fontSize: '11pt' }}>Mick Gallagher</p>
             </div>
             <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
@@ -300,19 +291,19 @@ CASE DETAILS:
               marginBottom: '0'
             }}
           ></div>
-          <div className="bg-white" style={{ padding: '0 25mm 20mm 25mm', marginTop: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5", color: "#000" }}>
+          <div className="bg-white" style={{ padding: '0 25mm 20mm 25mm', marginTop: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.3", color: "#000" }}>
             {editing ? (
               <Textarea
                 value={letter}
                 onChange={(e) => setLetter(e.target.value)}
                 rows={22}
                 className="font-body bg-white text-slate-900 w-full"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5" }}
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.3" }}
               />
             ) : (
-              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5", margin: 0, color: "#000" }}>
+              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.3", margin: 0, color: "#000" }}>
                 {letter.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '0 0 6pt 0', minHeight: '14pt' }}>{line || '\u00A0'}</p>
+                  <p key={i} style={{ margin: '0 0 3pt 0', minHeight: '12pt' }}>{line || '\u00A0'}</p>
                 ))}
               </div>
             )}
