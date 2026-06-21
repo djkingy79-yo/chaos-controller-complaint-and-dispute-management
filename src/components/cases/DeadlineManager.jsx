@@ -161,7 +161,8 @@ Return as JSON array only. Each deadline must have:
         includeFooter: true,
       });
       downloadPDFBlob(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      toast.success('Deadlines PDF downloaded');
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      else toast.success('Deadlines PDF downloaded');
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);

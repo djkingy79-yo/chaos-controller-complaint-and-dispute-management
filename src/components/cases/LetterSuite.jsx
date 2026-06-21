@@ -409,7 +409,8 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const filename = `${String(letterType.label).replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       downloadPDFBlob(blob, filename);
       console.log('PDF GENERATED', { type: 'letter', letter: letterType.key });
-      toast.success(`${letterType.label} PDF downloaded`);
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      else toast.success(`${letterType.label} PDF downloaded`);
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);

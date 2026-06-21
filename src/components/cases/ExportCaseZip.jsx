@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, Printer } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
-import { DOCUMENT_CSS } from "@/lib/printUtilities";
+import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },
@@ -15,122 +15,69 @@ const LETTER_DEFS = [
   { field: "letter_escalation", label: "Escalation Letter" },
 ];
 
-function buildSummaryHTML(caseItem, evidence, events) {
+function buildSummaryText(caseItem, evidence, events) {
   const sorted = [...events].sort((a, b) => new Date(a.event_date || 0) - new Date(b.event_date || 0));
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const lines = [
+    `CASE EXPORT — ${caseItem.title}`,
+    `Ref: CC-${caseItem.id.slice(0, 8).toUpperCase()}`,
+    '',
+    'CASE DETAILS',
+    `Organisation: ${caseItem.organisation_name || '—'}`,
+    `Category: ${caseItem.category || '—'}`,
+    `Status: ${(caseItem.status || '').replace(/_/g, ' ').toUpperCase()}`,
+    `Priority: ${(caseItem.priority || '').toUpperCase()}`,
+    `Account: ${caseItem.account_number || '—'}`,
+    `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`,
+    '',
+    'COMPLAINANT',
+    `Name: ${caseItem.complainant_name || '—'}`,
+    `Address: ${caseItem.complainant_address || '—'}`,
+    `Email: ${caseItem.complainant_email || '—'}`,
+    `Phone: ${caseItem.complainant_phone || '—'}`,
+    '',
+    'ISSUE SUMMARY',
+    caseItem.issue_summary || '—',
+    '',
+    'DESIRED OUTCOME',
+    caseItem.desired_outcome || '—',
+  ];
 
-  const summaryRows = [
-    { label: "Title", value: caseItem.title },
-    { label: "Category", value: caseItem.category ? caseItem.category.charAt(0).toUpperCase() + caseItem.category.slice(1) : null },
-    { label: "Status", value: (caseItem.status || "").replace(/_/g, " ").toUpperCase() },
-    { label: "Priority", value: (caseItem.priority || "").toUpperCase() },
-    { label: "Organisation", value: caseItem.organisation_name },
-    { label: "Account No.", value: caseItem.account_number },
-    { label: "Incident Date", value: caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : null },
-    { label: "Response Due", value: caseItem.response_deadline ? format(new Date(caseItem.response_deadline), "d MMMM yyyy") : null },
-    { label: "Escalation Body", value: caseItem.escalation_body },
-  ].filter(r => r.value);
+  if (sorted.length > 0) {
+    lines.push('', `TIMELINE (${sorted.length} events)`);
+    sorted.forEach(ev => {
+      const d = ev.event_date ? format(new Date(ev.event_date), 'd MMM yyyy') : 'Undated';
+      lines.push(`${d} — [${(ev.event_type || '').replace(/_/g, ' ')}] ${ev.title}`);
+      if (ev.description) lines.push(`  ${ev.description}`);
+    });
+  }
 
-  return `<!DOCTYPE html><html><head>
-    <title>Case Export — ${caseItem.title}</title>
-    <style>
-      ${DOCUMENT_CSS}
-      h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; border-bottom: 1px solid #000; padding-bottom: 4pt; }
-      h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
-      .summary-box { background: white; border: none; padding: 0; margin-bottom: 10pt; }
-      .summary-row td { border: none; padding: 3pt 6pt 3pt 0; font-size: 10pt; color: #000; }
-      .summary-row td:first-child { color: #000; font-style: normal; white-space: nowrap; width: 35%; font-weight: bold; }
-      .summary-row td:last-child { font-weight: normal; }
-      .section { margin-top: 10pt; }
-      table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 10pt; }
-      th { background: white; text-align: left; padding: 4pt 6pt; font-weight: bold; border-bottom: 1px solid #000; font-size: 10pt; color: #000; }
-      td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 10pt; color: #000; }
-      </style>
-      </head><body>
-      <div class="letterhead-header"></div>
-      <div class="document-content">
-      <div class="section-title" style="font-size:14pt;margin-bottom:10pt;">CHAOS CONTROLLER™ — CASE EXPORT</div>
-    
-    <div class="summary-box">
-      <table class="summary-row">
-        <tbody>${summaryRows.map(r => `<tr><td>${r.label}</td><td>${r.value}</td></tr>`).join("")}</tbody>
-      </table>
-    </div>
+  if (evidence.length > 0) {
+    lines.push('', `EVIDENCE INDEX (${evidence.length} files)`);
+    evidence.forEach((ev, i) => {
+      const d = ev.event_date ? format(new Date(ev.event_date), 'd MMM yyyy') : '—';
+      lines.push(`${i + 1}. ${ev.file_name} [${(ev.file_type || '').replace(/_/g, ' ')}] ${d}`);
+      if (ev.description) lines.push(`   ${ev.description}`);
+    });
+  }
 
-    <div class="section">
-      <div class="section-title">Complainant Details</div>
-      <table class="summary-row">
-        <tbody>
-          ${caseItem.complainant_name ? `<tr><td>Name</td><td>${caseItem.complainant_name}</td></tr>` : ""}
-          ${caseItem.complainant_address ? `<tr><td>Address</td><td>${caseItem.complainant_address}</td></tr>` : ""}
-          ${caseItem.complainant_email ? `<tr><td>Email</td><td>${caseItem.complainant_email}</td></tr>` : ""}
-          ${caseItem.complainant_phone ? `<tr><td>Phone</td><td>${caseItem.complainant_phone}</td></tr>` : ""}
-        </tbody>
-      </table>
-    </div>
-
-    ${caseItem.issue_summary ? `<div class="section">
-      <div class="section-title">Issue Summary</div>
-      <div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_summary}</div>
-    </div>` : ""}
-
-    ${caseItem.issue_details ? `<div class="section">
-      <div class="section-title">Full Issue Details</div>
-      <div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_details}</div>
-    </div>` : ""}
-
-    ${caseItem.desired_outcome ? `<div class="section">
-      <div class="section-title">Desired Outcome</div>
-      <div style="font-size:10.5pt;line-height:1.6;">${caseItem.desired_outcome}</div>
-    </div>` : ""}
-
-    ${sorted.length > 0 ? `
-    <div class="section">
-      <div class="section-title">Chronological Timeline (${sorted.length} events)</div>
-      <table>
-        <thead><tr><th style="width:70pt;">Date</th><th style="width:80pt;">Type</th><th>Event</th><th>Details</th></tr></thead>
-        <tbody>${sorted.map(ev=>`<tr>
-          <td style="white-space:nowrap;">${ev.event_date?format(new Date(ev.event_date),"d MMM yyyy"):"—"}</td>
-          <td style="text-transform:capitalize;">${(ev.event_type||"").replace(/_/g," ")}</td>
-          <td style="font-weight:bold;">${ev.title}</td>
-          <td style="color:#555;">${ev.description||""}</td>
-        </tr>`).join("")}</tbody>
-      </table>
-    </div>` : ""}
-
-    ${evidence.length > 0 ? `
-    <div class="section">
-      <div class="section-title">Evidence Index (${evidence.length} files)</div>
-      <table>
-        <thead><tr><th style="width:25pt;">#</th><th>File Name</th><th style="width:70pt;">Type</th><th style="width:60pt;">Date</th><th>Description</th></tr></thead>
-        <tbody>${evidence.map((ev,i)=>`<tr>
-          <td style="font-weight:bold;text-align:center;">${i+1}</td>
-          <td style="font-weight:bold;word-break:break-word;">${ev.file_name}</td>
-          <td style="text-transform:capitalize;">${(ev.file_type||"").replace(/_/g," ")}</td>
-          <td>${ev.event_date?format(new Date(ev.event_date),"d MMM yyyy"):"—"}</td>
-          <td style="color:#555;">${ev.description||"—"}</td>
-        </tr>`).join("")}</tbody>
-      </table>
-    </div>` : ""}
-
-    ${LETTER_DEFS.filter(ld => caseItem[ld.field]).map((ld, idx) => `
-    <div class="section" style="page-break-before:always;margin-top:20pt;">
-      <div class="section-title">${ld.label}</div>
-      <pre style="font-size:10pt;line-height:1.2;font-family:'Times New Roman',Times,serif;white-space:pre-wrap;">${(caseItem[ld.field] || '').replace(/<[^>]*>/g, '')}</pre>
-    </div>`).join("")}
-      </div>
-      <div class="letterhead-footer"></div>
-  </body></html>`;
+  return lines.join('\n');
 }
 
-function openPrintPreview(caseItem, evidence, events) {
-  const htmlContent = buildSummaryHTML(caseItem, evidence, events);
-  const win = window.open("", "_blank");
-  win.document.write(htmlContent);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 500);
+async function downloadBundlePDF(caseItem, evidence, events) {
+  const body = buildSummaryText(caseItem, evidence, events);
+  const blob = await generateChaosDocumentPDF({
+    documentType: 'general',
+    title: 'Case Export Bundle',
+    matter: caseItem.title,
+    date: format(new Date(), 'd MMMM yyyy'),
+    body,
+    includeHeader: true,
+    includeFooter: true,
+  });
+  if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+  downloadPDFBlob(blob, `Case_Export_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+  else toast.success('Case bundle PDF downloaded');
 }
 
 // Helper to generate letter PDF blob using unified generator
@@ -147,6 +94,7 @@ async function generateLetterPDF(title, content) {
 
 export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) {
   const [exporting, setExporting] = useState(false);
+  const [pdfExporting, setPdfExporting] = useState(false);
 
   const handleExportZip = async () => {
     setExporting(true);
@@ -157,8 +105,8 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
 
     console.log('[ExportZIP] Starting export...');
 
-    // 1. HTML summary (for browser viewing/printing)
-    zip.file("01_case_summary.html", buildSummaryHTML(caseItem, evidence, events));
+    // 1. Text summary
+    zip.file("01_case_summary.txt", buildSummaryText(caseItem, evidence, events));
 
     // 2. Individual letters as PDF (using unified generator)
     const lettersFolder = zip.folder("letters");
@@ -274,16 +222,29 @@ Review and print as needed.
     setExporting(false);
   };
 
+  const handleBundlePDF = async () => {
+    setPdfExporting(true);
+    try {
+      await downloadBundlePDF(caseItem, evidence, events);
+    } catch (error) {
+      console.error('Bundle PDF failed:', error);
+      alert('PDF failed: ' + error.message);
+    } finally {
+      setPdfExporting(false);
+    }
+  };
+
   return (
     <div className="flex items-center gap-2">
       <Button
         variant="outline"
         size="sm"
-        onClick={() => openPrintPreview(caseItem, evidence, events)}
+        onClick={handleBundlePDF}
+        disabled={pdfExporting}
         className="gap-2"
       >
-        <Printer className="w-4 h-4" />
-        <span className="hidden sm:inline">PDF Bundle</span>
+        {pdfExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+        <span className="hidden sm:inline">{pdfExporting ? 'Generating...' : 'PDF Bundle'}</span>
       </Button>
       <Button
         variant="outline"

@@ -126,7 +126,8 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
       });
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       downloadPDFBlob(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      toast.success('Timeline PDF downloaded');
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      else toast.success('Timeline PDF downloaded');
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);

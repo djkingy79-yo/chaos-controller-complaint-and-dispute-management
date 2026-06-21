@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
 import { useQuery } from "@tanstack/react-query";
 import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { detectIndustry } from "@/lib/industryClassifier";
 
 const typeConfig = {
   email:         { icon: Mail,      label: "Email",           color: "bg-primary/10 text-primary" },
@@ -307,6 +308,17 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     const caseUpdates = {};
     if (extracted.merchant_name && !caseItem?.organisation_name)
       caseUpdates.organisation_name = extracted.merchant_name;
+
+    // Auto-classify industry from merchant name or document text
+    if (!caseItem?.category || caseItem.category === 'other') {
+      const detectedCategory = detectIndustry(extracted.merchant_name) ||
+        detectIndustry(extracted.issue_summary) ||
+        detectIndustry(extracted.document_summary);
+      if (detectedCategory && detectedCategory !== caseItem?.category) {
+        caseUpdates.category = detectedCategory;
+      }
+    }
+
     if (extracted.complainant_name && !caseItem?.complainant_name)
       caseUpdates.complainant_name = extracted.complainant_name;
     if (extracted.complainant_address && !caseItem?.complainant_address)
@@ -423,7 +435,8 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       downloadPDFBlob(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       console.log('PDF GENERATED', { type: 'evidence' });
-      toast.success('Evidence index PDF downloaded');
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      else toast.success('Evidence index PDF downloaded');
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);

@@ -10,36 +10,47 @@ export const LETTERHEAD_URL = 'https://media.base44.com/images/public/6a2ac3b012
 export const FOOTER_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// IMAGE LOADER — never throws, returns null on failure
+// IMAGE LOADER — never throws, never crashes PDF generation, returns null on any failure
 // ─────────────────────────────────────────────────────────────────────────────
-function loadImageAsDataURL(url) {
+function loadImageAsDataURL(url, label) {
   return new Promise((resolve) => {
+    // Timeout: 6 seconds — don't stall PDF generation
+    const timeout = setTimeout(() => {
+      console.error(`${label} image failed`, new Error(`Timeout loading: ${url}`));
+      resolve(null);
+    }, 6000);
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    const timeout = setTimeout(() => {
-      console.warn('[PDF Generator] Image load timeout:', url);
-      resolve(null);
-    }, 8000);
+
     img.onload = () => {
       clearTimeout(timeout);
       try {
         const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        if (canvas.width === 0 || canvas.height === 0) {
+          console.error(`${label} image failed`, new Error('Image has zero dimensions'));
+          resolve(null);
+          return;
+        }
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/jpeg'));
+        resolve(canvas.toDataURL('image/jpeg', 0.92));
       } catch (e) {
-        console.warn('[PDF Generator] Canvas error:', e);
+        console.error(`${label} image failed`, e);
         resolve(null);
       }
     };
-    img.onerror = () => {
+
+    img.onerror = (e) => {
       clearTimeout(timeout);
-      console.warn('[PDF Generator] Image load failed:', url);
+      console.error(`${label} image failed`, new Error(`Failed to load: ${url}`));
       resolve(null);
     };
-    img.src = url + '?t=' + Date.now(); // bust cache
+
+    // Cache-bust to avoid stale CORS failures
+    img.src = url + '?cb=' + Date.now();
   });
 }
 
@@ -62,6 +73,7 @@ export function cleanForPDF(content) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN PDF GENERATOR
+// Returns: { blob: Blob, warnings: string[] }
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateChaosDocumentPDF({
   documentType = 'general',
@@ -73,8 +85,9 @@ export async function generateChaosDocumentPDF({
   includeHeader = true,
   includeFooter = true,
 }) {
-  console.log('DASHBOARD PDF GENERATOR START', { type: documentType, title });
+  console.log('PDF GENERATOR START', { type: documentType, title });
 
+  const warnings = [];
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
   const pageWidth = 210;
@@ -82,68 +95,77 @@ export async function generateChaosDocumentPDF({
   const leftMargin = 17.5;
   const rightMargin = 17.5;
   const topMargin = 12.5;
-  const bottomMargin = 30; // reserve space for footer
+  const bottomMargin = 30;
   const contentWidth = pageWidth - leftMargin - rightMargin;
 
-  // Set Times New Roman 11pt as default
   pdf.setFont('times', 'normal');
   pdf.setFontSize(11);
 
   let yPos = topMargin;
 
   // ── HEADER ──
-  let headerHeight = 0;
   if (includeHeader) {
-    const headerImg = await loadImageAsDataURL(LETTERHEAD_URL);
+    const headerImg = await loadImageAsDataURL(LETTERHEAD_URL, 'Header');
     if (headerImg) {
       try {
         const imgProps = pdf.getImageProperties(headerImg);
-        headerHeight = Math.min(imgProps.h * (contentWidth / imgProps.w), 25);
+        const headerHeight = Math.min(imgProps.h * (contentWidth / imgProps.w), 25);
         pdf.addImage(headerImg, 'JPEG', leftMargin, yPos, contentWidth, headerHeight);
         yPos += headerHeight + 6;
       } catch (e) {
-        console.warn('[PDF Generator] Header insert failed:', e);
+        console.error('Header image failed', e);
+        warnings.push('Header branding image failed to embed.');
         yPos += 8;
       }
     } else {
+      warnings.push('Header branding image failed to load.');
       yPos += 8;
     }
   }
 
-  // Helper: add footer image to current page
-  const addFooter = async () => {
-    if (!includeFooter) return;
-    const footerImg = await loadImageAsDataURL(FOOTER_URL);
-    if (footerImg) {
+  // ── FOOTER helper — load once, embed on each page ──
+  let footerImgData = null;
+  let footerHeight = 0;
+  if (includeFooter) {
+    footerImgData = await loadImageAsDataURL(FOOTER_URL, 'Footer');
+    if (footerImgData) {
       try {
-        const fp = pdf.getImageProperties(footerImg);
-        const fh = Math.min(fp.h * (contentWidth / fp.w), 20);
-        pdf.addImage(footerImg, 'JPEG', leftMargin, pageHeight - fh - 5, contentWidth, fh);
+        const fp = pdf.getImageProperties(footerImgData);
+        footerHeight = Math.min(fp.h * (contentWidth / fp.w), 20);
       } catch (e) {
-        console.warn('[PDF Generator] Footer insert failed:', e);
+        console.error('Footer image failed', e);
+        warnings.push('Footer branding image failed to embed.');
+        footerImgData = null;
       }
+    } else {
+      warnings.push('Footer branding image failed to load.');
+    }
+  }
+
+  const addFooter = () => {
+    if (!footerImgData) return;
+    try {
+      pdf.addImage(footerImgData, 'JPEG', leftMargin, pageHeight - footerHeight - 5, contentWidth, footerHeight);
+    } catch (e) {
+      console.error('Footer image failed', e);
     }
   };
 
-  // Helper: check page overflow and add new page if needed
-  const checkPageBreak = async (requiredHeight = 15) => {
+  const checkPageBreak = (requiredHeight = 15) => {
     if (yPos + requiredHeight > pageHeight - bottomMargin) {
-      await addFooter();
+      addFooter();
       pdf.addPage();
       yPos = topMargin + 8;
-      // Re-add header on new pages? No — just reset position
     }
   };
 
-  // Helper: write a bold section heading
-  const writeHeading = async (text) => {
-    await checkPageBreak(12);
+  const writeHeading = (text) => {
+    checkPageBreak(12);
     pdf.setFont('times', 'bold');
     pdf.setFontSize(12);
     const lines = pdf.splitTextToSize(String(text).toUpperCase(), contentWidth);
     pdf.text(lines, leftMargin, yPos);
     yPos += lines.length * 6 + 2;
-    // Underline
     pdf.setDrawColor(0);
     pdf.setLineWidth(0.3);
     pdf.line(leftMargin, yPos - 1, leftMargin + contentWidth, yPos - 1);
@@ -152,8 +174,7 @@ export async function generateChaosDocumentPDF({
     pdf.setFontSize(11);
   };
 
-  // Helper: write body text with line wrapping + page breaks
-  const writeBody = async (text) => {
+  const writeBody = (text) => {
     if (!text || !String(text).trim()) return;
     const clean = cleanForPDF(text);
     const paragraphs = clean.split('\n');
@@ -162,11 +183,11 @@ export async function generateChaosDocumentPDF({
     for (const para of paragraphs) {
       const trimmed = para.trim();
       if (!trimmed) {
-        yPos += 3; // blank line gap
+        yPos += 3;
         continue;
       }
       const lines = pdf.splitTextToSize(trimmed, contentWidth);
-      await checkPageBreak(lines.length * 5.5 + 2);
+      checkPageBreak(lines.length * 5.5 + 2);
       pdf.text(lines, leftMargin, yPos);
       yPos += lines.length * 5.5 + 1;
     }
@@ -202,33 +223,35 @@ export async function generateChaosDocumentPDF({
     yPos += 6;
   }
 
-  // ── BODY (plain text / letters) ──
+  // ── BODY ──
   if (body && String(body).trim()) {
-    await writeBody(body);
+    writeBody(body);
   }
 
-  // ── SECTIONS (snapshot / summary style) ──
+  // ── SECTIONS ──
   if (sections && sections.length > 0) {
     for (const section of sections) {
-      if (section.title) {
-        await writeHeading(section.title);
-      }
+      if (section.title) writeHeading(section.title);
       if (section.content) {
-        await writeBody(section.content);
+        writeBody(section.content);
         yPos += 4;
       }
     }
   }
 
   // ── FOOTER on last page ──
-  await addFooter();
+  addFooter();
 
-  console.log('PDF GENERATED', { type: documentType, title, pages: pdf.getNumberOfPages() });
-  return pdf.output('blob');
+  console.log('PDF GENERATED', { type: documentType, title, pages: pdf.getNumberOfPages(), warnings });
+
+  const blob = pdf.output('blob');
+  // Attach warnings to blob so callers can surface them
+  blob._warnings = warnings;
+  return blob;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CONVENIENCE: download a PDF blob
+// CONVENIENCE: trigger browser file download from a PDF blob
 // ─────────────────────────────────────────────────────────────────────────────
 export function downloadPDFBlob(blob, filename) {
   const url = URL.createObjectURL(blob);

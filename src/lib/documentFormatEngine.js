@@ -1,20 +1,10 @@
 /**
- * CHAOS CONTROLLER™ — UNIVERSAL DOCUMENT FORMAT ENGINE
- * 
- * Re-exports from unified PDF generator.
- * ALL letters, snapshots, summaries, exports MUST use generateChaosDocumentPDF() from lib/pdfGenerator.
+ * CHAOS CONTROLLER™ — DOCUMENT FORMAT ENGINE
+ *
+ * All document generation must use generateChaosDocumentPDF() from lib/pdfGenerator.
+ * This file re-exports only the safe, non-window-opening utilities.
+ * printDocument, printLetter, printTableDocument are REMOVED — they opened blank windows.
  */
 
-// Re-export unified PDF generator and assets
-export { generateChaosDocumentPDF, cleanForPDF, LETTERHEAD_URL, FOOTER_URL } from './pdfGenerator';
-
-// Re-export legacy helpers for backward compatibility
-export { 
-  stripHtmlTags, 
-  cleanContentForPrint, 
-  buildFormalLetter, 
-  printDocument, 
-  printLetter,
-  PRINT_CSS,
-  DOCUMENT_CSS
-} from './printUtilities';
+export { generateChaosDocumentPDF, cleanForPDF, downloadPDFBlob, LETTERHEAD_URL, FOOTER_URL } from './pdfGenerator';
+export { stripHtmlTags, cleanContentForPrint } from './printUtilities';

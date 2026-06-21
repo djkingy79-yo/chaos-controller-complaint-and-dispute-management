@@ -33,7 +33,8 @@ async function generateAndDownload({ type, title, body, sections, matter, date }
     const filename = `${String(title || 'Document').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
     downloadPDFBlob(blob, filename);
     console.log('PDF GENERATED', { type, title });
-    toast.success(`${title} downloaded`);
+    if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+    else toast.success(`${title} downloaded`);
   } catch (error) {
     console.error('PDF FAILED', error);
     alert('PDF failed: ' + error.message);

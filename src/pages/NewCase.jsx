@@ -277,7 +277,14 @@ LETTER INSTRUCTIONS:
         {/* Step 3: Guided Questions */}
         {step === 3 && (
           <motion.div key="questions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <GuidedQuestions category={category} data={formData} onChange={setFormData} onNext={generateComplaint} onBack={() => setStep(2)} />
+            <GuidedQuestions
+              category={category}
+              data={formData}
+              onChange={setFormData}
+              onNext={generateComplaint}
+              onBack={() => setStep(2)}
+              onCategoryDetected={(detected) => setCategory(detected)}
+            />
           </motion.div>
         )}
 

@@ -106,7 +106,8 @@ export default function CaseSummary({ caseItem, evidence, events }) {
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       downloadPDFBlob(blob, `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       console.log('PDF GENERATED', { type: 'summary' });
-      toast.success('Case summary PDF downloaded');
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      else toast.success('Case summary PDF downloaded');
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);

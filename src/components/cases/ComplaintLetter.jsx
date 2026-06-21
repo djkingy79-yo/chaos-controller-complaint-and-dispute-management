@@ -3,10 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, Download } from "lucide-react";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -142,37 +142,17 @@ CRITICAL RULES:
         includeHeader: true,
         includeFooter: true,
       });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const win = window.open(pdfUrl, '_blank');
-      if (win) {
-        setTimeout(() => { win.print(); }, 500);
-      }
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+      if (!pdfBlob || pdfBlob.size === 0) throw new Error('Generated PDF is empty');
+      downloadPDFBlob(pdfBlob, `Complaint_Letter_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (pdfBlob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      else toast.success('Complaint letter PDF downloaded');
     } catch (error) {
-      toast.error('PDF generation failed: ' + error.message);
+      console.error('PDF FAILED', error);
+      alert('PDF failed: ' + error.message);
     }
   };
 
-  const handleDownloadPDF = async () => {
-    try {
-      const cleanContent = letter.replace(/<[^>]*>/g, '');
-      const pdfBlob = await generateChaosDocumentPDF({
-        documentType: 'letter',
-        title: 'Complaint Letter',
-        body: cleanContent,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Complaint_Letter_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      toast.error('PDF download failed: ' + error.message);
-    }
-  };
+
 
   const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[NRMA Address\]|\[.*?\]/.test(letter);
 
@@ -250,11 +230,8 @@ CRITICAL RULES:
           <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5 text-xs">
             <Copy className="w-3.5 h-3.5" /> Copy
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 text-xs">
-            <Download className="w-3.5 h-3.5" /> Download PDF
-          </Button>
           <Button variant="outline" size="sm" onClick={handlePrintPDF} className="gap-1.5 text-xs">
-            <Printer className="w-3.5 h-3.5" /> Print PDF
+            <Download className="w-3.5 h-3.5" /> Download PDF
           </Button>
           <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={regenerating} className="gap-1.5 text-xs">
             {regenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}

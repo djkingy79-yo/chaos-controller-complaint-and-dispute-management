@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, ArrowLeft, Building2 } from "lucide-react";
 import OrgPicker from "@/components/directories/OrgPicker";
+import { detectIndustry } from "@/lib/industryClassifier";
 
 // Complainant personal details — collected for every category
 const complainantFields = [
@@ -101,7 +102,7 @@ const caseFields = {
   ],
 };
 
-export default function GuidedQuestions({ category, data, onChange, onNext, onBack }) {
+export default function GuidedQuestions({ category, data, onChange, onNext, onBack, onCategoryDetected }) {
   const specificFields = caseFields[category] || caseFields.other;
   const allQuestions = [...complainantFields, ...specificFields];
   const [step, setStep] = useState(0);
@@ -110,6 +111,11 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
 
   const handleChange = (value) => {
     onChange({ ...data, [current.key]: value });
+    // Auto-classify industry when organisation name is entered
+    if (current.key === 'organisation_name' && value && onCategoryDetected) {
+      const detected = detectIndustry(value);
+      if (detected) onCategoryDetected(detected);
+    }
   };
 
   const handleOrgSelect = (org) => {
