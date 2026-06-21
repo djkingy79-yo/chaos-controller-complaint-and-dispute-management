@@ -53,7 +53,7 @@ function printChecklist(items, caseName) {
   <p style="font-size:11pt;color:#555;">Printed: ${new Date().toLocaleDateString('en-AU',{day:'2-digit',month:'long',year:'numeric'})}</p>
   <table><thead><tr><th></th><th>Item</th><th>Category</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
-  <div class="footer">Chaos Controller™ — chaoscontrollerapp@gmail.com | 0413 572 850</div>
+  <div class="footer"></div>
   </div></body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);

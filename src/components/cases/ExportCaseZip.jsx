@@ -246,14 +246,11 @@ ${"─".repeat(60)}
     ✓ Print-ready for tribunal submissions
 
 ${"─".repeat(60)}
-CONTACT & SUPPORT
+EXPORT COMPLETE
 ${"─".repeat(60)}
 
-Chaos Controller™
-chaoscontroller.com.au
-The Complaint & Dispute App THAT'S GOT YOUR BACK
-
-"They had your loyalty. Now you deserve their accountability."
+All documents formatted for tribunal submission.
+Review and print as needed.
 `);
 
     const blob = await zip.generateAsync({ type: "blob" });

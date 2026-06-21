@@ -52,7 +52,6 @@ function addPageFooter(doc, pageNum) {
   doc.setTextColor(...GREY);
   doc.setFont("helvetica", "italic");
   doc.text(`Page ${pageNum}`, pageW - 14, pageH - 6, { align: "right" });
-  doc.text("Chaos Controller™ — Organisational purposes only. Not legal advice.", 14, pageH - 6);
 }
 
 function drawHRule(doc, y, r, g, b) {
