@@ -28,32 +28,47 @@ function buildEventPayload(deadline, caseInfo) {
   };
 }
 
-async function findExistingEvent(accessToken, deadlineId) {
+async function findExistingEvent(accessToken, deadlineId, retryCount = 0) {
   const timeMin = new Date(Date.now() - 365 * 86400000).toISOString();
   const res = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=250&timeMin=${timeMin}&privateExtendedProperty=deadlineId%3D${deadlineId}&privateExtendedProperty=source%3DChaosController`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
+  if (res.status === 429 && retryCount < 3) {
+    const waitTime = Math.pow(2, retryCount) * 1000;
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+    return findExistingEvent(accessToken, deadlineId, retryCount + 1);
+  }
   if (!res.ok) return null;
   const data = await res.json();
   return data.items?.[0] || null;
 }
 
-async function createCalendarEvent(accessToken, deadline, caseInfo) {
+async function createCalendarEvent(accessToken, deadline, caseInfo, retryCount = 0) {
   const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(buildEventPayload(deadline, caseInfo))
   });
+  if (res.status === 429 && retryCount < 3) {
+    const waitTime = Math.pow(2, retryCount) * 1000;
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+    return createCalendarEvent(accessToken, deadline, caseInfo, retryCount + 1);
+  }
   return res.ok;
 }
 
-async function updateCalendarEvent(accessToken, googleEventId, deadline, caseInfo) {
+async function updateCalendarEvent(accessToken, googleEventId, deadline, caseInfo, retryCount = 0) {
   const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${googleEventId}`, {
     method: 'PUT',
     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(buildEventPayload(deadline, caseInfo))
   });
+  if (res.status === 429 && retryCount < 3) {
+    const waitTime = Math.pow(2, retryCount) * 1000;
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+    return updateCalendarEvent(accessToken, googleEventId, deadline, caseInfo, retryCount + 1);
+  }
   return res.ok;
 }
 
@@ -99,7 +114,10 @@ Deno.serve(async (req) => {
       for (const deadline of deadlines) {
         if (!deadline.deadline_date) continue;
         const existing = await findExistingEvent(accessToken, deadline.id);
-        if (existing && await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo)) updatedCount++;
+        if (existing) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          if (await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo)) updatedCount++;
+        }
       }
       return Response.json({ success: true, caseId, updatedCount });
     }
@@ -136,8 +154,10 @@ Deno.serve(async (req) => {
         const caseInfo = activeCases.find(c => c.id === deadline.case_id);
         if (!caseInfo) continue;
         if (existingByDeadlineId[deadline.id]) {
+          await new Promise(resolve => setTimeout(resolve, 500));
           await updateCalendarEvent(accessToken, existingByDeadlineId[deadline.id].id, deadline, caseInfo);
         } else if (await createCalendarEvent(accessToken, deadline, caseInfo)) {
+          await new Promise(resolve => setTimeout(resolve, 500));
           syncedCount++;
         }
       }
