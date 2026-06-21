@@ -156,7 +156,7 @@ Support: chaoscontrollerapp@gmail.com`;
 
       // Google Calendar
       try {
-        const googleConn = await base44.asServiceRole.connectors.getCurrentAppUserConnection(GOOGLE_CONNECTOR_ID);
+        const googleConn = await base44.asServiceRole.connectors.getConnection('googlecalendar');
         if (googleConn?.accessToken) {
           await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
             method: 'POST',
