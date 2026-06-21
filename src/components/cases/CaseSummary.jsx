@@ -62,7 +62,10 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     .slice(0, 5);
 
   const handleSummaryPDF = async () => {
+    console.log('[CaseSummary] handleSummaryPDF called');
+    
     if (!caseItem) {
+      console.error('[CaseSummary] No caseItem');
       toast.error('Case data not available');
       return;
     }
@@ -90,7 +93,10 @@ export default function CaseSummary({ caseItem, evidence, events }) {
 
     const body = `CASE DETAILS\n${summaryLines}\n\nISSUE SUMMARY\n${String(caseItem.issue_summary || "—")}\n\nDESIRED OUTCOME\n${String(caseItem.desired_outcome || "—")}\n\nUPCOMING DEADLINES (${upcomingDeadlines.length})\n${deadlineLines}`;
 
+    console.log('[CaseSummary] Body length:', body.length);
+
     try {
+      toast.info('Generating PDF...');
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'general',
         title: 'Case Summary',
@@ -98,6 +104,8 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         includeHeader: true,
         includeFooter: true,
       });
+      
+      console.log('[CaseSummary] PDF blob created:', !!pdfBlob, 'size:', pdfBlob?.size);
       
       if (!pdfBlob || pdfBlob.size === 0) {
         throw new Error('Generated PDF is empty');
@@ -108,13 +116,14 @@ export default function CaseSummary({ caseItem, evidence, events }) {
       a.href = url;
       a.download = `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       document.body.appendChild(a);
+      console.log('[CaseSummary] Triggering download');
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success('Case summary PDF downloaded');
     } catch (error) {
       console.error('[CaseSummary] PDF generation failed:', error);
-      toast.error('PDF generation failed: ' + error.message);
+      toast.error('PDF failed: ' + error.message);
     }
   };
 
