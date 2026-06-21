@@ -400,29 +400,41 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
 
   const handlePrintEvidence = async () => {
     try {
+      if (!sorted || sorted.length === 0) {
+        toast.error('No evidence to export');
+        return;
+      }
+      
       const body = sorted.map((ev, i) => {
         const cfg = typeConfig[ev.file_type] || typeConfig.other;
         const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMMM yyyy") : "—";
         const desc = ev.description || ev.extracted_data?.document_summary || "—";
-        return `${i + 1}. ${ev.file_name}\n   Type: ${cfg.label} | Date: ${dateStr}\n   ${desc}`;
+        return `${i + 1}. ${String(ev.file_name || 'Unknown')}\n   Type: ${cfg.label} | Date: ${dateStr}\n   ${String(desc || '—')}`;
       }).join("\n\n");
 
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'general',
         title: 'Evidence Index',
-        body: `EVIDENCE VAULT (${sorted.length} files)\n\n${body}`,
+        body: String(`EVIDENCE VAULT (${sorted.length} files)\n\n${body}` || '').trim(),
         includeHeader: true,
         includeFooter: true,
       });
+
+      if (!pdfBlob || pdfBlob.size === 0) {
+        throw new Error('Generated PDF is empty');
+      }
 
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success('Evidence index PDF downloaded');
     } catch (error) {
+      console.error('[EvidenceVault] PDF generation failed:', error);
       toast.error('PDF generation failed: ' + error.message);
     }
   };

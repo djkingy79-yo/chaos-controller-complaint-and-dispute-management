@@ -90,29 +90,41 @@ export default function CaseTimeline({ caseId, events }) {
   };
 
   const handleTimelinePDF = async () => {
-    const body = sorted.map(ev => {
-      const cfg = eventTypeConfig[ev.event_type] || eventTypeConfig.incident;
-      const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : format(new Date(ev.created_date), "d MMM yyyy");
-      return `${dateStr} — ${ev.title}\n   Type: ${(ev.event_type || '').replace(/_/g, ' ')}\n   ${ev.description || ''}`;
-    }).join("\n\n");
-
     try {
+      if (!sorted || sorted.length === 0) {
+        toast.error('No timeline events to export');
+        return;
+      }
+      
+      const body = sorted.map(ev => {
+        const cfg = eventTypeConfig[ev.event_type] || eventTypeConfig.incident;
+        const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : format(new Date(ev.created_date), "d MMM yyyy");
+        return `${dateStr} — ${String(ev.title || 'Event')}\n   Type: ${String((ev.event_type || '').replace(/_/g, ' '))}\n   ${String(ev.description || '—')}`;
+      }).join("\n\n");
+
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'general',
         title: 'Case Timeline',
-        body: `CASE TIMELINE (${sorted.length} events)\n\n${body}`,
+        body: String(`CASE TIMELINE (${sorted.length} events)\n\n${body}` || '').trim(),
         includeHeader: true,
         includeFooter: true,
       });
+      
+      if (!pdfBlob || pdfBlob.size === 0) {
+        throw new Error('Generated PDF is empty');
+      }
       
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success('Timeline PDF downloaded');
     } catch (error) {
+      console.error('[CaseTimeline] PDF generation failed:', error);
       toast.error('PDF generation failed: ' + error.message);
     }
   };

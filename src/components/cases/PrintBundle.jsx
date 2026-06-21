@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
-import { format } from "date-fns";
+import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren, BarChart2, Download } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
 import { printLetter as printLetterUniversal, printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
 import { printTableDocument } from "@/lib/printUtilities";
+import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 
 
 const LETTER_DEFS = [
@@ -173,6 +175,98 @@ function printDeadlineItems(caseItem, deadlines) {
     <div class="letterhead-footer"></div>
   </body></html>`;
   printDocument(html);
+}
+
+async function printCaseSummaryReport(caseItem, evidence, events, deadlines) {
+  try {
+    const upcomingDeadlines = deadlines
+      .filter((d) => d.status === "pending" && d.deadline_date)
+      .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
+      .slice(0, 5);
+
+    const summaryLines = [
+      `Organisation: ${String(caseItem.organisation_name || "—")}`,
+      `Status: ${String((caseItem.status || "").replace(/_/g, " ").toUpperCase())}`,
+      `Category: ${String(caseItem.category || "—")}`,
+      `Priority: ${String(caseItem.priority || "—")}`,
+      `Complainant: ${String(caseItem.complainant_name || "—")}`,
+      `Account #: ${String(caseItem.account_number || "—")}`,
+      `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}`,
+      `Escalation Body: ${String(caseItem.escalation_body || "—")}`,
+    ].join("\n");
+
+    const deadlineLines = upcomingDeadlines.length > 0
+      ? upcomingDeadlines.map(d => {
+          const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
+          const urgency = daysLeft < 0 ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? "TODAY" : `${daysLeft} days`;
+          return `${d.title} — Due: ${format(new Date(d.deadline_date), "d MMM yyyy")} | ${urgency}`;
+        }).join("\n")
+      : "No upcoming deadlines.";
+
+    const body = `CASE DETAILS\n${summaryLines}\n\nISSUE SUMMARY\n${String(caseItem.issue_summary || "—")}\n\nDESIRED OUTCOME\n${String(caseItem.desired_outcome || "—")}\n\nSTATISTICS\nEvidence Files: ${evidence.length}\nTimeline Events: ${events.length}\nUpcoming Deadlines: ${upcomingDeadlines.length}\n\nUPCOMING DEADLINES\n${deadlineLines}`;
+
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'general',
+      title: 'Case Summary Report',
+      body: String(body || '').trim(),
+      includeHeader: true,
+      includeFooter: true,
+    });
+
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Case summary report downloaded');
+  } catch (error) {
+    console.error('[PrintBundle] Case Summary PDF failed:', error);
+    toast.error('Case summary PDF failed: ' + error.message);
+  }
+}
+
+async function printWeeklySnapshotReport(caseItem, evidence, events, deadlines) {
+  try {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAhead = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    
+    const recentEvents = events.filter(e => e.event_date && new Date(e.event_date) > weekAgo);
+    const upcomingDeadlines = deadlines.filter(d =>
+      d.deadline_date && new Date(d.deadline_date) > now && new Date(d.deadline_date) < twoWeeksAhead && d.status === "pending"
+    );
+    const overdueDeadlines = deadlines.filter(d =>
+      d.deadline_date && new Date(d.deadline_date) < now && d.status === "pending"
+    );
+
+    const body = `WEEKLY CASE SNAPSHOT\nWeek of ${format(now, "d MMMM yyyy")}\n\nCASE: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || "—"}\nStatus: ${(caseItem.status || "").replace(/_/g, " ")}\n\nQUICK STATS\nThis Week: ${recentEvents.length} new events\nUpcoming (14 days): ${upcomingDeadlines.length} deadlines\nOverdue: ${overdueDeadlines.length} items\n\nRECENT ACTIVITY\n${recentEvents.length > 0 ? recentEvents.map(e => `[${e.event_date}] ${e.title}`).join("\n") : "No new events this week."}\n\nUPCOMING DEADLINES\n${upcomingDeadlines.length > 0 ? upcomingDeadlines.map(d => `${d.title} — Due ${d.deadline_date}`).join("\n") : "No upcoming deadlines."}\n\nOVERDUE ITEMS\n${overdueDeadlines.length > 0 ? overdueDeadlines.map(d => `${d.title} — Was due ${d.deadline_date} (OVERDUE)`).join("\n") : "No overdue items."}`;
+
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'snapshot',
+      title: 'WEEKLY CASE SNAPSHOT',
+      matter: caseItem.title,
+      date: format(now, "d MMMM yyyy"),
+      sections: [{ title: 'Weekly Overview', content: body }],
+      includeHeader: true,
+      includeFooter: true,
+    });
+
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Weekly snapshot report downloaded');
+  } catch (error) {
+    console.error('[PrintBundle] Weekly Snapshot PDF failed:', error);
+    toast.error('Weekly snapshot PDF failed: ' + error.message);
+  }
 }
 
 function printBundle(caseItem, evidence, events, checklistItems) {
@@ -538,6 +632,37 @@ export default function PrintBundle({ caseItem, evidence, events }) {
             <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           <p className="text-xs text-muted-foreground">Print all deadlines with urgency ({deadlines.length})</p>
+        </button>
+
+        {/* NEW: Case Summary & Weekly Snapshot Reports */}
+        <button
+          onClick={() => printCaseSummaryReport(caseItem, evidence, events, deadlines)}
+          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
+          style={{gridColumn: "1 / -1"}}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <FileText className="w-4 h-4 text-primary" />
+            </div>
+            <span className="font-medium text-sm text-foreground">Case Summary Report</span>
+            <Download className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <p className="text-xs text-muted-foreground">Download complete case summary with stats & deadlines</p>
+        </button>
+
+        <button
+          onClick={() => printWeeklySnapshotReport(caseItem, evidence, events, deadlines)}
+          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
+          style={{gridColumn: "1 / -1"}}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-accent/10 rounded-lg">
+              <BarChart2 className="w-4 h-4 text-accent" />
+            </div>
+            <span className="font-medium text-sm text-foreground">Weekly Snapshot Report</span>
+            <Download className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <p className="text-xs text-muted-foreground">Download AI weekly activity summary & upcoming actions</p>
         </button>
       </div>
     </div>

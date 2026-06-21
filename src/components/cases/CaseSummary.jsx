@@ -90,18 +90,18 @@ export default function CaseSummary({ caseItem, evidence, events }) {
 
     const body = `CASE DETAILS\n${summaryLines}\n\nISSUE SUMMARY\n${String(caseItem.issue_summary || "—")}\n\nDESIRED OUTCOME\n${String(caseItem.desired_outcome || "—")}\n\nUPCOMING DEADLINES (${upcomingDeadlines.length})\n${deadlineLines}`;
 
-    console.log('[CaseSummary] Generating PDF with body:', body.substring(0, 100));
-
     try {
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'general',
         title: 'Case Summary',
-        body,
+        body: String(body || '').trim(),
         includeHeader: true,
         includeFooter: true,
       });
       
-      console.log('[CaseSummary] PDF blob created:', !!pdfBlob, 'size:', pdfBlob.size);
+      if (!pdfBlob || pdfBlob.size === 0) {
+        throw new Error('Generated PDF is empty');
+      }
       
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
