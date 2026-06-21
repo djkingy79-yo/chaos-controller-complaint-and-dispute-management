@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Printer, Download, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
 import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import { LETTERHEAD_URL, FOOTER_URL } from "@/lib/documentFormatEngine";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
@@ -59,10 +59,17 @@ function cleanSnapshotContent(md) {
  * A4 Layout: 210mm x 297mm, margins 17.5mm L/R, 12.5mm T/B
  */
 async function generateSnapshotPDF(caseItem, snapshot) {
+  console.log('[PDF] Starting PDF generation...');
+  console.log('[PDF] caseItem:', !!caseItem, 'snapshot:', !!snapshot);
+  
+  if (!caseItem || !snapshot) {
+    throw new Error('Missing case data or snapshot');
+  }
+  
   const { sections } = cleanSnapshotContent(snapshot);
   const today = format(new Date(), "d MMMM yyyy");
   
-  // Create A4 PDF (210mm x 297mm)
+  console.log('[PDF] Creating jsPDF instance...');
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -75,25 +82,32 @@ async function generateSnapshotPDF(caseItem, snapshot) {
   const rightMargin = 17.5;
   const topMargin = 12.5;
   const bottomMargin = 12.5;
-  const contentWidth = pageWidth - leftMargin - rightMargin; // 175mm
+  const contentWidth = pageWidth - leftMargin - rightMargin;
   
-  let yPos = topMargin; // Start at 12.5mm from top
+  let yPos = topMargin;
   
-  // Load and add header image
-  const headerImg = await loadImage(LETTERHEAD_URL);
-  if (headerImg) {
-    // Header: 175mm wide, max 22mm tall, positioned at margins
-    pdf.addImage(headerImg, 'JPEG', leftMargin, yPos, 175, 0);
-    // Get actual rendered height from image
-    const imgHeight = pdf.getImageProperties(headerImg).h * (175 / pdf.getImageProperties(headerImg).w);
-    yPos += Math.min(imgHeight, 22);
+  // Load and add header image with error handling
+  console.log('[PDF] Loading header image...');
+  try {
+    const headerImg = await loadImage(LETTERHEAD_URL);
+    if (headerImg) {
+      console.log('[PDF] Header image loaded successfully');
+      pdf.addImage(headerImg, 'JPEG', leftMargin, yPos, 175, 0);
+      const imgProps = pdf.getImageProperties(headerImg);
+      const imgHeight = imgProps.h * (175 / imgProps.w);
+      yPos += Math.min(imgHeight, 22);
+    } else {
+      console.warn('[PDF] Header image failed to load, continuing without it');
+    }
+  } catch (err) {
+    console.error('[PDF] Header image error:', err);
   }
   
-  // 8mm gap after header
   yPos += 8;
   
-  // Title block - Times New Roman (times in jsPDF)
-  pdf.setFont('times', 'bold');
+  // Title block
+  console.log('[PDF] Adding title block...');
+  pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(12);
   pdf.text('CHAOS CONTROLLER™', leftMargin, yPos);
   yPos += 7;
@@ -102,7 +116,7 @@ async function generateSnapshotPDF(caseItem, snapshot) {
   pdf.text('WEEKLY CASE SNAPSHOT', leftMargin, yPos);
   yPos += 8;
   
-  pdf.setFont('times', 'normal');
+  pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(11);
   pdf.text(`Matter: ${caseItem.title}`, leftMargin, yPos);
   yPos += 6;
@@ -118,10 +132,9 @@ async function generateSnapshotPDF(caseItem, snapshot) {
   yPos += 8;
   
   // Render sections
+  console.log('[PDF] Rendering', sections.length, 'sections...');
   for (const section of sections) {
-    // Check if we need a new page (leave room for footer)
     if (yPos > pageHeight - bottomMargin - 30) {
-      // Add footer to current page before adding new page
       const footerImg = await loadImage(FOOTER_URL);
       if (footerImg) {
         const footerProps = pdf.getImageProperties(footerImg);
@@ -133,17 +146,15 @@ async function generateSnapshotPDF(caseItem, snapshot) {
       yPos = topMargin;
     }
     
-    // Section title - bold uppercase
     if (section.title) {
-      pdf.setFont('times', 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(12);
       const titleLines = pdf.splitTextToSize(section.title.toUpperCase(), contentWidth);
       pdf.text(titleLines, leftMargin, yPos);
       yPos += (titleLines.length * 6) + 2;
-      pdf.setFont('times', 'normal');
+      pdf.setFont('helvetica', 'normal');
     }
     
-    // Section content - 11pt normal
     if (section.content) {
       const contentLines = pdf.splitTextToSize(section.content, contentWidth);
       pdf.setFontSize(11);
@@ -153,14 +164,20 @@ async function generateSnapshotPDF(caseItem, snapshot) {
   }
   
   // Add footer to last page
-  const footerImg = await loadImage(FOOTER_URL);
-  if (footerImg) {
-    const footerProps = pdf.getImageProperties(footerImg);
-    const footerHeight = footerProps.h * (175 / footerProps.w);
-    const footerY = pageHeight - bottomMargin - footerHeight;
-    pdf.addImage(footerImg, 'JPEG', leftMargin, footerY, 175, 0);
+  console.log('[PDF] Adding footer...');
+  try {
+    const footerImg = await loadImage(FOOTER_URL);
+    if (footerImg) {
+      const footerProps = pdf.getImageProperties(footerImg);
+      const footerHeight = footerProps.h * (175 / footerProps.w);
+      const footerY = pageHeight - bottomMargin - footerHeight;
+      pdf.addImage(footerImg, 'JPEG', leftMargin, footerY, 175, 0);
+    }
+  } catch (err) {
+    console.error('[PDF] Footer image error:', err);
   }
   
+  console.log('[PDF] PDF generation complete');
   return pdf;
 }
 
