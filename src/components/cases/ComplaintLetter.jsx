@@ -119,13 +119,14 @@ CRITICAL RULES:
   };
 
   const handlePrint = () => {
+    const cleanText = letter.replace(/<[^>]*>/g, '');
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
     <style>${getLetterPageStyles()}</style>
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content" style="padding:8pt 25mm 20mm 25mm">${letter}</div>
+        <div class="letter-content" style="padding:8pt 25mm 20mm 25mm">${cleanText}</div>
         <div class="letterhead-footer"></div>
       </div>
     </body></html>`);
@@ -267,10 +268,11 @@ CRITICAL RULES:
             ) : (
               <div className="letter-content" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000" }}>
                 {(() => {
-                  const lines = letter.split('\n');
-                  let senderLines = [];
-                  let recipientLines = [];
-                  let bodyLines = [];
+                  const cleanText = letter.replace(/<[^>]*>/g, '');
+                  const lines = cleanText.split('\n');
+                  const senderLines = [];
+                  const recipientLines = [];
+                  const bodyLines = [];
                   let inSender = true;
                   let foundBlank = false;
                   
