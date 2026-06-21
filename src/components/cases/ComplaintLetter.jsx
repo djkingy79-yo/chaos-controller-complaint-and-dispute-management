@@ -80,43 +80,46 @@ export default function ComplaintLetter({ caseItem }) {
       }, []).join("\n    ")
     : accountNumbers;
 
-  const prompt = `CRITICAL PROFESSIONAL LETTER FORMAT - AUSTRALIAN BUSINESS STANDARD:
+  const prompt = `CRITICAL: GENERATE HTML WITH INLINE STYLES FOR PROPER ALIGNMENT - NO PLAIN TEXT:
 
-  OUTPUT FORMAT (EXACT ORDER):
-  Line 1: ${today} (plain text only, no bold, no asterisks)
-  Line 2: [blank]
-  Lines 3-7: SENDER ADDRESS RIGHT-ALIGNED (name, street, city, email, phone - NO gaps between lines)
-  Line 8: [blank]
-  Lines 9-12: RECIPIENT ADDRESS LEFT-ALIGNED (handler, org, address, email - NO gaps)
-  Line 13: [blank]
-  Line 14: Re: line
-  Line 15: Dear Sir/Madam,
-  Lines 16+: Body paragraphs (compact spacing)
-  Final: Yours faithfully, [blank line] Sender name
+OUTPUT EXACT HTML STRUCTURE (copy this format exactly):
 
-  CRITICAL RULES:
-  1. SENDER ADDRESS ON RIGHT SIDE
-  2. RECIPIENT ADDRESS ON LEFT SIDE
-  3. NO BLANK LINES WITHIN ADDRESS BLOCKS - TIGHT SINGLE SPACING
-  4. NO PLACEHOLDER BRACKETS - omit lines if data missing
-  5. COMPACT PARAGRAPH SPACING - professional density
+<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">${today}</div>
+<div style="height:8pt"></div>
+<div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">
+<div style="margin:0;line-height:1.1">${client.name || ""}</div>
+<div style="margin:0;line-height:1.1">${client.address || ""}</div>
+<div style="margin:0;line-height:1.1">${client.email || ""}</div>
+<div style="margin:0;line-height:1.1">${client.phone || ""}</div>
+</div>
+<div style="height:8pt"></div>
+<div style="text-align:left;line-height:1.1;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">
+<div style="margin:0;line-height:1.1">${caseItem.complaint_handler_name || "The Complaints Manager"}</div>
+<div style="margin:0;line-height:1.1">${caseItem.organisation_name || ""}</div>
+<div style="margin:0;line-height:1.1">${caseItem.organisation_complaints_address || ""}</div>
+<div style="margin:0;line-height:1.1">${caseItem.organisation_complaints_email || ""}</div>
+</div>
+<div style="height:8pt"></div>
+<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif"><strong>Re:</strong> Formal Complaint - ${caseItem.account_number || client.accounts?.[0] || "Account Dispute"}</div>
+<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">Dear Sir/Madam,</div>
+<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">[First paragraph - professional Australian English]</div>
+<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">[Second paragraph]</div>
+<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">[Third paragraph]</div>
+<div style="text-align:left;margin:0 0 8pt 0;font-size:10pt;font-family:'Times New Roman',Times,serif">Yours faithfully,</div>
+<div style="height:12pt"></div>
+<div style="text-align:left;margin:0;font-size:10pt;font-family:'Times New Roman',Times,serif">${client.name || ""}</div>
 
-  COMPLAINANT (SENDER - RIGHT SIDE):
-  Name: ${client.name || "omit"}
-  Address: ${client.address || "omit"}
-  Email: ${client.email || "omit"}
-  Phone: ${client.phone || "omit"}
-  Account: ${formattedAccounts || "omit"}
+CRITICAL RULES:
+1. Use EXACT HTML structure above - NO plain text lines
+2. SENDER ADDRESS: text-align:right with line-height:1.1 (ZERO gaps between lines)
+3. RECIPIENT ADDRESS: text-align:left with line-height:1.1
+4. 8pt margins between all sections
+5. NO [brackets] for real data - use actual values or omit the line entirely
+6. Body paragraphs should have proper content about the case
 
-  ORGANISATION (RECIPIENT - LEFT SIDE):
-  Handler: ${caseItem.complaint_handler_name || "The Complaints Manager"}
-  Org: ${caseItem.organisation_name || "omit"}
-  Address: ${caseItem.organisation_complaints_address || "omit"}
-  Email: ${caseItem.organisation_complaints_email || "omit"}
+CASE DETAILS: ${caseItem.issue_summary}. Desired outcome: ${caseItem.desired_outcome}. Escalate to: ${caseItem.escalation_body || "ombudsman"}.
 
-  CASE: ${caseItem.issue_summary}. Desired: ${caseItem.desired_outcome}. Escalate to: ${caseItem.escalation_body || "ombudsman"}.
-
-  Generate the complete letter NOW with sender address RIGHT-ALIGNED.`;
+Generate the complete HTML letter NOW with proper inline styles.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);
@@ -125,29 +128,15 @@ export default function ComplaintLetter({ caseItem }) {
   };
 
   const handlePrint = () => {
-    const lines = letter.split('\n');
-    const firstPageLines = lines.slice(0, 45);
-    const remainingLines = lines.slice(45);
-    const continuationPages = [];
-    for (let i = 0; i < remainingLines.length; i += 55) {
-      continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
-    }
-    const continuationHTML = continuationPages.map((chunk) => `
-      <div class="letter-continuation">
-        <div class="continuation-header"></div>
-        <div class="continuation-content">${chunk.split('\n').map(line => `<p style="margin:0 0 3pt 0;min-height:11pt;line-height:1.2;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
-      </div>
-    `).join('');
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
     <style>${getLetterPageStyles()}</style>
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content" style="padding:0 25mm 20mm 25mm">${firstPageLines.map(line => `<p style="margin:0 0 3pt 0;min-height:11pt;line-height:1.2;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="letter-content" style="padding:8pt 25mm 20mm 25mm">${letter}</div>
         <div class="letterhead-footer"></div>
       </div>
-      ${continuationHTML}
     </body></html>`);
     win.document.close();
     win.focus();
@@ -285,11 +274,11 @@ export default function ComplaintLetter({ caseItem }) {
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2" }}
               />
             ) : (
-              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, color: "#000" }}>
-                {letter.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '0 0 8pt 0', minHeight: '10pt', lineHeight: '1.2' }}>{line || '\u00A0'}</p>
-                ))}
-              </div>
+              <div 
+                className="text-slate-900 w-full" 
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, color: "#000" }}
+                dangerouslySetInnerHTML={{ __html: letter.replace(/\n/g, '<br/>') }}
+              />
             )}
           </div>
           {/* Extended footer banner */}

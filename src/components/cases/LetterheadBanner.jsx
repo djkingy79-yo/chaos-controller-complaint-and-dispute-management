@@ -82,6 +82,9 @@ export function getLetterPageStyles() {
       margin: 0 0 8pt 0;
       line-height: 1.2;
     }
+    .letter-content div {
+      line-height: 1.1;
+    }
     
     /* Date line - left aligned at top */
     .letter-date {
