@@ -186,7 +186,18 @@ CASE DETAILS:
         
         {/* Sample format preview */}
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-          <div className="letterhead-header" style={{ height: '180px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top' }}></div>
+          {/* Header Banner - 180px */}
+          <div 
+            className="w-full"
+            style={{ 
+              height: '180px', 
+              backgroundImage: `url(${LETTERHEAD_URL})`, 
+              backgroundSize: 'contain', 
+              backgroundRepeat: 'no-repeat', 
+              backgroundPosition: 'center top',
+              backgroundColor: '#ffffff'
+            }}
+          ></div>
           <div className="px-12 pb-8 bg-white" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
             <div style={{ padding: '1.5in 0 0 0' }}>
               <p style={{ fontSize: '13pt', fontWeight: 'bold', marginBottom: '12pt', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
@@ -265,7 +276,18 @@ CASE DETAILS:
 
       {/* Letterhead Preview */}
       <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-        <div className="letterhead-header" style={{ height: '180px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top' }}></div>
+        {/* Header Banner - 180px */}
+        <div 
+          className="w-full"
+          style={{ 
+            height: '180px', 
+            backgroundImage: `url(${LETTERHEAD_URL})`, 
+            backgroundSize: 'contain', 
+            backgroundRepeat: 'no-repeat', 
+            backgroundPosition: 'center top',
+            backgroundColor: '#ffffff'
+          }}
+        ></div>
         <div className="px-12 pb-8 bg-white" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
           {editing ? (
             <Textarea
