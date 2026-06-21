@@ -73,23 +73,52 @@ function renderSectionsToHtml(sections) {
   }).join('');
 }
 
-function printSnapshot(caseItem, snapshot, generatedAt) {
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
+function printSnapshot(caseItem, snapshot) {
   const { sections } = cleanSnapshotContent(snapshot);
-  const contentHtml = renderSectionsToHtml(sections);
+  const today = format(new Date(), "d MMMM yyyy");
   
-  const header = `
-    <div style="font-size:8pt;letter-spacing:2px;text-transform:uppercase;color:#000;margin-bottom:14pt;font-weight:bold;">Chaos Controller™ — Weekly Case Snapshot</div>
-    <div style="font-size:13pt;font-weight:bold;margin-bottom:10pt;color:#000;">${caseItem.title}</div>
-    <div style="font-size:10pt;color:#666;margin-bottom:16pt;">vs. ${caseItem.organisation_name || "Organisation"} | Ref: ${caseRef}</div>
+  // Build header in exact required format - NO "Generated:", NO ref, NO timestamp
+  const headerHtml = `
+    <div style="font-size:9pt;font-weight:bold;text-transform:uppercase;color:#000;margin-bottom:18pt;letter-spacing:1px;">CHAOS CONTROLLER™</div>
+    <div style="font-size:14pt;font-weight:bold;color:#000;margin-bottom:4pt;">WEEKLY CASE SNAPSHOT</div>
+    <div style="font-size:10pt;color:#000;margin:12pt 0 20pt 0;line-height:1.6;">
+      <div style="margin-bottom:3pt;"><strong>Matter:</strong> ${caseItem.title}</div>
+      <div style="margin-bottom:3pt;"><strong>Against:</strong> ${caseItem.organisation_name || "Organisation"}</div>
+      <div><strong>Date:</strong> ${today}</div>
+    </div>
+    <div style="border-top:1px solid #000;margin-bottom:16pt;"></div>
+  `;
+  
+  // Render sections
+  const contentHtml = sections.map(section => {
+    const titleHtml = section.title 
+      ? `<div style="font-size:11pt;font-weight:bold;color:#000;margin:14pt 0 6pt 0;text-transform:uppercase;letter-spacing:0.5px;">${section.title}</div>`
+      : '';
+    const contentHtml = section.content
+      ? `<div style="font-size:10.5pt;line-height:1.5;color:#000;margin:6pt 0;white-space:pre-wrap;word-wrap:break-word;">${section.content}</div>`
+      : '';
+    return titleHtml + contentHtml;
+  }).join('');
+  
+  // Aggressive inline print CSS to kill ALL browser chrome
+  const printCss = `
+    @page { margin: 25mm 25mm 25mm 25mm !important; size: A4 !important; }
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+      html { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
+      body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
+      nav, header, footer, aside, button, iframe, [class*="chrome"], [class*="url"], [class*="timestamp"], [class*="browser"], [class*="nav"], [class*="header"], [class*="footer"] { display: none !important; visibility: hidden !important; }
+      a[href]:after, a[href] { content: none !important; display: none !important; }
+      .no-print { display: none !important; }
+    }
   `;
   
   const html = `<!DOCTYPE html><html><head>
     <title>Weekly Snapshot — ${caseItem.title}</title>
-    <style>${DOCUMENT_CSS}</style>
+    <style>${DOCUMENT_CSS}${printCss}</style>
   </head><body>
     <div class="letterhead-header"></div>
-    <div class="document-content" style="padding: 0 17.5mm;">${header}${contentHtml}</div>
+    <div class="document-content">${headerHtml}${contentHtml}</div>
     <div class="letterhead-footer"></div>
   </body></html>`;
   printDocument(html);
@@ -231,7 +260,7 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
           </div>
           <div className="flex items-center gap-2">
             {snapshot && (
-              <Button variant="outline" size="sm" onClick={() => printSnapshot(caseItem, snapshot, generatedAt)} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={() => printSnapshot(caseItem, snapshot)} className="gap-1.5">
                 <Printer className="w-3.5 h-3.5" /> Print
               </Button>
             )}
@@ -284,7 +313,7 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-success" />
-              <span className="text-xs text-muted-foreground">Generated: {generatedAt}</span>
+              <span className="text-xs text-muted-foreground">Snapshot ready</span>
             </div>
             <Badge variant="outline" className="text-xs">Week of {format(new Date(), "d MMM yyyy")}</Badge>
           </div>

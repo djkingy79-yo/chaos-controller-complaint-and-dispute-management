@@ -16,16 +16,24 @@ export const FOOTER_URL = 'https://media.base44.com/images/public/6a2ac3b012e456
 // ─────────────────────────────────────────────────────────────────────────────
 export const DOCUMENT_CSS = `
   @page {
-    margin: 12.5mm 17.5mm 12.5mm 17.5mm;
+    margin: 0;
     size: A4;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
-    nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; }
+    @page { margin: 0 !important; }
+    html, body { 
+      -webkit-print-header: "" !important; 
+      -webkit-print-footer: "" !important; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      width: 100% !important;
+    }
+    nav, header, footer, aside, button, [class*="chrome"], [class*="url"], [class*="timestamp"], [class*="browser"], iframe { display: none !important; visibility: hidden !important; }
     a[href]:after, a[href] { content: none !important; display: none !important; }
+    .no-print { display: none !important; }
   }
   html, body { margin: 0; padding: 0; background: white; width: 100%; }
   body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.3; }
@@ -33,7 +41,7 @@ export const DOCUMENT_CSS = `
   .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
   .letterhead-footer { width: 100%; height: 60px; background-image: url('${FOOTER_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
   
-  .document-content { width: 100%; max-width: 100%; margin: 0; padding: 0; box-sizing: border-box; }
+  .document-content { width: 100%; max-width: 100%; margin: 0; padding: 0 17.5mm; box-sizing: border-box; }
   .blank-line { margin: 0; padding: 0; line-height: 1.3; }
   
   .date-line { font-size: 11pt; margin: 0 0 1em 0; text-align: left; }
