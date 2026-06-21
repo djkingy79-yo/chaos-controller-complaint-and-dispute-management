@@ -127,63 +127,92 @@ export async function generateChaosDocumentPDF({
   
   // Document-specific formatting
   if (documentType === 'letter') {
-    // Date
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
-    pdf.text(date, leftMargin, yPos);
-    yPos += 15;
+    // Date - only if provided
+    if (date && date.trim()) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+      pdf.text(String(date).trim(), leftMargin, yPos);
+      yPos += 15;
+    }
     
-    // Party details
-    const claimantLines = claimant.split('\n').filter(l => l.trim());
-    const recipientLines = recipient.split('\n').filter(l => l.trim());
+    // Party details - only if provided
+    const claimantStr = String(claimant || '').trim();
+    const recipientStr = String(recipient || '').trim();
+    const claimantLines = claimantStr ? claimantStr.split('\n').filter(l => l.trim()) : [];
+    const recipientLines = recipientStr ? recipientStr.split('\n').filter(l => l.trim()) : [];
     
-    const maxLines = Math.max(claimantLines.length, recipientLines.length);
-    const claimantHeight = maxLines * 5;
+    if (claimantLines.length > 0 || recipientLines.length > 0) {
+      const maxLines = Math.max(claimantLines.length, recipientLines.length, 1);
+      const claimantHeight = maxLines * 5;
+      
+      if (claimantLines.length > 0) {
+        pdf.text(claimantLines, pageWidth - rightMargin, yPos, { align: 'right' });
+      }
+      if (recipientLines.length > 0) {
+        pdf.text(recipientLines, leftMargin, yPos);
+      }
+      yPos += claimantHeight + 10;
+    }
     
-    pdf.text(claimantLines, pageWidth - rightMargin, yPos, { align: 'right' });
-    pdf.text(recipientLines, leftMargin, yPos);
-    yPos += claimantHeight + 10;
+    // RE line - only if provided
+    const reLineStr = String(reLine || '').trim();
+    if (reLineStr) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(reLineStr, leftMargin, yPos);
+      yPos += 10;
+    }
     
-    // RE line
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(reLine, leftMargin, yPos);
-    yPos += 10;
+    // Greeting - only if provided
+    const greetingStr = String(greeting || '').trim();
+    if (greetingStr) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(greetingStr, leftMargin, yPos);
+      yPos += 10;
+    }
     
-    // Greeting
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(greeting, leftMargin, yPos);
-    yPos += 10;
+    // Body - ALWAYS required for letters
+    const cleanBody = cleanForPDF(body || '');
+    if (cleanBody && cleanBody.trim()) {
+      const bodyLines = pdf.splitTextToSize(cleanBody, contentWidth);
+      pdf.text(bodyLines, leftMargin, yPos);
+      yPos += bodyLines.length * 5.5 + 10;
+    } else {
+      console.warn('[PDF Generator] Letter body is empty!');
+    }
     
-    // Body
-    const cleanBody = cleanForPDF(body);
-    const bodyLines = pdf.splitTextToSize(cleanBody, contentWidth);
-    pdf.text(bodyLines, leftMargin, yPos);
-    yPos += bodyLines.length * 5.5 + 10;
+    // Closing - only if provided
+    const closingStr = String(closing || '').trim();
+    if (closingStr) {
+      pdf.text(closingStr, leftMargin, yPos);
+      yPos += 8;
+    }
     
-    // Closing
-    pdf.text(closing, leftMargin, yPos);
-    yPos += 8;
-    
-    // Signature
-    const sigLines = signature.split('\n');
-    pdf.text(sigLines, leftMargin, yPos);
-    yPos += sigLines.length * 5.5 + 10;
+    // Signature - only if provided
+    const sigStr = String(signature || '').trim();
+    if (sigStr) {
+      const sigLines = sigStr.split('\n');
+      pdf.text(sigLines, leftMargin, yPos);
+      yPos += sigLines.length * 5.5 + 10;
+    }
     
   } else if (documentType === 'snapshot' || documentType === 'summary') {
     // Title block
+    const titleStr = String(title || 'Document').trim();
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(14);
-    pdf.text(title.toUpperCase(), leftMargin, yPos);
+    pdf.text(titleStr.toUpperCase(), leftMargin, yPos);
     yPos += 8;
     
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
-    if (matter) {
-      pdf.text(`Matter: ${matter}`, leftMargin, yPos);
+    const matterStr = String(matter || '').trim();
+    if (matterStr) {
+      pdf.text(`Matter: ${matterStr}`, leftMargin, yPos);
       yPos += 6;
     }
-    if (date) {
-      pdf.text(`Date: ${date}`, leftMargin, yPos);
+    const dateStr = String(date || '').trim();
+    if (dateStr) {
+      pdf.text(`Date: ${dateStr}`, leftMargin, yPos);
       yPos += 6;
     }
     yPos += 3;
@@ -211,21 +240,39 @@ export async function generateChaosDocumentPDF({
         yPos = topMargin;
       }
       
-      if (section.title) {
+      const sectionTitle = String(section.title || '').trim();
+      if (sectionTitle) {
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(12);
-        const titleLines = pdf.splitTextToSize(section.title.toUpperCase(), contentWidth);
+        const titleLines = pdf.splitTextToSize(sectionTitle.toUpperCase(), contentWidth);
         pdf.text(titleLines, leftMargin, yPos);
         yPos += (titleLines.length * 6) + 2;
         pdf.setFont('helvetica', 'normal');
       }
       
-      if (section.content) {
-        const contentLines = pdf.splitTextToSize(section.content, contentWidth);
+      const sectionContent = String(section.content || '').trim();
+      if (sectionContent) {
+        const contentLines = pdf.splitTextToSize(sectionContent, contentWidth);
         pdf.setFontSize(11);
         pdf.text(contentLines, leftMargin, yPos);
         yPos += (contentLines.length * 5.5) + 4;
       }
+    }
+  } else if (documentType === 'general') {
+    // General document - just body text
+    const titleStr = String(title || 'Document').trim();
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(14);
+    pdf.text(titleStr.toUpperCase(), leftMargin, yPos);
+    yPos += 10;
+    
+    const bodyStr = String(body || '').trim();
+    if (bodyStr) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+      const bodyLines = pdf.splitTextToSize(bodyStr, contentWidth);
+      pdf.text(bodyLines, leftMargin, yPos);
+      yPos += bodyLines.length * 5.5;
     }
   }
   
