@@ -62,17 +62,22 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     .slice(0, 5);
 
   const handleSummaryPDF = async () => {
+    if (!caseItem) {
+      toast.error('Case data not available');
+      return;
+    }
+    
     const client = buildClientContext(caseItem, evidence);
     
     const summaryLines = [
-      `Organisation: ${caseItem.organisation_name || "—"}`,
-      `Status: ${STATUS_LABELS[caseItem.status] || caseItem.status}`,
-      `Category: ${caseItem.category}`,
-      `Priority: ${PRIORITY_LABELS[caseItem.priority] || caseItem.priority}`,
-      `Complainant: ${client.name || "—"}`,
-      `Account #: ${caseItem.account_number || "—"}`,
+      `Organisation: ${String(caseItem.organisation_name || "—")}`,
+      `Status: ${String(STATUS_LABELS[caseItem.status] || caseItem.status || "—")}`,
+      `Category: ${String(caseItem.category || "—")}`,
+      `Priority: ${String(PRIORITY_LABELS[caseItem.priority] || caseItem.priority || "—")}`,
+      `Complainant: ${String(client.name || "—")}`,
+      `Account #: ${String(caseItem.account_number || "—")}`,
       `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}`,
-      `Escalation Body: ${caseItem.escalation_body || "—"}`,
+      `Escalation Body: ${String(caseItem.escalation_body || "—")}`,
     ].join("\n");
 
     const deadlineLines = upcomingDeadlines.length > 0
@@ -83,7 +88,9 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         }).join("\n")
       : "No upcoming deadlines.";
 
-    const body = `CASE DETAILS\n${summaryLines}\n\nISSUE SUMMARY\n${caseItem.issue_summary || "—"}\n\nDESIRED OUTCOME\n${caseItem.desired_outcome || "—"}\n\nUPCOMING DEADLINES (${upcomingDeadlines.length})\n${deadlineLines}`;
+    const body = `CASE DETAILS\n${summaryLines}\n\nISSUE SUMMARY\n${String(caseItem.issue_summary || "—")}\n\nDESIRED OUTCOME\n${String(caseItem.desired_outcome || "—")}\n\nUPCOMING DEADLINES (${upcomingDeadlines.length})\n${deadlineLines}`;
+
+    console.log('[CaseSummary] Generating PDF with body:', body.substring(0, 100));
 
     try {
       const pdfBlob = await generateChaosDocumentPDF({
@@ -94,14 +101,19 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         includeFooter: true,
       });
       
+      console.log('[CaseSummary] PDF blob created:', !!pdfBlob, 'size:', pdfBlob.size);
+      
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success('Case summary PDF downloaded');
     } catch (error) {
+      console.error('[CaseSummary] PDF generation failed:', error);
       toast.error('PDF generation failed: ' + error.message);
     }
   };
