@@ -37,7 +37,7 @@ function buildSummaryHTML(caseItem, evidence, events) {
       @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
+      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
       h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; border-bottom: 1px solid #000; padding-bottom: 4pt; }
       h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
       .summary-box { background: white; border: none; padding: 0; margin-bottom: 10pt; }
@@ -155,7 +155,7 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
         <style>
           @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
           body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-          .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
+          .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
           .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; margin-top: 8pt; }
         </style>
         </head><body>

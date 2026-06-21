@@ -42,6 +42,7 @@ function printSnapshot(caseItem, snapshot, generatedAt) {
       p { margin: 4pt 0 6pt; line-height: 1.2; white-space: pre-wrap; }
       .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
       .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+      .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
     </style>
   </head><body>
     <div class="letterhead-header"></div>
@@ -49,7 +50,7 @@ function printSnapshot(caseItem, snapshot, generatedAt) {
       <div class="header">Chaos Controller™ — Weekly Case Snapshot</div>
       <div style="font-size:14pt;font-weight:bold;margin-bottom:10pt;color:#000;">${caseItem.title}</div>
       <div style="font-size:10pt;color:#666;margin-bottom:12pt;">vs. ${caseItem.organisation_name || "Organisation"} | Ref: ${caseRef} | Generated: ${generatedAt}</div>
-      <div style="margin-top:10pt; white-space: pre-wrap;">${cleanSnapshot}</div>
+      <pre style="margin-top:10pt; white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.2;">${cleanSnapshot}</pre>
     </div>
     <div class="letterhead-footer"></div>
   </body></html>`);
