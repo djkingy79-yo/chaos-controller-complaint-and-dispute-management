@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, Printer } from "lucide-react";
 import { format } from "date-fns";
-import { buildPrintDocument, LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
+import { buildPrintDocument } from "@/lib/printUtilities";
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },
@@ -34,10 +34,9 @@ function buildSummaryHTML(caseItem, evidence, events) {
   return `<!DOCTYPE html><html><head>
     <title>Case Export — ${caseItem.title}</title>
     <style>
-      @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      @page { margin: 25mm 25mm 25mm 25mm; size: A4; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; -webkit-print-header: ""!important; -webkit-print-footer: ""!important; } a[href]:after, a[href] { content: none!important; display: none!important; } }
       body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
       h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; border-bottom: 1px solid #000; padding-bottom: 4pt; }
       h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
       .summary-box { background: white; border: none; padding: 0; margin-bottom: 10pt; }
@@ -48,10 +47,10 @@ function buildSummaryHTML(caseItem, evidence, events) {
       table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 10pt; }
       th { background: white; text-align: left; padding: 4pt 6pt; font-weight: bold; border-bottom: 1px solid #000; font-size: 10pt; color: #000; }
       td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 10pt; color: #000; }
+      .print-content { margin: 0 25mm; padding: 0; }
       </style>
       </head><body>
-      <div class="letterhead-header"></div>
-      <div style="padding:0 25mm 20mm 25mm;">
+      <div class="print-content">
       <div class="section-title" style="font-size:14pt;margin-bottom:10pt;">CHAOS CONTROLLER™ — CASE EXPORT</div>
     
     <div class="summary-box">
@@ -139,15 +138,13 @@ function buildLetterHTML(title, content) {
   const cleanContent = content.replace(/<[^>]*>/g, '');
   return `<!DOCTYPE html><html><head><title>${title}</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+    @page { margin: 25mm 25mm 25mm 25mm; size: A4; }
+    @media print { body { -webkit-print-header: ""!important; -webkit-print-footer: ""!important; } a[href]:after, a[href] { content: none!important; display: none!important; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; margin-top: 8pt; padding: 0 25mm 20mm 25mm; }
+    .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; margin: 0 25mm; padding: 0; }
   </style>
   </head><body>
-    <div class="letterhead-header"></div>
     <div class="content">${cleanContent}</div>
-    <div style="width:100%;height:60px;background-image:url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg');background-size:100% 100%;background-repeat:no-repeat;background-position:center center;background-color:#ffffff"></div>
   </body></html>`;
 }
 
