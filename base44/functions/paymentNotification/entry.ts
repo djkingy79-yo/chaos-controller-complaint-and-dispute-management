@@ -6,34 +6,34 @@ Deno.serve(async (req) => {
     let body = {};
     try { body = await req.json(); } catch { /* entity automation — no body */ }
 
-    const { paymentId, status, data: automationData, event: automationEvent } = body;
+    const { paymentId, status, data, event } = body;
 
     // Support both entity automation path and direct frontend call
     let payment;
-    if (automationEvent?.entity_name === 'PaymentRequest') {
-      // Automation path — read from payload
-      payment = automationData;
-      if (!payment) return Response.json({ skipped: 'no payment data' });
-      // Determine effective status for routing
-      const effectiveStatus = payment.status;
-      if (!['pending', 'verified'].includes(effectiveStatus)) {
-        return Response.json({ skipped: 'status not pending or verified' });
+    let effectivePaymentStatus;
+    
+    if (event?.entity_name === 'PaymentRequest') {
+      // Entity automation path — data contains the full entity record
+      if (!data || !data.id) {
+        return Response.json({ skipped: 'no payment data in automation payload' });
       }
-      // Reuse same email logic below by setting status
-      body.status = effectiveStatus;
-      body.paymentId = payment.id;
-    } else {
+      payment = data;
+      effectivePaymentStatus = payment.status;
+      
+      // Only process pending or verified statuses
+      if (!['pending', 'verified'].includes(effectivePaymentStatus)) {
+        return Response.json({ skipped: `status ${effectivePaymentStatus} not processed` });
+      }
+    } else if (paymentId && status) {
       // Direct call from admin UI
-      if (!paymentId || !status) {
-        return Response.json({ error: 'Missing paymentId or status' }, { status: 400 });
-      }
       payment = await base44.asServiceRole.entities.PaymentRequest.get(paymentId);
+      if (!payment) {
+        return Response.json({ error: 'Payment not found' }, { status: 404 });
+      }
+      effectivePaymentStatus = status;
+    } else {
+      return Response.json({ error: 'Invalid request - missing paymentId and status, or automation data' }, { status: 400 });
     }
-    if (!payment) {
-      return Response.json({ error: 'Payment not found' }, { status: 404 });
-    }
-
-    const effectivePaymentStatus = body.status;
 
     // Send email using Core integration
     const sendEmail = async (to, subject, body) => {
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       }
     };
 
-    // Send email to admin (chaoscontrollerapp@gmail.com) for new payments
+    // Send email to admin for new payments
     if (effectivePaymentStatus === 'pending') {
       const adminEmail = 'chaoscontrollerapp@gmail.com';
       const adminSubject = `New Payment Notification - ${payment.plan_name} Plan`;
