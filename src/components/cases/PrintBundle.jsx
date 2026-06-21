@@ -40,43 +40,40 @@ function buildClientContext(caseItem, evidence) {
 function printLetter(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
   const client = buildClientContext(caseItem, evidence);
   const content = caseItem[field] || `No ${label} generated yet.`;
-  const lines = content.split('\n');
-  // First page: ~45 lines with 1.5 inch margins, continuation: ~55 lines
+  const cleanContent = content.replace(/<[^>]*>/g, '');
+  const lines = cleanContent.split('\n');
   const firstPageLines = lines.slice(0, 45);
   const remainingLines = lines.slice(45);
   const continuationPages = [];
   for (let i = 0; i < remainingLines.length; i += 55) {
     continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
   }
-  const continuationHTML = continuationPages.map((chunk, idx) => `
+  const continuationHTML = continuationPages.map((chunk) => `
     <div class="letter-continuation">
       <div class="continuation-header"></div>
-      <div class="continuation-content">${chunk.replace(/\n/g, '<br>')}</div>
+      <pre class="continuation-content" style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${chunk}</pre>
     </div>
   `).join('');
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
   const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
+  win.document.write(`<!DOCTYPE html><html><head><title>${label}</title>
   <style>
-    @page { margin: 0; size: A4; }
-    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
+    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+    @media print { 
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { margin: 25mm 20mm 20mm 20mm; }
+    }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
     .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
     .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .letterhead-footer { display: none !important; }
-    .letter-content { position: relative; padding: 8pt 25mm 20mm 25mm; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; width: 100%; }
-    .letter-content p { margin: 0 0 4pt 0; line-height: 1.2; font-size: 10pt; }
-    .letter-content div { line-height: 1.0; }
+    .letter-content { padding: 8pt 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; white-space: pre-wrap; }
     .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
-    .continuation-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin-bottom: 0; }
-    .continuation-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.5; }
-    .continuation-content p { margin: 0 0 6pt 0; min-height: 14pt; font-size: 11pt; }
-    p { margin: 10pt 0; min-height: 18pt; }
+    .continuation-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; }
   </style>
   </head><body>
     <div class="letter-page">
       <div class="letterhead-header"></div>
-      <div class="letter-content" style="white-space: pre-wrap;">${content.replace(/<[^>]*>/g, '')}</div>
+      <pre class="letter-content" style="white-space:pre-wrap;margin:0;">${firstPageLines.join('\n')}</pre>
     </div>
     ${continuationHTML}
   </body></html>`);
@@ -97,32 +94,25 @@ function printTimeline(caseItem, events) {
   `).join("");
 
   const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Timeline — ${caseItem.title}</title>
+  win.document.write(`<!DOCTYPE html><html><head><title>Timeline</title>
   <style>
-    @page { margin: 0; size: A4; }
+    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { display: none !important; }
-    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .print-content { padding: 8pt 25mm 20mm 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <div class="letter-page">
-      <div class="letterhead-header"></div>
-      <div class="print-content">
-        <h1>Case Timeline</h1>
-        <h2>${caseItem.title}</h2>
-        <table>
-          <thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Details</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
+    <div class="letterhead-header"></div>
+    <div class="print-content">
+      <h1>Case Timeline</h1>
+      <h2>${caseItem.title}</h2>
+      <table>${rows}</table>
     </div>
   </body></html>`);
   win.document.close();
@@ -159,33 +149,25 @@ function printEvidence(caseItem, evidence) {
   }
 
   const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Evidence — ${caseItem.title}</title>
+  win.document.write(`<!DOCTYPE html><html><head><title>Evidence Index</title>
   <style>
-    @page { margin: 0; size: A4; }
+    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { display: none !important; }
-    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .print-content { padding: 8pt 25mm 20mm 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <div class="letter-page">
-      <div class="letterhead-header"></div>
-      <div class="print-content">
-        <h1>Evidence Index ${allTags.length > 0 ? "— Grouped by Tags" : ""}</h1>
-        <h2>${caseItem.title} — ${caseItem.organisation_name || ""}</h2>
-        <p style="font-size:10pt;color:#000;margin-bottom:10pt;font-weight:bold;">Total: <strong>${evidence.length}</strong> documents ${allTags.length > 0 ? `· ${allTags.length} categories` : ""}</p>
-        <table>
-          <thead><tr><th style="width:25pt;">#</th><th>File Name</th><th style="width:80pt;">Type</th><th style="width:70pt;">Date</th><th>Description / Tags</th></tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>
+    <div class="letterhead-header"></div>
+    <div class="print-content">
+      <h1>Evidence Index</h1>
+      <h2>${caseItem.title}</h2>
+      <table>${tableRows}</table>
     </div>
   </body></html>`);
   win.document.close();
@@ -216,32 +198,23 @@ function printChecklist(caseItem, evidence, events) {
   `).join("");
 
   const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Checklist — ${caseItem.title}</title>
+  win.document.write(`<!DOCTYPE html><html><head><title>Checklist</title>
   <style>
-    @page { margin: 0; size: A4; }
+    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { display: none !important; }
-    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .print-content { padding: 8pt 25mm 20mm 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <div class="letter-page">
-      <div class="letterhead-header"></div>
-      <div class="print-content">
-        <h1>Case Checklist</h1>
-        <h2>${caseItem.title}</h2>
-        <table>
-          <thead><tr><th style="width:30pt;"></th><th>Item</th><th style="width:80pt;">Status</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
+    <div class="letterhead-header"></div>
+    <div class="print-content">
+      <h1>Case Checklist</h1>
+      <table>${rows}</table>
     </div>
   </body></html>`);
   win.document.close();
@@ -259,32 +232,23 @@ function printChecklistItems(caseItem, checklistItems) {
     </tr>`).join('');
   
   const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist — ${caseItem.title}</title>
+  win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist</title>
   <style>
-    @page { margin: 0; size: A4; }
+    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { display: none !important; }
-    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .print-content { padding: 8pt 25mm 20mm 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <div class="letter-page">
-      <div class="letterhead-header"></div>
-      <div class="print-content">
-        <h1>Smart Checklist</h1>
-        <h2>${caseItem.title} · ${checklistItems.length} items</h2>
-        <table>
-          <thead><tr><th style="width:30pt;"></th><th>Action</th><th style="width:80pt;">Category</th><th style="width:70pt;">Status</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
+    <div class="letterhead-header"></div>
+    <div class="print-content">
+      <h1>Smart Checklist</h1>
+      <table>${rows}</table>
     </div>
   </body></html>`);
   win.document.close();
@@ -307,32 +271,23 @@ function printDeadlineItems(caseItem, deadlines) {
   }).join('');
   
   const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Deadlines — ${caseItem.title}</title>
+  win.document.write(`<!DOCTYPE html><html><head><title>Deadlines</title>
   <style>
-    @page { margin: 0; size: A4; }
+    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { display: none !important; }
-    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .print-content { padding: 8pt 25mm 20mm 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <div class="letter-page">
-      <div class="letterhead-header"></div>
-      <div class="print-content">
-        <h1>Deadline War Room</h1>
-        <h2>${caseItem.title} · ${deadlines.length} deadlines</h2>
-        <table>
-          <thead><tr><th>Deadline</th><th style="width:80pt;">Date</th><th style="width:70pt;">Urgency</th><th style="width:90pt;">Type</th><th style="width:70pt;">Status</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
+    <div class="letterhead-header"></div>
+    <div class="print-content">
+      <h1>Deadline War Room</h1>
+      <table>${rows}</table>
     </div>
   </body></html>`);
   win.document.close();

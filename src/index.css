@@ -103,3 +103,11 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   }
 }
+
+@media print {
+  @page { margin: 20mm; size: A4; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  nav, header, footer, aside, .no-print, button, [role="button"], .print\\:hidden { display: none !important; }
+  a[href]:after { content: none !important; }
+  .print\\:visible { display: block !important; }
+}

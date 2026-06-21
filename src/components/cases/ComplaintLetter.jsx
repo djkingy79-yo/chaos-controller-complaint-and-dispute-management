@@ -124,7 +124,10 @@ CRITICAL RULES:
     win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
     <style>
       @page { margin: 0; size: A4; }
-      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      @media print { 
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+      }
       body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; }
       .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
       .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
