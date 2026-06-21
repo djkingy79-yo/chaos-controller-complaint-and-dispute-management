@@ -85,20 +85,21 @@ export default function ComplaintLetter({ caseItem }) {
   CRITICAL RULES:
   1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
   2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
+  3. NO BLANK LINES within address blocks - addresses are continuous lines.
 
   FORMATTING REQUIREMENTS:
   1. FIRST line: TODAY'S DATE - ${today} (LEFT aligned at top)
-  2. RECIPIENT ADDRESS (LEFT SIDE, below date): Complaint handler name, organisation name, complaints address, complaints email (left aligned)
-  3. SENDER ADDRESS (RIGHT SIDE, opposite recipient): Full name, address lines, email, phone (each on separate lines, right aligned)
+  2. RECIPIENT ADDRESS (LEFT SIDE, below date): Complaint handler name, organisation name, complaints address, complaints email - NO BLANK LINES between them
+  3. SENDER ADDRESS (RIGHT SIDE, opposite recipient): Full name, address lines, email, phone - NO BLANK LINES between them
   4. Then: Re: line, salutation, body paragraphs, closing
   
   STRUCTURE:
   - Date (LEFT aligned, top)
-  - Recipient address (LEFT aligned, below date)
-  - Sender address (RIGHT aligned, opposite recipient)
+  - Recipient address (LEFT aligned, below date, NO gaps between lines)
+  - Sender address (RIGHT aligned, opposite recipient, NO gaps between lines)
   - Re: line
   - Salutation
-  - Body paragraphs
+  - Body paragraphs (single spaced)
   - Closing (Yours faithfully,)
   - Sender name
 
@@ -132,7 +133,8 @@ CASE DETAILS:
 9. Mention ${caseItem.escalation_body || "the relevant ombudsman"} as the next escalation step if unresolved.
 10. Close with "Yours faithfully," then the complainant's full name (if provided).
 11. NEVER write bracket placeholders — use real data or omit the line entirely.
-12. If account numbers are very long, format them on separate lines for readability.`;
+12. If account numbers are very long, format them on separate lines for readability.
+13. NO BLANK LINES within sender or recipient address blocks.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
     setLetter(result);
@@ -203,17 +205,17 @@ CASE DETAILS:
               <p style={{ fontSize: '13pt', fontWeight: 'bold', margin: '0 0 12pt 0', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12pt' }}>
                 <div style={{ textAlign: 'left', minWidth: '45%' }}>
-                  <p style={{ margin: '0' }}>The Complaints Manager</p>
-                  <p style={{ margin: '0' }}>NRMA Insurance</p>
-                  <p style={{ margin: '0' }}>GPO Box 438</p>
-                  <p style={{ margin: '0' }}>Sydney NSW 2001</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>The Complaints Manager</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>NRMA Insurance</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>GPO Box 438</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>Sydney NSW 2001</p>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '45%' }}>
-                  <p style={{ margin: '0' }}>Mick Gallagher</p>
-                  <p style={{ margin: '0' }}>14 The Road</p>
-                  <p style={{ margin: '0' }}>Penrith 2750</p>
-                  <p style={{ margin: '0' }}>Email: Djkingy79@gmail.com</p>
-                  <p style={{ margin: '0' }}>Mobile: 0413572850</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>Mick Gallagher</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>14 The Road</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>Penrith 2750</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>Email: Djkingy79@gmail.com</p>
+                  <p style={{ margin: '0', lineHeight: '1.0' }}>Mobile: 0413572850</p>
                 </div>
               </div>
               <p style={{ margin: '12pt 0', fontWeight: 'bold' }}>Re: Formal Complaint — Account NRMA09887</p>
