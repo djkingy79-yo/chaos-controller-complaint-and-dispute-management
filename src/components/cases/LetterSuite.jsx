@@ -344,9 +344,16 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [generating, setGenerating] = useState(false);
 
   const handleApplyTemplate = (content) => {
+    console.log('VISIBLE LETTER BUTTON CLICKED', {
+      action: 'apply_template',
+      letterType: letterType.label,
+      caseId: caseItem?.id,
+      hasContent: !!content
+    });
     setText(content);
     updateMutation.mutate({ [field]: content });
     setEditing(false);
+    console.log('[LetterSuite] Template applied');
   };
 
   const updateMutation = useMutation({
@@ -365,17 +372,26 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   });
 
   const handleGenerate = async () => {
+    console.log('VISIBLE LETTER BUTTON CLICKED', {
+      action: 'regenerate',
+      letterType: letterType.label,
+      caseId: caseItem?.id,
+      field: field
+    });
     setGenerating(true);
     try {
       const client = buildClientContext(caseItem, evidence);
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today);
+      console.log('[LetterSuite] Regenerate - calling InvokeLLM');
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
+      console.log('[LetterSuite] Regenerate - AI response received', result.length, 'chars');
       // Only update local state after successful save
       updateMutation.mutate({ [field]: result }, {
         onSuccess: () => {
           setText(result);
           toast.success(`${letterType.label} generated and saved`);
+          console.log('[LetterSuite] Regenerate - saved to database');
           setGenerating(false);
         },
         onError: () => {
@@ -384,12 +400,20 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         }
       });
     } catch (e) {
+      console.error('[LetterSuite] Regenerate failed:', e);
       toast.error("Generation failed: " + e.message);
       setGenerating(false);
     }
   };
 
   const handlePrintPDF = async () => {
+    // VISIBLE BUTTON CLICK LOG - DEPLOYED TEST
+    console.log('VISIBLE LETTER BUTTON CLICKED', {
+      action: 'print_pdf',
+      letterType: letterType.label,
+      caseId: caseItem?.id,
+      hasContent: !!text
+    });
     console.log('[LetterSuite] Print PDF clicked', letterType.label);
     console.log('[LetterSuite] Letter exists:', !!text);
     console.log('[LetterSuite] Case exists:', !!caseItem);
@@ -413,6 +437,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       });
       
       console.log('[LetterSuite] PDF generated', pdfBlob.size, 'bytes');
+      console.log('generateChaosDocumentPDF reached - PDF blob created');
       
       // Try to open print window
       const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -443,6 +468,13 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handleDownloadPDF = async () => {
+    // VISIBLE BUTTON CLICK LOG - DEPLOYED TEST
+    console.log('VISIBLE LETTER BUTTON CLICKED', {
+      action: 'download_pdf',
+      letterType: letterType.label,
+      caseId: caseItem?.id,
+      hasContent: !!text
+    });
     console.log('[LetterSuite] Download PDF clicked', letterType.label);
     console.log('[LetterSuite] Letter exists:', !!text);
     
@@ -464,6 +496,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       });
       
       console.log('[LetterSuite] PDF generated', pdfBlob.size, 'bytes');
+      console.log('generateChaosDocumentPDF reached - PDF blob created');
       
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
@@ -474,7 +507,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      console.log('[LetterSuite] Download initiated');
+      console.log('[LetterSuite] Download initiated - file should be downloading now');
     } catch (error) {
       console.error('[LetterSuite] PDF download failed:', error);
       toast.error('Download failed: ' + error.message);
@@ -509,7 +542,20 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </Button>
               <Button
                 variant="outline" size="sm"
-                onClick={() => { if (editing) updateMutation.mutate({ [field]: text }); setEditing(!editing); }}
+                onClick={() => {
+                  console.log('VISIBLE LETTER BUTTON CLICKED', {
+                    action: editing ? 'save_edit' : 'toggle_edit',
+                    letterType: letterType.label,
+                    caseId: caseItem?.id
+                  });
+                  if (editing) {
+                    console.log('[LetterSuite] Saving edited letter...');
+                    updateMutation.mutate({ [field]: text });
+                  } else {
+                    console.log('[LetterSuite] Entering edit mode');
+                  }
+                  setEditing(!editing);
+                }}
                 className="gap-1.5 text-xs"
               >
                 {editing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
