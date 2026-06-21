@@ -89,20 +89,20 @@ export default function ComplaintLetter({ caseItem }) {
   4. Address lines must be TIGHT single-spaced with NO gaps.
 
   FORMATTING REQUIREMENTS:
-  1. FIRST line (left aligned): TODAY'S DATE - ${today} - PLAIN TEXT ONLY, no asterisks, no bold, no **, just "21 June 2026"
+  1. FIRST LINE: TODAY'S DATE - ${today} - PLAIN TEXT ONLY, no asterisks, no bold, no **, just "21 June 2026"
   2. BLANK LINE after date
-  3. RECIPIENT ADDRESS (LEFT SIDE) - TIGHT SPACING: Complaint handler name, organisation name, complaints address, complaints email
+  3. SENDER ADDRESS (RIGHT SIDE, aligned right) - TIGHT SPACING: Full name, address lines, email, phone - each on separate line, NO gaps
   4. BLANK LINE
-  5. SENDER ADDRESS (RIGHT SIDE) - TIGHT SPACING: Full name, address lines, email, phone
+  5. RECIPIENT ADDRESS (LEFT SIDE) - TIGHT SPACING: Complaint handler name, organisation name, complaints address, complaints email - each on separate line, NO gaps
   6. BLANK LINE
   7. Then: Re: line, salutation, body paragraphs, closing
   
   STRUCTURE:
-  - Date (FIRST line at top)
+  - Date (FIRST line at top, left aligned)
   - Blank line
-  - Recipient address (LEFT aligned)
+  - Sender address (RIGHT aligned - name, street, city, email, phone)
   - Blank line
-  - Sender address (RIGHT aligned)
+  - Recipient address (LEFT aligned - handler, org, address, email)
   - Blank line
   - Re: line
   - Salutation

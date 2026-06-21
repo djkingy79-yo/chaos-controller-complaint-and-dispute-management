@@ -55,16 +55,20 @@ const LETTER_TYPES = [
 function buildPrompt(type, caseItem, client, today) {
   const base = `You are a professional consumer advocacy assistant in Australia. Generate a formal letter for a consumer dispute.
 
-CRITICAL RULES:
-1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
-2. Use STANDARD BUSINESS LETTER FORMAT with DATE FIRST.
-3. ALWAYS use AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence).
+  CRITICAL RULES:
+  1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
+  2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
+  3. ALWAYS use AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence).
+  4. Address lines must be TIGHT single-spaced with NO gaps.
 
-FORMATTING REQUIREMENTS:
-- FIRST LINE: Today's date: ${today} - NO asterisks or bold markers, plain text only
-- TOP RIGHT (below date): Sender's (complainant's) full name, address lines, email, phone
-- LEFT SIDE (below date, opposite sender): Merchant's complaint handler name, organisation name, complaints address, complaints email
-- Then: Re: line, salutation, body, closing
+  FORMATTING REQUIREMENTS:
+  - FIRST LINE: Today's date: ${today} - PLAIN TEXT ONLY, no asterisks, no bold, no **
+  - BLANK LINE after date
+  - SENDER ADDRESS (RIGHT SIDE, aligned right): Full name, address lines, email, phone - each on separate line, NO gaps between lines
+  - BLANK LINE
+  - RECIPIENT ADDRESS (LEFT SIDE): Complaint handler name, organisation name, complaints address, complaints email - each on separate line, NO gaps
+  - BLANK LINE
+  - Then: Re: line, salutation, body, closing
 
 COMPLAINANT DETAILS:
 - Name: ${client.name || "not provided — omit name line"}
@@ -91,17 +95,18 @@ CASE DETAILS:
 - Today's Date: ${today}`;
 
   const formats = `
-  PROFESSIONAL BUSINESS LETTER FORMAT - CRITICAL:
-  1. LINE 1: ${today} (DATE FIRST, PLAIN TEXT - NO ASTERISKS)
-  2. NEXT: Sender details RIGHT side (Name, Address, Email, Phone) - each on separate line
-  3. OPPOSITE LEFT: Recipient details (Complaint Handler, Organisation, Address, Email) - each on separate line
-  4. BLANK LINE
-  5. Re: line with account/reference
-  6. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
-  7. Body paragraphs - professional AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence)
-  8. Close: "Yours faithfully," then blank line, then complainant name
-  9. NEVER use [brackets] for placeholders - if data missing, omit that line entirely
-  10. Keep formatting CLEAN and PROFESSIONAL - this is a legal document`;
+  PROFESSIONAL AUSTRALIAN BUSINESS LETTER FORMAT - CRITICAL:
+  1. LINE 1: ${today} (DATE FIRST, LEFT ALIGNED, PLAIN TEXT - NO ASTERISKS, NO BOLD)
+  2. BLANK LINE
+  3. SENDER ADDRESS RIGHT SIDE (Name, Address, Email, Phone) - TIGHT single-spaced, NO gaps between lines
+  4. RECIPIENT ADDRESS LEFT SIDE (Complaint Handler, Organisation, Address, Email) - TIGHT single-spaced, NO gaps
+  5. BLANK LINE
+  6. Re: line with account/reference
+  7. Salutation: "Dear ${caseItem.complaint_handler_name || "Sir/Madam"},"
+  8. Body paragraphs - professional AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence)
+  9. Close: "Yours faithfully," then blank line, then complainant name
+  10. NEVER use [brackets] for placeholders - if data missing, omit that line entirely
+  11. Keep formatting CLEAN and PROFESSIONAL - this is a legal document`;
 
   if (type === "letter1") {
     return `${base}
