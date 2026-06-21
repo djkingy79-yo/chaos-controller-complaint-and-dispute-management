@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Printer, CheckSquare, ClipboardList } from "lucide-react";
+import { Printer, CheckSquare, ClipboardList, Download } from "lucide-react";
 import { format } from "date-fns";
 import { CONTACT } from "./LetterheadBanner";
+import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 
-function printChecklist(caseItem, evidence, events) {
+async function printChecklistPDF(caseItem, evidence, events) {
   const checks = [
     { label: "Issue summary documented", done: !!(caseItem.issue_summary) },
     { label: "Full issue details recorded", done: !!(caseItem.issue_details) },
@@ -19,82 +21,55 @@ function printChecklist(caseItem, evidence, events) {
     { label: "Response received from organisation", done: ["response_received", "escalation_ready", "escalated", "resolved"].includes(caseItem.status) },
   ];
 
-  const rows = checks.map((c) => `
-    <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:14pt;">${c.done ? "☑" : "☐"}</td>
-      <td style="padding:6pt 8pt;font-size:12pt;">${c.label}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;${c.done ? "color:green;" : "color:#c00;"}">${c.done ? "COMPLETE" : "MISSING"}</td>
-    </tr>
-  `).join("");
-
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Checklist — ${caseItem.title}</title>
-  <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; }
-    h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4pt; }
-    h2 { font-size: 12pt; font-style: italic; color: #666; margin-bottom: 12pt; font-weight: normal; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-    th { text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; }
-    .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
-  </style>
-  </head><body>
-    <h1>Case Checklist</h1>
-    <h2>${caseItem.title}</h2>
-    <table>
-      <thead><tr><th style="width:30pt;"></th><th>Item</th><th style="width:80pt;">Status</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div class="footer">
-      <span>${CONTACT.website} | ${CONTACT.email}</span>
-      <span>${caseRef} | ${now}</span>
-    </div>
-  </body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 500);
+  const body = checks.map(c => `${c.done ? "☑" : "☐"} ${c.label} — ${c.done ? "COMPLETE" : "MISSING"}`).join("\n");
+  
+  try {
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'general',
+      title: 'Case Checklist',
+      body: `CASE CHECKLIST\n\n${body}`,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Checklist_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Checklist PDF downloaded');
+  } catch (error) {
+    toast.error('PDF generation failed: ' + error.message);
+  }
 }
 
-function printChecklistItems(caseItem, checklistItems) {
-  const rows = checklistItems.map(item => `
-    <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:14pt;">${item.status === 'complete' ? '☑' : '☐'}</td>
-      <td style="padding:6pt 8pt;font-size:12pt;${item.status === 'complete' ? 'text-decoration:line-through;color:#888;' : ''}">${item.label}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(item.category || '').replace(/_/g, ' ')}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;font-weight:bold;${item.status === 'complete' ? 'color:green;' : item.status === 'missing' ? 'color:#c00;' : 'color:#f90;'}">${(item.status || '').replace('_', ' ').toUpperCase()}</td>
-    </tr>`).join('');
-  
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist — ${caseItem.title}</title>
-  <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; }
-    h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4pt; }
-    h2 { font-size: 12pt; font-style: italic; color: #666; margin-bottom: 12pt; font-weight: normal; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-    th { text-align: left; padding: 5pt 8pt; font-size: 10pt; font-weight: bold; border-bottom: 2px solid #ddd; }
-    td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; }
-    .footer { margin-top: 30pt; padding-top: 8pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; }
-  </style>
-  </head><body>
-    <h1>Smart Checklist</h1>
-    <h2>${caseItem.title} · ${checklistItems.length} items</h2>
-    <table>
-      <thead><tr><th style="width:30pt;"></th><th>Action</th><th style="width:80pt;">Category</th><th style="width:70pt;">Status</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div class="footer">
-      <span>${CONTACT.website} | ${CONTACT.email}</span>
-      <span>${caseRef} | ${now}</span>
-    </div>
-  </body></html>`);
-  win.document.close();
-  setTimeout(() => { win.print(); win.close(); }, 400);
+async function printChecklistItemsPDF(caseItem, checklistItems) {
+  const body = checklistItems.map(item => {
+    const statusMark = item.status === 'complete' ? '☑' : '☐';
+    const statusText = (item.status || '').toUpperCase();
+    return `${statusMark} ${item.label}\n   Category: ${(item.category || '').replace(/_/g, ' ')} | Status: ${statusText}`;
+  }).join("\n\n");
+
+  try {
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'general',
+      title: 'Smart Checklist',
+      body: `SMART CHECKLIST (${checklistItems.length} items)\n\n${body}`,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SmartChecklist_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Smart checklist PDF downloaded');
+  } catch (error) {
+    toast.error('PDF generation failed: ' + error.message);
+  }
 }
 
 export default function CaseChecklist({ caseItem, evidence, events, checklistItems }) {
@@ -128,8 +103,8 @@ export default function CaseChecklist({ caseItem, evidence, events, checklistIte
               <p className="text-xs text-muted-foreground">Track your case completion progress</p>
             </div>
           </div>
-          <Button onClick={() => printChecklist(caseItem, evidence, events)} className="gap-2">
-            <Printer className="w-4 h-4" /> Print
+          <Button onClick={() => printChecklistPDF(caseItem, evidence, events)} className="gap-2">
+            <Download className="w-4 h-4" /> PDF
           </Button>
         </div>
 
@@ -172,8 +147,8 @@ export default function CaseChecklist({ caseItem, evidence, events, checklistIte
                 <p className="text-xs text-muted-foreground">{checklistItems.length} tasks identified</p>
               </div>
             </div>
-            <Button variant="outline" onClick={() => printChecklistItems(caseItem, checklistItems)} className="gap-2">
-              <Printer className="w-4 h-4" /> Print
+            <Button variant="outline" onClick={() => printChecklistItemsPDF(caseItem, checklistItems)} className="gap-2">
+              <Download className="w-4 h-4" /> PDF
             </Button>
           </div>
 

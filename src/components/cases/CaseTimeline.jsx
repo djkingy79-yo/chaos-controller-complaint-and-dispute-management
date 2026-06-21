@@ -16,11 +16,13 @@ import {
   FileText,
   CheckCircle2,
   Zap,
-  Circle,
   Loader2,
   CalendarPlus,
+  Download,
 } from "lucide-react";
 import { format } from "date-fns";
+import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 
 const eventTypeConfig = {
   incident: { icon: AlertCircle, color: "text-destructive", bg: "bg-destructive/10" },
@@ -58,7 +60,6 @@ export default function CaseTimeline({ caseId, events }) {
       const endDate = new Date(eventDate);
       endDate.setHours(eventDate.getHours() + 1);
 
-      // Use Google Calendar connector to create event
       const result = await base44.functions.invoke('syncCalendar', {
         action: 'create',
         event: {
@@ -88,6 +89,34 @@ export default function CaseTimeline({ caseId, events }) {
     }
   };
 
+  const handleTimelinePDF = async () => {
+    const body = sorted.map(ev => {
+      const cfg = eventTypeConfig[ev.event_type] || eventTypeConfig.incident;
+      const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : format(new Date(ev.created_date), "d MMM yyyy");
+      return `${dateStr} — ${ev.title}\n   Type: ${(ev.event_type || '').replace(/_/g, ' ')}\n   ${ev.description || ''}`;
+    }).join("\n\n");
+
+    try {
+      const pdfBlob = await generateChaosDocumentPDF({
+        documentType: 'general',
+        title: 'Case Timeline',
+        body: `CASE TIMELINE (${sorted.length} events)\n\n${body}`,
+        includeHeader: true,
+        includeFooter: true,
+      });
+      
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Timeline PDF downloaded');
+    } catch (error) {
+      toast.error('PDF generation failed: ' + error.message);
+    }
+  };
+
   const sorted = [...events].sort((a, b) => {
     const da = a.event_date || a.created_date;
     const db = b.event_date || b.created_date;
@@ -98,56 +127,63 @@ export default function CaseTimeline({ caseId, events }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-heading font-semibold text-foreground">Timeline</h3>
-        <Dialog open={showAdd} onOpenChange={setShowAdd}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1.5 text-xs">
-              <Plus className="w-3.5 h-3.5" /> Add Event
+        <div className="flex items-center gap-2">
+          {sorted.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleTimelinePDF} className="gap-1.5 text-xs">
+              <Download className="w-3.5 h-3.5" /> PDF
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Timeline Event</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label>Event Type</Label>
-                <Select value={form.event_type} onValueChange={(v) => setForm({ ...form, event_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="incident">Incident</SelectItem>
-                    <SelectItem value="complaint">Complaint</SelectItem>
-                    <SelectItem value="response">Response</SelectItem>
-                    <SelectItem value="deadline">Deadline</SelectItem>
-                    <SelectItem value="escalation">Escalation</SelectItem>
-                    <SelectItem value="evidence">Evidence</SelectItem>
-                    <SelectItem value="resolution">Resolution</SelectItem>
-                    <SelectItem value="action_required">Action Required</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="What happened?" />
-              </div>
-              <div className="space-y-2">
-                <Label>Details (optional)</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="More details..." rows={3} />
-              </div>
-              <Button
-                onClick={() => createMutation.mutate({ ...form, case_id: caseId })}
-                disabled={!form.title || createMutation.isPending}
-                className="w-full gap-2"
-              >
-                {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                Add Event
+          )}
+          <Dialog open={showAdd} onOpenChange={setShowAdd}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1.5 text-xs">
+                <Plus className="w-3.5 h-3.5" /> Add Event
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Timeline Event</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label>Event Type</Label>
+                  <Select value={form.event_type} onValueChange={(v) => setForm({ ...form, event_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="incident">Incident</SelectItem>
+                      <SelectItem value="complaint">Complaint</SelectItem>
+                      <SelectItem value="response">Response</SelectItem>
+                      <SelectItem value="deadline">Deadline</SelectItem>
+                      <SelectItem value="escalation">Escalation</SelectItem>
+                      <SelectItem value="evidence">Evidence</SelectItem>
+                      <SelectItem value="resolution">Resolution</SelectItem>
+                      <SelectItem value="action_required">Action Required</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Date</Label>
+                  <Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="What happened?" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Details (optional)</Label>
+                  <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="More details..." rows={3} />
+                </div>
+                <Button
+                  onClick={() => createMutation.mutate({ ...form, case_id: caseId })}
+                  disabled={!form.title || createMutation.isPending}
+                  className="w-full gap-2"
+                >
+                  {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Add Event
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {sorted.length === 0 ? (

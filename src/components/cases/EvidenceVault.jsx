@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Upload, FileText, Image, Mail, FileCheck, Loader2,
   Trash2, ExternalLink, Plus, ScanLine, Camera, Tag, FileDigit,
-  HardDrive, Search,
+  HardDrive, Search, Printer,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
 import { useQuery } from "@tanstack/react-query";
+import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
 
 const typeConfig = {
   email:         { icon: Mail,      label: "Email",           color: "bg-primary/10 text-primary" },
@@ -397,6 +398,35 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     return new Date(a.created_date) - new Date(b.created_date);
   });
 
+  const handlePrintEvidence = async () => {
+    try {
+      const body = sorted.map((ev, i) => {
+        const cfg = typeConfig[ev.file_type] || typeConfig.other;
+        const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMMM yyyy") : "—";
+        const desc = ev.description || ev.extracted_data?.document_summary || "—";
+        return `${i + 1}. ${ev.file_name}\n   Type: ${cfg.label} | Date: ${dateStr}\n   ${desc}`;
+      }).join("\n\n");
+
+      const pdfBlob = await generateChaosDocumentPDF({
+        documentType: 'general',
+        title: 'Evidence Index',
+        body: `EVIDENCE VAULT (${sorted.length} files)\n\n${body}`,
+        includeHeader: true,
+        includeFooter: true,
+      });
+
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Evidence index PDF downloaded');
+    } catch (error) {
+      toast.error('PDF generation failed: ' + error.message);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <DocumentScanner
@@ -409,6 +439,9 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
         <div className="flex items-center justify-between">
           <h3 className="font-heading font-semibold text-foreground">Evidence Vault</h3>
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handlePrintEvidence}>
+              <Printer className="w-3.5 h-3.5" /> PDF
+            </Button>
             <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowScanner(true)} disabled={!canUpload}>
               <Camera className="w-3.5 h-3.5" /> Scan Doc
             </Button>

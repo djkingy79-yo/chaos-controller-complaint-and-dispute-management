@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { format, differenceInDays, isPast, parseISO } from "date-fns";
-import { Printer, FileText, TrendingUp, AlertCircle, CheckCircle2, Clock, Mail } from "lucide-react";
+import { Printer, FileText, TrendingUp, AlertCircle, CheckCircle2, Clock, Mail, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
+import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 
 
 const STATUS_LABELS = {
@@ -60,79 +61,57 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
     .slice(0, 5);
 
-  const handlePrint = () => {
+  const handleSummaryPDF = async () => {
     const client = buildClientContext(caseItem, evidence);
-    const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
+    
+    const summaryLines = [
+      `Organisation: ${caseItem.organisation_name || "—"}`,
+      `Status: ${STATUS_LABELS[caseItem.status] || caseItem.status}`,
+      `Category: ${caseItem.category}`,
+      `Priority: ${PRIORITY_LABELS[caseItem.priority] || caseItem.priority}`,
+      `Complainant: ${client.name || "—"}`,
+      `Account #: ${caseItem.account_number || "—"}`,
+      `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}`,
+      `Escalation Body: ${caseItem.escalation_body || "—"}`,
+    ].join("\n");
 
-    const deadlineRows = upcomingDeadlines.length
-      ? upcomingDeadlines.map((d) => {
+    const deadlineLines = upcomingDeadlines.length > 0
+      ? upcomingDeadlines.map(d => {
           const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
-          const overdue = daysLeft < 0;
-          return `<tr style="border-bottom:1px solid #eee;">
-            <td style="padding:5pt 8pt;font-size:10.5pt;font-weight:bold;">${d.title}</td>
-            <td style="padding:5pt 8pt;font-size:10.5pt;">${format(new Date(d.deadline_date), "d MMM yyyy")}</td>
-            <td style="padding:5pt 8pt;font-size:10pt;text-transform:capitalize;">${(d.deadline_type || "").replace(/_/g, " ")}</td>
-            <td style="padding:5pt 8pt;font-size:10.5pt;font-weight:bold;color:${overdue ? "#c00" : daysLeft <= 7 ? "#d97706" : "#166534"};">
-              ${overdue ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? "TODAY" : `${daysLeft} days`}
-            </td>
-          </tr>`;
-        }).join("")
-      : `<tr><td colspan="4" style="padding:8pt;font-size:10.5pt;color:#888;font-style:italic;">No upcoming deadlines.</td></tr>`;
+          const urgency = daysLeft < 0 ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? "TODAY" : `${daysLeft} days`;
+          return `${d.title} — Due: ${format(new Date(d.deadline_date), "d MMM yyyy")} | ${urgency}`;
+        }).join("\n")
+      : "No upcoming deadlines.";
 
-    const html = `<!DOCTYPE html><html><head>
-      <title>Case Summary — ${caseItem.title}</title>
-      <style>${DOCUMENT_CSS}</style>
-      </head><body>
-      <div class="letterhead-header"></div>
-      <div class="document-content" style="padding: 0 17.5mm;">
-      <h1 style="font-size:16pt;font-weight:bold;margin-bottom:14pt;">Case Summary</h1>
-      <h2 style="font-size:13pt;font-weight:bold;margin-bottom:16pt;">${caseItem.title}</h2>
+    const body = `CASE DETAILS\n${summaryLines}\n\nISSUE SUMMARY\n${caseItem.issue_summary || "—"}\n\nDESIRED OUTCOME\n${caseItem.desired_outcome || "—"}\n\nUPCOMING DEADLINES (${upcomingDeadlines.length})\n${deadlineLines}`;
 
-        <div class="summary-box">
-        <table class="summary-row">
-        <tbody>
-          <tr><td>Organisation</td><td>${caseItem.organisation_name || "—"}</td></tr>
-          <tr><td>Status</td><td>${STATUS_LABELS[caseItem.status] || caseItem.status}</td></tr>
-          <tr><td>Category</td><td>${caseItem.category}</td></tr>
-          <tr><td>Priority</td><td>${PRIORITY_LABELS[caseItem.priority] || caseItem.priority}</td></tr>
-          <tr><td>Complainant</td><td>${client.name || "—"}</td></tr>
-          <tr><td>Account #</td><td>${caseItem.account_number || "—"}</td></tr>
-          <tr><td>Incident Date</td><td>${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}</td></tr>
-          <tr><td>Escalation Body</td><td>${caseItem.escalation_body || "—"}</td></tr>
-        </tbody>
-        </table>
-        </div>
-
-        ${caseItem.issue_summary ? `<div class="section" style="margin-top:14pt;">
-        <div class="section-title" style="font-size:11pt;">Issue Summary</div>
-        <div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_summary}</div>
-        </div>` : ""}
-
-        ${caseItem.desired_outcome ? `<div class="section" style="margin-top:14pt;">
-        <div class="section-title" style="font-size:11pt;">Desired Outcome</div>
-        <div style="font-size:10.5pt;line-height:1.6;">${caseItem.desired_outcome}</div>
-        </div>` : ""}
-
-        <div class="section" style="margin-top:14pt;">
-        <div class="section-title" style="font-size:11pt;">Upcoming Deadlines (${upcomingDeadlines.length})</div>
-        <table>
-        <thead><tr><th>Title</th><th style="width:80pt;">Due Date</th><th style="width:80pt;">Type</th><th>Days Remaining</th></tr></thead>
-        <tbody>${deadlineRows}</tbody>
-        </table>
-        </div>
-        </div>
-        <div class="letterhead-footer"></div>
-      </body></html>`;
-
-    printDocument(html);
+    try {
+      const pdfBlob = await generateChaosDocumentPDF({
+        documentType: 'general',
+        title: 'Case Summary',
+        body,
+        includeHeader: true,
+        includeFooter: true,
+      });
+      
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Case summary PDF downloaded');
+    } catch (error) {
+      toast.error('PDF generation failed: ' + error.message);
+    }
   };
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h3 className="font-heading font-semibold text-foreground">Case Summary</h3>
-        <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 text-xs">
-          <Printer className="w-3.5 h-3.5" /> Print Summary
+        <Button variant="outline" size="sm" onClick={handleSummaryPDF} className="gap-1.5 text-xs">
+          <Download className="w-3.5 h-3.5" /> PDF
         </Button>
       </div>
 
