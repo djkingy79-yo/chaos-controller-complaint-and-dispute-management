@@ -64,9 +64,9 @@ function buildPrompt(type, caseItem, client, today) {
   FORMATTING REQUIREMENTS:
   - FIRST LINE: Today's date: ${today} - PLAIN TEXT ONLY, no asterisks, no bold, no **
   - BLANK LINE after date
-  - SENDER ADDRESS (LEFT SIDE): Full name, address lines, email, phone - each on separate line, NO gaps between lines
+  - SENDER ADDRESS (RIGHT SIDE): Full name, address lines, email, phone - each on separate line, NO gaps between lines
   - BLANK LINE
-  - RECIPIENT ADDRESS (LEFT SIDE, directly under sender): Complaint handler name, organisation name, complaints address, complaints email - each on separate line, NO gaps
+  - RECIPIENT ADDRESS (LEFT SIDE): Complaint handler name, organisation name, complaints address, complaints email - each on separate line, NO gaps
   - BLANK LINE
   - Then: Re: line, salutation, body, closing
 
@@ -122,9 +122,9 @@ CASE DETAILS:
   CRITICAL FORMAT:
   - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
   - Line 2: Blank
-  - Lines 3-7: Sender address LEFT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
+  - Lines 3-7: Sender address RIGHT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
   - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned under sender (tight single-spaced, NO gaps)`;
+  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
   }
 
   if (type === "letter2") {
@@ -141,9 +141,9 @@ CASE DETAILS:
   CRITICAL FORMAT:
   - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
   - Line 2: Blank
-  - Lines 3-7: Sender address LEFT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
+  - Lines 3-7: Sender address RIGHT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
   - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned under sender (tight single-spaced, NO gaps)`;
+  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
   }
 
   if (type === "letter3") {
@@ -160,9 +160,9 @@ CASE DETAILS:
   CRITICAL FORMAT:
   - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
   - Line 2: Blank
-  - Lines 3-7: Sender address LEFT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
+  - Lines 3-7: Sender address RIGHT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
   - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned under sender (tight single-spaced, NO gaps)`;
+  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
   }
 
   if (type === "accept_offer") {
@@ -180,9 +180,9 @@ CASE DETAILS:
   CRITICAL FORMAT:
   - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
   - Line 2: Blank
-  - Lines 3-7: Sender address LEFT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
+  - Lines 3-7: Sender address RIGHT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
   - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned under sender (tight single-spaced, NO gaps)`;
+  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
   }
 
   if (type === "deny_offer") {
@@ -200,9 +200,9 @@ CASE DETAILS:
   CRITICAL FORMAT:
   - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
   - Line 2: Blank
-  - Lines 3-7: Sender address LEFT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
+  - Lines 3-7: Sender address RIGHT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
   - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned under sender (tight single-spaced, NO gaps)`;
+  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
   }
 
   if (type === "escalation") {
@@ -222,9 +222,9 @@ CASE DETAILS:
   CRITICAL FORMAT:
   - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
   - Line 2: Blank
-  - Lines 3-7: Sender address LEFT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
+  - Lines 3-7: Sender address RIGHT aligned (Name, Street, City, Email, Phone - NO gaps between lines)
   - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned under sender (tight single-spaced, NO gaps)`;
+  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
   }
 
   return base;
