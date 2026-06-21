@@ -45,8 +45,7 @@ export default function HeroSection({ onGetStarted, onSignIn }) {
           className="text-center mb-5"
         >
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-bold tracking-tighter leading-tight">
-            <span className="text-white drop-shadow-lg">Welcome to</span>
-            <span className="text-[#FFD700] ml-2 sm:ml-3 drop-shadow-lg" style={{ textShadow: "0 0 30px rgba(255, 215, 0, 0.5)" }}>Chaos!</span>
+            <span className="text-[#FFD700] drop-shadow-lg" style={{ textShadow: "0 0 30px rgba(255, 215, 0, 0.5)" }}>WELCOME TO CHAOS</span>
           </h1>
         </motion.div>
 
