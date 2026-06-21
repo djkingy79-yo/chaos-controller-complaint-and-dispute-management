@@ -136,13 +136,21 @@ function openPrintPreview(caseItem, evidence, events) {
 // Helper to generate letter PDF blob using unified generator
 async function generateLetterPDF(title, content) {
   const cleanContent = content.replace(/<[^>]*>/g, '');
-  return await generateChaosDocumentPDF({
-    documentType: 'letter',
-    title: title,
-    body: cleanContent,
-    includeHeader: true,
-    includeFooter: true,
-  });
+  console.log('[ExportZIP] Generating letter PDF:', title);
+  try {
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'letter',
+      title: title,
+      letterContent: cleanContent,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    console.log('[ExportZIP] Letter PDF generated:', pdfBlob.size, 'bytes');
+    return pdfBlob;
+  } catch (error) {
+    console.error('[ExportZIP] Letter PDF failed:', title, error);
+    throw error;
+  }
 }
 
 export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) {

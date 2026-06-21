@@ -3,8 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
-import { printLetter as printLetterUniversal, printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
-import { printTableDocument } from "@/lib/printUtilities";
+import { generateChaosDocumentPDF, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
+import { DOCUMENT_CSS } from "@/lib/printUtilities";
 
 
 const LETTER_DEFS = [
@@ -39,55 +39,114 @@ function buildClientContext(caseItem, evidence) {
   return merged;
 }
 
-function printLetterBundle(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
+async function printLetterBundle(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
   const content = caseItem[field] || `No ${label} generated yet.`;
-  printLetterUniversal({ title: label, letterContent: content });
-}
-
-function printTimeline(caseItem, events) {
-  const sorted = [...events].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
-  const rows = sorted.map((ev) => `
-    <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:10pt;white-space:nowrap;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${ev.event_type.replace("_", " ")}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${ev.title}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;color:#000;">${ev.description || ""}</td>
-    </tr>
-  `).join("");
-  printTableDocument({ title: "Timeline", heading: "Case Timeline", subheading: caseItem.title, tableRows: rows });
-}
-
-function printEvidence(caseItem, evidence) {
-  const sorted = [...evidence].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
-  const allTags = [...new Set(evidence.flatMap((ev) => ev.tags || []))];
-  
-  const grouped = allTags.length > 0 ? {} : { "All Documents": sorted };
-  if (allTags.length > 0) {
-    for (const tag of allTags) {
-      grouped[tag] = sorted.filter((ev) => ev.tags?.includes(tag));
+  console.log('[PrintBundle] Letter PDF:', label);
+  try {
+    const cleanContent = content.replace(/<[^>]*>/g, '');
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'letter',
+      title: label,
+      letterContent: cleanContent,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const win = window.open(pdfUrl, '_blank');
+    if (win) {
+      win.onload = () => { setTimeout(() => { win.print(); }, 500); };
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    } else {
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = `${label.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      alert('Popup blocked - PDF downloaded instead');
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
     }
-    const untagged = sorted.filter((ev) => !ev.tags || ev.tags.length === 0);
-    if (untagged.length > 0) grouped["Other"] = untagged;
+  } catch (error) {
+    console.error('[PrintBundle] Letter PDF failed:', label, error);
+    alert('PDF failed: ' + error.message);
   }
-
-  let tableRows = "";
-  let itemNum = 1;
-  for (const [groupName, items] of Object.entries(grouped)) {
-    tableRows += `<tr style="background:white;"><th colspan="5" style="text-align:left;padding:6pt 8pt;font-size:11pt;border-bottom:2pt solid #000;">${groupName} (${items.length})</th></tr>`;
-    tableRows += items.map((ev) => `
-      <tr style="border-bottom:1px solid #eee;">
-        <td style="padding:6pt 8pt;font-size:10pt;">${itemNum++}</td>
-        <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${ev.file_name}</td>
-        <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(ev.file_type || "").replace("_", " ")}</td>
-        <td style="padding:6pt 8pt;font-size:10pt;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-        <td style="padding:6pt 8pt;font-size:10pt;color:#000;">${[ev.description, ev.tags?.join(", ")].filter(Boolean).join(" · ") || "—"}</td>
-      </tr>
-    `).join("");
-  }
-  printTableDocument({ title: "Evidence Index", heading: "Evidence Index", subheading: `${caseItem.title} — ${evidence.length} documents`, tableRows: tableRows });
 }
 
-function printChecklist(caseItem, evidence, events) {
+async function printTimeline(caseItem, events) {
+  const sorted = [...events].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
+  console.log('[PrintBundle] Timeline PDF');
+  try {
+    const sections = [{
+      title: 'Chronological Timeline',
+      content: sorted.map(ev => 
+        `[${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}] ${(ev.event_type||"").replace(/_/g," ")}: ${ev.title}${ev.description ? " — " + ev.description : ""}`
+      ).join('\n\n')
+    }];
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'snapshot',
+      title: 'CASE TIMELINE',
+      matter: caseItem.title,
+      date: format(new Date(), "d MMMM yyyy"),
+      sections: sections,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const win = window.open(pdfUrl, '_blank');
+    if (win) {
+      win.onload = () => { setTimeout(() => { win.print(); }, 500); };
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    } else {
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = `Timeline_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      alert('Popup blocked - PDF downloaded instead');
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    }
+  } catch (error) {
+    console.error('[PrintBundle] Timeline PDF failed:', error);
+    alert('PDF failed: ' + error.message);
+  }
+}
+
+async function printEvidence(caseItem, evidence) {
+  const sorted = [...evidence].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
+  console.log('[PrintBundle] Evidence PDF');
+  try {
+    const sections = [{
+      title: `Evidence Index (${evidence.length} documents)`,
+      content: sorted.map((ev, i) => 
+        `${i + 1}. ${ev.file_name}\n   Type: ${(ev.file_type||"").replace(/_/g," ")} | Date: ${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}\n   ${ev.description || ""}${ev.tags?.length ? " | Tags: " + ev.tags.join(", ") : ""}`
+      ).join('\n\n')
+    }];
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'snapshot',
+      title: 'EVIDENCE INDEX',
+      matter: caseItem.title,
+      date: format(new Date(), "d MMMM yyyy"),
+      sections: sections,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const win = window.open(pdfUrl, '_blank');
+    if (win) {
+      win.onload = () => { setTimeout(() => { win.print(); }, 500); };
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    } else {
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = `Evidence_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      alert('Popup blocked - PDF downloaded instead');
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    }
+  } catch (error) {
+    console.error('[PrintBundle] Evidence PDF failed:', error);
+    alert('PDF failed: ' + error.message);
+  }
+}
+
+async function printChecklist(caseItem, evidence, events) {
   const checks = [
     { label: "Issue summary documented", done: !!(caseItem.issue_summary) },
     { label: "Full issue details recorded", done: !!(caseItem.issue_details) },
@@ -100,79 +159,113 @@ function printChecklist(caseItem, evidence, events) {
     { label: "Complaint sent to organisation", done: ["complaint_sent", "awaiting_response", "response_received", "escalation_ready", "escalated", "resolved"].includes(caseItem.status) },
     { label: "Response received from organisation", done: ["response_received", "escalation_ready", "escalated", "resolved"].includes(caseItem.status) },
   ];
-
-  const rows = checks.map((c) => `<tr style="border-bottom:1px solid #eee;">
-    <td style="padding:6pt 8pt;font-size:12pt;">${c.done ? "☑" : "☐"}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;">${c.label}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${c.done ? "color:green;" : "color:#c00;"}">${c.done ? "COMPLETE" : "MISSING"}</td>
-  </tr>`).join("");
-
-  const html = `<!DOCTYPE html><html><head><title>Checklist</title>
-  <style>${DOCUMENT_CSS}
-    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content"><h1>Case Checklist</h1><table>${rows}</table></div>
-    <div class="letterhead-footer"></div>
-  </body></html>`;
-  printDocument(html);
+  console.log('[PrintBundle] Checklist PDF');
+  try {
+    const sections = [{
+      title: 'Case Checklist',
+      content: checks.map(c => `${c.done ? "☑" : "☐"} ${c.label} — ${c.done ? "COMPLETE" : "MISSING"}`).join('\n')
+    }];
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'snapshot',
+      title: 'CASE CHECKLIST',
+      matter: caseItem.title,
+      date: format(new Date(), "d MMMM yyyy"),
+      sections: sections,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const win = window.open(pdfUrl, '_blank');
+    if (win) {
+      win.onload = () => { setTimeout(() => { win.print(); }, 500); };
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    } else {
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = `Checklist_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      alert('Popup blocked - PDF downloaded instead');
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    }
+  } catch (error) {
+    console.error('[PrintBundle] Checklist PDF failed:', error);
+    alert('PDF failed: ' + error.message);
+  }
 }
 
-function printChecklistItems(caseItem, checklistItems) {
-  const rows = checklistItems.map(item => `<tr style="border-bottom:1px solid #eee;">
-    <td style="padding:6pt 8pt;font-size:12pt;">${item.status === 'complete' ? '☑' : '☐'}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;${item.status === 'complete' ? 'text-decoration:line-through;color:#888;' : ''}">${item.label}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(item.category || '').replace(/_/g, ' ')}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${item.status === 'complete' ? 'color:green;' : item.status === 'missing' ? 'color:#c00;' : 'color:#f90;'}">${(item.status || '').replace('_', ' ').toUpperCase()}</td>
-  </tr>`).join('');
-  
-  const html = `<!DOCTYPE html><html><head><title>Smart Checklist</title>
-  <style>${DOCUMENT_CSS}
-    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content"><h1>Smart Checklist</h1><table>${rows}</table></div>
-    <div class="letterhead-footer"></div>
-  </body></html>`;
-  printDocument(html);
+async function printChecklistItems(caseItem, checklistItems) {
+  const rows = checklistItems.map(item => 
+    `${item.status === 'complete' ? '☑' : '☐'} ${item.label} (${(item.category||'').replace(/_/g,' ')}) — ${(item.status||'').toUpperCase()}`
+  ).join('\n');
+  console.log('[PrintBundle] Smart Checklist PDF');
+  try {
+    const sections = [{ title: 'Smart Checklist', content: rows }];
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'snapshot',
+      title: 'SMART CHECKLIST',
+      matter: caseItem.title,
+      date: format(new Date(), "d MMMM yyyy"),
+      sections: sections,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const win = window.open(pdfUrl, '_blank');
+    if (win) {
+      win.onload = () => { setTimeout(() => { win.print(); }, 500); };
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    } else {
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = `Smart_Checklist_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      alert('Popup blocked - PDF downloaded instead');
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    }
+  } catch (error) {
+    console.error('[PrintBundle] Smart Checklist PDF failed:', error);
+    alert('PDF failed: ' + error.message);
+  }
 }
 
-function printDeadlineItems(caseItem, deadlines) {
+async function printDeadlineItems(caseItem, deadlines) {
   const sorted = [...deadlines].sort((a, b) => new Date(a.deadline_date || 0) - new Date(b.deadline_date || 0));
-  const rows = sorted.map(d => {
-    const daysLeft = d.deadline_date ? Math.round((new Date(d.deadline_date) - new Date()) / 86400000) : null;
-    const urgency = daysLeft === null ? '—' : daysLeft < 0 ? 'OVERDUE' : daysLeft === 0 ? 'TODAY' : `${daysLeft} days`;
-    const color = daysLeft !== null && daysLeft < 0 ? '#c00' : daysLeft !== null && daysLeft <= 7 ? '#f90' : '#060';
-    return `<tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${d.title}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;">${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : '—'}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;color:${color};">${urgency}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(d.deadline_type || '').replace(/_/g, ' ')}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${d.status === 'completed' ? 'color:green;' : 'color:#c00;'}">${(d.status || '').toUpperCase()}</td>
-    </tr>`;
-  }).join('');
-  
-  const html = `<!DOCTYPE html><html><head><title>Deadlines</title>
-  <style>${DOCUMENT_CSS}
-    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content"><h1>Deadline War Room</h1><table>${rows}</table></div>
-    <div class="letterhead-footer"></div>
-  </body></html>`;
-  printDocument(html);
+  console.log('[PrintBundle] Deadlines PDF');
+  try {
+    const sections = [{
+      title: 'Deadline War Room',
+      content: sorted.map(d => {
+        const daysLeft = d.deadline_date ? Math.round((new Date(d.deadline_date) - new Date()) / 86400000) : null;
+        const urgency = daysLeft === null ? '—' : daysLeft < 0 ? 'OVERDUE' : daysLeft === 0 ? 'TODAY' : `${daysLeft} days`;
+        return `${d.title} — ${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : '—'} | ${urgency} | ${(d.deadline_type||'').replace(/_/g,' ')} | ${(d.status||'').toUpperCase()}`;
+      }).join('\n')
+    }];
+    const pdfBlob = await generateChaosDocumentPDF({
+      documentType: 'snapshot',
+      title: 'DEADLINE WAR ROOM',
+      matter: caseItem.title,
+      date: format(new Date(), "d MMMM yyyy"),
+      sections: sections,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const win = window.open(pdfUrl, '_blank');
+    if (win) {
+      win.onload = () => { setTimeout(() => { win.print(); }, 500); };
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    } else {
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = `Deadlines_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      alert('Popup blocked - PDF downloaded instead');
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+    }
+  } catch (error) {
+    console.error('[PrintBundle] Deadlines PDF failed:', error);
+    alert('PDF failed: ' + error.message);
+  }
 }
 
 function printBundle(caseItem, evidence, events, checklistItems) {
