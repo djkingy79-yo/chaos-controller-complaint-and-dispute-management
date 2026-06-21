@@ -243,17 +243,17 @@ CRITICAL RULES:
               marginBottom: '0'
             }}
           ></div>
-          <div className="bg-white" style={{ padding: '8pt 25mm 20mm 25mm', marginTop: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000" }}>
+          <div className="bg-white" style={{ padding: '8pt 25mm 20mm 25mm', marginTop: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000", width: '100%', boxSizing: 'border-box' }}>
             {editing ? (
               <Textarea
                 value={letter}
                 onChange={(e) => setLetter(e.target.value)}
                 rows={22}
                 className="font-body bg-white text-slate-900 w-full"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2" }}
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", width: '100%', boxSizing: 'border-box' }}
               />
             ) : (
-              <pre style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, whiteSpace: 'pre-wrap', color: "#000" }}>
+              <pre style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: "#000", width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
                 {letter.replace(/<[^>]*>/g, '')}
               </pre>
             )}

@@ -33,20 +33,26 @@ export const PRINT_CSS = `
   @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     @page { margin-top: 25mm !important; margin-bottom: 25mm !important; margin-left: 25mm !important; margin-right: 25mm !important; }
+    html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
     body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
-    nav, header, footer, button, [class*="banner"], .letterhead-banner { display: none !important; }
+    nav, header, footer, aside, button, [role="button"], iframe, .no-print, [class*="banner"], [class*="chrome"], [class*="browser"], .letterhead-banner { display: none !important; visibility: hidden !important; height: 0 !important; }
     a[href]:after, a[href] { content: none !important; display: none !important; }
+    /* Hide ALL URLs and timestamps */
+    #browser-chrome, .browser-chrome, .url-bar, .timestamp, .print-timestamp, [class*="url"], [class*="timestamp"] { display: none !important; }
   }
-  body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-  .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-  .letterhead-footer { width: 100%; height: 60px; background-image: url('${FOOTER_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-  .print-content { margin: 0 25mm; padding: 0; }
+  html, body { margin: 0; padding: 0; background: white; width: 100%; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+  .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; margin: 0; padding: 0; }
+  .letterhead-footer { width: 100%; height: 60px; background-image: url('${FOOTER_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; margin: 0; padding: 0; }
+  .print-content { width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; box-sizing: border-box; }
+  .print-content-full { width: 100%; max-width: 100%; margin: 0; padding: 0 25mm; box-sizing: border-box; }
   h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
   h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; }
   table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
   th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
   td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.2; margin: 0; color: #000; }
+  pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.2; margin: 0; padding: 0; color: #000; width: 100%; max-width: 100%; box-sizing: border-box; }
+  p { margin: 0 0 8pt 0; font-size: 10pt; line-height: 1.2; }
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -109,8 +115,8 @@ export function openPrintWindow(title, bodyHtml, customCss = '') {
 export function buildPrintDocument({ title, content, contentType = 'pre', customCss = '' }) {
   const cleanContent = contentType === 'pre' ? cleanContentForPrint(content) : content;
   const contentTag = contentType === 'pre' 
-    ? `<pre class="print-content" style="white-space:pre-wrap;margin:0 25mm;">${cleanContent}</pre>`
-    : `<div class="print-content" style="margin:0 25mm;">${content}</div>`;
+    ? `<pre class="print-content-full">${cleanContent}</pre>`
+    : `<div class="print-content">${content}</div>`;
   
   return `<!DOCTYPE html><html><head>
     <title>${title}</title>
@@ -131,19 +137,21 @@ export function buildPrintDocument({ title, content, contentType = 'pre', custom
 export function printLetter(title, letterContent, continuationPages = []) {
   const cleanContent = cleanContentForPrint(letterContent);
   const lines = cleanContent.split('\n');
-  const firstPageLines = lines.slice(0, 45);
-  const remainingLines = lines.slice(45);
+  const firstPageLines = lines.slice(0, 50);
+  const remainingLines = lines.slice(50);
   
   const continuationHTML = continuationPages.length > 0 
     ? continuationPages.map(chunk => `
-        <div class="letter-continuation" style="page-break-before:always;min-height:297mm;">
+        <div class="letter-continuation" style="page-break-before:always;">
           <div class="letterhead-header"></div>
-          <pre style="margin:0 25mm;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${chunk}</pre>
+          <pre class="print-content-full">${chunk}</pre>
+          <div class="letterhead-footer"></div>
         </div>`).join('')
     : remainingLines.length > 0 ? `
-        <div class="letter-continuation" style="page-break-before:always;min-height:297mm;">
+        <div class="letter-continuation" style="page-break-before:always;">
           <div class="letterhead-header"></div>
-          <pre style="margin:0 25mm;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${remainingLines.join('\n')}</pre>
+          <pre class="print-content-full">${remainingLines.join('\n')}</pre>
+          <div class="letterhead-footer"></div>
         </div>` 
     : '';
   
@@ -152,13 +160,13 @@ export function printLetter(title, letterContent, continuationPages = []) {
     <title>${title}</title>
     <style>
       ${PRINT_CSS}
-      .letter-page { min-height: 297mm; }
+      .letter-page { page-break-after: always; }
       .letter-continuation { background: white; }
     </style>
   </head><body>
     <div class="letter-page">
       <div class="letterhead-header"></div>
-      <pre class="print-content" style="white-space:pre-wrap;margin:0 25mm;">${firstPageLines.join('\n')}</pre>
+      <pre class="print-content-full">${firstPageLines.join('\n')}</pre>
       <div class="letterhead-footer"></div>
     </div>
     ${continuationHTML}
