@@ -30,11 +30,12 @@ export default function Login() {
 
   const handleGoogle = async () => {
     try {
-      // Redirect to home page first to avoid ProtectedRoute loop
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
       await base44.auth.loginWithProvider("google", redirectUrl);
-      // Fallback: if loginWithProvider doesn't redirect immediately
-      window.location.href = redirectUrl;
+      // Fallback if provider doesn't redirect
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 500);
     } catch (err) {
       console.error('Google login failed:', err);
       setError('Google login failed. Please try again.');
@@ -43,10 +44,12 @@ export default function Login() {
 
   const handleMicrosoft = async () => {
     try {
-      // Redirect to home page first to avoid ProtectedRoute loop
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
       await base44.auth.loginWithProvider("microsoft", redirectUrl);
-      window.location.href = redirectUrl;
+      // Fallback if provider doesn't redirect
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 500);
     } catch (err) {
       console.error('Microsoft login failed:', err);
       setError('Microsoft login failed. Please try again.');
