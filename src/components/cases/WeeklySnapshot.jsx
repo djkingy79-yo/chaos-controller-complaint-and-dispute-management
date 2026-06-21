@@ -4,38 +4,92 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Printer, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
-import ReactMarkdown from "react-markdown";
 import { printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
-function renderMarkdownToHtml(md) {
-  if (!md) return "";
-  let html = md
-    .replace(/^## (.*$)/gm, '<h2 style="font-size:12pt;font-weight:bold;margin:10pt 0 6pt 0;color:#000;">$1</h2>')
-    .replace(/^### (.*$)/gm, '<h3 style="font-size:11pt;font-weight:bold;margin:8pt 0 4pt 0;color:#000;">$1</h3>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^- (.*$)/gm, '<li style="margin-bottom:3pt;line-height:1.2;">$1</li>')
-    .replace(/^\d+\. (.*$)/gm, '<li style="margin-bottom:3pt;line-height:1.2;">$1</li>')
-    .replace(/\n\n/g, '</p><p style="margin:4pt 0 6pt;line-height:1.2;">')
-    .replace(/\n/g, '<br/>');
-  // Wrap consecutive <li> tags in <ul>
-  html = html.replace(/(<li.*>.*<\/li>(<br\/>)?)+/g, (match) => '<ul style="margin:4pt 0 6pt 18pt;padding:0;">' + match + '</ul>');
-  return '<p style="margin:4pt 0 6pt;line-height:1.2;">' + html + '</p>';
+/**
+ * Clean and parse AI-generated markdown into clean document sections
+ * This MUST run before saving or rendering to remove all markdown symbols
+ */
+function cleanSnapshotContent(md) {
+  if (!md) return { sections: [] };
+  
+  // Remove all markdown formatting symbols
+  let cleaned = md
+    .replace(/\*\*/g, '')           // Remove bold markers
+    .replace(/\*/g, '')             // Remove italic markers
+    .replace(/^##\s+/gm, '')        // Remove ## headings
+    .replace(/^###\s+/gm, '')       // Remove ### headings
+    .replace(/^- /gm, '')           // Remove bullet points
+    .replace(/^\d+\.\s+/gm, '')     // Remove numbered list markers
+    .replace(/`/g, '')              // Remove code ticks
+    .replace(/^>/gm, '')            // Remove blockquote markers
+    .replace(/---/g, '')            // Remove horizontal rules
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links, keep text
+    .trim();
+  
+  // Parse into structured sections
+  const lines = cleaned.split('\n');
+  const sections = [];
+  let currentSection = { title: '', content: [] };
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    
+    // Check if this looks like a section heading (short line, no period, capitalised)
+    if (trimmed.length < 60 && !trimmed.endsWith('.') && trimmed.match(/^[A-Z][A-Za-z\s&]+$/)) {
+      if (currentSection.content.length > 0) {
+        sections.push({ ...currentSection, content: currentSection.content.join('\n') });
+      }
+      currentSection = { title: trimmed, content: [] };
+    } else {
+      currentSection.content.push(trimmed);
+    }
+  }
+  
+  if (currentSection.content.length > 0) {
+    sections.push({ ...currentSection, content: currentSection.content.join('\n') });
+  }
+  
+  return { sections };
+}
+
+/**
+ * Render cleaned sections to HTML for print/PDF
+ */
+function renderSectionsToHtml(sections) {
+  if (!sections || sections.length === 0) return '';
+  
+  return sections.map(section => {
+    const titleHtml = section.title 
+      ? `<div style="font-size:11pt;font-weight:bold;margin:14pt 0 6pt 0;color:#000;text-transform:uppercase;letter-spacing:0.5px;">${section.title}</div>`
+      : '';
+    const contentHtml = section.content
+      ? `<div style="font-size:11pt;line-height:1.4;margin:6pt 0;color:#000;white-space:pre-wrap;word-wrap:break-word;">${section.content}</div>`
+      : '';
+    return titleHtml + contentHtml;
+  }).join('');
 }
 
 function printSnapshot(caseItem, snapshot, generatedAt) {
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const cleanSnapshot = snapshot.replace(/<[^>]*>/g, '');
-  const header = `<div style="font-size:8pt;letter-spacing:2px;text-transform:uppercase;color:#000;margin-bottom:10pt;font-weight:bold;">Chaos Controller™ — Weekly Case Snapshot</div>
-  <div style="font-size:14pt;font-weight:bold;margin-bottom:10pt;color:#000;">${caseItem.title}</div>
-  <div style="font-size:10pt;color:#666;margin-bottom:12pt;">vs. ${caseItem.organisation_name || "Organisation"} | Ref: ${caseRef} | Generated: ${generatedAt}</div>`;
-  const content = `<pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.3;width:100%;max-width:100%;">${cleanSnapshot}</pre>`;
-  const html = `<!DOCTYPE html><html><head><title>Weekly Snapshot — ${caseItem.title}</title>
-  <style>${DOCUMENT_CSS}</style>
+  const { sections } = cleanSnapshotContent(snapshot);
+  const contentHtml = renderSectionsToHtml(sections);
+  
+  const header = `
+    <div style="font-size:8pt;letter-spacing:2px;text-transform:uppercase;color:#000;margin-bottom:14pt;font-weight:bold;">Chaos Controller™ — Weekly Case Snapshot</div>
+    <div style="font-size:13pt;font-weight:bold;margin-bottom:10pt;color:#000;">${caseItem.title}</div>
+    <div style="font-size:10pt;color:#666;margin-bottom:16pt;">vs. ${caseItem.organisation_name || "Organisation"} | Ref: ${caseRef}</div>
+  `;
+  
+  const html = `<!DOCTYPE html><html><head>
+    <title>Weekly Snapshot — ${caseItem.title}</title>
+    <style>${DOCUMENT_CSS}</style>
   </head><body>
     <div class="letterhead-header"></div>
-    <div class="document-content" style="padding: 0 17.5mm;">${header}${content}</div>
+    <div class="document-content" style="padding: 0 17.5mm;">${header}${contentHtml}</div>
     <div class="letterhead-footer"></div>
   </body></html>`;
   printDocument(html);
@@ -81,7 +135,33 @@ export default function WeeklySnapshot({ caseItem, evidence = [], events = [] })
 
     const prompt = `You are a consumer advocacy case manager for Chaos Controller™, an Australian dispute resolution platform.
 
-Generate a concise WEEKLY CASE SNAPSHOT report in Australian English for the following case. Format it clearly with headings using markdown (##, ###, bullet points). Be factual, professional, and actionable.
+Generate a concise WEEKLY CASE SNAPSHOT report in Australian English for the following case. Use PLAIN TEXT ONLY — NO markdown symbols.
+
+CRITICAL RULES:
+- NO markdown: no ##, no ###, no **, no bullets, no numbered lists with dots
+- NO timestamps or "Generated at" lines
+- NO developer formatting
+- Use UPPERCASE section titles on their own line
+- Use normal paragraphs for content
+- Australian English spelling
+
+STRUCTURE:
+WEEKLY STATUS SUMMARY
+[2-3 sentences on where the case stands]
+
+RECENT ACTIVITY
+[Date] [Event description]
+[Date] [Event description]
+
+UPCOMING ACTIONS
+[Action item 1]
+[Action item 2]
+
+RISK ASSESSMENT
+[Brief risk assessment paragraph]
+
+RECOMMENDED NEXT STEPS
+[Numbered steps without dots or markdown]
 
 CASE DETAILS:
 - Title: ${caseItem.title}
@@ -112,24 +192,10 @@ ${overdueDeadlines.length > 0
 EVIDENCE ON FILE: ${evidence.length} document(s)
 TOTAL TIMELINE EVENTS: ${events.length}
 
-Please generate the snapshot with these sections:
-## Weekly Status Summary
-(2-3 sentences on where the case stands this week)
-
-## Recent Activity
-(bullet points of key developments in the past 7 days, or note if quiet)
-
-## Upcoming Deadlines & Actions
-(bullet points of what needs attention in the next 14 days)
-
-## Risk Assessment
-(brief assessment of any risks, overdue items, or escalation considerations)
-
-## Recommended Next Steps
-(3-5 concrete, numbered action items the user should take this week)`;
+Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
-    const ts = format(new Date(), "d MMM yyyy, h:mm a");
+    const ts = format(new Date(), "d MMMM yyyy");
     setSnapshot(result);
     setGeneratedAt(ts);
     try {
@@ -222,8 +288,20 @@ Please generate the snapshot with these sections:
             </div>
             <Badge variant="outline" className="text-xs">Week of {format(new Date(), "d MMM yyyy")}</Badge>
           </div>
-          <div className="prose prose-sm max-w-none text-foreground [&>h2]:font-heading [&>h2]:font-bold [&>h2]:text-base [&>h2]:mt-5 [&>h2]:mb-2 [&>h3]:font-heading [&>h3]:font-semibold [&>h3]:text-sm [&>h3]:mt-4 [&>h3]:mb-1 [&>ul]:space-y-1 [&>ol]:space-y-1">
-            <ReactMarkdown>{snapshot}</ReactMarkdown>
+          <div className="space-y-4 text-sm text-foreground">
+            {(() => {
+              const { sections } = cleanSnapshotContent(snapshot);
+              return sections.map((section, idx) => (
+                <div key={idx}>
+                  {section.title && (
+                    <div className="font-heading font-bold text-xs uppercase tracking-wide text-foreground mb-2">{section.title}</div>
+                  )}
+                  {section.content && (
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">{section.content}</div>
+                  )}
+                </div>
+              ));
+            })()}
           </div>
         </div>
       )}
