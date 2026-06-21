@@ -400,7 +400,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       {text ? (
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
           {/* Thinner, longer header banner */}
-          <div className="letterhead-banner" style={{ height: '60px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', margin: '0 auto 0 auto' }}></div>
+          <div className="letterhead-banner" style={{ height: '60px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', backgroundPosition: 'center center', margin: '0 auto 0 auto' }}></div>
           <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000", marginTop: '0', paddingTop: '8pt' }}>
             {editing ? (
               <Textarea
@@ -463,9 +463,9 @@ function LetterEditor({ letterType, caseItem, evidence }) {
             style={{ 
               height: '60px', 
               backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, 
-              backgroundSize: 'contain', 
+              backgroundSize: '100% 100%', 
               backgroundRepeat: 'no-repeat', 
-              backgroundPosition: 'center bottom',
+              backgroundPosition: 'center center',
               backgroundColor: '#ffffff'
             }}
           ></div>

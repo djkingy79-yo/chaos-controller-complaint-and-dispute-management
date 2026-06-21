@@ -247,9 +247,9 @@ CRITICAL:
             style={{ 
               height: '60px', 
               backgroundImage: `url(${LETTERHEAD_URL})`, 
-              backgroundSize: 'contain', 
+              backgroundSize: '100% 100%', 
               backgroundRepeat: 'no-repeat', 
-              backgroundPosition: 'center top',
+              backgroundPosition: 'center center',
               backgroundColor: '#ffffff',
               marginBottom: '0'
             }}
@@ -316,9 +316,9 @@ CRITICAL:
             style={{ 
               height: '60px', 
               backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, 
-              backgroundSize: 'contain', 
+              backgroundSize: '100% 100%', 
               backgroundRepeat: 'no-repeat', 
-              backgroundPosition: 'center bottom',
+              backgroundPosition: 'center center',
               backgroundColor: '#ffffff'
             }}
           ></div>

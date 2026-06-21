@@ -51,7 +51,7 @@ export function getLetterPageStyles() {
       background-image: url('${HEADER_URL}');
       background-size: 100% 100%;
       background-repeat: no-repeat;
-      background-position: center top;
+      background-position: center center;
     }
     
     .letterhead-footer {
@@ -63,7 +63,7 @@ export function getLetterPageStyles() {
       background-image: url('${FOOTER_URL}');
       background-size: 100% 100%;
       background-repeat: no-repeat;
-      background-position: center bottom;
+      background-position: center center;
     }
 
     /* Letter body - compact spacing, left-aligned addresses, date at top */
@@ -135,7 +135,7 @@ export function getLetterPageStyles() {
       background-image: url('${CONTINUATION_PAGE_URL}');
       background-size: 100% 100%;
       background-repeat: no-repeat;
-      background-position: center top;
+      background-position: center center;
       margin-bottom: 0;
     }
     

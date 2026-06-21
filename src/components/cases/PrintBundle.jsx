@@ -62,13 +62,13 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
     .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
     .letterhead-footer { display: none !important; }
     .letter-content { position: relative; padding: 8pt 25mm 20mm 25mm; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; width: 100%; }
     .letter-content p { margin: 0 0 4pt 0; line-height: 1.2; font-size: 10pt; }
     .letter-content div { line-height: 1.0; }
     .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
-    .continuation-header { width: 100%; height: 40px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; margin-bottom: 10pt; }
+    .continuation-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin-bottom: 0; }
     .continuation-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.5; }
     .continuation-content p { margin: 0 0 6pt 0; min-height: 14pt; font-size: 11pt; }
     p { margin: 10pt 0; min-height: 18pt; }
