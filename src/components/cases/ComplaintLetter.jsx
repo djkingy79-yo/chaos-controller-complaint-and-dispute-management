@@ -298,17 +298,17 @@ CASE DETAILS:
               backgroundColor: '#ffffff'
             }}
           ></div>
-          <div className="bg-white" style={{ padding: '0 25mm 20mm 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", color: "#000" }}>
+          <div className="bg-white" style={{ padding: '25mm 25mm 20mm 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", color: "#000" }}>
             {editing ? (
               <Textarea
                 value={letter}
                 onChange={(e) => setLetter(e.target.value)}
                 rows={22}
                 className="font-body bg-white text-slate-900 w-full"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", marginTop: '25mm' }}
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6" }}
               />
             ) : (
-              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: 0, color: "#000", marginTop: '25mm' }}>
+              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: 0, color: "#000" }}>
                 {letter.split('\n').map((line, i) => (
                   <p key={i} style={{ margin: '10pt 0', minHeight: '18pt' }}>{line || '\u00A0'}</p>
                 ))}
