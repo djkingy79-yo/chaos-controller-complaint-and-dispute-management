@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Copy, RefreshCw, Pencil, Check, Loader2, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { printLetter, cleanContentForPrint, LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
+import { printLetter as printLetterUniversal } from "@/lib/documentFormatEngine";
+import { LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -119,7 +120,7 @@ CRITICAL RULES:
   };
 
   const handlePrint = () => {
-    printLetter('Complaint Letter', letter);
+    printLetterUniversal({ title: 'Complaint Letter', letterContent: letter });
   };
 
   const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[NRMA Address\]|\[.*?\]/.test(letter);

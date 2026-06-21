@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Printer, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import { printTableDocument } from "@/lib/printUtilities";
+import { printDocument, buildDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
@@ -30,25 +30,15 @@ function printSnapshot(caseItem, snapshot, generatedAt) {
   const header = `<div style="font-size:8pt;letter-spacing:2px;text-transform:uppercase;color:#000;margin-bottom:10pt;font-weight:bold;">Chaos Controller™ — Weekly Case Snapshot</div>
   <div style="font-size:14pt;font-weight:bold;margin-bottom:10pt;color:#000;">${caseItem.title}</div>
   <div style="font-size:10pt;color:#666;margin-bottom:12pt;">vs. ${caseItem.organisation_name || "Organisation"} | Ref: ${caseRef} | Generated: ${generatedAt}</div>`;
-  const content = `<pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;width:100%;max-width:100%;">${cleanSnapshot}</pre>`;
-  const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Weekly Snapshot — ${caseItem.title}</title>
-  <style>
-    @page { margin: 25mm 25mm 25mm 25mm; size: A4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; } nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; } a[href]:after, a[href] { content: none !important; display: none !important; } }
-    html, body { margin: 0; padding: 0; background: white; width: 100%; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .print-content { width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; box-sizing: border-box; }
-  </style>
+  const content = `<pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.3;width:100%;max-width:100%;">${cleanSnapshot}</pre>`;
+  const html = `<!DOCTYPE html><html><head><title>Weekly Snapshot — ${caseItem.title}</title>
+  <style>${DOCUMENT_CSS}</style>
   </head><body>
     <div class="letterhead-header"></div>
-    <div class="print-content">${header}${content}</div>
+    <div class="document-content" style="padding: 0 17.5mm;">${header}${content}</div>
     <div class="letterhead-footer"></div>
-  </body></html>`);
-  win.document.close();
-  setTimeout(() => { win.print(); win.close(); }, 500);
+  </body></html>`;
+  printDocument(html);
 }
 
 export default function WeeklySnapshot({ caseItem, evidence = [], events = [] }) {

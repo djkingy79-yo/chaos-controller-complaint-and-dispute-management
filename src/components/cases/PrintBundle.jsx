@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
-import { printLetter, printTableDocument } from "@/lib/printUtilities";
+import { printLetter as printLetterUniversal, printDocument, buildDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
+import { printTableDocument } from "@/lib/printUtilities";
 
 
 const LETTER_DEFS = [
@@ -40,7 +41,7 @@ function buildClientContext(caseItem, evidence) {
 
 function printLetterBundle(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
   const content = caseItem[field] || `No ${label} generated yet.`;
-  printLetter(label, content, []);
+  printLetterUniversal({ title: label, letterContent: content });
 }
 
 function printTimeline(caseItem, events) {
@@ -106,16 +107,8 @@ function printChecklist(caseItem, evidence, events) {
     <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${c.done ? "color:green;" : "color:#c00;"}">${c.done ? "COMPLETE" : "MISSING"}</td>
   </tr>`).join("");
 
-  const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Checklist</title>
-  <style>
-    @page { margin: 25mm 25mm 25mm 25mm; size: A4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; } nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; } a[href]:after, a[href] { content: none !important; display: none !important; } }
-    html, body { margin: 0; padding: 0; background: white; width: 100%; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .print-content { width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; box-sizing: border-box; }
+  const html = `<!DOCTYPE html><html><head><title>Checklist</title>
+  <style>${DOCUMENT_CSS}
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
@@ -123,12 +116,10 @@ function printChecklist(caseItem, evidence, events) {
   </style>
   </head><body>
     <div class="letterhead-header"></div>
-    <div class="print-content"><h1>Case Checklist</h1><table>${rows}</table></div>
+    <div class="document-content"><h1>Case Checklist</h1><table>${rows}</table></div>
     <div class="letterhead-footer"></div>
-  </body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 500);
+  </body></html>`;
+  printDocument(html);
 }
 
 function printChecklistItems(caseItem, checklistItems) {
@@ -139,16 +130,8 @@ function printChecklistItems(caseItem, checklistItems) {
     <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${item.status === 'complete' ? 'color:green;' : item.status === 'missing' ? 'color:#c00;' : 'color:#f90;'}">${(item.status || '').replace('_', ' ').toUpperCase()}</td>
   </tr>`).join('');
   
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist</title>
-  <style>
-    @page { margin: 25mm 25mm 25mm 25mm; size: A4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; } nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; } a[href]:after, a[href] { content: none !important; display: none !important; } }
-    html, body { margin: 0; padding: 0; background: white; width: 100%; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .print-content { width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; box-sizing: border-box; }
+  const html = `<!DOCTYPE html><html><head><title>Smart Checklist</title>
+  <style>${DOCUMENT_CSS}
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
@@ -156,11 +139,10 @@ function printChecklistItems(caseItem, checklistItems) {
   </style>
   </head><body>
     <div class="letterhead-header"></div>
-    <div class="print-content"><h1>Smart Checklist</h1><table>${rows}</table></div>
+    <div class="document-content"><h1>Smart Checklist</h1><table>${rows}</table></div>
     <div class="letterhead-footer"></div>
-  </body></html>`);
-  win.document.close();
-  setTimeout(() => { win.print(); win.close(); }, 400);
+  </body></html>`;
+  printDocument(html);
 }
 
 function printDeadlineItems(caseItem, deadlines) {
@@ -178,16 +160,8 @@ function printDeadlineItems(caseItem, deadlines) {
     </tr>`;
   }).join('');
   
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Deadlines</title>
-  <style>
-    @page { margin: 25mm 25mm 25mm 25mm; size: A4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; } nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; } a[href]:after, a[href] { content: none !important; display: none !important; } }
-    html, body { margin: 0; padding: 0; background: white; width: 100%; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .print-content { width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; box-sizing: border-box; }
+  const html = `<!DOCTYPE html><html><head><title>Deadlines</title>
+  <style>${DOCUMENT_CSS}
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
@@ -195,11 +169,10 @@ function printDeadlineItems(caseItem, deadlines) {
   </style>
   </head><body>
     <div class="letterhead-header"></div>
-    <div class="print-content"><h1>Deadline War Room</h1><table>${rows}</table></div>
+    <div class="document-content"><h1>Deadline War Room</h1><table>${rows}</table></div>
     <div class="letterhead-footer"></div>
-  </body></html>`);
-  win.document.close();
-  setTimeout(() => { win.print(); win.close(); }, 400);
+  </body></html>`;
+  printDocument(html);
 }
 
 function printBundle(caseItem, evidence, events, checklistItems) {
@@ -259,15 +232,10 @@ function printBundle(caseItem, evidence, events, checklistItems) {
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Case Bundle — ${caseItem.title}</title>
     <style>
-      @page { margin: 25mm 25mm 25mm 25mm; size: A4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      @media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; } nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; } a[href]:after, a[href] { content: none !important; display: none !important; } }
-      html, body { margin: 0; padding: 0; background: white; width: 100%; }
-      body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
-      * { box-sizing: border-box; }
-      
+      ${DOCUMENT_CSS}
       .page { page-break-after: always; padding: 0; width: 100%; max-width: 100%; }
       .page:last-child { page-break-after: auto; }
-      .page-content { width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; }
+      .page-content { width: 100%; max-width: 100%; margin: 0; padding: 0 17.5mm; }
       
       .cover-title { font-size: 8pt; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 10pt; }
       .cover-main { font-size: 12pt; font-weight: bold; line-height: 1.3; margin-bottom: 6pt; color: #1a1a2e; }
@@ -289,15 +257,15 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       .toc-num { font-weight: bold; color: #1a1a2e; min-width: 25pt; font-size: 10pt; }
       .toc-title { font-size: 10pt; font-weight: bold; flex: 1; }
       
-      p { margin: 6pt 0; min-height: 14pt; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.6; }
-      pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.2; margin: 0; width: 100%; }
-      
-      .footer { margin-top: 25pt; padding-top: 6pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; font-family: 'Times New Roman', Times, serif; }
+      p { margin: 6pt 0; min-height: 14pt; font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; }
+      pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; margin: 0; width: 100%; }
       
       .progress-bar { background: #eee; height: 8pt; border-radius: 4pt; overflow: hidden; margin: 6pt 0; }
       .progress-fill { height: 100%; background: linear-gradient(to right, #1a1a2e, #FFD700); border-radius: 4pt; }
     </style>
   </head><body>
+    <div class="letterhead-header"></div>
+    <div class="document-content">
     
     <!-- COVER PAGE -->
     <div class="page">
@@ -432,6 +400,8 @@ function printBundle(caseItem, evidence, events, checklistItems) {
     </div>`;
     }).join("")}
     
+    </div>
+    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   win.focus();

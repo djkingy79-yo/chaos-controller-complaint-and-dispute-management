@@ -8,7 +8,8 @@ import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText, Lock } from
 import LetterTemplateManager from "./LetterTemplateManager";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { printLetter, LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
+import { printLetter as printLetterUniversal, buildFormalLetter, printDocument } from "@/lib/documentFormatEngine";
+import { LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -375,7 +376,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handlePrint = () => {
-    printLetter(letterType.label, text, []);
+    printLetterUniversal({ title: letterType.label, letterContent: text });
   };
 
   const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[.*?\]/.test(text);

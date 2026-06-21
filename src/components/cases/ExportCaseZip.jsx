@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, Printer } from "lucide-react";
 import { format } from "date-fns";
-import { buildPrintDocument, LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
+import { buildDocument, DOCUMENT_CSS, LETTERHEAD_URL, FOOTER_URL } from "@/lib/documentFormatEngine";
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },
@@ -34,11 +34,7 @@ function buildSummaryHTML(caseItem, evidence, events) {
   return `<!DOCTYPE html><html><head>
     <title>Case Export — ${caseItem.title}</title>
     <style>
-      @page { margin: 25mm 25mm 25mm 25mm; size: A4; }
-      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; -webkit-print-header: ""!important; -webkit-print-footer: ""!important; } a[href]:after, a[href] { content: none!important; display: none!important; } }
-      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-      .letterhead-footer { width: 100%; height: 60px; background-image: url('${FOOTER_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+      ${DOCUMENT_CSS}
       h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; border-bottom: 1px solid #000; padding-bottom: 4pt; }
       h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
       .summary-box { background: white; border: none; padding: 0; margin-bottom: 10pt; }
@@ -49,11 +45,10 @@ function buildSummaryHTML(caseItem, evidence, events) {
       table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 10pt; }
       th { background: white; text-align: left; padding: 4pt 6pt; font-weight: bold; border-bottom: 1px solid #000; font-size: 10pt; color: #000; }
       td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 10pt; color: #000; }
-      .print-content { margin: 0 25mm; padding: 0; }
       </style>
       </head><body>
       <div class="letterhead-header"></div>
-      <div class="print-content">
+      <div class="document-content">
       <div class="section-title" style="font-size:14pt;margin-bottom:10pt;">CHAOS CONTROLLER™ — CASE EXPORT</div>
     
     <div class="summary-box">
@@ -123,7 +118,8 @@ function buildSummaryHTML(caseItem, evidence, events) {
       <div class="section-title">${ld.label}</div>
       <pre style="font-size:10pt;line-height:1.2;font-family:'Times New Roman',Times,serif;white-space:pre-wrap;">${(caseItem[ld.field] || '').replace(/<[^>]*>/g, '')}</pre>
     </div>`).join("")}
-    </div>
+      </div>
+      <div class="letterhead-footer"></div>
   </body></html>`;
 }
 
@@ -141,17 +137,12 @@ function buildLetterHTML(title, content) {
   const cleanContent = content.replace(/<[^>]*>/g, '');
   return `<!DOCTYPE html><html><head><title>${title}</title>
   <style>
-    @page { margin: 25mm 25mm 25mm 25mm; size: A4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; } nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; } a[href]:after, a[href] { content: none !important; display: none !important; } }
-    html, body { margin: 0; padding: 0; background: white; width: 100%; }
-    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
-    .content { white-space: pre-wrap; word-wrap: break-word; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; box-sizing: border-box; }
+    ${DOCUMENT_CSS}
+    .content { white-space: pre-wrap; word-wrap: break-word; font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; width: 100%; max-width: 100%; margin: 0; padding: 0 17.5mm; box-sizing: border-box; }
   </style>
   </head><body>
     <div class="letterhead-header"></div>
-    <div class="content">${cleanContent}</div>
+    <div class="document-content">${cleanContent}</div>
     <div class="letterhead-footer"></div>
   </body></html>`;
 }
