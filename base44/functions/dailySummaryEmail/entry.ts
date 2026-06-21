@@ -7,18 +7,18 @@ function encodeSubject(subject) {
 }
 
 function htmlEmail(bodyHtml) {
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#0d0d0d;font-family:Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:20px 0;">
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:20px 0;">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;">
-<tr><td style="background:#000;padding:16px 24px;border-bottom:2px solid #FFD700;text-align:center;">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;">
+<tr><td style="background:#ffffff;padding:16px 24px;border-bottom:2px solid #FFD700;text-align:center;">
 <img src="${LOGO_URL}" alt="Chaos Controller" style="height:48px;width:auto;display:inline-block;" />
 </td></tr>
-<tr><td style="padding:28px 28px 20px 28px;color:#e0e0e0;font-size:14px;line-height:1.7;">
+<tr><td style="padding:28px 28px 20px 28px;color:#333333;font-size:14px;line-height:1.7;">
 ${bodyHtml}
 </td></tr>
-<tr><td style="background:#0a0a0a;border-top:1px solid #222;padding:16px 24px;text-align:center;color:#555;font-size:11px;">
-Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#FFD700;text-decoration:none;">chaoscontroller.com.au</a>
+<tr><td style="background:#f9f9f9;border-top:1px solid #e0e0e0;padding:16px 24px;text-align:center;color:#666666;font-size:11px;">
+Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#0066cc;text-decoration:none;">chaoscontroller.com.au</a>
 </td></tr>
 </table>
 </td></tr>
@@ -90,21 +90,21 @@ Deno.serve(async (req) => {
       const subject = `Daily Briefing - ${todayLabel}`;
 
       const todayRowsHtml = todayItems.length === 0
-        ? `<p style="color:#66ff99;">No deadlines due today. Great job staying on top of things!</p>`
+        ? `<p style="color:#22c55e;">No deadlines due today. Great job staying on top of things!</p>`
         : todayItems.map(item => `
-          <div style="background:#1a1a1a;border-left:3px solid #ff6666;padding:12px 16px;border-radius:4px;margin:10px 0;">
-            <p style="color:#ff9999;font-weight:bold;margin:0 0 4px 0;">${item.deadline.title}</p>
-            <p style="color:#aaa;font-size:12px;margin:0;">Case: ${item.caseItem.title} &bull; ${item.caseItem.organisation_name || 'N/A'}</p>
-            <a href="https://chaoscontroller.com.au/case/${item.caseItem.id}" style="color:#FFD700;font-size:12px;text-decoration:none;">View Case &rarr;</a>
+          <div style="background:#fef2f2;border-left:3px solid #ef4444;padding:12px 16px;border-radius:4px;margin:10px 0;">
+            <p style="color:#dc2626;font-weight:bold;margin:0 0 4px 0;">${item.deadline.title}</p>
+            <p style="color:#666666;font-size:12px;margin:0;">Case: ${item.caseItem.title} &bull; ${item.caseItem.organisation_name || 'N/A'}</p>
+            <a href="https://chaoscontroller.com.au/case/${item.caseItem.id}" style="color:#0066cc;font-size:12px;text-decoration:none;">View Case &rarr;</a>
           </div>`).join('');
 
       const tomorrowRowsHtml = tomorrowItems.length === 0 ? '' : `
-        <p style="color:#FFD700;font-weight:bold;margin:24px 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:1px;">Tomorrow &mdash; ${tomorrowLabel}</p>
+        <p style="color:#b45309;font-weight:bold;margin:24px 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:1px;">Tomorrow &mdash; ${tomorrowLabel}</p>
         ${tomorrowItems.map(item => `
-          <div style="background:#1a1a1a;border-left:3px solid #FFD700;padding:12px 16px;border-radius:4px;margin:10px 0;">
-            <p style="color:#fff;font-weight:bold;margin:0 0 4px 0;">${item.deadline.title}</p>
-            <p style="color:#aaa;font-size:12px;margin:0;">Case: ${item.caseItem.title} &bull; ${item.caseItem.organisation_name || 'N/A'}</p>
-            <a href="https://chaoscontroller.com.au/case/${item.caseItem.id}" style="color:#FFD700;font-size:12px;text-decoration:none;">View Case &rarr;</a>
+          <div style="background:#fef9e7;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:4px;margin:10px 0;">
+            <p style="color:#92400e;font-weight:bold;margin:0 0 4px 0;">${item.deadline.title}</p>
+            <p style="color:#666666;font-size:12px;margin:0;">Case: ${item.caseItem.title} &bull; ${item.caseItem.organisation_name || 'N/A'}</p>
+            <a href="https://chaoscontroller.com.au/case/${item.caseItem.id}" style="color:#0066cc;font-size:12px;text-decoration:none;">View Case &rarr;</a>
           </div>`).join('')}`;
 
       const html = htmlEmail(`

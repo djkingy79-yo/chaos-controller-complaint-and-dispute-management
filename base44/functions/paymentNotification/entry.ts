@@ -59,16 +59,16 @@ Deno.serve(async (req) => {
         <html>
         <head>
           <style>
-            body { font-family: 'Inter', Arial, sans-serif; background: #0a0a0f; color: #fff; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: #1a1a2e; border-radius: 12px; padding: 30px; border: 2px solid #FFD700; }
+            body { font-family: 'Inter', Arial, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 30px; border: 2px solid #FFD700; }
             .header { text-align: center; margin-bottom: 30px; }
             .logo { width: 60px; height: 60px; margin-bottom: 15px; }
-            h1 { color: #FFD700; font-size: 24px; margin: 0 0 10px 0; }
+            h1 { color: #b45309; font-size: 24px; margin: 0 0 10px 0; }
             .badge { background: #FFD700; color: #000; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
-            .section { background: #0a0a0f; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            .label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-            .value { color: #fff; font-size: 16px; font-weight: bold; }
-            .highlight { color: #FFD700; font-size: 20px; }
+            .section { background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .label { color: #666666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+            .value { color: #000000; font-size: 16px; font-weight: bold; }
+            .highlight { color: #b45309; font-size: 20px; }
             .cta { text-align: center; margin-top: 30px; }
             .button { background: #FFD700; color: #000; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; }
             .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
@@ -81,38 +81,38 @@ Deno.serve(async (req) => {
               <h1>New Payment Received</h1>
               <span class="badge">${payment.plan_name} Plan</span>
             </div>
-            
+
             <div class="section">
               <div class="label">Customer Name</div>
               <div class="value">${payment.user_name || 'Not provided'}</div>
             </div>
-            
+
             <div class="section">
               <div class="label">Customer Email</div>
               <div class="value">${payment.user_email}</div>
             </div>
-            
+
             <div class="section">
               <div class="label">Plan Selected</div>
               <div class="value highlight">${payment.plan_name} — ${payment.amount} AUD</div>
             </div>
-            
+
             ${payment.payid_reference ? `
             <div class="section">
               <div class="label">Payment Reference</div>
               <div class="value">${payment.payid_reference || 'Not provided'}</div>
             </div>
             ` : ''}
-            
+
             <div class="section">
               <div class="label">Submitted Date</div>
               <div class="value">${new Date(payment.created_date).toLocaleString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
             </div>
-            
+
             <div class="cta">
               <a href="https://chaoscontroller.com.au/dashboard" class="button">Verify Payment in Admin Dashboard</a>
             </div>
-            
+
             <div class="footer">
               <p>Chaos Controller™ — Professional Dispute Management</p>
               <p>This is an automated notification from your payment system.</p>
@@ -134,22 +134,22 @@ Deno.serve(async (req) => {
         <html>
         <head>
           <style>
-            body { font-family: 'Inter', Arial, sans-serif; background: #0a0a0f; color: #fff; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: #1a1a2e; border-radius: 12px; padding: 30px; border: 2px solid #00ff88; }
+            body { font-family: 'Inter', Arial, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 30px; border: 2px solid #16a34a; }
             .header { text-align: center; margin-bottom: 30px; }
             .logo { width: 60px; height: 60px; margin-bottom: 15px; }
-            h1 { color: #00ff88; font-size: 24px; margin: 0 0 10px 0; }
-            .badge { background: #00ff88; color: #000; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
-            .section { background: #0a0a0f; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            .label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-            .value { color: #fff; font-size: 16px; font-weight: bold; }
-            .highlight { color: #FFD700; font-size: 20px; }
-            .success { color: #00ff88; font-size: 18px; font-weight: bold; }
+            h1 { color: #16a34a; font-size: 24px; margin: 0 0 10px 0; }
+            .badge { background: #16a34a; color: #000; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
+            .section { background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .label { color: #666666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+            .value { color: #000000; font-size: 16px; font-weight: bold; }
+            .highlight { color: #b45309; font-size: 20px; }
+            .success { color: #16a34a; font-size: 18px; font-weight: bold; }
             .cta { text-align: center; margin-top: 30px; }
-            .button { background: #00ff88; color: #000; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; }
-            .features { background: #FFD700/10; border: 1px solid #FFD700/30; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .button { background: #16a34a; color: #fff; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; }
+            .features { background: #fef9e7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0; }
             .feature-item { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
-            .check { color: #00ff88; font-weight: bold; }
+            .check { color: #16a34a; font-weight: bold; }
             .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
           </style>
         </head>
@@ -160,11 +160,11 @@ Deno.serve(async (req) => {
               <h1>Payment Verified!</h1>
               <span class="badge">${payment.plan_name} Activated</span>
             </div>
-            
+
             <div class="section">
               <p class="success">Your ${payment.plan_name} subscription has been successfully activated!</p>
             </div>
-            
+
             <div class="section">
               <div class="label">Subscription Period</div>
               <div class="value">
@@ -174,9 +174,9 @@ Deno.serve(async (req) => {
                 }
               </div>
             </div>
-            
+
             <div class="features">
-              <div class="label" style="color: #FFD700;">What's Included in ${payment.plan_name}:</div>
+              <div class="label" style="color: #b45309;">What's Included in ${payment.plan_name}:</div>
               ${payment.plan_name === 'Starter' ? `
                 <div class="feature-item"><span class="check">✓</span> 3 active cases</div>
                 <div class="feature-item"><span class="check">✓</span> Evidence vault — 25 files per case</div>
@@ -198,11 +198,11 @@ Deno.serve(async (req) => {
                 <div class="feature-item"><span class="check">✓</span> Merchant shared case portals</div>
               `}
             </div>
-            
+
             <div class="cta">
               <a href="https://chaoscontroller.com.au/dashboard" class="button">Go to Your Dashboard</a>
             </div>
-            
+
             <div class="footer">
               <p>Chaos Controller™ — Professional Dispute Management</p>
               <p>Questions? Reply to this email or contact chaoscontrollerapp@gmail.com</p>

@@ -8,18 +8,18 @@ function encodeSubject(subject) {
 }
 
 function htmlEmail(bodyHtml) {
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#0d0d0d;font-family:Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:20px 0;">
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:20px 0;">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;">
-<tr><td style="background:#000;padding:16px 24px;border-bottom:2px solid #FFD700;text-align:center;">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;">
+<tr><td style="background:#ffffff;padding:16px 24px;border-bottom:2px solid #FFD700;text-align:center;">
 <img src="${LOGO_URL}" alt="Chaos Controller" style="height:48px;width:auto;display:inline-block;" />
 </td></tr>
-<tr><td style="padding:28px 28px 20px 28px;color:#e0e0e0;font-size:14px;line-height:1.7;">
+<tr><td style="padding:28px 28px 20px 28px;color:#333333;font-size:14px;line-height:1.7;">
 ${bodyHtml}
 </td></tr>
-<tr><td style="background:#0a0a0a;border-top:1px solid #222;padding:16px 24px;text-align:center;color:#555;font-size:11px;">
-Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#FFD700;text-decoration:none;">chaoscontroller.com.au</a>
+<tr><td style="background:#f9f9f9;border-top:1px solid #e0e0e0;padding:16px 24px;text-align:center;color:#666666;font-size:11px;">
+Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#0066cc;text-decoration:none;">chaoscontroller.com.au</a>
 </td></tr>
 </table>
 </td></tr>
@@ -91,17 +91,17 @@ Deno.serve(async (req) => {
 
     const subject = `[${caseRef}] Merchant Portal Access - "${caseItem.title}"`;
     const html = htmlEmail(`
-      <p style="color:#aaa;font-size:12px;margin:0 0 20px 0;">MERCHANT PORTAL LOGIN ALERT</p>
-      <p>Hi <strong style="color:#fff;">${owner.full_name || 'there'}</strong>,</p>
+      <p style="color:#666666;font-size:12px;margin:0 0 20px 0;text-transform:uppercase;letter-spacing:1px;">MERCHANT PORTAL LOGIN ALERT</p>
+      <p>Hi <strong style="color:#000000;">${owner.full_name || 'there'}</strong>,</p>
       <p>A merchant has just accessed your case file in the Chaos Controller™ Merchant Portal.</p>
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border-radius:8px;padding:16px;margin:20px 0;">
-        <tr><td style="padding:6px 0;color:#888;font-size:12px;width:140px;">Case Reference</td><td style="color:#FFD700;font-weight:bold;">${caseRef}</td></tr>
-        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Case</td><td style="color:#fff;font-weight:bold;">${caseItem.title}</td></tr>
-        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Organisation</td><td style="color:#fff;">${caseItem.organisation_name || 'N/A'}</td></tr>
-        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Merchant</td><td style="color:#fff;">${merchantName}</td></tr>
-        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Access Time</td><td style="color:#fff;">${viewedAt} (Sydney)</td></tr>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:8px;padding:16px;margin:20px 0;">
+        <tr><td style="padding:6px 0;color:#666666;font-size:12px;width:140px;">Case Reference</td><td style="color:#b45309;font-weight:bold;">${caseRef}</td></tr>
+        <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Case</td><td style="color:#000000;font-weight:bold;">${caseItem.title}</td></tr>
+        <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Organisation</td><td style="color:#333333;">${caseItem.organisation_name || 'N/A'}</td></tr>
+        <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Merchant</td><td style="color:#333333;">${merchantName}</td></tr>
+        <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Access Time</td><td style="color:#333333;">${viewedAt} (Sydney)</td></tr>
       </table>
-      <p style="color:#ccc;">The merchant is reviewing your case. You may receive a response shortly.</p>
+      <p style="color:#666666;">The merchant is reviewing your case. You may receive a response shortly.</p>
       <p style="margin-top:24px;"><a href="https://chaoscontroller.com.au/case/${caseItem.id}" style="background:#FFD700;color:#000;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">View Your Case</a></p>
     `);
 
