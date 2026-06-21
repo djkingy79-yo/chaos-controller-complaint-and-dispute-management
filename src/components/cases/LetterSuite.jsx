@@ -407,26 +407,17 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handlePrintPDF = async () => {
-    // VISIBLE BUTTON CLICK LOG - DEPLOYED TEST
-    console.log('VISIBLE LETTER BUTTON CLICKED', {
-      action: 'print_pdf',
-      letterType: letterType.label,
-      caseId: caseItem?.id,
-      hasContent: !!text
-    });
-    console.log('[LetterSuite] Print PDF clicked', letterType.label);
-    console.log('[LetterSuite] Letter exists:', !!text);
-    console.log('[LetterSuite] Case exists:', !!caseItem);
-    console.log('[LetterSuite] generateChaosDocumentPDF:', typeof generateChaosDocumentPDF);
+    // Mobile-visible feedback
+    alert(`🖨️ PRINT PDF CLICKED\nLetter: ${letterType.label}\nCase: ${caseItem?.title}\nHas content: ${!!text}`);
     
     if (!text) {
-      toast.error('No letter content to print');
+      alert('❌ ERROR: No letter content to print');
       return;
     }
     
     try {
+      alert('⏳ Generating PDF...');
       const cleanContent = text.replace(/<[^>]*>/g, '');
-      console.log('[LetterSuite] Generating PDF...', cleanContent.length, 'chars');
       
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
@@ -436,56 +427,37 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         includeFooter: true,
       });
       
-      console.log('[LetterSuite] PDF generated', pdfBlob.size, 'bytes');
-      console.log('generateChaosDocumentPDF reached - PDF blob created');
+      alert(`✅ PDF GENERATED\nSize: ${pdfBlob.size} bytes\nOpening for print...`);
       
-      // Try to open print window
+      // Mobile Safari: create download link directly
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      const win = window.open(pdfUrl, '_blank');
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       
-      if (win) {
-        win.onload = () => {
-          console.log('[LetterSuite] Print window loaded');
-          setTimeout(() => {
-            win.print();
-          }, 500);
-        };
-        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
-      } else {
-        // Popup blocked - fallback to download
-        console.log('[LetterSuite] Popup blocked, downloading instead');
-        const a = document.createElement('a');
-        a.href = pdfUrl;
-        a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-        a.click();
-        toast.success('Popup blocked - PDF downloaded instead');
-        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
-      }
+      alert('📥 PDF downloaded! Check your Downloads folder.\n\nOn iPhone: Tap the download arrow in Safari → Manage → Open in another app to print.');
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
     } catch (error) {
+      alert(`❌ PRINT FAILED\n${error.message}`);
       console.error('[LetterSuite] PDF print failed:', error);
-      toast.error('Print failed: ' + error.message);
     }
   };
 
   const handleDownloadPDF = async () => {
-    // VISIBLE BUTTON CLICK LOG - DEPLOYED TEST
-    console.log('VISIBLE LETTER BUTTON CLICKED', {
-      action: 'download_pdf',
-      letterType: letterType.label,
-      caseId: caseItem?.id,
-      hasContent: !!text
-    });
-    console.log('[LetterSuite] Download PDF clicked', letterType.label);
-    console.log('[LetterSuite] Letter exists:', !!text);
+    // Mobile-visible feedback
+    alert(`📥 DOWNLOAD PDF CLICKED\nLetter: ${letterType.label}\nCase: ${caseItem?.title}\nHas content: ${!!text}`);
     
     if (!text) {
-      toast.error('No letter content to download');
+      alert('❌ ERROR: No letter content to download');
       return;
     }
     
     try {
+      alert('⏳ Generating PDF...');
       const cleanContent = text.replace(/<[^>]*>/g, '');
-      console.log('[LetterSuite] Generating PDF...', cleanContent.length, 'chars');
       
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
@@ -495,8 +467,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         includeFooter: true,
       });
       
-      console.log('[LetterSuite] PDF generated', pdfBlob.size, 'bytes');
-      console.log('generateChaosDocumentPDF reached - PDF blob created');
+      alert(`✅ PDF GENERATED\nSize: ${pdfBlob.size} bytes\nDownloading...`);
       
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
@@ -507,10 +478,10 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      console.log('[LetterSuite] Download initiated - file should be downloading now');
+      alert('📥 PDF downloaded! Check your Downloads folder.\n\nOn iPhone: Tap the download arrow in Safari → Manage → Open in another app.');
     } catch (error) {
+      alert(`❌ DOWNLOAD FAILED\n${error.message}`);
       console.error('[LetterSuite] PDF download failed:', error);
-      toast.error('Download failed: ' + error.message);
     }
   };
 
