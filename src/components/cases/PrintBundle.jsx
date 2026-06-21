@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
-import { printLetter as printLetterUniversal, printDocument, buildDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
+import { printLetter as printLetterUniversal, printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
 import { printTableDocument } from "@/lib/printUtilities";
 
 

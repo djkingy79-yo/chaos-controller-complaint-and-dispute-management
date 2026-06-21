@@ -26,19 +26,13 @@ export const FOOTER_URL = 'https://media.base44.com/images/public/6a2ac3b012e456
 // All new code should use lib/documentFormatEngine.js directly
 export {
   buildFormalLetter,
-  buildDocument,
   printDocument,
   printLetter,
-  printGenericDocument,
-  printLetterLegacy,
-  buildPartyDetails,
-  buildBlankLines,
-  formatDate,
+  DOCUMENT_CSS as PRINT_CSS,
   cleanContentForPrint,
   stripHtmlTags,
   LETTERHEAD_URL as ENGINE_LETTERHEAD,
   FOOTER_URL as ENGINE_FOOTER,
-  VERSION as ENGINE_VERSION,
 } from './documentFormatEngine';
 
 // ─────────────────────────────────────────────────────────────────────────────

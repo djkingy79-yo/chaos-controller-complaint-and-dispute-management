@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, differenceInDays, isPast, parseISO } from "date-fns";
 import { Printer, FileText, TrendingUp, AlertCircle, CheckCircle2, Clock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { printDocument, buildDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
+import { printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
 
 
 const STATUS_LABELS = {
