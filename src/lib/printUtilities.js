@@ -24,16 +24,19 @@ export const FOOTER_URL = 'https://media.base44.com/images/public/6a2ac3b012e456
 // RE-EXPORT FROM UNIVERSAL DOCUMENT FORMAT ENGINE
 // ─────────────────────────────────────────────────────────────────────────────
 // All new code should use lib/documentFormatEngine.js directly
+import { DOCUMENT_CSS } from './documentFormatEngine';
+
 export {
   buildFormalLetter,
   printDocument,
   printLetter,
-  DOCUMENT_CSS as PRINT_CSS,
   cleanContentForPrint,
   stripHtmlTags,
   LETTERHEAD_URL as ENGINE_LETTERHEAD,
   FOOTER_URL as ENGINE_FOOTER,
 } from './documentFormatEngine';
+
+export const PRINT_CSS = DOCUMENT_CSS;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LEGACY HELPER FUNCTIONS (for backward compatibility)

@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, Printer } from "lucide-react";
 import { format } from "date-fns";
-import { buildDocument, DOCUMENT_CSS, LETTERHEAD_URL, FOOTER_URL } from "@/lib/documentFormatEngine";
+import { DOCUMENT_CSS, LETTERHEAD_URL, FOOTER_URL } from "@/lib/documentFormatEngine";
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },

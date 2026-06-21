@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Printer, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import { printDocument, buildDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
+import { printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
