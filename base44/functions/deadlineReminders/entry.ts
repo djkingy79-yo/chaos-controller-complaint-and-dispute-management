@@ -183,7 +183,7 @@ Chaos Controller™ — AI-Powered Consumer Advocacy`;
 
       // 4. Push to Google Calendar (per-user connector)
       try {
-        const googleConn = await base44.asServiceRole.connectors.getAppUserConnection(GOOGLE_CONNECTOR_ID, caseItem.created_by_id);
+        const googleConn = await base44.asServiceRole.connectors.getCurrentAppUserConnection(GOOGLE_CONNECTOR_ID);
         if (googleConn?.accessToken) {
           await pushToGoogleCalendar(googleConn.accessToken, deadline, caseItem, daysUntil);
         }
