@@ -56,11 +56,11 @@ function cleanSnapshotContent(md) {
 
 /**
  * Generate PDF using jsPDF - NO browser print involved
+ * A4 Layout: 210mm x 297mm, margins 17.5mm L/R, 12.5mm T/B
  */
 async function generateSnapshotPDF(caseItem, snapshot) {
   const { sections } = cleanSnapshotContent(snapshot);
   const today = format(new Date(), "d MMMM yyyy");
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
   
   // Create A4 PDF (210mm x 297mm)
   const pdf = new jsPDF({
@@ -69,83 +69,96 @@ async function generateSnapshotPDF(caseItem, snapshot) {
     format: 'a4'
   });
   
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const contentWidth = pageWidth - 35; // 17.5mm margins on each side
+  const pageWidth = 210;
+  const pageHeight = 297;
   const leftMargin = 17.5;
-  let yPos = 25; // Start position
+  const rightMargin = 17.5;
+  const topMargin = 12.5;
+  const bottomMargin = 12.5;
+  const contentWidth = pageWidth - leftMargin - rightMargin; // 175mm
   
-  // Load header image
+  let yPos = topMargin; // Start at 12.5mm from top
+  
+  // Load and add header image
   const headerImg = await loadImage(LETTERHEAD_URL);
   if (headerImg) {
-    pdf.addImage(headerImg, 'JPEG', 0, 0, pageWidth, 15);
+    // Header: 175mm wide, max 22mm tall, positioned at margins
+    pdf.addImage(headerImg, 'JPEG', leftMargin, yPos, 175, 0);
+    // Get actual rendered height from image
+    const imgHeight = pdf.getImageProperties(headerImg).h * (175 / pdf.getImageProperties(headerImg).w);
+    yPos += Math.min(imgHeight, 22);
   }
   
-  yPos = 45; // After header
-  
-  // Title block
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(9);
-  pdf.text('CHAOS CONTROLLER™', leftMargin, yPos);
+  // 8mm gap after header
   yPos += 8;
+  
+  // Title block - Times New Roman (times in jsPDF)
+  pdf.setFont('times', 'bold');
+  pdf.setFontSize(12);
+  pdf.text('CHAOS CONTROLLER™', leftMargin, yPos);
+  yPos += 7;
   
   pdf.setFontSize(14);
   pdf.text('WEEKLY CASE SNAPSHOT', leftMargin, yPos);
-  yPos += 10;
+  yPos += 8;
   
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont('times', 'normal');
+  pdf.setFontSize(11);
   pdf.text(`Matter: ${caseItem.title}`, leftMargin, yPos);
   yPos += 6;
   pdf.text(`Against: ${caseItem.organisation_name || "Organisation"}`, leftMargin, yPos);
   yPos += 6;
   pdf.text(`Date: ${today}`, leftMargin, yPos);
-  yPos += 8;
+  yPos += 7;
   
   // Separator line
   pdf.setDrawColor(0);
   pdf.setLineWidth(0.3);
-  pdf.line(leftMargin, yPos, pageWidth - leftMargin, yPos);
-  yPos += 10;
+  pdf.line(leftMargin, yPos, pageWidth - rightMargin, yPos);
+  yPos += 8;
   
   // Render sections
-  pdf.setFont('times', 'normal');
-  pdf.setFontSize(11);
-  
   for (const section of sections) {
-    // Check if we need a new page
-    if (yPos > 250) {
-      pdf.addPage();
-      yPos = 25;
-      // Add footer to previous page
+    // Check if we need a new page (leave room for footer)
+    if (yPos > pageHeight - bottomMargin - 30) {
+      // Add footer to current page before adding new page
       const footerImg = await loadImage(FOOTER_URL);
       if (footerImg) {
-        pdf.addImage(footerImg, 'JPEG', 0, pageHeight - 15, pageWidth, 15);
+        const footerProps = pdf.getImageProperties(footerImg);
+        const footerHeight = footerProps.h * (175 / footerProps.w);
+        const footerY = pageHeight - bottomMargin - footerHeight;
+        pdf.addImage(footerImg, 'JPEG', leftMargin, footerY, 175, 0);
       }
+      pdf.addPage();
+      yPos = topMargin;
     }
     
-    // Section title
+    // Section title - bold uppercase
     if (section.title) {
       pdf.setFont('times', 'bold');
-      pdf.setFontSize(11);
+      pdf.setFontSize(12);
       const titleLines = pdf.splitTextToSize(section.title.toUpperCase(), contentWidth);
       pdf.text(titleLines, leftMargin, yPos);
-      yPos += (titleLines.length * 5) + 3;
+      yPos += (titleLines.length * 6) + 2;
       pdf.setFont('times', 'normal');
     }
     
-    // Section content
+    // Section content - 11pt normal
     if (section.content) {
       const contentLines = pdf.splitTextToSize(section.content, contentWidth);
+      pdf.setFontSize(11);
       pdf.text(contentLines, leftMargin, yPos);
-      yPos += (contentLines.length * 5) + 6;
+      yPos += (contentLines.length * 5.5) + 4;
     }
   }
   
   // Add footer to last page
   const footerImg = await loadImage(FOOTER_URL);
   if (footerImg) {
-    pdf.addImage(footerImg, 'JPEG', 0, pageHeight - 15, pageWidth, 15);
+    const footerProps = pdf.getImageProperties(footerImg);
+    const footerHeight = footerProps.h * (175 / footerProps.w);
+    const footerY = pageHeight - bottomMargin - footerHeight;
+    pdf.addImage(footerImg, 'JPEG', leftMargin, footerY, 175, 0);
   }
   
   return pdf;
