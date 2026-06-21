@@ -312,8 +312,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       {text ? (
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
           {/* Smaller professional letterhead banner — page 1 only */}
-          <div className="letterhead-banner" style={{ height: '80px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', margin: '0 auto 20pt auto' }}></div>
-          {/* Letter body — 1.5 inch margins, Times New Roman 11pt, normal spacing */}
+          <div className="letterhead-banner" style={{ height: '180px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', margin: '0 auto 0 auto' }}></div>
           <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3", color: "#000", marginTop: '0', paddingTop: '0' }}>
             {editing ? (
               <Textarea
