@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Printer, Download, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
-import { buildFormalLetter, printDocument, LETTERHEAD_URL, FOOTER_URL } from '@/lib/printUtilities';
+import { generateChaosDocumentPDF } from '@/lib/pdfGenerator';
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
@@ -163,35 +163,37 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
   const handlePrintPDF = async () => {
     setPdfGenerating(true);
     try {
-      const { sections } = cleanSnapshotContent(snapshot);
-      const html = `<!DOCTYPE html><html><head>
-        <title>Weekly Snapshot - ${caseItem.title}</title>
-        <style>
-          @page { margin: 25mm; size: A4; }
-          body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; }
-          h1 { font-size: 14pt; font-weight: bold; margin: 12pt 0; }
-          h2 { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; }
-          p { line-height: 1.3; }
-          .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; }
-          .letterhead-footer { width: 100%; height: 60px; background-image: url('${FOOTER_URL}'); background-size: 100% 100%; }
-          .print-content { margin: 0 25mm; }
-        </style>
-      </head><body>
-        <div class="letterhead-header"></div>
-        <div class="print-content">
-          <h1>WEEKLY CASE SNAPSHOT</h1>
-          <p><strong>Matter:</strong> ${caseItem.title}</p>
-          <p><strong>Date:</strong> ${format(new Date(), "d MMMM yyyy")}</p>
-          <hr/>
-          ${sections.map(s => `<h2>${s.title}</h2><p>${s.content.replace(/\n/g, '<br/>')}</p>`).join('')}
-        </div>
-        <div class="letterhead-footer"></div>
-      </body></html>`;
+      console.log('[WeeklySnapshot] Print PDF clicked');
+      console.log('[WeeklySnapshot] Snapshot exists:', !!snapshot);
+      console.log('[WeeklySnapshot] Case exists:', !!caseItem);
       
-      printDocument(html);
+      const { sections } = cleanSnapshotContent(snapshot);
+      const pdfBlob = await generateChaosDocumentPDF({
+        documentType: 'snapshot',
+        title: 'WEEKLY CASE SNAPSHOT',
+        matter: caseItem.title,
+        date: format(new Date(), "d MMMM yyyy"),
+        sections: sections,
+        includeHeader: true,
+        includeFooter: true,
+      });
+      
+      console.log('[WeeklySnapshot] PDF blob generated:', !!pdfBlob);
+      
+      // Open for print
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const win = window.open(pdfUrl, '_blank');
+      if (win) {
+        win.onload = () => {
+          setTimeout(() => {
+            win.print();
+          }, 500);
+        };
+      }
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
     } catch (error) {
-      console.error('[WeeklySnapshot] Print failed:', error);
-      alert('Print failed: ' + error.message);
+      console.error('[WeeklySnapshot] PDF generation failed:', error);
+      alert('PDF generation failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
     }
@@ -200,35 +202,29 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
   const handleDownloadPDF = async () => {
     setPdfGenerating(true);
     try {
-      const { sections } = cleanSnapshotContent(snapshot);
-      const html = `<!DOCTYPE html><html><head>
-        <title>Weekly Snapshot - ${caseItem.title}</title>
-        <style>
-          @page { margin: 25mm; size: A4; }
-          body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; }
-          h1 { font-size: 14pt; font-weight: bold; margin: 12pt 0; }
-          h2 { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; }
-          p { line-height: 1.3; }
-          .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; }
-          .letterhead-footer { width: 100%; height: 60px; background-image: url('${FOOTER_URL}'); background-size: 100% 100%; }
-          .print-content { margin: 0 25mm; }
-        </style>
-      </head><body>
-        <div class="letterhead-header"></div>
-        <div class="print-content">
-          <h1>WEEKLY CASE SNAPSHOT</h1>
-          <p><strong>Matter:</strong> ${caseItem.title}</p>
-          <p><strong>Date:</strong> ${format(new Date(), "d MMMM yyyy")}</p>
-          <hr/>
-          ${sections.map(s => `<h2>${s.title}</h2><p>${s.content.replace(/\n/g, '<br/>')}</p>`).join('')}
-        </div>
-        <div class="letterhead-footer"></div>
-      </body></html>`;
+      console.log('[WeeklySnapshot] Download PDF clicked');
       
-      printDocument(html);
+      const { sections } = cleanSnapshotContent(snapshot);
+      const pdfBlob = await generateChaosDocumentPDF({
+        documentType: 'snapshot',
+        title: 'WEEKLY CASE SNAPSHOT',
+        matter: caseItem.title,
+        date: format(new Date(), "d MMMM yyyy"),
+        sections: sections,
+        includeHeader: true,
+        includeFooter: true,
+      });
+      
+      // Download
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Weekly_Snapshot_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('[WeeklySnapshot] Download failed:', error);
-      alert('Download failed: ' + error.message);
+      console.error('[WeeklySnapshot] PDF download failed:', error);
+      alert('PDF download failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
     }

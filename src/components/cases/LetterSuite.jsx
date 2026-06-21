@@ -344,16 +344,9 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [generating, setGenerating] = useState(false);
 
   const handleApplyTemplate = (content) => {
-    console.log('VISIBLE LETTER BUTTON CLICKED', {
-      action: 'apply_template',
-      letterType: letterType.label,
-      caseId: caseItem?.id,
-      hasContent: !!content
-    });
     setText(content);
     updateMutation.mutate({ [field]: content });
     setEditing(false);
-    console.log('[LetterSuite] Template applied');
   };
 
   const updateMutation = useMutation({
@@ -372,26 +365,17 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   });
 
   const handleGenerate = async () => {
-    console.log('VISIBLE LETTER BUTTON CLICKED', {
-      action: 'regenerate',
-      letterType: letterType.label,
-      caseId: caseItem?.id,
-      field: field
-    });
     setGenerating(true);
     try {
       const client = buildClientContext(caseItem, evidence);
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today);
-      console.log('[LetterSuite] Regenerate - calling InvokeLLM');
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
-      console.log('[LetterSuite] Regenerate - AI response received', result.length, 'chars');
       // Only update local state after successful save
       updateMutation.mutate({ [field]: result }, {
         onSuccess: () => {
           setText(result);
           toast.success(`${letterType.label} generated and saved`);
-          console.log('[LetterSuite] Regenerate - saved to database');
           setGenerating(false);
         },
         onError: () => {
@@ -400,88 +384,56 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         }
       });
     } catch (e) {
-      console.error('[LetterSuite] Regenerate failed:', e);
       toast.error("Generation failed: " + e.message);
       setGenerating(false);
     }
   };
 
   const handlePrintPDF = async () => {
-    // Mobile-visible feedback
-    alert(`🖨️ PRINT PDF CLICKED\nLetter: ${letterType.label}\nCase: ${caseItem?.title}\nHas content: ${!!text}`);
-    
-    if (!text) {
-      alert('❌ ERROR: No letter content to print');
-      return;
-    }
-    
     try {
-      alert('⏳ Generating PDF...');
       const cleanContent = text.replace(/<[^>]*>/g, '');
-      
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
         title: letterType.label,
-        letterContent: cleanContent,
+        body: cleanContent,
         includeHeader: true,
         includeFooter: true,
       });
-      
-      alert(`✅ PDF GENERATED\nSize: ${pdfBlob.size} bytes\nOpening for print...`);
-      
-      // Mobile Safari: create download link directly
       const pdfUrl = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = pdfUrl;
-      a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      alert('📥 PDF downloaded! Check your Downloads folder.\n\nOn iPhone: Tap the download arrow in Safari → Manage → Open in another app to print.');
+      const win = window.open(pdfUrl, '_blank');
+      if (win) {
+        win.onload = () => {
+          setTimeout(() => {
+            win.print();
+          }, 500);
+        };
+      }
       setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
     } catch (error) {
-      alert(`❌ PRINT FAILED\n${error.message}`);
       console.error('[LetterSuite] PDF print failed:', error);
+      toast.error('PDF generation failed: ' + error.message);
     }
   };
 
   const handleDownloadPDF = async () => {
-    // Mobile-visible feedback
-    alert(`📥 DOWNLOAD PDF CLICKED\nLetter: ${letterType.label}\nCase: ${caseItem?.title}\nHas content: ${!!text}`);
-    
-    if (!text) {
-      alert('❌ ERROR: No letter content to download');
-      return;
-    }
-    
     try {
-      alert('⏳ Generating PDF...');
       const cleanContent = text.replace(/<[^>]*>/g, '');
-      
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
         title: letterType.label,
-        letterContent: cleanContent,
+        body: cleanContent,
         includeHeader: true,
         includeFooter: true,
       });
-      
-      alert(`✅ PDF GENERATED\nSize: ${pdfBlob.size} bytes\nDownloading...`);
-      
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      document.body.appendChild(a);
+      a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       a.click();
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
-      alert('📥 PDF downloaded! Check your Downloads folder.\n\nOn iPhone: Tap the download arrow in Safari → Manage → Open in another app.');
     } catch (error) {
-      alert(`❌ DOWNLOAD FAILED\n${error.message}`);
       console.error('[LetterSuite] PDF download failed:', error);
+      toast.error('PDF download failed: ' + error.message);
     }
   };
 
@@ -513,20 +465,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </Button>
               <Button
                 variant="outline" size="sm"
-                onClick={() => {
-                  console.log('VISIBLE LETTER BUTTON CLICKED', {
-                    action: editing ? 'save_edit' : 'toggle_edit',
-                    letterType: letterType.label,
-                    caseId: caseItem?.id
-                  });
-                  if (editing) {
-                    console.log('[LetterSuite] Saving edited letter...');
-                    updateMutation.mutate({ [field]: text });
-                  } else {
-                    console.log('[LetterSuite] Entering edit mode');
-                  }
-                  setEditing(!editing);
-                }}
+                onClick={() => { if (editing) updateMutation.mutate({ [field]: text }); setEditing(!editing); }}
                 className="gap-1.5 text-xs"
               >
                 {editing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}

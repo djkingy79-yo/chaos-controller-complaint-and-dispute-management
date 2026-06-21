@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, Printer } from "lucide-react";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
 import { DOCUMENT_CSS } from "@/lib/printUtilities";
 
 const LETTER_DEFS = [
@@ -136,21 +136,13 @@ function openPrintPreview(caseItem, evidence, events) {
 // Helper to generate letter PDF blob using unified generator
 async function generateLetterPDF(title, content) {
   const cleanContent = content.replace(/<[^>]*>/g, '');
-  console.log('[ExportZIP] Generating letter PDF:', title);
-  try {
-    const pdfBlob = await generateChaosDocumentPDF({
-      documentType: 'letter',
-      title: title,
-      letterContent: cleanContent,
-      includeHeader: true,
-      includeFooter: true,
-    });
-    console.log('[ExportZIP] Letter PDF generated:', pdfBlob.size, 'bytes');
-    return pdfBlob;
-  } catch (error) {
-    console.error('[ExportZIP] Letter PDF failed:', title, error);
-    throw error;
-  }
+  return await generateChaosDocumentPDF({
+    documentType: 'letter',
+    title: title,
+    body: cleanContent,
+    includeHeader: true,
+    includeFooter: true,
+  });
 }
 
 export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) {
