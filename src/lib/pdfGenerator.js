@@ -134,9 +134,14 @@ export async function generateChaosDocumentPDF({
     
     // If letterContent is provided (pre-formatted), use it directly
     if (letterContent) {
+      console.log('[PDF Generator] Raw letterContent length:', letterContent.length);
+      console.log('[PDF Generator] Raw letterContent (first 200 chars):', letterContent.substring(0, 200));
       const cleanContent = cleanForPDF(letterContent);
+      console.log('[PDF Generator] Clean content length:', cleanContent.length);
+      console.log('[PDF Generator] Clean content (first 200 chars):', cleanContent.substring(0, 200));
       const lines = cleanContent.split('\n');
-      console.log('[PDF Generator] Letter content lines:', lines.length);
+      console.log('[PDF Generator] Lines count:', lines.length);
+      console.log('[PDF Generator] First 5 lines:', lines.slice(0, 5));
       
       for (const line of lines) {
         if (yPos > pageHeight - bottomMargin - 30) {
@@ -167,15 +172,19 @@ export async function generateChaosDocumentPDF({
         }
         
         const trimmed = line.trim();
-        if (trimmed && typeof trimmed === 'string') {
+        console.log('[PDF Generator] Processing line:', trimmed.substring(0, 80), 'length:', trimmed.length);
+        if (trimmed && typeof trimmed === 'string' && trimmed.length > 0) {
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(10);
           try {
             const textLines = pdf.splitTextToSize(trimmed, contentWidth);
+            console.log('[PDF Generator] splitTextToSize result:', textLines);
             if (textLines && Array.isArray(textLines) && textLines.length > 0) {
               pdf.text(textLines, leftMargin, yPos);
+              console.log('[PDF Generator] text() rendered', textLines.length, 'lines at y:', yPos);
               yPos += textLines.length * 4.5;
             } else {
+              console.log('[PDF Generator] No text lines to render');
               yPos += 3;
             }
           } catch (textErr) {
@@ -183,6 +192,7 @@ export async function generateChaosDocumentPDF({
             yPos += 3;
           }
         } else {
+          console.log('[PDF Generator] Skipping empty/invalid line');
           yPos += 3;
         }
       }
