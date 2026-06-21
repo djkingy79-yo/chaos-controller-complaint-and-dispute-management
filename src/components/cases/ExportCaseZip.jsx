@@ -37,7 +37,7 @@ function buildSummaryHTML(caseItem, evidence, events) {
       @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-      .letterhead-header { width: 100%; height: 80px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
+      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
       h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; border-bottom: 1px solid #000; padding-bottom: 4pt; }
       h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
       .summary-box { background: white; border: none; padding: 0; margin-bottom: 10pt; }
@@ -155,14 +155,14 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
         <style>
           @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
           body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-          .letterhead-header { width: 100%; height: 80px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
+          .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
           .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; margin-top: 8pt; }
         </style>
         </head><body>
           <div class="letterhead-header"></div>
           <div style="padding:0 25mm 20mm 25mm;">
           <div class="header" style="font-size:12pt;font-weight:bold;color:#000;margin-bottom:10pt;border-bottom:1px solid #000;padding-bottom:4pt;">${ld.label}</div>
-          <div class="content">${caseItem[ld.field].split('\n').map(l => '<p style="margin:0 0 3pt 0;">' + (l || '&nbsp;') + '</p>').join('')}</div>
+          <div class="content">${caseItem[ld.field].split('\n').map(l => '<p style="margin:0 0 8pt 0;">' + (l || '&nbsp;') + '</p>').join('')}</div>
           </div>
         </body></html>`;
         lettersFolder.file(`${i + 1}_${ld.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.html`, letterHTML);

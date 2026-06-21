@@ -262,13 +262,13 @@ export default function ComplaintLetter({ caseItem }) {
       {/* A4 Letter Preview */}
       <div className="flex justify-center">
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
-          {/* Header Banner - 180px */}
+          {/* Thinner, longer header banner */}
           <div 
             className="w-full"
             style={{ 
-              height: '180px', 
+              height: '60px', 
               backgroundImage: `url(${LETTERHEAD_URL})`, 
-              backgroundSize: 'cover', 
+              backgroundSize: 'contain', 
               backgroundRepeat: 'no-repeat', 
               backgroundPosition: 'center top',
               backgroundColor: '#ffffff',
@@ -285,13 +285,14 @@ export default function ComplaintLetter({ caseItem }) {
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2" }}
               />
             ) : (
-              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.15", margin: 0, color: "#000" }}>
+              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, color: "#000" }}>
                 {letter.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '0 0 2pt 0', minHeight: '10pt', lineHeight: '1.15' }}>{line || '\u00A0'}</p>
+                  <p key={i} style={{ margin: '0 0 8pt 0', minHeight: '10pt', lineHeight: '1.2' }}>{line || '\u00A0'}</p>
                 ))}
               </div>
             )}
           </div>
+          {/* Extended footer banner */}
           <div 
             className="w-full"
             style={{ 

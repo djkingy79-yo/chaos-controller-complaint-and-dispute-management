@@ -35,9 +35,9 @@ export function getLetterPageStyles() {
       .letter-page, .letter-continuation { break-inside: avoid; }
     }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
 
-    /* Page 1: Full letterhead with header image */
+    /* Page 1: Full letterhead with header image - thinner but full width */
     .letter-page {
       position: relative;
       width: 100%;
@@ -47,9 +47,9 @@ export function getLetterPageStyles() {
     
     .letterhead-header {
       width: 100%;
-      height: 80px;
+      height: 60px;
       background-image: url('${HEADER_URL}');
-      background-size: contain;
+      background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: center top;
     }
@@ -59,67 +59,65 @@ export function getLetterPageStyles() {
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 35px;
+      height: 60px;
       background-image: url('${FOOTER_URL}');
-      background-size: contain;
+      background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: center bottom;
     }
 
-    /* Letter body - ZERO top padding, compact spacing */
+    /* Letter body - compact spacing, left-aligned addresses */
     .letter-content {
       position: relative;
       padding: 0 25mm 20mm 25mm;
       margin: 0;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
+      font-size: 10pt;
       color: #000;
-      line-height: 1.3;
+      line-height: 1.2;
       width: 100%;
     }
     
     .letter-content p {
-      margin: 0 0 3pt 0;
+      margin: 0 0 8pt 0;
       line-height: 1.2;
-      min-height: 11pt;
     }
     
-    /* Date line - Heading 1 style - bold, left aligned at top */
+    /* Date line - left aligned at top */
     .letter-date {
       font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
-      font-weight: bold;
-      margin: 0 0 12pt 0;
+      font-size: 10pt;
+      margin: 0 0 8pt 0;
       text-align: left;
     }
     
-    /* Sender address - RIGHT aligned, tight spacing */
+    /* Sender address - LEFT aligned, ZERO spacing between lines */
     .sender-address {
-      text-align: right;
-      line-height: 1.1;
-      margin: 0 0 10pt 0;
+      text-align: left;
+      line-height: 1.0;
+      margin: 0 0 8pt 0;
     }
     
-    /* Receiver address - LEFT aligned, tight spacing */
+    /* Receiver address - LEFT aligned under sender, ZERO spacing */
     .receiver-address {
       text-align: left;
-      line-height: 1.1;
-      margin: 0 0 10pt 0;
+      line-height: 1.0;
+      margin: 0 0 8pt 0;
     }
     
     /* Address blocks - single spaced, no gaps */
-    .address-block { line-height: 1.1; margin: 0 0 8pt 0; }
-    .address-line { line-height: 1.1; margin: 0; }
+    .address-block { line-height: 1.0; margin: 0 0 6pt 0; }
+    .address-line { line-height: 1.0; margin: 0; }
     
-    /* Section headings - Heading 2 style */
+    /* Section headings */
     h2.section-title, .section-heading {
       font-family: 'Times New Roman', Times, serif;
       font-size: 11pt;
       font-weight: bold;
-      margin: 12pt 0 8pt 0;
+      margin: 10pt 0 6pt 0;
     }
 
-    /* Continuation pages — plain white with minimal header */
+    /* Continuation pages */
     .letter-continuation {
       position: relative;
       width: 100%;
@@ -130,9 +128,9 @@ export function getLetterPageStyles() {
     
     .continuation-header {
       width: 100%;
-      height: 40px;
+      height: 60px;
       background-image: url('${CONTINUATION_PAGE_URL}');
-      background-size: contain;
+      background-size: 100% 100%;
       background-repeat: no-repeat;
       background-position: center top;
       margin-bottom: 0;
@@ -142,29 +140,28 @@ export function getLetterPageStyles() {
       padding: 0 25mm 20mm 25mm;
       margin-top: 0;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
+      font-size: 10pt;
       color: #000;
       line-height: 1.2;
     }
     
     .continuation-content p {
-      margin: 0 0 3pt 0;
+      margin: 0 0 8pt 0;
       line-height: 1.2;
-      min-height: 11pt;
     }
 
     pre {
       white-space: pre-wrap;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 11pt;
+      font-size: 10pt;
       line-height: 1.2;
       margin: 0;
       color: #000;
     }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 11pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 11pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 11pt; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
+    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
+    td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 10pt; }
   `;
 }
 
