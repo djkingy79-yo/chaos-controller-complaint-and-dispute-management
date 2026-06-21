@@ -87,14 +87,15 @@ export default function ComplaintLetter({ caseItem }) {
   2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
 
   FORMATTING REQUIREMENTS:
-  1. TOP ROW: TODAY'S DATE - ${today} (RIGHT SIDE) alongside SENDER ADDRESS (RIGHT SIDE)
-  2. RECIPIENT ADDRESS (LEFT SIDE, opposite date/sender): Complaint handler name, organisation name, complaints address, complaints email (left aligned)
-  3. Then: Re: line, salutation, body paragraphs, closing
+  1. FIRST line: TODAY'S DATE - ${today} (LEFT aligned at top)
+  2. RECIPIENT ADDRESS (LEFT SIDE, below date): Complaint handler name, organisation name, complaints address, complaints email (left aligned)
+  3. SENDER ADDRESS (RIGHT SIDE, opposite recipient): Full name, address lines, email, phone (each on separate lines, right aligned)
+  4. Then: Re: line, salutation, body paragraphs, closing
   
   STRUCTURE:
-  - Date (RIGHT aligned, top)
-  - Sender address (RIGHT aligned, below date)
-  - Recipient address (LEFT aligned, opposite sender)
+  - Date (LEFT aligned, top)
+  - Recipient address (LEFT aligned, below date)
+  - Sender address (RIGHT aligned, opposite recipient)
   - Re: line
   - Salutation
   - Body paragraphs
@@ -199,6 +200,7 @@ CASE DETAILS:
               }}
             ></div>
             <div style={{ padding: '25mm 25mm 0 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6", color: "#000" }}>
+              <p style={{ fontSize: '13pt', fontWeight: 'bold', margin: '0 0 12pt 0', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12pt' }}>
                 <div style={{ textAlign: 'left', minWidth: '45%' }}>
                   <p style={{ margin: '0' }}>The Complaints Manager</p>
@@ -207,7 +209,6 @@ CASE DETAILS:
                   <p style={{ margin: '0' }}>Sydney NSW 2001</p>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '45%' }}>
-                  <p style={{ fontSize: '13pt', fontWeight: 'bold', margin: '0 0 6pt 0' }}>{format(new Date(), "d MMMM yyyy")}</p>
                   <p style={{ margin: '0' }}>Mick Gallagher</p>
                   <p style={{ margin: '0' }}>14 The Road</p>
                   <p style={{ margin: '0' }}>Penrith 2750</p>
