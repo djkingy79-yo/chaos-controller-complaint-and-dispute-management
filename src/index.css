@@ -129,10 +129,52 @@
     print-color-adjust: exact;
   }
   
-  /* Force white background, black text */
+  /* Typography: 12pt body, single spacing */
   body {
     background: #ffffff !important;
     color: #000000 !important;
+    font-size: 12pt !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Paragraph spacing: single line (12pt) */
+  p {
+    margin: 0 0 12pt 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Date block: first element, before addresses */
+  .date-block {
+    display: block;
+    margin-bottom: 12pt;
+  }
+  
+  /* Sender address: right-aligned */
+  .sender-address {
+    text-align: right !important;
+    margin-left: auto !important;
+    width: fit-content;
+  }
+  
+  /* Receiver address: left-aligned */
+  .receiver-address {
+    text-align: left !important;
+    margin-right: auto !important;
+  }
+  
+  /* Logo header: full-width at top */
+  .logo-header {
+    display: block;
+    width: 100%;
+    margin-bottom: 20mm;
+  }
+  
+  /* Logo footer: fixed at bottom */
+  .logo-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
   }
   
   /* Hide interactive web components */
