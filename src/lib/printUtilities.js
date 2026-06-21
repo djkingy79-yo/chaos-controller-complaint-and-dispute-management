@@ -23,15 +23,22 @@ export const FOOTER_URL = 'https://media.base44.com/images/public/6a2ac3b012e456
 // PRINT CSS (FROZEN - USE IN ALL PRINT WINDOWS)
 // ─────────────────────────────────────────────────────────────────────────────
 export const PRINT_CSS = `
-  @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-  @media print { 
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    @page { margin: 25mm 20mm 20mm 20mm; }
+  @page {
+    margin: 25mm 25mm 25mm 25mm;
+    size: A4;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page:first { margin: 25mm 25mm 25mm 25mm; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    @page { margin-top: 25mm !important; margin-bottom: 25mm !important; margin-left: 25mm !important; margin-right: 25mm !important; }
+    body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
+    nav, header, footer, button, [class*="banner"], .letterhead-banner, .letterhead-header, .letterhead-footer { display: none !important; }
+    a[href]:after, a[href] { content: none !important; display: none !important; }
   }
   body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-  .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-  .letterhead-footer { width: 100%; height: 60px; background-image: url('${FOOTER_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-  .print-content { padding: 8pt 25mm 20mm 25mm; }
+  .print-content { margin: 0 25mm; padding: 0; }
   h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
   h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; }
   table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
@@ -78,9 +85,7 @@ export function openPrintWindow(title, bodyHtml, customCss = '') {
     <title>${title}</title>
     <style>${PRINT_CSS}${customCss}</style>
   </head><body>
-    <div class="letterhead-header"></div>
     ${bodyHtml}
-    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -100,16 +105,14 @@ export function openPrintWindow(title, bodyHtml, customCss = '') {
 export function buildPrintDocument({ title, content, contentType = 'pre', customCss = '' }) {
   const cleanContent = contentType === 'pre' ? cleanContentForPrint(content) : content;
   const contentTag = contentType === 'pre' 
-    ? `<pre class="print-content" style="white-space:pre-wrap;margin:0;">${cleanContent}</pre>`
-    : `<div class="print-content">${content}</div>`;
+    ? `<pre class="print-content" style="white-space:pre-wrap;margin:0 25mm;">${cleanContent}</pre>`
+    : `<div class="print-content" style="margin:0 25mm;">${content}</div>`;
   
   return `<!DOCTYPE html><html><head>
     <title>${title}</title>
     <style>${PRINT_CSS}${customCss}</style>
   </head><body>
-    <div class="letterhead-header"></div>
     ${contentTag}
-    <div class="letterhead-footer"></div>
   </body></html>`;
 }
 
@@ -128,13 +131,11 @@ export function printLetter(title, letterContent, continuationPages = []) {
   const continuationHTML = continuationPages.length > 0 
     ? continuationPages.map(chunk => `
         <div class="letter-continuation" style="page-break-before:always;min-height:297mm;">
-          <div class="letterhead-header"></div>
-          <pre style="padding:8pt 25mm 20mm 25mm;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${chunk}</pre>
+          <pre style="margin:0 25mm;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${chunk}</pre>
         </div>`).join('')
     : remainingLines.length > 0 ? `
         <div class="letter-continuation" style="page-break-before:always;min-height:297mm;">
-          <div class="letterhead-header"></div>
-          <pre style="padding:8pt 25mm 20mm 25mm;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${remainingLines.join('\n')}</pre>
+          <pre style="margin:0 25mm;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${remainingLines.join('\n')}</pre>
         </div>` 
     : '';
   
@@ -148,8 +149,7 @@ export function printLetter(title, letterContent, continuationPages = []) {
     </style>
   </head><body>
     <div class="letter-page">
-      <div class="letterhead-header"></div>
-      <pre class="print-content" style="white-space:pre-wrap;margin:0;">${firstPageLines.join('\n')}</pre>
+      <pre class="print-content" style="white-space:pre-wrap;margin:0 25mm;">${firstPageLines.join('\n')}</pre>
     </div>
     ${continuationHTML}
   </body></html>`);
@@ -171,13 +171,11 @@ export function printTableDocument({ title, heading, subheading = '', tableRows 
     <title>${title}</title>
     <style>${PRINT_CSS}</style>
   </head><body>
-    <div class="letterhead-header"></div>
-    <div class="print-content">
+    <div class="print-content" style="margin:0 25mm;">
       <h1>${heading}</h1>
       ${subheading ? `<h2>${subheading}</h2>` : ''}
       <table>${tableRows}</table>
     </div>
-    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   win.focus();

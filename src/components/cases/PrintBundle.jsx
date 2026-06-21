@@ -156,8 +156,7 @@ function printChecklistItems(caseItem, checklistItems) {
     @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .print-content { padding: 8pt 25mm 20mm 25mm; }
+    .print-content { padding: 0; margin: 0 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
@@ -195,8 +194,7 @@ function printDeadlineItems(caseItem, deadlines) {
     @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .print-content { padding: 8pt 25mm 20mm 25mm; }
+    .print-content { padding: 0; margin: 0 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
