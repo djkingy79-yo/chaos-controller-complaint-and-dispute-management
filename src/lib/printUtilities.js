@@ -34,10 +34,12 @@ export const PRINT_CSS = `
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     @page { margin-top: 25mm !important; margin-bottom: 25mm !important; margin-left: 25mm !important; margin-right: 25mm !important; }
     body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
-    nav, header, footer, button, [class*="banner"], .letterhead-banner, .letterhead-header, .letterhead-footer { display: none !important; }
+    nav, header, footer, button, [class*="banner"], .letterhead-banner { display: none !important; }
     a[href]:after, a[href] { content: none !important; display: none !important; }
   }
   body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+  .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+  .letterhead-footer { width: 100%; height: 60px; background-image: url('${FOOTER_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
   .print-content { margin: 0 25mm; padding: 0; }
   h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
   h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; }
