@@ -105,18 +105,20 @@ export default function CalendarSync() {
 
   const checkGoogle = async () => {
     try {
-      const res = await base44.functions.invoke("syncCalendar", { action: "check" });
-      setGoogleConnected(res.data?.connected || false);
+      const res = await base44.functions.invoke("syncCalendar", { action: "sync" });
+      setGoogleConnected(res.data?.success || false);
       setGoogleEvents(res.data?.events || []);
       setGoogleSyncedCount(res.data?.syncedCount || 0);
       setGoogleTotal(res.data?.totalDeadlines || 0);
       setGoogleError(null);
-    } catch {
+    } catch (err) {
       setGoogleConnected(false);
+      setGoogleError(err.message);
     }
   };
 
   const syncGoogle = async () => {
+    setGoogleSyncing(true);
     try {
       const res = await base44.functions.invoke("syncCalendar", { action: "sync" });
       setGoogleEvents(res.data?.events || []);
@@ -126,7 +128,9 @@ export default function CalendarSync() {
       setGoogleError(null);
     } catch (err) {
       setGoogleConnected(false);
-      setGoogleError(err.message);
+      setGoogleError('Sync failed: ' + err.message);
+    } finally {
+      setGoogleSyncing(false);
     }
   };
 
@@ -165,18 +169,17 @@ export default function CalendarSync() {
 
   const handleGoogleConnect = async () => {
     try {
-      const url = await base44.connectors.getAppUserConnectURL(GOOGLE_CONNECTOR_ID);
-      const popup = window.open(url, "_blank");
-      const timer = setInterval(() => {
-        if (!popup || popup.closed) { clearInterval(timer); syncGoogle(); }
-      }, 500);
+      const url = await base44.connectors.connectAppUser(GOOGLE_CONNECTOR_ID);
+      window.location.href = url;
     } catch (err) { setGoogleError(err.message); }
   };
 
   const handleGoogleDisconnect = async () => {
     try {
       await base44.connectors.disconnectAppUser(GOOGLE_CONNECTOR_ID);
-      setGoogleConnected(false); setGoogleEvents([]);
+      setGoogleConnected(false);
+      setGoogleEvents([]);
+      setGoogleError(null);
     } catch (err) { setGoogleError(err.message); }
   };
 

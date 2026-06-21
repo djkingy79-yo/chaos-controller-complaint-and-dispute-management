@@ -2,9 +2,23 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const CONNECTOR_ID = '6a2f842ded0843ad5cb9ecb7';
 
-async function getToken(base44) {
-  const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
-  return accessToken;
+async function getToken(base44, userId) {
+  // App-user connector (each user connects their own Google account)
+  if (userId) {
+    try {
+      const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection('6a2f842ded0843ad5cb9ecb7');
+      return accessToken;
+    } catch (e) {
+      console.error('App-user connector not found:', e.message);
+    }
+  }
+  // Shared connector backup (for automations)
+  try {
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
+    return accessToken;
+  } catch (e) {
+    throw new Error('No Google Calendar connection found. Please connect your account in Settings.');
+  }
 }
 
 function buildEventPayload(deadline, caseInfo) {
@@ -91,7 +105,7 @@ Deno.serve(async (req) => {
       const caseInfo = cases[0];
       if (!caseInfo) return Response.json({ skipped: 'Case not found' });
 
-      const accessToken = await getToken(base44);
+      const accessToken = await getToken(base44, null);
       const existing = await findExistingEvent(accessToken, deadline.id);
       const ok = existing
         ? await updateCalendarEvent(accessToken, existing.id, deadline, caseInfo)
@@ -108,7 +122,7 @@ Deno.serve(async (req) => {
       const caseInfo = cases[0];
       if (!caseInfo) return Response.json({ skipped: 'Case not found' });
 
-      const accessToken = await getToken(base44);
+      const accessToken = await getToken(base44, null);
       const deadlines = await base44.asServiceRole.entities.Deadline.filter({ case_id: caseId });
       let updatedCount = 0;
       for (const deadline of deadlines) {
@@ -126,7 +140,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const accessToken = await getToken(base44);
+    const accessToken = await getToken(base44, user.id);
 
     if (action === 'sync') {
       const allCases = await base44.entities.Case.filter({ created_by_id: user.id });
