@@ -458,51 +458,9 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5" }}
               />
             ) : (
-              <div className="letter-content" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000" }}>
-                {(() => {
-                  const cleanText = text.replace(/<[^>]*>/g, '');
-                  const lines = cleanText.split('\n');
-                  const senderLines = [];
-                  const recipientLines = [];
-                  const bodyLines = [];
-                  let inSender = true;
-                  let foundBlank = false;
-                  
-                  for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    if (inSender) {
-                      if (line.trim() === '' && foundBlank) {
-                        inSender = false;
-                        continue;
-                      }
-                      if (line.trim() === '') {
-                        foundBlank = true;
-                        continue;
-                      }
-                      senderLines.push(line);
-                    } else if (bodyLines.length === 0 && line.trim() === '') {
-                      continue;
-                    } else {
-                      bodyLines.push(line);
-                    }
-                  }
-                  
-                  return (
-                    <>
-                      <div style={{ textAlign: 'right', lineHeight: '1.0', marginBottom: '6pt' }}>
-                        {senderLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.0', fontSize: '10pt' }}>{line}</div>)}
-                      </div>
-                      <div style={{ textAlign: 'left', lineHeight: '1.0', marginBottom: '6pt' }}>
-                        {recipientLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.0', fontSize: '10pt' }}>{line}</div>)}
-                      </div>
-                      {bodyLines.map((line, i) => {
-                        if (line.trim() === '') return <div key={i} style={{ height: '4pt' }} />;
-                        return <p key={i} style={{ margin: '0 0 4pt 0', lineHeight: '1.2', fontSize: '10pt' }}>{line}</p>;
-                      })}
-                    </>
-                  );
-                })()}
-              </div>
+              <pre style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, whiteSpace: 'pre-wrap', color: "#000" }}>
+                {text.replace(/<[^>]*>/g, '')}
+              </pre>
             )}
           </div>
           {/* Extended footer banner */}

@@ -122,7 +122,15 @@ CRITICAL RULES:
     const cleanText = letter.replace(/<[^>]*>/g, '');
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
-    <style>${getLetterPageStyles()}</style>
+    <style>
+      @page { margin: 0; size: A4; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; }
+      .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
+      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+      .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+      .letter-content { padding: 8pt 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; white-space: pre-wrap; }
+    </style>
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
@@ -155,11 +163,11 @@ CRITICAL RULES:
             <div 
               className="w-full"
               style={{ 
-                height: '180px', 
+                height: '60px', 
                 backgroundImage: `url(${LETTERHEAD_URL})`, 
-                backgroundSize: 'cover', 
+                backgroundSize: '100% 100%', 
                 backgroundRepeat: 'no-repeat', 
-                backgroundPosition: 'center top',
+                backgroundPosition: 'center center',
                 backgroundColor: '#ffffff'
               }}
             ></div>
@@ -187,7 +195,7 @@ CRITICAL RULES:
               <p style={{ margin: '0 0 3pt 0', fontSize: '10pt' }}>Yours faithfully,</p>
               <p style={{ margin: '0', fontSize: '10pt' }}>Mick Gallagher</p>
             </div>
-            <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
+            <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', backgroundPosition: 'center center' }}></div>
           </div>
         </div>
         
@@ -266,51 +274,9 @@ CRITICAL RULES:
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2" }}
               />
             ) : (
-              <div className="letter-content" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000" }}>
-                {(() => {
-                  const cleanText = letter.replace(/<[^>]*>/g, '');
-                  const lines = cleanText.split('\n');
-                  const senderLines = [];
-                  const recipientLines = [];
-                  const bodyLines = [];
-                  let inSender = true;
-                  let foundBlank = false;
-                  
-                  for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    if (inSender) {
-                      if (line.trim() === '' && foundBlank) {
-                        inSender = false;
-                        continue;
-                      }
-                      if (line.trim() === '') {
-                        foundBlank = true;
-                        continue;
-                      }
-                      senderLines.push(line);
-                    } else if (bodyLines.length === 0 && line.trim() === '') {
-                      continue;
-                    } else {
-                      bodyLines.push(line);
-                    }
-                  }
-                  
-                  return (
-                    <>
-                      <div style={{ textAlign: 'right', lineHeight: '1.0', marginBottom: '4pt' }}>
-                        {senderLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.0', fontSize: '10pt' }}>{line}</div>)}
-                      </div>
-                      <div style={{ textAlign: 'left', lineHeight: '1.0', marginBottom: '4pt' }}>
-                        {recipientLines.map((line, i) => <div key={i} style={{ margin: 0, lineHeight: '1.0', fontSize: '10pt' }}>{line}</div>)}
-                      </div>
-                      {bodyLines.map((line, i) => {
-                        if (line.trim() === '') return <div key={i} style={{ height: '4pt' }} />;
-                        return <p key={i} style={{ margin: '0 0 4pt 0', lineHeight: '1.2', fontSize: '10pt' }}>{line}</p>;
-                      })}
-                    </>
-                  );
-                })()}
-              </div>
+              <pre style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, whiteSpace: 'pre-wrap', color: "#000" }}>
+                {letter.replace(/<[^>]*>/g, '')}
+              </pre>
             )}
           </div>
           {/* Extended footer banner */}
