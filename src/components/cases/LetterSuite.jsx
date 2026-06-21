@@ -244,17 +244,17 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
       .letterhead-header { width: 100%; height: 180px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
       .letterhead-footer { display: none !important; }
-      .letter-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.3; }
-      .letter-content p { margin: 0 0 4pt 0; min-height: 12pt; line-height: 1.3; }
+      .letter-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.5; }
+      .letter-content p { margin: 0 0 6pt 0; min-height: 14pt; line-height: 1.5; }
       .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
       .continuation-header { width: 100%; height: 40px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-      .continuation-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.3; }
-      .continuation-content p { margin: 0 0 4pt 0; min-height: 12pt; line-height: 1.3; }
+      .continuation-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.5; }
+      .continuation-content p { margin: 0 0 6pt 0; min-height: 14pt; line-height: 1.5; }
     </style>
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content">${firstPageLines.map(line => `<p style="margin:0 0 4pt 0;min-height:12pt;line-height:1.3;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="letter-content">${firstPageLines.map(line => `<p style="margin:0 0 6pt 0;min-height:14pt;line-height:1.5;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
       </div>
       ${continuationHTML}
     </body></html>`);
@@ -313,19 +313,19 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
           {/* Smaller professional letterhead banner — page 1 only */}
           <div className="letterhead-banner" style={{ height: '180px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', margin: '0 auto 0 auto' }}></div>
-          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3", color: "#000", marginTop: '0', paddingTop: '0' }}>
+          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5", color: "#000", marginTop: '0', paddingTop: '0' }}>
             {editing ? (
               <Textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
                 rows={18}
                 className="font-body bg-white text-slate-900 w-full"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6" }}
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5" }}
               />
             ) : (
-              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: 0, color: "#000" }}>
+              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5", margin: 0, color: "#000" }}>
                 {text.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '0 0 4pt 0', minHeight: '12pt', fontSize: '10pt' }}>{line || '\u00A0'}</p>
+                  <p key={i} style={{ margin: '0 0 6pt 0', minHeight: '14pt' }}>{line || '\u00A0'}</p>
                 ))}
               </div>
             )}
