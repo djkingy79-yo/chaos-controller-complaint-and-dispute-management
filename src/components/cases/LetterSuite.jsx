@@ -243,19 +243,18 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
       .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
       .letterhead-header { width: 100%; height: 180px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-      .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+      .letterhead-footer { display: none !important; }
       .letter-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.3; }
       .letter-content p { margin: 0 0 4pt 0; min-height: 12pt; line-height: 1.3; }
       .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
       .continuation-header { width: 100%; height: 40px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-      .continuation-content { padding: 0 25mm 25mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
-      .continuation-content p { margin: 10pt 0; min-height: 18pt; line-height: 1.6; }
+      .continuation-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.3; }
+      .continuation-content p { margin: 0 0 4pt 0; min-height: 12pt; line-height: 1.3; }
     </style>
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content">${firstPageLines.map(line => `<p style="margin:10pt 0;min-height:18pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
-        <div class="letterhead-footer"></div>
+        <div class="letter-content">${firstPageLines.map(line => `<p style="margin:0 0 4pt 0;min-height:12pt;line-height:1.3;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
       </div>
       ${continuationHTML}
     </body></html>`);
@@ -332,9 +331,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </div>
             )}
           </div>
-            {/* Professional footer — page 1 only */}
-            <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
-            </div>
+        </div>
       ) : (
         <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-10 text-center">
           <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />

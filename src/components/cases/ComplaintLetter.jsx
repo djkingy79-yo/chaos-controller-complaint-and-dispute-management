@@ -88,7 +88,7 @@ export default function ComplaintLetter({ caseItem }) {
   3. The DATE must be the VERY FIRST line at the TOP of the page.
 
   FORMATTING REQUIREMENTS:
-  1. FIRST line (left aligned): TODAY'S DATE - ${today} - this is the FIRST thing on the page, NO asterisks or bold markers
+  1. FIRST line (left aligned): TODAY'S DATE - ${today} - this is the FIRST thing on the page, NO asterisks, NO bold markers, just plain text like "21 June 2026"
   2. BLANK LINE after date
   3. RECIPIENT ADDRESS (LEFT SIDE): Complaint handler name, organisation name, complaints address, complaints email
   4. BLANK LINE
