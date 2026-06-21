@@ -87,15 +87,15 @@ export default function ComplaintLetter({ caseItem }) {
   2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
 
   FORMATTING REQUIREMENTS:
-  1. FIRST line: TODAY'S DATE - ${today} (bold when rendered)
-  2. LEFT SIDE (below date): Sender's full name, address lines, email, phone (each on separate lines)
-  3. RIGHT SIDE (below date, opposite sender): Complaint handler name, organisation name, complaints address, complaints email
+  1. FIRST line: TODAY'S DATE - ${today} (left aligned)
+  2. SENDER ADDRESS (RIGHT SIDE, below date): Full name, address lines, email, phone (each on separate lines, right aligned)
+  3. RECIPIENT ADDRESS (LEFT SIDE, below date, opposite sender): Complaint handler name, organisation name, complaints address, complaints email (left aligned)
   4. Then: Re: line, salutation, body paragraphs, closing
   
   STRUCTURE:
   - Date first (left aligned)
-  - Sender address (left aligned, below date)
-  - Recipient address (right aligned, opposite sender)
+  - Sender address (RIGHT aligned, below date)
+  - Recipient address (LEFT aligned, opposite sender)
   - Re: line
   - Salutation
   - Body paragraphs
@@ -185,49 +185,53 @@ CASE DETAILS:
         </div>
         
         {/* Sample format preview */}
-        <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-          {/* Header Banner - 180px */}
-          <div 
-            className="w-full"
-            style={{ 
-              height: '180px', 
-              backgroundImage: `url(${LETTERHEAD_URL})`, 
-              backgroundSize: 'contain', 
-              backgroundRepeat: 'no-repeat', 
-              backgroundPosition: 'center top',
-              backgroundColor: '#ffffff'
-            }}
-          ></div>
-          <div className="px-12 pb-8 bg-white" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
-            <div style={{ padding: '1.5in 0 0 0' }}>
-              <p style={{ fontSize: '13pt', fontWeight: 'bold', marginBottom: '12pt', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
-              <div style={{ textAlign: 'left', marginBottom: '12pt', lineHeight: '1.0' }}>
-                <p style={{ margin: '0' }}>Mick Gallagher</p>
-                <p style={{ margin: '0' }}>14 The Road</p>
-                <p style={{ margin: '0' }}>Penrith 2750</p>
-                <p style={{ margin: '0' }}>Email: Djkingy79@gmail.com</p>
-                <p style={{ margin: '0' }}>Mobile: 0413572850</p>
+        <div className="flex justify-center">
+          <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
+            {/* Header Banner - 180px */}
+            <div 
+              className="w-full"
+              style={{ 
+                height: '180px', 
+                backgroundImage: `url(${LETTERHEAD_URL})`, 
+                backgroundSize: 'cover', 
+                backgroundRepeat: 'no-repeat', 
+                backgroundPosition: 'center top',
+                backgroundColor: '#ffffff'
+              }}
+            ></div>
+            <div style={{ padding: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
+              <div style={{ padding: '25mm 25mm 0 25mm' }}>
+                <p style={{ fontSize: '13pt', fontWeight: 'bold', marginBottom: '12pt', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12pt', lineHeight: '1.0' }}>
+                  <div style={{ textAlign: 'left', minWidth: '45%' }}>
+                    <p style={{ margin: '0' }}>The Complaints Manager</p>
+                    <p style={{ margin: '0' }}>NRMA Insurance</p>
+                    <p style={{ margin: '0' }}>GPO Box 438</p>
+                    <p style={{ margin: '0' }}>Sydney NSW 2001</p>
+                  </div>
+                  <div style={{ textAlign: 'right', minWidth: '45%' }}>
+                    <p style={{ margin: '0' }}>Mick Gallagher</p>
+                    <p style={{ margin: '0' }}>14 The Road</p>
+                    <p style={{ margin: '0' }}>Penrith 2750</p>
+                    <p style={{ margin: '0' }}>Email: Djkingy79@gmail.com</p>
+                    <p style={{ margin: '0' }}>Mobile: 0413572850</p>
+                  </div>
+                </div>
+                <p style={{ margin: '12pt 0', fontWeight: 'bold' }}>Re: Formal Complaint — Account NRMA09887</p>
+                <p style={{ margin: '12pt 0' }}>Dear Sir/Madam,</p>
+                <p style={{ margin: '6pt 0' }}>I am writing to formally lodge a complaint regarding...</p>
+                <p style={{ margin: '6pt 0', color: '#666', fontStyle: 'italic' }}>[Letter body continues...]</p>
+                <p style={{ margin: '12pt 0' }}>Yours faithfully,</p>
+                <p style={{ margin: '6pt 0' }}>Mick Gallagher</p>
               </div>
-              <div style={{ textAlign: 'right', marginBottom: '12pt', lineHeight: '1.0' }}>
-                <p style={{ margin: '0' }}>The Complaints Manager</p>
-                <p style={{ margin: '0' }}>NRMA Insurance</p>
-                <p style={{ margin: '0' }}>GPO Box 438</p>
-                <p style={{ margin: '0' }}>Sydney NSW 2001</p>
-              </div>
-              <p style={{ margin: '12pt 0', fontWeight: 'bold' }}>Re: Formal Complaint — Account NRMA09887</p>
-              <p style={{ margin: '12pt 0' }}>Dear Sir/Madam,</p>
-              <p style={{ margin: '6pt 0' }}>I am writing to formally lodge a complaint regarding...</p>
-              <p style={{ margin: '6pt 0', color: '#666', fontStyle: 'italic' }}>[Letter body continues...]</p>
-              <p style={{ margin: '12pt 0' }}>Yours faithfully,</p>
-              <p style={{ margin: '6pt 0' }}>Mick Gallagher</p>
             </div>
+            <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
           </div>
-          <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
         </div>
         
         <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
           <p className="text-xs text-muted-foreground">
-            <strong>Format shown:</strong> Date (13pt bold, left) · Sender address (left) · Recipient address (right) · Re line · Body · Closing
+            <strong>Format shown:</strong> Date (13pt bold, left) · Sender address (right) · Recipient address (left) · Re line · Body · Closing
           </p>
         </div>
       </div>
@@ -274,36 +278,38 @@ CASE DETAILS:
         </div>
       )}
 
-      {/* Letterhead Preview */}
-      <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-        {/* Header Banner - 180px */}
-        <div 
-          className="w-full"
-          style={{ 
-            height: '180px', 
-            backgroundImage: `url(${LETTERHEAD_URL})`, 
-            backgroundSize: 'contain', 
-            backgroundRepeat: 'no-repeat', 
-            backgroundPosition: 'center top',
-            backgroundColor: '#ffffff'
-          }}
-        ></div>
-        <div className="px-12 pb-8 bg-white" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
-          {editing ? (
-            <Textarea
-              value={letter}
-              onChange={(e) => setLetter(e.target.value)}
-              rows={22}
-              className="font-body bg-white text-slate-900 w-full"
-              style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0" }}
-            />
-          ) : (
-            <pre className="whitespace-pre-wrap text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", margin: 0, color: "#000" }}>
-              {letter}
-            </pre>
-          )}
+      {/* A4 Letter Preview */}
+      <div className="flex justify-center">
+        <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
+          {/* Header Banner - 180px */}
+          <div 
+            className="w-full"
+            style={{ 
+              height: '180px', 
+              backgroundImage: `url(${LETTERHEAD_URL})`, 
+              backgroundSize: 'cover', 
+              backgroundRepeat: 'no-repeat', 
+              backgroundPosition: 'center top',
+              backgroundColor: '#ffffff'
+            }}
+          ></div>
+          <div className="bg-white" style={{ padding: '25mm 25mm 25mm 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
+            {editing ? (
+              <Textarea
+                value={letter}
+                onChange={(e) => setLetter(e.target.value)}
+                rows={22}
+                className="font-body bg-white text-slate-900 w-full"
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0" }}
+              />
+            ) : (
+              <pre className="whitespace-pre-wrap text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", margin: 0, color: "#000" }}>
+                {letter}
+              </pre>
+            )}
+          </div>
+          <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
         </div>
-        <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
       </div>
     </div>
   );
