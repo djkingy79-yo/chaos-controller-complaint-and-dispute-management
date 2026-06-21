@@ -1,26 +1,46 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const LOGO_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/4bbb85089_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png';
+
 function encodeSubject(subject) {
   return `=?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
 }
 
-// Build a base64url-encoded RFC 2822 email for Gmail API
-function buildMimeMessage({ to, from, subject, body }) {
+function htmlEmail(bodyHtml) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#0d0d0d;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:20px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;">
+<tr><td style="background:#000;padding:16px 24px;border-bottom:2px solid #FFD700;text-align:center;">
+<img src="${LOGO_URL}" alt="Chaos Controller" style="height:48px;width:auto;display:inline-block;" />
+</td></tr>
+<tr><td style="padding:28px 28px 20px 28px;color:#e0e0e0;font-size:14px;line-height:1.7;">
+${bodyHtml}
+</td></tr>
+<tr><td style="background:#0a0a0a;border-top:1px solid #222;padding:16px 24px;text-align:center;color:#555;font-size:11px;">
+Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#FFD700;text-decoration:none;">chaoscontroller.com.au</a>
+</td></tr>
+</table>
+</td></tr>
+</table></body></html>`;
+}
+
+function buildMimeMessage({ to, from, subject, html }) {
   const message = [
     `From: ${from}`,
     `To: ${to}`,
     `Subject: ${encodeSubject(subject)}`,
     `MIME-Version: 1.0`,
-    `Content-Type: text/plain; charset=UTF-8`,
+    `Content-Type: text/html; charset=UTF-8`,
     ``,
-    body
+    html
   ].join('\r\n');
   return btoa(unescape(encodeURIComponent(message)))
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-async function sendGmail(accessToken, { to, from, subject, body }) {
-  const raw = buildMimeMessage({ to, from, subject, body });
+async function sendGmail(accessToken, { to, from, subject, html }) {
+  const raw = buildMimeMessage({ to, from, subject, html });
   const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
     headers: {
@@ -81,37 +101,27 @@ Deno.serve(async (req) => {
     const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
 
     const subject = `[${caseRef}] Case Update: ${statusLabel}`;
-    const emailBody = `Hi ${owner.full_name || "there"},
-
-Your case status has been updated in Chaos Controller.
-
-CASE STATUS CHANGE
-==================
-
-Case Reference: ${caseRef}
-Case: ${caseItem.title}
-Organisation: ${caseItem.organisation_name || "N/A"}
-Category: ${caseItem.category ? caseItem.category.charAt(0).toUpperCase() + caseItem.category.slice(1) : "N/A"}
-
-Previous Status: ${oldStatusLabel}
-New Status: ${statusLabel}
-
-${newStatus === "escalation_ready" ? "Your case is now ready for escalation to the relevant ombudsman. Log in to generate your escalation bundle." : ""}
-${newStatus === "resolved" ? "Congratulations! Your case has been marked as resolved." : ""}
-${newStatus === "response_received" ? "A response has been received. Log in to review and decide your next steps." : ""}
-
-View your case:
-https://chaoscontroller.com.au/case/${caseItem.id}
-
-Never Fear. Control Starts Here.
-Chaos Controller - AI-Powered Consumer Advocacy
-Support: chaoscontrollerapp@gmail.com`;
+    const emailHtml = htmlEmail(`
+      <p>Hi <strong style="color:#fff;">${owner.full_name || 'there'}</strong>,</p>
+      <p>Your case status has been updated in Chaos Controller™.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border-radius:8px;padding:16px;margin:20px 0;">
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;width:140px;">Case Reference</td><td style="color:#FFD700;font-weight:bold;">${caseRef}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Case</td><td style="color:#fff;font-weight:bold;">${caseItem.title}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Organisation</td><td style="color:#fff;">${caseItem.organisation_name || 'N/A'}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Previous Status</td><td style="color:#aaa;">${oldStatusLabel}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;">New Status</td><td style="color:#FFD700;font-weight:bold;">${statusLabel}</td></tr>
+      </table>
+      ${newStatus === 'escalation_ready' ? '<p style="color:#ff6666;">Your case is ready for escalation. Log in to generate your escalation bundle.</p>' : ''}
+      ${newStatus === 'resolved' ? '<p style="color:#66ff99;">Congratulations! Your case has been marked as resolved.</p>' : ''}
+      ${newStatus === 'response_received' ? '<p style="color:#ffcc44;">A response has been received. Log in to review and decide your next steps.</p>' : ''}
+      <p style="margin-top:24px;"><a href="https://chaoscontroller.com.au/case/${caseItem.id}" style="background:#FFD700;color:#000;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">View Your Case</a></p>
+    `);
 
     await sendGmail(accessToken, {
       to: owner.email,
-      from: "Chaos Controller™ <chaoscontrollerapp@gmail.com>",
+      from: "Chaos Controller <chaoscontrollerapp@gmail.com>",
       subject,
-      body: emailBody
+      html: emailHtml
     });
 
     // Notify merchant/respondent if there's an active share
@@ -121,9 +131,18 @@ Support: chaoscontrollerapp@gmail.com`;
       const portalUrl = `https://chaoscontroller.com.au/shared-case/${activeShare.share_token}`;
       await sendGmail(accessToken, {
         to: activeShare.recipient_email,
-        from: "Chaos Controller™ <chaoscontrollerapp@gmail.com>",
+        from: "Chaos Controller <chaoscontrollerapp@gmail.com>",
         subject: `[${caseRef}] Case Update: Status Changed to ${statusLabel}`,
-        body: `Dear ${activeShare.recipient_name || 'Representative'},\n\nA case you have been shared on has been updated.\n\nCase Reference: ${caseRef}\nCase: ${caseItem.title}\nNew Status: ${statusLabel}\n\nView the case portal:\n${portalUrl}\n\nChaos Controller - AI-Powered Consumer Advocacy`
+        html: htmlEmail(`
+          <p>Dear <strong style="color:#fff;">${activeShare.recipient_name || 'Representative'}</strong>,</p>
+          <p>A case you have been shared on has been updated.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border-radius:8px;padding:16px;margin:20px 0;">
+            <tr><td style="padding:6px 0;color:#888;font-size:12px;width:140px;">Case Reference</td><td style="color:#FFD700;font-weight:bold;">${caseRef}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;font-size:12px;">Case</td><td style="color:#fff;">${caseItem.title}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;font-size:12px;">New Status</td><td style="color:#FFD700;font-weight:bold;">${statusLabel}</td></tr>
+          </table>
+          <p style="margin-top:24px;"><a href="${portalUrl}" style="background:#FFD700;color:#000;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">View Case Portal</a></p>
+        `)
       });
     }
 

@@ -12,26 +12,47 @@ async function graphRequest(accessToken, path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+const LOGO_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/4bbb85089_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png';
+
 function encodeSubject(subject) {
   return `=?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
 }
 
-function buildMimeMessage({ to, from, subject, body }) {
+function htmlEmail(bodyHtml) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#0d0d0d;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:20px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;">
+<tr><td style="background:#000;padding:16px 24px;border-bottom:2px solid #FFD700;text-align:center;">
+<img src="${LOGO_URL}" alt="Chaos Controller" style="height:48px;width:auto;display:inline-block;" />
+</td></tr>
+<tr><td style="padding:28px 28px 20px 28px;color:#e0e0e0;font-size:14px;line-height:1.7;">
+${bodyHtml}
+</td></tr>
+<tr><td style="background:#0a0a0a;border-top:1px solid #222;padding:16px 24px;text-align:center;color:#555;font-size:11px;">
+Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#FFD700;text-decoration:none;">chaoscontroller.com.au</a>
+</td></tr>
+</table>
+</td></tr>
+</table></body></html>`;
+}
+
+function buildMimeMessage({ to, from, subject, html }) {
   const message = [
     `From: ${from}`,
     `To: ${to}`,
     `Subject: ${encodeSubject(subject)}`,
     `MIME-Version: 1.0`,
-    `Content-Type: text/plain; charset=UTF-8`,
+    `Content-Type: text/html; charset=UTF-8`,
     ``,
-    body
+    html
   ].join('\r\n');
   return btoa(unescape(encodeURIComponent(message)))
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-async function sendGmail(accessToken, { to, from, subject, body }) {
-  const raw = buildMimeMessage({ to, from, subject, body });
+async function sendGmail(accessToken, { to, from, subject, html }) {
+  const raw = buildMimeMessage({ to, from, subject, html });
   const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -83,44 +104,30 @@ Deno.serve(async (req) => {
     const isOffer = response.response_type === 'offer_settlement';
     const isDenial = response.response_type === 'deny_claim';
 
-    const subject = `📬 [${caseRef}] Merchant Response: "${caseItem.title}" — ${responseTypeLabel}`;
-    const emailBody = `Hi ${owner.full_name || 'there'},
-
-A merchant has responded to your case in Chaos Controller™.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MERCHANT ACTIVITY ALERT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Case Reference: ${caseRef}
-Case: ${caseItem.title}
-Organisation: ${caseItem.organisation_name || 'N/A'}
-
-Merchant: ${merchantName}
-Response Type: ${responseTypeLabel}
-${isOffer && response.offer_amount ? `Settlement Offer Amount: ${response.offer_amount}` : ''}
-
-Response Preview:
-"${(response.response_text || '').slice(0, 300)}${response.response_text?.length > 300 ? '...' : ''}"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${isOffer ? '💰 ACTION REQUIRED: A settlement offer has been made. Log in to review and decide whether to accept or reject.' : ''}
-${isDenial ? '🚨 ACTION REQUIRED: The merchant has denied your claim. Consider escalating to the relevant ombudsman.' : ''}
-${!isOffer && !isDenial ? '📋 Log in to review the full response and update your case accordingly.' : ''}
-
-View your case:
-https://chaoscontroller.com.au/case/${caseItem.id}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Never Fear. Control Starts Here.
-Chaos Controller™ — AI-Powered Consumer Advocacy
-Support: chaoscontrollerapp@gmail.com`;
+    const subject = `[${caseRef}] Merchant Response: ${responseTypeLabel} - "${caseItem.title}"`;
+    const emailHtml = htmlEmail(`
+      <p style="color:#aaa;font-size:12px;margin:0 0 20px 0;">MERCHANT ACTIVITY ALERT</p>
+      <p>Hi <strong style="color:#fff;">${owner.full_name || 'there'}</strong>,</p>
+      <p>A merchant has responded to your case in Chaos Controller™.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border-radius:8px;padding:16px;margin:20px 0;">
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;width:140px;">Case Reference</td><td style="color:#FFD700;font-weight:bold;">${caseRef}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Case</td><td style="color:#fff;font-weight:bold;">${caseItem.title}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Organisation</td><td style="color:#fff;">${caseItem.organisation_name || 'N/A'}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Merchant</td><td style="color:#fff;">${merchantName}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:12px;">Response Type</td><td style="color:#FFD700;font-weight:bold;">${responseTypeLabel}</td></tr>
+        ${isOffer && response.offer_amount ? `<tr><td style="padding:6px 0;color:#888;font-size:12px;">Offer Amount</td><td style="color:#66ff99;font-weight:bold;">${response.offer_amount}</td></tr>` : ''}
+      </table>
+      <div style="background:#1a1a1a;border-left:3px solid #FFD700;padding:12px 16px;border-radius:4px;margin:16px 0;color:#ccc;font-style:italic;font-size:13px;">"${(response.response_text || '').slice(0, 300)}${(response.response_text?.length || 0) > 300 ? '...' : ''}"</div>
+      ${isOffer ? '<p style="color:#66ff99;font-weight:bold;">ACTION REQUIRED: A settlement offer has been made. Log in to review and decide whether to accept or reject.</p>' : ''}
+      ${isDenial ? '<p style="color:#ff6666;font-weight:bold;">ACTION REQUIRED: The merchant has denied your claim. Consider escalating to the relevant ombudsman.</p>' : ''}
+      <p style="margin-top:24px;"><a href="https://chaoscontroller.com.au/case/${caseItem.id}" style="background:#FFD700;color:#000;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">View Your Case</a></p>
+    `);
 
     await sendGmail(accessToken, {
       to: owner.email,
-      from: 'Chaos Controller™ <chaoscontrollerapp@gmail.com>',
+      from: 'Chaos Controller <chaoscontrollerapp@gmail.com>',
       subject,
-      body: emailBody
+      html: emailHtml
     });
 
     // Create in-app notification

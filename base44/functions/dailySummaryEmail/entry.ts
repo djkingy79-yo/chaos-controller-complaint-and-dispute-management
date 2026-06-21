@@ -1,5 +1,30 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const LOGO_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/4bbb85089_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png';
+
+function encodeSubject(subject) {
+  return `=?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
+}
+
+function htmlEmail(bodyHtml) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#0d0d0d;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:20px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;">
+<tr><td style="background:#000;padding:16px 24px;border-bottom:2px solid #FFD700;text-align:center;">
+<img src="${LOGO_URL}" alt="Chaos Controller" style="height:48px;width:auto;display:inline-block;" />
+</td></tr>
+<tr><td style="padding:28px 28px 20px 28px;color:#e0e0e0;font-size:14px;line-height:1.7;">
+${bodyHtml}
+</td></tr>
+<tr><td style="background:#0a0a0a;border-top:1px solid #222;padding:16px 24px;text-align:center;color:#555;font-size:11px;">
+Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#FFD700;text-decoration:none;">chaoscontroller.com.au</a>
+</td></tr>
+</table>
+</td></tr>
+</table></body></html>`;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -60,87 +85,59 @@ Deno.serve(async (req) => {
       const todayItems = items.filter(i => i.isToday);
       const tomorrowItems = items.filter(i => !i.isToday);
 
-      let body = `Hi ${user.full_name || "there"},
+      const todayLabel = today.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+      const tomorrowLabel = tomorrow.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+      const subject = `Daily Briefing - ${todayLabel}`;
 
-Here's your daily briefing from Chaos Controller™.
+      const todayRowsHtml = todayItems.length === 0
+        ? `<p style="color:#66ff99;">No deadlines due today. Great job staying on top of things!</p>`
+        : todayItems.map(item => `
+          <div style="background:#1a1a1a;border-left:3px solid #ff6666;padding:12px 16px;border-radius:4px;margin:10px 0;">
+            <p style="color:#ff9999;font-weight:bold;margin:0 0 4px 0;">${item.deadline.title}</p>
+            <p style="color:#aaa;font-size:12px;margin:0;">Case: ${item.caseItem.title} &bull; ${item.caseItem.organisation_name || 'N/A'}</p>
+            <a href="https://chaoscontroller.com.au/case/${item.caseItem.id}" style="color:#FFD700;font-size:12px;text-decoration:none;">View Case &rarr;</a>
+          </div>`).join('');
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TODAY'S DEADLINES — ${today.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`;
+      const tomorrowRowsHtml = tomorrowItems.length === 0 ? '' : `
+        <p style="color:#FFD700;font-weight:bold;margin:24px 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:1px;">Tomorrow &mdash; ${tomorrowLabel}</p>
+        ${tomorrowItems.map(item => `
+          <div style="background:#1a1a1a;border-left:3px solid #FFD700;padding:12px 16px;border-radius:4px;margin:10px 0;">
+            <p style="color:#fff;font-weight:bold;margin:0 0 4px 0;">${item.deadline.title}</p>
+            <p style="color:#aaa;font-size:12px;margin:0;">Case: ${item.caseItem.title} &bull; ${item.caseItem.organisation_name || 'N/A'}</p>
+            <a href="https://chaoscontroller.com.au/case/${item.caseItem.id}" style="color:#FFD700;font-size:12px;text-decoration:none;">View Case &rarr;</a>
+          </div>`).join('')}`;
 
-      if (todayItems.length === 0) {
-        body += `
-✓ No deadlines due today. Great job staying on top of things!
-`;
-      } else {
-        for (const item of todayItems) {
-          body += `
-⚠️ ${item.deadline.title}
-   Case: ${item.caseItem.title}
-   Organisation: ${item.caseItem.organisation_name || 'N/A'}
-   Type: ${item.deadline.deadline_type || 'Deadline'}
-   → https://chaoscontroller.com.au/case/${item.caseItem.id}
-`;
-        }
-      }
-
-      if (tomorrowItems.length > 0) {
-        body += `
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TOMORROW — ${tomorrow.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`;
-        for (const item of tomorrowItems) {
-          body += `
-📅 ${item.deadline.title}
-   Case: ${item.caseItem.title}
-   Organisation: ${item.caseItem.organisation_name || 'N/A'}
-   → https://chaoscontroller.com.au/case/${item.caseItem.id}
-`;
-        }
-      }
-
-      body += `
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Stay organised. Stay in control.
-Chaos Controller™ — AI-Powered Consumer Advocacy
-`;
+      const html = htmlEmail(`
+        <p>Hi <strong style="color:#fff;">${user.full_name || 'there'}</strong>,</p>
+        <p>Here's your daily briefing from Chaos Controller™.</p>
+        <p style="color:#FFD700;font-weight:bold;margin:20px 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:1px;">Today's Deadlines &mdash; ${todayLabel}</p>
+        ${todayRowsHtml}
+        ${tomorrowRowsHtml}
+        <p style="margin-top:24px;"><a href="https://chaoscontroller.com.au/dashboard" style="background:#FFD700;color:#000;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">Open Dashboard</a></p>
+      `);
 
       try {
         const gmailConn = await base44.asServiceRole.connectors.getConnection('gmail');
         if (gmailConn?.accessToken) {
-          const rawMessage = `From: Chaos Controller <${gmailConn.connectionConfig?.email || 'noreply@chaoscontroller.com.au'}>\r\n` +
-            `To: ${user.email}\r\n` +
-            `Subject: 📋 Your Daily Chaos Controller Briefing — ${today.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}\r\n` +
-            `Content-Type: text/plain; charset=UTF-8\r\n\r\n${body}`;
+          const rawMessage = [
+            `From: Chaos Controller <${gmailConn.connectionConfig?.email || 'noreply@chaoscontroller.com.au'}>`,
+            `To: ${user.email}`,
+            `Subject: ${encodeSubject(subject)}`,
+            `MIME-Version: 1.0`,
+            `Content-Type: text/html; charset=UTF-8`,
+            ``,
+            html
+          ].join('\r\n');
           await fetch('https://www.googleapis.com/gmail/v1/users/me/messages/send', {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${gmailConn.accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              raw: btoa(rawMessage).replace(/\+/g, '-').replace(/\//g, '_'),
-            }),
+            headers: { 'Authorization': `Bearer ${gmailConn.accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ raw: btoa(unescape(encodeURIComponent(rawMessage))).replace(/\+/g, '-').replace(/\//g, '_') }),
           });
         } else {
-          await base44.asServiceRole.integrations.Core.SendEmail({
-            to: user.email,
-            subject: `📋 Your Daily Chaos Controller Briefing — ${today.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}`,
-            body,
-            from_name: "Chaos Controller™",
-          });
+          await base44.asServiceRole.integrations.Core.SendEmail({ to: user.email, subject, body: html, from_name: "Chaos Controller™" });
         }
       } catch (_) {
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: user.email,
-          subject: `📋 Your Daily Chaos Controller Briefing — ${today.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}`,
-          body,
-          from_name: "Chaos Controller™",
-        });
+        await base44.asServiceRole.integrations.Core.SendEmail({ to: user.email, subject, body: html, from_name: "Chaos Controller™" });
       }
 
       sent.push({ email: user.email, deadlines: items.length });

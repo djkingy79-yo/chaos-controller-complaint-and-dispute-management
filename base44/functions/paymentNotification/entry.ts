@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
         <body>
           <div class="container">
             <div class="header">
-              <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/46dd15b0d_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png" alt="Chaos Controller" class="logo" />
-              <h1>🔔 New Payment Received</h1>
+              <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/4bbb85089_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png" alt="Chaos Controller" class="logo" />
+              <h1>New Payment Received</h1>
               <span class="badge">${payment.plan_name} Plan</span>
             </div>
             
@@ -156,8 +156,8 @@ Deno.serve(async (req) => {
         <body>
           <div class="container">
             <div class="header">
-              <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/46dd15b0d_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png" alt="Chaos Controller" class="logo" />
-              <h1>✅ Payment Verified!</h1>
+              <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/4bbb85089_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png" alt="Chaos Controller" class="logo" />
+              <h1>Payment Verified!</h1>
               <span class="badge">${payment.plan_name} Activated</span>
             </div>
             
