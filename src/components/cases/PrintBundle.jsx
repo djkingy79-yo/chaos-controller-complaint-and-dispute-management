@@ -119,10 +119,11 @@ function printChecklist(caseItem, evidence, events) {
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>Checklist</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+    @page { margin: 25mm 25mm 25mm 25mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
     .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
     .print-content { padding: 8pt 25mm 20mm 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
@@ -135,6 +136,7 @@ function printChecklist(caseItem, evidence, events) {
       <h1>Case Checklist</h1>
       <table>${rows}</table>
     </div>
+    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -153,9 +155,11 @@ function printChecklistItems(caseItem, checklistItems) {
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+    @page { margin: 25mm 25mm 25mm 25mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
     .print-content { padding: 0; margin: 0 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
@@ -168,6 +172,7 @@ function printChecklistItems(caseItem, checklistItems) {
       <h1>Smart Checklist</h1>
       <table>${rows}</table>
     </div>
+    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);
@@ -191,9 +196,11 @@ function printDeadlineItems(caseItem, deadlines) {
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Deadlines</title>
   <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+    @page { margin: 25mm 25mm 25mm 25mm; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
     .print-content { padding: 0; margin: 0 25mm; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
@@ -206,6 +213,7 @@ function printDeadlineItems(caseItem, deadlines) {
       <h1>Deadline War Room</h1>
       <table>${rows}</table>
     </div>
+    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);
@@ -268,10 +276,12 @@ function printBundle(caseItem, evidence, events, checklistItems) {
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Case Bundle — ${caseItem.title}</title>
     <style>
-      @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
+      @page { margin: 25mm 25mm 25mm 25mm; size: A4; }
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       * { box-sizing: border-box; }
       body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #111; line-height: 1.6; }
+      .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+      .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
       
       .page { page-break-after: always; padding: 0; }
       .page:last-child { page-break-after: auto; }
@@ -307,6 +317,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
     
     <!-- COVER PAGE -->
     <div class="page">
+      <div class="letterhead-header"></div>
       <div class="cover-title" style="font-size:8pt;">Chaos Controller™ — Formal Case Bundle</div>
       <div style="border-left: 4px solid #1a1a2e; padding-left: 12pt; margin-bottom: 18pt;">
         <div class="cover-main" style="font-size:12pt;">${caseItem.title}</div>
@@ -329,6 +340,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
         <div style="font-size:8pt;color:#888;margin-top:4pt;">Generated: ${today} · Ref: ${caseRef}</div>
       </div>
       
+      <div class="letterhead-footer"></div>
     </div>
     
     <!-- TABLE OF CONTENTS -->
@@ -342,19 +354,23 @@ function printBundle(caseItem, evidence, events, checklistItems) {
             <div class="toc-title">${s.title}</div>
           </div>`).join("")}
       </div>
-      </div>
+      <div class="letterhead-footer"></div>
+    </div>
 
-      <!-- SECTION 1: CASE SUMMARY -->
+    <!-- SECTION 1: CASE SUMMARY -->
     <div class="page">
+      <div class="letterhead-header"></div>
       <div class="section-title">1. Case Summary</div>
       <table class="summary-row" style="margin-top:8pt;">
         <tbody>${summaryRows.map(r=>`<tr><td>${r.label}</td><td>${r.value}</td></tr>`).join("")}</tbody>
       </table>
       ${caseItem.issue_details ? `<div style="margin-top:14pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Full Details</div><div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_details}</div></div>` : ""}
-      </div>
+      <div class="letterhead-footer"></div>
+    </div>
 
-      <!-- SECTION 2: READINESS CHECKLIST -->
+    <!-- SECTION 2: READINESS CHECKLIST -->
     <div class="page">
+      <div class="letterhead-header"></div>
       <div class="section-title">2. Escalation Readiness Checklist</div>
       <div class="section-subtitle">Readiness: <strong>${readinessPct}%</strong> — ${readinessChecks.filter(c=>c.done).length} of ${readinessChecks.length} complete</div>
       <table>
@@ -378,10 +394,12 @@ function printBundle(caseItem, evidence, events, checklistItems) {
             </tr>`).join("")}</tbody>
           </table>
         </div>` : ""}
-      </div>
+      <div class="letterhead-footer"></div>
+    </div>
 
-      <!-- SECTION 3: TIMELINE -->
+    <!-- SECTION 3: TIMELINE -->
     <div class="page">
+      <div class="letterhead-header"></div>
       <div class="section-title">3. Chronological Timeline</div>
       ${sorted.length === 0 ? `<p style="color:#888;font-style:italic;">No timeline events recorded.</p>` : `
       <table>
@@ -393,10 +411,12 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           <td style="color:#555;">${ev.description||""}</td>
         </tr>`).join("")}</tbody>
       </table>`}
-      </div>
+      <div class="letterhead-footer"></div>
+    </div>
 
-      <!-- SECTION 4: EVIDENCE INDEX -->
+    <!-- SECTION 4: EVIDENCE INDEX -->
     <div class="page">
+      <div class="letterhead-header"></div>
       <div class="section-title">4. Evidence Index ${allTags.length > 0 ? `— ${allTags.length} tag categories` : ""}</div>
       <div class="section-subtitle">Total documents: <strong>${evidence.length}</strong></div>
       ${evSorted.length === 0 ? `<p style="color:#888;font-style:italic;">No evidence uploaded.</p>` : `
@@ -410,10 +430,12 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           <td style="color:#555;">${[ev.description, ev.tags?.join(", ")].filter(Boolean).join(" · ")||"—"}</td>
         </tr>`).join("")}</tbody>
       </table>`}
-      </div>
+      <div class="letterhead-footer"></div>
+    </div>
 
-      <!-- SECTION 5: SMART CHECKLIST -->
+    <!-- SECTION 5: SMART CHECKLIST -->
     <div class="page">
+      <div class="letterhead-header"></div>
       <div class="section-title">5. Smart Checklist</div>
       <div class="section-subtitle">${checklistItems.length} AI-generated action items</div>
       ${checklistItems.length === 0 ? `<p style="color:#888;font-style:italic;">No action items generated yet.</p>` : `
@@ -426,15 +448,18 @@ function printBundle(caseItem, evidence, events, checklistItems) {
           <td style="font-weight:bold;${item.status==="complete"?"color:green;":item.status==="missing"?"color:#c00;":"color:#f90;"}">${(item.status||"").toUpperCase()}</td>
         </tr>`).join("")}</tbody>
       </table>`}
-      </div>
+      <div class="letterhead-footer"></div>
+    </div>
 
-      <!-- LETTERS -->
+    <!-- LETTERS -->
     ${presentLetters.map((ld, idx) => {
     const letterLines = (caseItem[ld.field] || '').split('\n');
     return `
     <div class="page">
+    <div class="letterhead-header"></div>
     <div class="section-title">${ld.label}</div>
     <pre style="margin-top:6pt;font-size:10pt;line-height:1.2;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;">${(caseItem[ld.field] || '').replace(/<[^>]*>/g, '')}</pre>
+    <div class="letterhead-footer"></div>
     </div>`;
     }).join("")}
     
