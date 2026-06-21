@@ -87,34 +87,42 @@ function printTimeline(caseItem, events) {
   const sorted = [...events].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
   const rows = sorted.map((ev) => `
     <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:11pt;white-space:nowrap;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${ev.event_type.replace("_", " ")}</td>
-      <td style="padding:6pt 8pt;font-size:12pt;font-weight:bold;">${ev.title}</td>
-      <td style="padding:6pt 8pt;font-size:11pt;color:#444;">${ev.description || ""}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;white-space:nowrap;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${ev.event_type.replace("_", " ")}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${ev.title}</td>
+      <td style="padding:6pt 8pt;font-size:10pt;color:#000;">${ev.description || ""}</td>
     </tr>
   `).join("");
 
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>Timeline — ${caseItem.title}</title>
   <style>
-    @page { margin: 1.5in; size: A4; }
+    @page { margin: 0; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
+    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <h1>Case Timeline</h1>
-    <h2>${caseItem.title}</h2>
-    <table>
-      <thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Details</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="letter-page">
+      <div class="letterhead-header"></div>
+      <div class="print-content">
+        <h1>Case Timeline</h1>
+        <h2>${caseItem.title}</h2>
+        <table>
+          <thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Details</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="letterhead-footer"></div>
+    </div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -137,40 +145,48 @@ function printEvidence(caseItem, evidence) {
   let tableRows = "";
   let itemNum = 1;
   for (const [groupName, items] of Object.entries(grouped)) {
-    tableRows += `<tr style="background:#1a1a2e;color:white;"><th colspan="5" style="text-align:left;padding:6pt 8pt;font-size:11pt;">${groupName} (${items.length})</th></tr>`;
+    tableRows += `<tr style="background:white;"><th colspan="5" style="text-align:left;padding:6pt 8pt;font-size:11pt;border-bottom:2pt solid #000;">${groupName} (${items.length})</th></tr>`;
     tableRows += items.map((ev) => `
       <tr style="border-bottom:1px solid #eee;">
-        <td style="padding:6pt 8pt;font-size:11pt;">${itemNum++}</td>
-        <td style="padding:6pt 8pt;font-size:12pt;font-weight:bold;">${ev.file_name}</td>
-        <td style="padding:6pt 8pt;font-size:11pt;text-transform:capitalize;">${(ev.file_type || "").replace("_", " ")}</td>
-        <td style="padding:6pt 8pt;font-size:11pt;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-        <td style="padding:6pt 8pt;font-size:11pt;color:#444;">${[ev.description, ev.tags?.join(", ")].filter(Boolean).join(" · ") || "—"}</td>
+        <td style="padding:6pt 8pt;font-size:10pt;">${itemNum++}</td>
+        <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${ev.file_name}</td>
+        <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(ev.file_type || "").replace("_", " ")}</td>
+        <td style="padding:6pt 8pt;font-size:10pt;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
+        <td style="padding:6pt 8pt;font-size:10pt;color:#000;">${[ev.description, ev.tags?.join(", ")].filter(Boolean).join(" · ") || "—"}</td>
       </tr>
     `).join("");
   }
 
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>Evidence — ${caseItem.title}</title>
   <style>
-    @page { margin: 1.5in; size: A4; }
+    @page { margin: 0; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
+    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <h1>Evidence Index ${allTags.length > 0 ? "— Grouped by Tags" : ""}</h1>
-    <h2>${caseItem.title} — ${caseItem.organisation_name || ""}</h2>
-    <p style="font-size:10pt;color:#000;margin-bottom:10pt;font-weight:bold;">Total: <strong>${evidence.length}</strong> documents ${allTags.length > 0 ? `· ${allTags.length} categories` : ""}</p>
-    <table>
-      <thead><tr><th style="width:25pt;">#</th><th>File Name</th><th style="width:80pt;">Type</th><th style="width:70pt;">Date</th><th>Description / Tags</th></tr></thead>
-      <tbody>${tableRows}</tbody>
-    </table>
+    <div class="letter-page">
+      <div class="letterhead-header"></div>
+      <div class="print-content">
+        <h1>Evidence Index ${allTags.length > 0 ? "— Grouped by Tags" : ""}</h1>
+        <h2>${caseItem.title} — ${caseItem.organisation_name || ""}</h2>
+        <p style="font-size:10pt;color:#000;margin-bottom:10pt;font-weight:bold;">Total: <strong>${evidence.length}</strong> documents ${allTags.length > 0 ? `· ${allTags.length} categories` : ""}</p>
+        <table>
+          <thead><tr><th style="width:25pt;">#</th><th>File Name</th><th style="width:80pt;">Type</th><th style="width:70pt;">Date</th><th>Description / Tags</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      <div class="letterhead-footer"></div>
+    </div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -199,27 +215,35 @@ function printChecklist(caseItem, evidence, events) {
     </tr>
   `).join("");
 
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>Checklist — ${caseItem.title}</title>
   <style>
-    @page { margin: 1.5in; size: A4; }
+    @page { margin: 0; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
+    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <h1>Case Checklist</h1>
-    <h2>${caseItem.title}</h2>
-    <table>
-      <thead><tr><th style="width:30pt;"></th><th>Item</th><th style="width:80pt;">Status</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="letter-page">
+      <div class="letterhead-header"></div>
+      <div class="print-content">
+        <h1>Case Checklist</h1>
+        <h2>${caseItem.title}</h2>
+        <table>
+          <thead><tr><th style="width:30pt;"></th><th>Item</th><th style="width:80pt;">Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="letterhead-footer"></div>
+    </div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -235,27 +259,35 @@ function printChecklistItems(caseItem, checklistItems) {
       <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${item.status === 'complete' ? 'color:green;' : item.status === 'missing' ? 'color:#c00;' : 'color:#f90;'}">${(item.status || '').replace('_', ' ').toUpperCase()}</td>
     </tr>`).join('');
   
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Smart Checklist — ${caseItem.title}</title>
   <style>
-    @page { margin: 1.5in; size: A4; }
+    @page { margin: 0; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
+    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <h1>Smart Checklist</h1>
-    <h2>${caseItem.title} · ${checklistItems.length} items</h2>
-    <table>
-      <thead><tr><th style="width:30pt;"></th><th>Action</th><th style="width:80pt;">Category</th><th style="width:70pt;">Status</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="letter-page">
+      <div class="letterhead-header"></div>
+      <div class="print-content">
+        <h1>Smart Checklist</h1>
+        <h2>${caseItem.title} · ${checklistItems.length} items</h2>
+        <table>
+          <thead><tr><th style="width:30pt;"></th><th>Action</th><th style="width:80pt;">Category</th><th style="width:70pt;">Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="letterhead-footer"></div>
+    </div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);
@@ -276,27 +308,35 @@ function printDeadlineItems(caseItem, deadlines) {
     </tr>`;
   }).join('');
   
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Deadlines — ${caseItem.title}</title>
   <style>
-    @page { margin: 1.5in; size: A4; }
+    @page { margin: 0; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
+    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
+    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
     table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
     th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; color: #000; }
     td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
+    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
   </style>
   </head><body>
-    <h1>Deadline War Room</h1>
-    <h2>${caseItem.title} · ${deadlines.length} deadlines</h2>
-    <table>
-      <thead><tr><th>Deadline</th><th style="width:80pt;">Date</th><th style="width:70pt;">Urgency</th><th style="width:90pt;">Type</th><th style="width:70pt;">Status</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="letter-page">
+      <div class="letterhead-header"></div>
+      <div class="print-content">
+        <h1>Deadline War Room</h1>
+        <h2>${caseItem.title} · ${deadlines.length} deadlines</h2>
+        <table>
+          <thead><tr><th>Deadline</th><th style="width:80pt;">Date</th><th style="width:70pt;">Urgency</th><th style="width:90pt;">Type</th><th style="width:70pt;">Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="letterhead-footer"></div>
+    </div>
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.print(); win.close(); }, 400);

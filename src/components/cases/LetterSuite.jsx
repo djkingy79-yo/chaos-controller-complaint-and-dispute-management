@@ -231,15 +231,19 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
     }
     const continuationHTML = continuationPages.map((chunk, idx) => `
-      <div class="letter-continuation"><pre>${chunk}</pre></div>
+      <div class="letter-continuation">
+        <div class="continuation-header"></div>
+        <div class="continuation-content"><pre>${chunk}</pre></div>
+      </div>
     `).join('');
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>${letterType.label}</title>
     <style>${getLetterPageStyles()}</style>
     </head><body>
       <div class="letter-page">
-        <div class="letterhead-banner"></div>
+        <div class="letterhead-header"></div>
         <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
+        <div class="letterhead-footer"></div>
       </div>
       ${continuationHTML}
     </body></html>`);
@@ -313,8 +317,10 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                 {text}
               </pre>
             )}
-          </div>
-        </div>
+            </div>
+            {/* Professional footer — page 1 only */}
+            <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
+            </div>
       ) : (
         <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-10 text-center">
           <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
