@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, RefreshCw, Printer, Download, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, RefreshCw, Download, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
-import { generateChaosDocumentPDF } from '@/lib/pdfGenerator';
+import { generateChaosDocumentPDF, downloadPDFBlob } from '@/lib/pdfGenerator';
 import { toast } from "sonner";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
@@ -161,103 +161,43 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
     setLoading(false);
   };
 
-  const handlePrintPDF = async () => {
-    setPdfGenerating(true);
-    try {
-      if (!snapshot || !caseItem) {
-        toast.error('Snapshot or case data not available');
-        setPdfGenerating(false);
-        return;
-      }
-      
-      const { sections } = cleanSnapshotContent(snapshot);
-      
-      // Validate sections - ensure all titles and content are valid strings
-      const validatedSections = sections.map(s => ({
-        title: String(s.title || ''),
-        content: String(s.content || '')
-      })).filter(s => s.title || s.content);
-      
-      if (validatedSections.length === 0) {
-        toast.error('No content to generate PDF from');
-        setPdfGenerating(false);
-        return;
-      }
-      
-      const pdfBlob = await generateChaosDocumentPDF({
-        documentType: 'snapshot',
-        title: 'WEEKLY CASE SNAPSHOT',
-        matter: String(caseItem.title || 'Case'),
-        date: format(new Date(), "d MMMM yyyy"),
-        sections: validatedSections,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      
-      // Open for print
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const win = window.open(pdfUrl, '_blank');
-      if (win) {
-        win.onload = () => {
-          setTimeout(() => {
-            win.print();
-          }, 500);
-        };
-      }
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
-    } catch (error) {
-      console.error('[WeeklySnapshot] PDF generation failed:', error);
-      toast.error('PDF generation failed: ' + error.message);
-    } finally {
-      setPdfGenerating(false);
-    }
-  };
-
   const handleDownloadPDF = async () => {
+    console.log('DASHBOARD PRINT CLICKED', { tab: 'weekly-snapshot', caseId: caseItem?.id });
     setPdfGenerating(true);
+    if (!snapshot) {
+      alert('Generate the snapshot first before downloading.');
+      setPdfGenerating(false);
+      return;
+    }
     try {
-      if (!snapshot || !caseItem) {
-        toast.error('Snapshot or case data not available');
-        setPdfGenerating(false);
-        return;
-      }
-      
       const { sections } = cleanSnapshotContent(snapshot);
-      
-      // Validate sections
-      const validatedSections = sections.map(s => ({
-        title: String(s.title || ''),
-        content: String(s.content || '')
-      })).filter(s => s.title || s.content);
-      
+      const validatedSections = sections
+        .map(s => ({ title: String(s.title || ''), content: String(s.content || '') }))
+        .filter(s => s.title || s.content);
+
       if (validatedSections.length === 0) {
-        toast.error('No content to generate PDF from');
+        alert('No content found in snapshot to generate PDF from.');
         setPdfGenerating(false);
         return;
       }
-      
-      const pdfBlob = await generateChaosDocumentPDF({
+
+      console.log('DASHBOARD PDF GENERATOR START', { type: 'snapshot' });
+      const blob = await generateChaosDocumentPDF({
         documentType: 'snapshot',
-        title: 'WEEKLY CASE SNAPSHOT',
+        title: 'Weekly Case Snapshot',
         matter: String(caseItem.title || 'Case'),
         date: format(new Date(), "d MMMM yyyy"),
         sections: validatedSections,
         includeHeader: true,
         includeFooter: true,
       });
-      
-      // Download
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Weekly_Snapshot_${String(caseItem.title || 'Case').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      downloadPDFBlob(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      console.log('PDF GENERATED', { type: 'snapshot' });
+      toast.success('Weekly Snapshot PDF downloaded');
     } catch (error) {
-      console.error('[WeeklySnapshot] PDF download failed:', error);
-      toast.error('PDF download failed: ' + error.message);
+      console.error('PDF FAILED', error);
+      alert('PDF failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
     }
@@ -290,28 +230,16 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
           </div>
           <div className="flex items-center gap-2">
             {snapshot && (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleDownloadPDF} 
-                  disabled={pdfGenerating}
-                  className="gap-1.5"
-                >
-                  <Download className="w-3.5 h-3.5" /> 
-                  {pdfGenerating ? 'Generating...' : 'Download PDF'}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handlePrintPDF} 
-                  disabled={pdfGenerating}
-                  className="gap-1.5"
-                >
-                  <Printer className="w-3.5 h-3.5" /> 
-                  {pdfGenerating ? 'Generating...' : 'Print PDF'}
-                </Button>
-              </>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDownloadPDF} 
+                disabled={pdfGenerating}
+                className="gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" /> 
+                {pdfGenerating ? 'Generating...' : 'Download PDF'}
+              </Button>
             )}
             <Button size="sm" onClick={generateSnapshot} disabled={loading} className="gap-1.5">
               {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}

@@ -23,6 +23,7 @@ import ExecutiveSummaryGenerator from "@/components/cases/ExecutiveSummaryGenera
 import SmartChecklist from "@/components/cases/SmartChecklist";
 import GeneratedChecklist from "@/components/cases/GeneratedChecklist";
 import OutlookDeadlineSync from "@/components/cases/OutlookDeadlineSync";
+import DeadlineManager from "@/components/cases/DeadlineManager";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
@@ -195,13 +196,14 @@ export default function CaseDetail() {
               <EvidenceVault caseId={caseId} evidence={evidence} caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="timeline" className="mt-4">
-              <CaseTimeline caseId={caseId} events={timelineEvents} />
+              <CaseTimeline caseId={caseId} events={timelineEvents} caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="checklist" className="mt-4 space-y-4">
               <SmartChecklist caseItem={caseItem} />
               <GeneratedChecklist caseId={caseId} caseItem={caseItem} />
             </TabsContent>
-            <TabsContent value="deadlines" className="mt-4">
+            <TabsContent value="deadlines" className="mt-4 space-y-4">
+              <DeadlineManager caseItem={caseItem} evidence={evidence} />
               <OutlookDeadlineSync caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="print" className="mt-4">

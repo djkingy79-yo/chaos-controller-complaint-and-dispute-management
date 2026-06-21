@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, differenceInDays, isPast, parseISO } from "date-fns";
 import { Printer, FileText, TrendingUp, AlertCircle, CheckCircle2, Clock, Mail, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 
 
@@ -62,26 +62,8 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     .slice(0, 5);
 
   const handleSummaryPDF = async () => {
-    console.log('[CaseSummary] handleSummaryPDF called');
-    
-    if (!caseItem) {
-      console.error('[CaseSummary] No caseItem');
-      toast.error('Case data not available');
-      return;
-    }
-    
+    console.log('DASHBOARD PRINT CLICKED', { tab: 'summary', caseId: caseItem?.id });
     const client = buildClientContext(caseItem, evidence);
-    
-    const summaryLines = [
-      `Organisation: ${String(caseItem.organisation_name || "—")}`,
-      `Status: ${String(STATUS_LABELS[caseItem.status] || caseItem.status || "—")}`,
-      `Category: ${String(caseItem.category || "—")}`,
-      `Priority: ${String(PRIORITY_LABELS[caseItem.priority] || caseItem.priority || "—")}`,
-      `Complainant: ${String(client.name || "—")}`,
-      `Account #: ${String(caseItem.account_number || "—")}`,
-      `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}`,
-      `Escalation Body: ${String(caseItem.escalation_body || "—")}`,
-    ].join("\n");
 
     const deadlineLines = upcomingDeadlines.length > 0
       ? upcomingDeadlines.map(d => {
@@ -91,39 +73,43 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         }).join("\n")
       : "No upcoming deadlines.";
 
-    const body = `CASE DETAILS\n${summaryLines}\n\nISSUE SUMMARY\n${String(caseItem.issue_summary || "—")}\n\nDESIRED OUTCOME\n${String(caseItem.desired_outcome || "—")}\n\nUPCOMING DEADLINES (${upcomingDeadlines.length})\n${deadlineLines}`;
-
-    console.log('[CaseSummary] Body length:', body.length);
+    const body = [
+      'CASE DETAILS',
+      `Organisation: ${caseItem.organisation_name || '—'}`,
+      `Status: ${STATUS_LABELS[caseItem.status] || caseItem.status || '—'}`,
+      `Category: ${caseItem.category || '—'}`,
+      `Priority: ${PRIORITY_LABELS[caseItem.priority] || caseItem.priority || '—'}`,
+      `Complainant: ${client.name || '—'}`,
+      `Account #: ${caseItem.account_number || '—'}`,
+      `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`,
+      `Escalation Body: ${caseItem.escalation_body || '—'}`,
+      '',
+      'ISSUE SUMMARY',
+      caseItem.issue_summary || '—',
+      '',
+      'DESIRED OUTCOME',
+      caseItem.desired_outcome || '—',
+      '',
+      `UPCOMING DEADLINES (${upcomingDeadlines.length})`,
+      deadlineLines,
+    ].join('\n');
 
     try {
-      toast.info('Generating PDF...');
-      const pdfBlob = await generateChaosDocumentPDF({
+      console.log('DASHBOARD PDF GENERATOR START', { type: 'summary' });
+      const blob = await generateChaosDocumentPDF({
         documentType: 'general',
         title: 'Case Summary',
-        body: String(body || '').trim(),
+        body,
         includeHeader: true,
         includeFooter: true,
       });
-      
-      console.log('[CaseSummary] PDF blob created:', !!pdfBlob, 'size:', pdfBlob?.size);
-      
-      if (!pdfBlob || pdfBlob.size === 0) {
-        throw new Error('Generated PDF is empty');
-      }
-      
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      document.body.appendChild(a);
-      console.log('[CaseSummary] Triggering download');
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      downloadPDFBlob(blob, `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      console.log('PDF GENERATED', { type: 'summary' });
       toast.success('Case summary PDF downloaded');
     } catch (error) {
-      console.error('[CaseSummary] PDF generation failed:', error);
-      toast.error('PDF failed: ' + error.message);
+      console.error('PDF FAILED', error);
+      alert('PDF failed: ' + error.message);
     }
   };
 

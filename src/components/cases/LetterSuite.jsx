@@ -4,11 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, Download, FileText, Lock } from "lucide-react";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Download, FileText, Lock } from "lucide-react";
 import LetterTemplateManager from "./LetterTemplateManager";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -389,75 +389,30 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     }
   };
 
-  const handlePrintPDF = async () => {
-    try {
-      if (!text || !text.trim()) {
-        toast.error('No letter content to print');
-        return;
-      }
-      
-      const cleanContent = String(text || '').replace(/<[^>]*>/g, '').trim();
-      
-      if (!cleanContent) {
-        toast.error('Letter content is empty after cleaning');
-        return;
-      }
-      
-      const pdfBlob = await generateChaosDocumentPDF({
-        documentType: 'letter',
-        title: String(letterType.label || 'Letter'),
-        body: cleanContent,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const win = window.open(pdfUrl, '_blank');
-      if (win) {
-        win.onload = () => {
-          setTimeout(() => {
-            win.print();
-          }, 500);
-        };
-      }
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
-    } catch (error) {
-      console.error('[LetterSuite] PDF print failed:', error);
-      toast.error('PDF generation failed: ' + error.message);
-    }
-  };
-
   const handleDownloadPDF = async () => {
+    console.log('DASHBOARD PRINT CLICKED', { tab: 'letter', letter: letterType.key });
+    if (!text || !text.trim()) {
+      alert(`No content for ${letterType.label}. Generate the letter first.`);
+      return;
+    }
+    const cleanContent = String(text).replace(/<[^>]*>/g, '').trim();
     try {
-      if (!text || !text.trim()) {
-        toast.error('No letter content to download');
-        return;
-      }
-      
-      const cleanContent = String(text || '').replace(/<[^>]*>/g, '').trim();
-      
-      if (!cleanContent) {
-        toast.error('Letter content is empty after cleaning');
-        return;
-      }
-      
-      const pdfBlob = await generateChaosDocumentPDF({
-        documentType: 'letter',
-        title: String(letterType.label || 'Letter'),
+      console.log('DASHBOARD PDF GENERATOR START', { type: 'letter', letter: letterType.key });
+      const blob = await generateChaosDocumentPDF({
+        documentType: 'general',
+        title: letterType.label,
         body: cleanContent,
         includeHeader: true,
         includeFooter: true,
       });
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${String(letterType.label || 'Letter').replace(/[^a-z0-9]/gi, '_')}_${String(caseItem.title || 'Case').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      const filename = `${String(letterType.label).replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      downloadPDFBlob(blob, filename);
+      console.log('PDF GENERATED', { type: 'letter', letter: letterType.key });
+      toast.success(`${letterType.label} PDF downloaded`);
     } catch (error) {
-      console.error('[LetterSuite] PDF download failed:', error);
-      toast.error('PDF download failed: ' + error.message);
+      console.error('PDF FAILED', error);
+      alert('PDF failed: ' + error.message);
     }
   };
 
@@ -483,9 +438,6 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </Button>
               <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 text-xs">
                 <Download className="w-3.5 h-3.5" /> Download PDF
-              </Button>
-              <Button variant="outline" size="sm" onClick={handlePrintPDF} className="gap-1.5 text-xs">
-                <Printer className="w-3.5 h-3.5" /> Print PDF
               </Button>
               <Button
                 variant="outline" size="sm"

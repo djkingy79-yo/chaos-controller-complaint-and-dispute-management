@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren, BarChart2, Download } from "lucide-react";
+import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren, BarChart2, Download, Loader2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { printLetter as printLetterUniversal, printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
-import { printTableDocument } from "@/lib/printUtilities";
-import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
-
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },
@@ -18,493 +15,219 @@ const LETTER_DEFS = [
   { field: "letter_escalation", label: "Escalation Letter" },
 ];
 
-function buildClientContext(caseItem, evidence) {
-  const merged = {
-    name: caseItem?.complainant_name || "",
-    address: caseItem?.complainant_address || "",
-    email: caseItem?.complainant_email || "",
-    phone: caseItem?.complainant_phone || "",
-    accounts: caseItem?.account_number ? [caseItem.account_number] : [],
-    policies: [],
-  };
-  for (const ev of (evidence || [])) {
-    const d = ev.extracted_data;
-    if (!d) continue;
-    if (!merged.name && d.complainant_name) merged.name = d.complainant_name;
-    if (!merged.address && d.complainant_address) merged.address = d.complainant_address;
-    if (!merged.email && d.complainant_email) merged.email = d.complainant_email;
-    if (!merged.phone && d.complainant_phone) merged.phone = d.complainant_phone;
-    if (d.account_numbers?.length) merged.accounts = [...merged.accounts, ...d.account_numbers];
-    if (d.policy_numbers?.length) merged.policies = [...merged.policies, ...d.policy_numbers];
+async function generateAndDownload({ type, title, body, sections, matter, date }) {
+  console.log('DASHBOARD PRINT CLICKED', { type, title });
+  console.log('DASHBOARD PDF GENERATOR START', { type });
+  try {
+    const blob = await generateChaosDocumentPDF({
+      documentType: type || 'general',
+      title,
+      body,
+      sections,
+      matter,
+      date,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    const filename = `${String(title || 'Document').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    downloadPDFBlob(blob, filename);
+    console.log('PDF GENERATED', { type, title });
+    toast.success(`${title} downloaded`);
+  } catch (error) {
+    console.error('PDF FAILED', error);
+    alert('PDF failed: ' + error.message);
   }
-  for (const k of ["accounts", "policies"]) { if (merged[k]) merged[k] = [...new Set(merged[k])]; }
-  return merged;
 }
 
-function printLetterBundle(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
-  const content = caseItem[field] || `No ${label} generated yet.`;
-  printLetterUniversal({ title: label, letterContent: content });
+async function handleLetterPDF(caseItem, ld) {
+  const content = caseItem[ld.field];
+  if (!content || !content.trim()) {
+    alert(`${ld.label} has not been generated yet. Go to the Letters tab to generate it first.`);
+    return;
+  }
+  await generateAndDownload({ type: 'general', title: ld.label, body: content });
 }
 
-function printTimeline(caseItem, events) {
+async function handleTimelinePDF(caseItem, events) {
+  console.log('DASHBOARD PRINT CLICKED', { tab: 'timeline', caseId: caseItem?.id });
+  const timelineCount = events?.length || 0;
+  console.log('DATA AVAILABLE', { timelineCount });
+  if (!events || events.length === 0) {
+    alert('No timeline events to export. Add events in the Timeline tab first.');
+    return;
+  }
   const sorted = [...events].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
-  const rows = sorted.map((ev) => `
-    <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:10pt;white-space:nowrap;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${ev.event_type.replace("_", " ")}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${ev.title}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;color:#000;">${ev.description || ""}</td>
-    </tr>
-  `).join("");
-  printTableDocument({ title: "Timeline", heading: "Case Timeline", subheading: caseItem.title, tableRows: rows });
+  const body = sorted.map((ev, i) => {
+    const dateStr = ev.event_date ? format(new Date(ev.event_date), 'd MMM yyyy') : 'Undated';
+    return `${dateStr} — ${ev.title}\nType: ${(ev.event_type || '').replace(/_/g, ' ')}\n${ev.description || ''}`;
+  }).join('\n\n');
+  await generateAndDownload({ type: 'general', title: 'Case Timeline', body: `CASE TIMELINE (${sorted.length} events)\n\n${body}` });
 }
 
-function printEvidence(caseItem, evidence) {
+async function handleEvidencePDF(caseItem, evidence) {
+  console.log('DASHBOARD PRINT CLICKED', { tab: 'evidence', caseId: caseItem?.id });
+  const evidenceCount = evidence?.length || 0;
+  console.log('DATA AVAILABLE', { evidenceCount });
+  if (!evidence || evidence.length === 0) {
+    alert('No evidence files to export. Upload files in the Evidence tab first.');
+    return;
+  }
   const sorted = [...evidence].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
-  const allTags = [...new Set(evidence.flatMap((ev) => ev.tags || []))];
-  
-  const grouped = allTags.length > 0 ? {} : { "All Documents": sorted };
-  if (allTags.length > 0) {
-    for (const tag of allTags) {
-      grouped[tag] = sorted.filter((ev) => ev.tags?.includes(tag));
-    }
-    const untagged = sorted.filter((ev) => !ev.tags || ev.tags.length === 0);
-    if (untagged.length > 0) grouped["Other"] = untagged;
+  const body = sorted.map((ev, i) => {
+    const dateStr = ev.event_date ? format(new Date(ev.event_date), 'd MMM yyyy') : 'No date';
+    return `${i + 1}. ${ev.file_name}\nType: ${(ev.file_type || '').replace(/_/g, ' ')} | Date: ${dateStr}\n${ev.description || ev.extracted_data?.document_summary || ''}`;
+  }).join('\n\n');
+  await generateAndDownload({ type: 'general', title: 'Evidence Index', body: `EVIDENCE INDEX (${sorted.length} files)\n\n${body}` });
+}
+
+async function handleChecklistPDF(caseItem, checklistItems) {
+  console.log('DASHBOARD PRINT CLICKED', { tab: 'checklist', caseId: caseItem?.id });
+  const checklistCount = checklistItems?.length || 0;
+  console.log('DATA AVAILABLE', { checklistCount });
+  if (!checklistItems || checklistItems.length === 0) {
+    alert('No checklist items to export. Generate the checklist first.');
+    return;
   }
+  const body = checklistItems.map(item => {
+    const tick = item.status === 'complete' ? '[x]' : '[ ]';
+    return `${tick} ${item.label}\nCategory: ${(item.category || '').replace(/_/g, ' ')} | Status: ${(item.status || '').toUpperCase()}`;
+  }).join('\n\n');
+  await generateAndDownload({ type: 'general', title: 'Smart Checklist', body: `SMART CHECKLIST (${checklistItems.length} items)\n\n${body}` });
+}
 
-  let tableRows = "";
-  let itemNum = 1;
-  for (const [groupName, items] of Object.entries(grouped)) {
-    tableRows += `<tr style="background:white;"><th colspan="5" style="text-align:left;padding:6pt 8pt;font-size:11pt;border-bottom:2pt solid #000;">${groupName} (${items.length})</th></tr>`;
-    tableRows += items.map((ev) => `
-      <tr style="border-bottom:1px solid #eee;">
-        <td style="padding:6pt 8pt;font-size:10pt;">${itemNum++}</td>
-        <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${ev.file_name}</td>
-        <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(ev.file_type || "").replace("_", " ")}</td>
-        <td style="padding:6pt 8pt;font-size:10pt;">${ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : "—"}</td>
-        <td style="padding:6pt 8pt;font-size:10pt;color:#000;">${[ev.description, ev.tags?.join(", ")].filter(Boolean).join(" · ") || "—"}</td>
-      </tr>
-    `).join("");
+async function handleDeadlinesPDF(caseItem, deadlines) {
+  console.log('DASHBOARD PRINT CLICKED', { tab: 'deadlines', caseId: caseItem?.id });
+  const deadlineCount = deadlines?.length || 0;
+  console.log('DATA AVAILABLE', { deadlineCount });
+  if (!deadlines || deadlines.length === 0) {
+    alert('No deadlines to export. Add deadlines in the Deadlines tab first.');
+    return;
   }
-  printTableDocument({ title: "Evidence Index", heading: "Evidence Index", subheading: `${caseItem.title} — ${evidence.length} documents`, tableRows: tableRows });
-}
-
-function printChecklist(caseItem, evidence, events) {
-  const checks = [
-    { label: "Issue summary documented", done: !!(caseItem.issue_summary) },
-    { label: "Full issue details recorded", done: !!(caseItem.issue_details) },
-    { label: "Desired outcome stated", done: !!(caseItem.desired_outcome) },
-    { label: "Complaint letter drafted", done: !!(caseItem.complaint_letter) },
-    { label: "Evidence uploaded (1+ files)", done: evidence.length > 0 },
-    { label: "Timeline started (1+ events)", done: events.length > 0 },
-    { label: "Response deadline set", done: !!(caseItem.response_deadline) },
-    { label: "Escalation body identified", done: !!(caseItem.escalation_body) },
-    { label: "Complaint sent to organisation", done: ["complaint_sent", "awaiting_response", "response_received", "escalation_ready", "escalated", "resolved"].includes(caseItem.status) },
-    { label: "Response received from organisation", done: ["response_received", "escalation_ready", "escalated", "resolved"].includes(caseItem.status) },
-  ];
-
-  const rows = checks.map((c) => `<tr style="border-bottom:1px solid #eee;">
-    <td style="padding:6pt 8pt;font-size:12pt;">${c.done ? "☑" : "☐"}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;">${c.label}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${c.done ? "color:green;" : "color:#c00;"}">${c.done ? "COMPLETE" : "MISSING"}</td>
-  </tr>`).join("");
-
-  const html = `<!DOCTYPE html><html><head><title>Checklist</title>
-  <style>${DOCUMENT_CSS}
-    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content"><h1>Case Checklist</h1><table>${rows}</table></div>
-    <div class="letterhead-footer"></div>
-  </body></html>`;
-  printDocument(html);
-}
-
-function printChecklistItems(caseItem, checklistItems) {
-  const rows = checklistItems.map(item => `<tr style="border-bottom:1px solid #eee;">
-    <td style="padding:6pt 8pt;font-size:12pt;">${item.status === 'complete' ? '☑' : '☐'}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;${item.status === 'complete' ? 'text-decoration:line-through;color:#888;' : ''}">${item.label}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(item.category || '').replace(/_/g, ' ')}</td>
-    <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${item.status === 'complete' ? 'color:green;' : item.status === 'missing' ? 'color:#c00;' : 'color:#f90;'}">${(item.status || '').replace('_', ' ').toUpperCase()}</td>
-  </tr>`).join('');
-  
-  const html = `<!DOCTYPE html><html><head><title>Smart Checklist</title>
-  <style>${DOCUMENT_CSS}
-    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content"><h1>Smart Checklist</h1><table>${rows}</table></div>
-    <div class="letterhead-footer"></div>
-  </body></html>`;
-  printDocument(html);
-}
-
-function printDeadlineItems(caseItem, deadlines) {
   const sorted = [...deadlines].sort((a, b) => new Date(a.deadline_date || 0) - new Date(b.deadline_date || 0));
-  const rows = sorted.map(d => {
-    const daysLeft = d.deadline_date ? Math.round((new Date(d.deadline_date) - new Date()) / 86400000) : null;
-    const urgency = daysLeft === null ? '—' : daysLeft < 0 ? 'OVERDUE' : daysLeft === 0 ? 'TODAY' : `${daysLeft} days`;
-    const color = daysLeft !== null && daysLeft < 0 ? '#c00' : daysLeft !== null && daysLeft <= 7 ? '#f90' : '#060';
-    return `<tr style="border-bottom:1px solid #eee;">
-      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;">${d.title}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;">${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : '—'}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;color:${color};">${urgency}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;text-transform:capitalize;">${(d.deadline_type || '').replace(/_/g, ' ')}</td>
-      <td style="padding:6pt 8pt;font-size:10pt;font-weight:bold;${d.status === 'completed' ? 'color:green;' : 'color:#c00;'}">${(d.status || '').toUpperCase()}</td>
-    </tr>`;
-  }).join('');
-  
-  const html = `<!DOCTYPE html><html><head><title>Deadlines</title>
-  <style>${DOCUMENT_CSS}
-    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content"><h1>Deadline War Room</h1><table>${rows}</table></div>
-    <div class="letterhead-footer"></div>
-  </body></html>`;
-  printDocument(html);
+  const body = sorted.map(d => {
+    const daysLeft = d.deadline_date ? differenceInDays(new Date(d.deadline_date), new Date()) : null;
+    const urgency = daysLeft === null ? 'No date' : daysLeft < 0 ? `OVERDUE by ${Math.abs(daysLeft)} days` : daysLeft === 0 ? 'DUE TODAY' : `${daysLeft} days remaining`;
+    return `${d.title}\nDue: ${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : 'No date'} | ${urgency}\nType: ${(d.deadline_type || '').replace(/_/g, ' ')} | Status: ${(d.status || '').toUpperCase()}`;
+  }).join('\n\n');
+  await generateAndDownload({ type: 'general', title: 'Deadline War Room', body: `DEADLINES (${sorted.length} items)\n\n${body}` });
 }
 
-async function printCaseSummaryReport(caseItem, evidence, events, deadlines) {
-  try {
-    const upcomingDeadlines = deadlines
-      .filter((d) => d.status === "pending" && d.deadline_date)
-      .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
-      .slice(0, 5);
+async function handleCaseSummaryPDF(caseItem, evidence, events, deadlines) {
+  console.log('DASHBOARD PRINT CLICKED', { tab: 'summary', caseId: caseItem?.id });
+  const hasSummary = !!caseItem?.issue_summary;
+  const timelineCount = events?.length || 0;
+  const evidenceCount = evidence?.length || 0;
+  const deadlineCount = deadlines?.length || 0;
+  console.log('DATA AVAILABLE', { hasSummary, timelineCount, evidenceCount, deadlineCount });
 
-    const summaryLines = [
-      `Organisation: ${String(caseItem.organisation_name || "—")}`,
-      `Status: ${String((caseItem.status || "").replace(/_/g, " ").toUpperCase())}`,
-      `Category: ${String(caseItem.category || "—")}`,
-      `Priority: ${String(caseItem.priority || "—")}`,
-      `Complainant: ${String(caseItem.complainant_name || "—")}`,
-      `Account #: ${String(caseItem.account_number || "—")}`,
-      `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : "—"}`,
-      `Escalation Body: ${String(caseItem.escalation_body || "—")}`,
-    ].join("\n");
+  const upcomingDeadlines = (deadlines || [])
+    .filter(d => d.status === 'pending' && d.deadline_date)
+    .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
+    .slice(0, 5);
 
-    const deadlineLines = upcomingDeadlines.length > 0
-      ? upcomingDeadlines.map(d => {
-          const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
-          const urgency = daysLeft < 0 ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? "TODAY" : `${daysLeft} days`;
-          return `${d.title} — Due: ${format(new Date(d.deadline_date), "d MMM yyyy")} | ${urgency}`;
-        }).join("\n")
-      : "No upcoming deadlines.";
+  const deadlineLines = upcomingDeadlines.length > 0
+    ? upcomingDeadlines.map(d => {
+        const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
+        const urgency = daysLeft < 0 ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? 'TODAY' : `${daysLeft} days`;
+        return `${d.title} — Due: ${format(new Date(d.deadline_date), 'd MMM yyyy')} | ${urgency}`;
+      }).join('\n')
+    : 'No upcoming deadlines.';
 
-    const body = `CASE DETAILS\n${summaryLines}\n\nISSUE SUMMARY\n${String(caseItem.issue_summary || "—")}\n\nDESIRED OUTCOME\n${String(caseItem.desired_outcome || "—")}\n\nSTATISTICS\nEvidence Files: ${evidence.length}\nTimeline Events: ${events.length}\nUpcoming Deadlines: ${upcomingDeadlines.length}\n\nUPCOMING DEADLINES\n${deadlineLines}`;
+  const body = [
+    'CASE DETAILS',
+    `Organisation: ${caseItem.organisation_name || '—'}`,
+    `Status: ${(caseItem.status || '').replace(/_/g, ' ').toUpperCase()}`,
+    `Category: ${caseItem.category || '—'}`,
+    `Priority: ${(caseItem.priority || '').toUpperCase()}`,
+    `Complainant: ${caseItem.complainant_name || '—'}`,
+    `Account #: ${caseItem.account_number || '—'}`,
+    `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`,
+    `Escalation Body: ${caseItem.escalation_body || '—'}`,
+    '',
+    'ISSUE SUMMARY',
+    caseItem.issue_summary || '—',
+    '',
+    'DESIRED OUTCOME',
+    caseItem.desired_outcome || '—',
+    '',
+    `STATISTICS`,
+    `Evidence Files: ${evidenceCount}`,
+    `Timeline Events: ${timelineCount}`,
+    `Upcoming Deadlines: ${deadlineCount}`,
+    '',
+    `UPCOMING DEADLINES`,
+    deadlineLines,
+  ].join('\n');
 
-    const pdfBlob = await generateChaosDocumentPDF({
-      documentType: 'general',
-      title: 'Case Summary Report',
-      body: String(body || '').trim(),
-      includeHeader: true,
-      includeFooter: true,
-    });
-
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success('Case summary report downloaded');
-  } catch (error) {
-    console.error('[PrintBundle] Case Summary PDF failed:', error);
-    toast.error('Case summary PDF failed: ' + error.message);
-  }
+  await generateAndDownload({ type: 'general', title: 'Case Summary Report', body });
 }
 
-async function printWeeklySnapshotReport(caseItem, evidence, events, deadlines) {
+async function handleWeeklySnapshotPDF(caseItem, evidence, events, deadlines) {
+  console.log('DASHBOARD PRINT CLICKED', { tab: 'weekly-snapshot', caseId: caseItem?.id });
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const twoWeeksAhead = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const recentEvents = (events || []).filter(e => e.event_date && new Date(e.event_date) > weekAgo);
+  const upcomingDeadlines = (deadlines || []).filter(d => d.deadline_date && new Date(d.deadline_date) > now && new Date(d.deadline_date) < twoWeeksAhead && d.status === 'pending');
+  const overdueDeadlines = (deadlines || []).filter(d => d.deadline_date && new Date(d.deadline_date) < now && d.status === 'pending');
+
+  console.log('DATA AVAILABLE', { timelineCount: events?.length, deadlineCount: deadlines?.length });
+
+  const sections = [
+    {
+      title: 'Case Overview',
+      content: `Title: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || '—'}\nStatus: ${(caseItem.status || '').replace(/_/g, ' ')}\nCategory: ${caseItem.category || '—'}`,
+    },
+    {
+      title: 'Weekly Activity',
+      content: `This Week: ${recentEvents.length} new events\nUpcoming (14 days): ${upcomingDeadlines.length} deadlines\nOverdue: ${overdueDeadlines.length} items\nTotal Evidence: ${(evidence || []).length} files`,
+    },
+    {
+      title: 'Recent Activity (Last 7 Days)',
+      content: recentEvents.length > 0
+        ? recentEvents.map(e => `[${e.event_date}] ${e.title}`).join('\n')
+        : 'No new events this week.',
+    },
+    {
+      title: 'Upcoming Deadlines',
+      content: upcomingDeadlines.length > 0
+        ? upcomingDeadlines.map(d => `${d.title} — Due ${d.deadline_date}`).join('\n')
+        : 'No upcoming deadlines in the next 14 days.',
+    },
+    {
+      title: 'Overdue Items',
+      content: overdueDeadlines.length > 0
+        ? overdueDeadlines.map(d => `${d.title} — Was due ${d.deadline_date} (OVERDUE)`).join('\n')
+        : 'No overdue items.',
+    },
+  ];
+
   try {
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const twoWeeksAhead = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-    
-    const recentEvents = events.filter(e => e.event_date && new Date(e.event_date) > weekAgo);
-    const upcomingDeadlines = deadlines.filter(d =>
-      d.deadline_date && new Date(d.deadline_date) > now && new Date(d.deadline_date) < twoWeeksAhead && d.status === "pending"
-    );
-    const overdueDeadlines = deadlines.filter(d =>
-      d.deadline_date && new Date(d.deadline_date) < now && d.status === "pending"
-    );
-
-    const body = `WEEKLY CASE SNAPSHOT\nWeek of ${format(now, "d MMMM yyyy")}\n\nCASE: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || "—"}\nStatus: ${(caseItem.status || "").replace(/_/g, " ")}\n\nQUICK STATS\nThis Week: ${recentEvents.length} new events\nUpcoming (14 days): ${upcomingDeadlines.length} deadlines\nOverdue: ${overdueDeadlines.length} items\n\nRECENT ACTIVITY\n${recentEvents.length > 0 ? recentEvents.map(e => `[${e.event_date}] ${e.title}`).join("\n") : "No new events this week."}\n\nUPCOMING DEADLINES\n${upcomingDeadlines.length > 0 ? upcomingDeadlines.map(d => `${d.title} — Due ${d.deadline_date}`).join("\n") : "No upcoming deadlines."}\n\nOVERDUE ITEMS\n${overdueDeadlines.length > 0 ? overdueDeadlines.map(d => `${d.title} — Was due ${d.deadline_date} (OVERDUE)`).join("\n") : "No overdue items."}`;
-
-    const pdfBlob = await generateChaosDocumentPDF({
+    console.log('DASHBOARD PDF GENERATOR START', { type: 'snapshot' });
+    const blob = await generateChaosDocumentPDF({
       documentType: 'snapshot',
-      title: 'WEEKLY CASE SNAPSHOT',
+      title: 'Weekly Case Snapshot',
       matter: caseItem.title,
-      date: format(now, "d MMMM yyyy"),
-      sections: [{ title: 'Weekly Overview', content: body }],
+      date: format(now, 'd MMMM yyyy'),
+      sections,
       includeHeader: true,
       includeFooter: true,
     });
-
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success('Weekly snapshot report downloaded');
+    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    downloadPDFBlob(blob, `Weekly_Snapshot_${format(now, 'yyyy-MM-dd')}.pdf`);
+    console.log('PDF GENERATED', { type: 'snapshot' });
+    toast.success('Weekly Snapshot PDF downloaded');
   } catch (error) {
-    console.error('[PrintBundle] Weekly Snapshot PDF failed:', error);
-    toast.error('Weekly snapshot PDF failed: ' + error.message);
+    console.error('PDF FAILED', error);
+    alert('PDF failed: ' + error.message);
   }
-}
-
-function printBundle(caseItem, evidence, events, checklistItems) {
-  const sorted = [...events].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
-  const evSorted = [...evidence].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
-  const allTags = [...new Set(evidence.flatMap((ev) => ev.tags || []))];
-  const client = buildClientContext(caseItem, evidence);
-  const today = format(new Date(), "d MMMM yyyy");
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const now = new Date().toLocaleString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-
-  const presentLetters = LETTER_DEFS.filter(ld => caseItem[ld.field]);
-
-  const summaryRows = [
-    { label: "Complainant Name", value: client.name },
-    { label: "Complainant Address", value: client.address },
-    { label: "Complainant Email", value: client.email },
-    { label: "Complainant Phone", value: client.phone },
-    { label: "Organisation", value: caseItem.organisation_name },
-    { label: "Complaints Email", value: caseItem.organisation_complaints_email },
-    { label: "Complaint Handler", value: caseItem.complaint_handler_name },
-    { label: "Account / Reference No.", value: caseItem.account_number || client.accounts?.join(", ") },
-    { label: "Category", value: caseItem.category ? caseItem.category.charAt(0).toUpperCase() + caseItem.category.slice(1) : null },
-    { label: "Incident Date", value: caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : null },
-    { label: "Case Status", value: (caseItem.status || "").replace(/_/g, " ").toUpperCase() },
-    { label: "Priority", value: (caseItem.priority || "").toUpperCase() },
-    { label: "Response Deadline", value: caseItem.response_deadline ? format(new Date(caseItem.response_deadline), "d MMMM yyyy") : null },
-    { label: "Escalation Body", value: caseItem.escalation_body },
-    { label: "Case Reference", value: caseRef },
-    { label: "Bundle Generated", value: today },
-  ].filter(r => r.value);
-
-  const readinessChecks = [
-    { label: "Issue summary documented", done: !!(caseItem.issue_summary) },
-    { label: "Full issue details recorded", done: !!(caseItem.issue_details) },
-    { label: "Desired outcome stated", done: !!(caseItem.desired_outcome) },
-    { label: "Complaint letter drafted", done: !!(caseItem.complaint_letter) },
-    { label: "Evidence uploaded (1+ files)", done: evidence.length > 0 },
-    { label: "Timeline started (1+ events)", done: events.length > 0 },
-    { label: "Response deadline set", done: !!(caseItem.response_deadline) },
-    { label: "Escalation body identified", done: !!(caseItem.escalation_body) },
-    { label: "Complaint sent to organisation", done: ["complaint_sent", "awaiting_response", "response_received", "escalation_ready", "escalated", "resolved"].includes(caseItem.status) },
-    { label: "Response received from organisation", done: ["response_received", "escalation_ready", "escalated", "resolved"].includes(caseItem.status) },
-  ];
-  const readinessPct = Math.round((readinessChecks.filter(c => c.done).length / readinessChecks.length) * 100);
-
-  const tocSections = [
-    { num: 1, title: "Case Summary" },
-    { num: 2, title: "Escalation Readiness Checklist" },
-    { num: 3, title: "Chronological Timeline" },
-    { num: 4, title: "Evidence Index" },
-    { num: 5, title: "Smart Checklist" },
-    ...presentLetters.map((ld, i) => ({ num: 6 + i, title: ld.label })),
-  ];
-
-  const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head>
-    <title>Case Bundle — ${caseItem.title}</title>
-    <style>
-      ${DOCUMENT_CSS}
-      .page { page-break-after: always; padding: 0; width: 100%; max-width: 100%; }
-      .page:last-child { page-break-after: auto; }
-      .page-content { width: 100%; max-width: 100%; margin: 0; padding: 0 17.5mm; }
-      
-      .cover-title { font-size: 8pt; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 10pt; }
-      .cover-main { font-size: 12pt; font-weight: bold; line-height: 1.3; margin-bottom: 6pt; color: #1a1a2e; }
-      .cover-sub { font-size: 10pt; color: #666; font-style: italic; margin-bottom: 14pt; }
-      
-      .summary-box { background: #f8f8f8; border: 1px solid #ddd; padding: 10pt 12pt; border-radius: 4pt; margin-bottom: 12pt; }
-      .summary-row td { border: none; padding: 2pt 10pt 2pt 0; font-size: 10pt; }
-      .summary-row td:first-child { color: #666; font-style: italic; white-space: nowrap; width: 35%; }
-      .summary-row td:last-child { font-weight: bold; }
-      
-      .section-title { font-size: 12pt; font-weight: bold; color: #1a1a2e; margin-bottom: 10pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
-      .section-subtitle { font-size: 10pt; color: #666; margin-bottom: 8pt; }
-      
-      table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 10pt; }
-      th { background: #f4f4f4; text-align: left; padding: 5pt 8pt; font-weight: bold; border-bottom: 2px solid #ddd; font-size: 10pt; }
-      td { padding: 4.5pt 8pt; border-bottom: 1px solid #eee; vertical-align: top; font-size: 10pt; }
-      
-      .toc-item { display: flex; align-items: baseline; padding: 5pt 0; border-bottom: 1px dotted #ccc; }
-      .toc-num { font-weight: bold; color: #1a1a2e; min-width: 25pt; font-size: 10pt; }
-      .toc-title { font-size: 10pt; font-weight: bold; flex: 1; }
-      
-      p { margin: 6pt 0; min-height: 14pt; font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; }
-      pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; margin: 0; width: 100%; }
-      
-      .progress-bar { background: #eee; height: 8pt; border-radius: 4pt; overflow: hidden; margin: 6pt 0; }
-      .progress-fill { height: 100%; background: linear-gradient(to right, #1a1a2e, #FFD700); border-radius: 4pt; }
-    </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content">
-    
-    <!-- COVER PAGE -->
-    <div class="page">
-      <div class="cover-title" style="font-size:8pt;">Chaos Controller™ — Formal Case Bundle</div>
-      <div style="border-left: 4px solid #1a1a2e; padding-left: 12pt; margin-bottom: 18pt;">
-        <div class="cover-main" style="font-size:12pt;">${caseItem.title}</div>
-        <div class="cover-sub" style="font-size:10pt;">vs. ${caseItem.organisation_name || "Organisation"}</div>
-      </div>
-      
-      <div class="summary-box">
-        <table class="summary-row">
-          <tbody>${summaryRows.map(r => `<tr><td style="font-size:10pt;">${r.label}</td><td style="font-size:10pt;">${r.value}</td></tr>`).join("")}</tbody>
-        </table>
-      </div>
-      
-      ${caseItem.issue_summary ? `<div style="margin-bottom:10pt;"><div style="font-size:8pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Issue Summary</div><div style="font-size:10pt;line-height:1.5;">${caseItem.issue_summary}</div></div>` : ""}
-      ${caseItem.desired_outcome ? `<div style="margin-bottom:10pt;"><div style="font-size:8pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Desired Outcome</div><div style="font-size:10pt;line-height:1.5;">${caseItem.desired_outcome}</div></div>` : ""}
-      
-      <div style="margin-top: 14pt; padding-top: 10pt; border-top: 1px solid #ddd;">
-        <div style="font-size:8pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Escalation Readiness</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${readinessPct}%"></div></div>
-        <div style="font-size:10pt;font-weight:bold;color:#1a1a2e;">${readinessPct}% Ready — ${readinessChecks.filter(c=>c.done).length}/${readinessChecks.length} steps complete</div>
-        <div style="font-size:8pt;color:#888;margin-top:4pt;">Generated: ${today} · Ref: ${caseRef}</div>
-      </div>
-      
-    </div>
-    
-    <!-- TABLE OF CONTENTS -->
-    <div class="page">
-      <div class="section-title">Table of Contents</div>
-      <div class="section-subtitle">${caseItem.title} — ${today}</div>
-      <div style="margin-top:12pt;">
-        ${tocSections.map(s => `
-          <div class="toc-item">
-            <div class="toc-num">${s.num}.</div>
-            <div class="toc-title">${s.title}</div>
-          </div>`).join("")}
-      </div>
-      </div>
-
-      <!-- SECTION 1: CASE SUMMARY -->
-    <div class="page">
-      <div class="section-title">1. Case Summary</div>
-      <table class="summary-row" style="margin-top:8pt;">
-        <tbody>${summaryRows.map(r=>`<tr><td>${r.label}</td><td>${r.value}</td></tr>`).join("")}</tbody>
-      </table>
-      ${caseItem.issue_details ? `<div style="margin-top:14pt;"><div style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4pt;">Full Details</div><div style="font-size:10.5pt;line-height:1.6;">${caseItem.issue_details}</div></div>` : ""}
-      </div>
-
-      <!-- SECTION 2: READINESS CHECKLIST -->
-    <div class="page">
-      <div class="section-title">2. Escalation Readiness Checklist</div>
-      <div class="section-subtitle">Readiness: <strong>${readinessPct}%</strong> — ${readinessChecks.filter(c=>c.done).length} of ${readinessChecks.length} complete</div>
-      <table>
-        <thead><tr><th style="width:30pt;"></th><th>Item</th><th style="width:80pt;">Status</th></tr></thead>
-        <tbody>${readinessChecks.map(c=>`<tr>
-          <td style="font-size:14pt;text-align:center;">${c.done?"☑":"☐"}</td>
-          <td>${c.label}</td>
-          <td style="font-weight:bold;${c.done?"color:green;":"color:#c00;"}">${c.done?"COMPLETE":"MISSING"}</td>
-        </tr>`).join("")}</tbody>
-      </table>
-      ${checklistItems.length > 0 ? `
-        <div style="margin-top:16pt;">
-          <div style="font-size:10pt;font-weight:bold;margin-bottom:6pt;color:#1a1a2e;">AI-Generated Action Items (${checklistItems.length})</div>
-          <table>
-            <thead><tr><th style="width:30pt;"></th><th>Action</th><th>Category</th><th style="width:70pt;">Status</th></tr></thead>
-            <tbody>${checklistItems.map(item=>`<tr>
-              <td style="font-size:13pt;text-align:center;">${item.status==="complete"?"☑":"☐"}</td>
-              <td style="${item.status==="complete"?"text-decoration:line-through;color:#888;":""}">${item.label}</td>
-              <td style="text-transform:capitalize;color:#666;">${(item.category||"").replace(/_/g," ")}</td>
-              <td style="font-weight:bold;${item.status==="complete"?"color:green;":item.status==="missing"?"color:#c00;":"color:#f90;"}">${(item.status||"").toUpperCase()}</td>
-            </tr>`).join("")}</tbody>
-          </table>
-        </div>` : ""}
-      </div>
-
-      <!-- SECTION 3: TIMELINE -->
-    <div class="page">
-      <div class="section-title">3. Chronological Timeline</div>
-      ${sorted.length === 0 ? `<p style="color:#888;font-style:italic;">No timeline events recorded.</p>` : `
-      <table>
-        <thead><tr><th style="width:70pt;">Date</th><th style="width:80pt;">Type</th><th>Event</th><th>Details</th></tr></thead>
-        <tbody>${sorted.map(ev=>`<tr>
-          <td style="white-space:nowrap;">${ev.event_date?format(new Date(ev.event_date),"d MMM yyyy"):"—"}</td>
-          <td style="text-transform:capitalize;">${(ev.event_type||"").replace(/_/g," ")}</td>
-          <td style="font-weight:bold;">${ev.title}</td>
-          <td style="color:#555;">${ev.description||""}</td>
-        </tr>`).join("")}</tbody>
-      </table>`}
-      </div>
-
-      <!-- SECTION 4: EVIDENCE INDEX -->
-    <div class="page">
-      <div class="section-title">4. Evidence Index ${allTags.length > 0 ? `— ${allTags.length} tag categories` : ""}</div>
-      <div class="section-subtitle">Total documents: <strong>${evidence.length}</strong></div>
-      ${evSorted.length === 0 ? `<p style="color:#888;font-style:italic;">No evidence uploaded.</p>` : `
-      <table>
-        <thead><tr><th style="width:25pt;">#</th><th>File Name</th><th style="width:70pt;">Type</th><th style="width:60pt;">Date</th><th>Description / Tags</th></tr></thead>
-        <tbody>${evSorted.map((ev,i)=>`<tr>
-          <td style="font-weight:bold;text-align:center;">${i+1}</td>
-          <td style="font-weight:bold;word-break:break-word;">${ev.file_name}</td>
-          <td style="text-transform:capitalize;">${(ev.file_type||"").replace(/_/g," ")}</td>
-          <td>${ev.event_date?format(new Date(ev.event_date),"d MMM yyyy"):"—"}</td>
-          <td style="color:#555;">${[ev.description, ev.tags?.join(", ")].filter(Boolean).join(" · ")||"—"}</td>
-        </tr>`).join("")}</tbody>
-      </table>`}
-      </div>
-
-      <!-- SECTION 5: SMART CHECKLIST -->
-    <div class="page">
-      <div class="section-title">5. Smart Checklist</div>
-      <div class="section-subtitle">${checklistItems.length} AI-generated action items</div>
-      ${checklistItems.length === 0 ? `<p style="color:#888;font-style:italic;">No action items generated yet.</p>` : `
-      <table>
-        <thead><tr><th style="width:30pt;"></th><th>Action</th><th>Category</th><th style="width:70pt;">Status</th></tr></thead>
-        <tbody>${checklistItems.map(item=>`<tr>
-          <td style="font-size:13pt;text-align:center;">${item.status==="complete"?"☑":"☐"}</td>
-          <td style="${item.status==="complete"?"text-decoration:line-through;color:#888;":""}">${item.label}</td>
-          <td style="text-transform:capitalize;color:#666;">${(item.category||"").replace(/_/g," ")}</td>
-          <td style="font-weight:bold;${item.status==="complete"?"color:green;":item.status==="missing"?"color:#c00;":"color:#f90;"}">${(item.status||"").toUpperCase()}</td>
-        </tr>`).join("")}</tbody>
-      </table>`}
-      </div>
-
-      <!-- LETTERS -->
-    ${presentLetters.map((ld, idx) => {
-    const letterLines = (caseItem[ld.field] || '').split('\n');
-    return `
-    <div class="page">
-    <div class="section-title">${ld.label}</div>
-    <pre style="margin-top:6pt;font-size:10pt;line-height:1.2;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;">${(caseItem[ld.field] || '').replace(/<[^>]*>/g, '')}</pre>
-    </div>`;
-    }).join("")}
-    
-    </div>
-    <div class="letterhead-footer"></div>
-  </body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 600);
 }
 
 export default function PrintBundle({ caseItem, evidence, events }) {
   const [checklistItems, setChecklistItems] = useState([]);
   const [deadlines, setDeadlines] = useState([]);
+  const [loadingPDF, setLoadingPDF] = useState(null);
 
   useEffect(() => {
     if (!caseItem?.id) return;
@@ -512,158 +235,121 @@ export default function PrintBundle({ caseItem, evidence, events }) {
     base44.entities.Deadline.filter({ case_id: caseItem.id }).then(setDeadlines).catch(() => {});
   }, [caseItem?.id]);
 
+  const run = async (key, fn) => {
+    setLoadingPDF(key);
+    try {
+      await fn();
+    } finally {
+      setLoadingPDF(null);
+    }
+  };
+
+  const PDFButton = ({ id, label, icon: Icon, iconColor, description, onClick, fullWidth }) => (
+    <button
+      onClick={() => run(id, onClick)}
+      disabled={loadingPDF === id}
+      className={`bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group disabled:opacity-60 ${fullWidth ? 'col-span-full' : ''}`}
+    >
+      <div className="flex items-center gap-3 mb-2">
+        <div className={`p-2 rounded-lg ${iconColor}`}>
+          {loadingPDF === id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
+        </div>
+        <span className="font-medium text-sm text-foreground">{label}</span>
+        <Download className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </button>
+  );
+
   return (
     <div className="space-y-4">
+      {/* Full Bundle */}
       <div className="bg-gradient-to-br from-primary/10 to-accent/5 border-2 border-primary/30 rounded-xl p-5">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2.5 bg-primary/15 rounded-lg">
             <Package className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="font-heading font-bold text-base text-foreground">Generate Professional PDF Bundle</p>
-            <p className="text-xs text-muted-foreground">Clean, professional case bundle for tribunal submissions</p>
+            <p className="font-heading font-bold text-base text-foreground">Generate PDF Bundle</p>
+            <p className="text-xs text-muted-foreground">Download complete case bundle as PDF</p>
           </div>
         </div>
         <Button
-          onClick={() => printBundle(caseItem, evidence, events, checklistItems)}
+          onClick={() => run('bundle', () => handleCaseSummaryPDF(caseItem, evidence, events, deadlines))}
+          disabled={loadingPDF === 'bundle'}
           className="w-full gap-2 mb-2 h-10 text-base font-bold"
           size="lg"
         >
-          <Printer className="w-4 h-4" />
-          Generate & Print Full Bundle
+          {loadingPDF === 'bundle' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {loadingPDF === 'bundle' ? 'Generating PDF...' : 'Download Case Summary PDF'}
         </Button>
-        <p className="text-xs text-muted-foreground text-center bg-muted/40 rounded-lg py-2 px-3">
-          💡 Choose <strong>"Save as PDF"</strong> in the print dialog for tribunal submissions
-        </p>
       </div>
 
       <div>
-        <h3 className="font-heading font-semibold text-foreground mb-1">Print Individual Sections</h3>
-        <p className="text-xs text-muted-foreground">Print specific documents with clean formatting.</p>
+        <h3 className="font-heading font-semibold text-foreground mb-1">Download Individual Sections</h3>
+        <p className="text-xs text-muted-foreground mb-3">Each button generates a standalone A4 PDF with Chaos header &amp; footer.</p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">
         {LETTER_DEFS.map((ld) => (
-          <button
+          <PDFButton
             key={ld.field}
-            onClick={() => printLetterBundle(caseItem, evidence, ld.field, ld.label)}
-            className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <FileText className="w-4 h-4 text-primary" />
-              </div>
-              <span className="font-medium text-sm text-foreground">{ld.label}</span>
-              <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {caseItem[ld.field] ? "Print formal letter" : "Not yet generated"}
-            </p>
-          </button>
+            id={ld.field}
+            label={ld.label}
+            icon={FileText}
+            iconColor="bg-primary/10"
+            description={caseItem[ld.field] ? 'Download PDF letter' : 'Not yet generated — go to Letters tab'}
+            onClick={() => handleLetterPDF(caseItem, ld)}
+          />
         ))}
 
-        <button
-          onClick={() => printTimeline(caseItem, events)}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-          style={{gridColumn: "1 / -1"}}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-warning/10 rounded-lg">
-              <Clock className="w-4 h-4 text-warning" />
-            </div>
-            <span className="font-medium text-sm text-foreground">Chronological Timeline</span>
-            <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <p className="text-xs text-muted-foreground">Print every event in date order</p>
-        </button>
+        <PDFButton
+          id="timeline"
+          label="Chronological Timeline"
+          icon={Clock}
+          iconColor="bg-warning/10"
+          description={`Download all ${events?.length || 0} events in date order`}
+          onClick={() => handleTimelinePDF(caseItem, events)}
+          fullWidth
+        />
 
-        <button
-          onClick={() => printEvidence(caseItem, evidence)}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-success/10 rounded-lg">
-              <FolderOpen className="w-4 h-4 text-success" />
-            </div>
-            <span className="font-medium text-sm text-foreground">Evidence Index</span>
-            <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <p className="text-xs text-muted-foreground">Print indexed evidence list with tags</p>
-        </button>
+        <PDFButton
+          id="evidence"
+          label="Evidence Index"
+          icon={FolderOpen}
+          iconColor="bg-success/10"
+          description={`Download indexed list of ${evidence?.length || 0} documents`}
+          onClick={() => handleEvidencePDF(caseItem, evidence)}
+        />
 
-        <button
-          onClick={() => printChecklist(caseItem, evidence, events)}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-accent/10 rounded-lg">
-              <FileText className="w-4 h-4 text-accent" />
-            </div>
-            <span className="font-medium text-sm text-foreground">Case Checklist</span>
-            <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <p className="text-xs text-muted-foreground">Print completion checklist</p>
-        </button>
+        <PDFButton
+          id="checklist"
+          label="Smart Checklist"
+          icon={ClipboardList}
+          iconColor="bg-accent/10"
+          description={`Download ${checklistItems.length} AI-generated action items`}
+          onClick={() => handleChecklistPDF(caseItem, checklistItems)}
+        />
 
-        <button
-          onClick={() => printChecklistItems(caseItem, checklistItems)}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-accent/20 rounded-lg">
-              <ClipboardList className="w-4 h-4 text-accent" />
-            </div>
-            <span className="font-medium text-sm text-foreground">Smart Checklist</span>
-            <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <p className="text-xs text-muted-foreground">Print AI-generated action items ({checklistItems.length})</p>
-        </button>
+        <PDFButton
+          id="deadlines"
+          label="Deadline War Room"
+          icon={Siren}
+          iconColor="bg-destructive/10"
+          description={`Download all ${deadlines.length} deadlines with urgency status`}
+          onClick={() => handleDeadlinesPDF(caseItem, deadlines)}
+          fullWidth
+        />
 
-        <button
-          onClick={() => printDeadlineItems(caseItem, deadlines)}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-          style={{gridColumn: "1 / -1"}}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-destructive/10 rounded-lg">
-              <Siren className="w-4 h-4 text-destructive" />
-            </div>
-            <span className="font-medium text-sm text-foreground">Deadline War Room</span>
-            <Printer className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <p className="text-xs text-muted-foreground">Print all deadlines with urgency ({deadlines.length})</p>
-        </button>
-
-        {/* NEW: Case Summary & Weekly Snapshot Reports */}
-        <button
-          onClick={() => printCaseSummaryReport(caseItem, evidence, events, deadlines)}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-          style={{gridColumn: "1 / -1"}}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <FileText className="w-4 h-4 text-primary" />
-            </div>
-            <span className="font-medium text-sm text-foreground">Case Summary Report</span>
-            <Download className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <p className="text-xs text-muted-foreground">Download complete case summary with stats & deadlines</p>
-        </button>
-
-        <button
-          onClick={() => printWeeklySnapshotReport(caseItem, evidence, events, deadlines)}
-          className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
-          style={{gridColumn: "1 / -1"}}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-accent/10 rounded-lg">
-              <BarChart2 className="w-4 h-4 text-accent" />
-            </div>
-            <span className="font-medium text-sm text-foreground">Weekly Snapshot Report</span>
-            <Download className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-          <p className="text-xs text-muted-foreground">Download AI weekly activity summary & upcoming actions</p>
-        </button>
+        <PDFButton
+          id="weekly"
+          label="Weekly Snapshot Report"
+          icon={BarChart2}
+          iconColor="bg-accent/10"
+          description="Download weekly activity summary & upcoming actions"
+          onClick={() => handleWeeklySnapshotPDF(caseItem, evidence, events, deadlines)}
+          fullWidth
+        />
       </div>
     </div>
   );

@@ -19,9 +19,10 @@ import {
   Loader2,
   CalendarPlus,
   Download,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 
 const eventTypeConfig = {
@@ -35,10 +36,11 @@ const eventTypeConfig = {
   action_required: { icon: Zap, color: "text-warning", bg: "bg-warning/10" },
 };
 
-export default function CaseTimeline({ caseId, events }) {
+export default function CaseTimeline({ caseId, events, caseItem }) {
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", event_type: "incident", event_date: new Date().toISOString().split("T")[0] });
   const [addingToCalendar, setAddingToCalendar] = useState(null);
+  const [generating, setGenerating] = useState(false);
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -89,43 +91,45 @@ export default function CaseTimeline({ caseId, events }) {
     }
   };
 
-  const handleTimelinePDF = async () => {
+  const handleAIGenerate = async () => {
+    setGenerating(true);
     try {
-      if (!sorted || sorted.length === 0) {
-        toast.error('No timeline events to export');
-        return;
-      }
-      
-      const body = sorted.map(ev => {
-        const cfg = eventTypeConfig[ev.event_type] || eventTypeConfig.incident;
-        const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : format(new Date(ev.created_date), "d MMM yyyy");
-        return `${dateStr} — ${String(ev.title || 'Event')}\n   Type: ${String((ev.event_type || '').replace(/_/g, ' '))}\n   ${String(ev.description || '—')}`;
-      }).join("\n\n");
+      const response = await base44.functions.invoke('autoGenerateTimelineFromEvidence', { caseId });
+      queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
+      toast.success('Timeline auto-generated from case data');
+    } catch (error) {
+      console.error('[CaseTimeline] AI generation failed:', error);
+      toast.error('Failed to generate timeline: ' + error.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
-      const pdfBlob = await generateChaosDocumentPDF({
+  const handleTimelinePDF = async () => {
+    console.log('DASHBOARD PRINT CLICKED', { tab: 'timeline', caseId });
+    if (!sorted || sorted.length === 0) {
+      alert('No timeline events to export.');
+      return;
+    }
+    const body = sorted.map(ev => {
+      const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : 'Undated';
+      return `${dateStr} — ${ev.title || 'Event'}\nType: ${(ev.event_type || '').replace(/_/g, ' ')}\n${ev.description || ''}`;
+    }).join("\n\n");
+
+    try {
+      const blob = await generateChaosDocumentPDF({
         documentType: 'general',
         title: 'Case Timeline',
-        body: String(`CASE TIMELINE (${sorted.length} events)\n\n${body}` || '').trim(),
+        body: `CASE TIMELINE (${sorted.length} events)\n\n${body}`,
         includeHeader: true,
         includeFooter: true,
       });
-      
-      if (!pdfBlob || pdfBlob.size === 0) {
-        throw new Error('Generated PDF is empty');
-      }
-      
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      downloadPDFBlob(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       toast.success('Timeline PDF downloaded');
     } catch (error) {
-      console.error('[CaseTimeline] PDF generation failed:', error);
-      toast.error('PDF generation failed: ' + error.message);
+      console.error('PDF FAILED', error);
+      alert('PDF failed: ' + error.message);
     }
   };
 
@@ -139,12 +143,16 @@ export default function CaseTimeline({ caseId, events }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-heading font-semibold text-foreground">Timeline</h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {sorted.length > 0 && (
             <Button variant="outline" size="sm" onClick={handleTimelinePDF} className="gap-1.5 text-xs">
               <Download className="w-3.5 h-3.5" /> PDF
             </Button>
           )}
+          <Button variant="outline" size="sm" onClick={handleAIGenerate} disabled={generating} className="gap-1.5 text-xs">
+            {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            {generating ? 'Generating...' : 'AI Generate'}
+          </Button>
           <Dialog open={showAdd} onOpenChange={setShowAdd}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1.5 text-xs">
@@ -201,7 +209,11 @@ export default function CaseTimeline({ caseId, events }) {
       {sorted.length === 0 ? (
         <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-8 text-center">
           <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No timeline events yet.</p>
+          <p className="text-sm font-semibold text-foreground mb-1">No timeline events yet.</p>
+          <p className="text-xs text-muted-foreground mb-4">Click "AI Generate" to automatically build your timeline from uploaded documents and case details.</p>
+          <Button size="sm" onClick={handleAIGenerate} disabled={generating} className="gap-2">
+            <Sparkles className="w-3.5 h-3.5" /> AI Generate Timeline
+          </Button>
         </div>
       ) : (
         <div className="relative pl-6">

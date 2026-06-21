@@ -1,48 +1,54 @@
 /**
  * CHAOS CONTROLLER™ — UNIFIED PDF GENERATOR
- * 
- * SINGLE SHARED SERVICE for all document generation.
  * ALL letters, snapshots, summaries, exports MUST use generateChaosDocumentPDF().
+ * No window.print(), no printDocument(), no printLetterUniversal() anywhere.
  */
 
 import { jsPDF } from 'jspdf';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ASSETS
-// ─────────────────────────────────────────────────────────────────────────────
 export const LETTERHEAD_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg';
 export const FOOTER_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HELPER FUNCTIONS
+// IMAGE LOADER — never throws, returns null on failure
 // ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Load image as data URL for jsPDF
- */
 function loadImageAsDataURL(url) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    const timeout = setTimeout(() => {
+      console.warn('[PDF Generator] Image load timeout:', url);
+      resolve(null);
+    }, 8000);
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg'));
+      clearTimeout(timeout);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg'));
+      } catch (e) {
+        console.warn('[PDF Generator] Canvas error:', e);
+        resolve(null);
+      }
     };
-    img.onerror = reject;
-    img.src = url;
+    img.onerror = () => {
+      clearTimeout(timeout);
+      console.warn('[PDF Generator] Image load failed:', url);
+      resolve(null);
+    };
+    img.src = url + '?t=' + Date.now(); // bust cache
   });
 }
 
-/**
- * Clean content for PDF - remove markdown, HTML tags, normalize
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTENT CLEANER
+// ─────────────────────────────────────────────────────────────────────────────
 export function cleanForPDF(content) {
   if (!content) return '';
-  return content
+  return String(content)
     .replace(/<[^>]*>/g, '')
     .replace(/\*\*/g, '')
     .replace(/\*/g, '')
@@ -54,259 +60,183 @@ export function cleanForPDF(content) {
     .replace(/\r/g, '\n');
 }
 
-/**
- * Generate Chaos Document PDF - UNIFIED GENERATOR
- * All document types must use this function
- * 
- * @param {Object} options
- * @param {string} options.documentType - 'letter' | 'snapshot' | 'summary' | 'general'
- * @param {string} options.title - Document title
- * @param {string} options.matter - Case/matter name
- * @param {string} options.claimant - Claimant details (multi-line)
- * @param {string} options.recipient - Recipient details (multi-line)
- * @param {string} options.date - Date string
- * @param {string} options.reLine - RE: subject line (for letters)
- * @param {string} options.greeting - Greeting (for letters)
- * @param {string} options.body - Main content
- * @param {string} options.closing - Closing (for letters)
- * @param {string} options.signature - Signature block
- * @param {Array} options.sections - Array of {title, content} for snapshots/summaries
- * @param {boolean} options.includeHeader - Include Chaos header (default: true)
- * @param {boolean} options.includeFooter - Include Chaos footer (default: true)
- * 
- * @returns {Promise<Blob>} PDF blob
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN PDF GENERATOR
+// ─────────────────────────────────────────────────────────────────────────────
 export async function generateChaosDocumentPDF({
   documentType = 'general',
   title = 'Document',
   matter = '',
-  claimant = '',
-  recipient = '',
   date = '',
-  reLine = '',
-  greeting = '',
   body = '',
-  closing = '',
-  signature = '',
   sections = [],
   includeHeader = true,
   includeFooter = true,
 }) {
-  console.log('[PDF Generator] Starting:', documentType, title);
-  
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-  
+  console.log('DASHBOARD PDF GENERATOR START', { type: documentType, title });
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
   const pageWidth = 210;
   const pageHeight = 297;
   const leftMargin = 17.5;
   const rightMargin = 17.5;
   const topMargin = 12.5;
-  const bottomMargin = 12.5;
+  const bottomMargin = 30; // reserve space for footer
   const contentWidth = pageWidth - leftMargin - rightMargin;
-  
+
+  // Set Times New Roman 11pt as default
+  pdf.setFont('times', 'normal');
+  pdf.setFontSize(11);
+
   let yPos = topMargin;
-  
-  // Add header
+
+  // ── HEADER ──
+  let headerHeight = 0;
   if (includeHeader) {
-    try {
-      const headerImg = await loadImageAsDataURL(LETTERHEAD_URL);
-      pdf.addImage(headerImg, 'JPEG', leftMargin, yPos, 175, 0);
-      const imgProps = pdf.getImageProperties(headerImg);
-      const imgHeight = imgProps.h * (175 / imgProps.w);
-      yPos += Math.min(imgHeight, 22);
-    } catch (err) {
-      console.error('[PDF Generator] Header image failed:', err);
-    }
-  }
-  
-  yPos += 8;
-  
-  // Document-specific formatting
-  if (documentType === 'letter') {
-    // Date - only if provided
-    if (date && String(date).trim()) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(11);
-      const dateStr = String(date).trim();
-      if (dateStr) {
-        pdf.text(dateStr, leftMargin, yPos);
-        yPos += 15;
-      }
-    }
-    
-    // Party details - only if provided
-    const claimantStr = String(claimant || '').trim();
-    const recipientStr = String(recipient || '').trim();
-    const claimantLines = claimantStr ? claimantStr.split('\n').filter(l => l.trim()) : [];
-    const recipientLines = recipientStr ? recipientStr.split('\n').filter(l => l.trim()) : [];
-    
-    if (claimantLines.length > 0 || recipientLines.length > 0) {
-      const maxLines = Math.max(claimantLines.length, recipientLines.length, 1);
-      const claimantHeight = maxLines * 5;
-      
-      if (claimantLines.length > 0) {
-        pdf.text(claimantLines, pageWidth - rightMargin, yPos, { align: 'right', angle: 0 });
-      }
-      if (recipientLines.length > 0) {
-        pdf.text(recipientLines, leftMargin, yPos, { angle: 0 });
-      }
-      yPos += claimantHeight + 10;
-    }
-    
-    // RE line - only if provided
-    const reLineStr = String(reLine || '').trim();
-    if (reLineStr) {
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(reLineStr, leftMargin, yPos, { angle: 0 });
-      yPos += 10;
-    }
-    
-    // Greeting - only if provided
-    const greetingStr = String(greeting || '').trim();
-    if (greetingStr) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(greetingStr, leftMargin, yPos, { angle: 0 });
-      yPos += 10;
-    }
-    
-    // Body - ALWAYS required for letters
-    const cleanBody = cleanForPDF(body || '');
-    if (cleanBody && cleanBody.trim()) {
-      const bodyLines = pdf.splitTextToSize(cleanBody, contentWidth);
-      if (bodyLines && bodyLines.length > 0) {
-        pdf.text(bodyLines, leftMargin, yPos, { angle: 0 });
-        yPos += bodyLines.length * 5.5 + 10;
+    const headerImg = await loadImageAsDataURL(LETTERHEAD_URL);
+    if (headerImg) {
+      try {
+        const imgProps = pdf.getImageProperties(headerImg);
+        headerHeight = Math.min(imgProps.h * (contentWidth / imgProps.w), 25);
+        pdf.addImage(headerImg, 'JPEG', leftMargin, yPos, contentWidth, headerHeight);
+        yPos += headerHeight + 6;
+      } catch (e) {
+        console.warn('[PDF Generator] Header insert failed:', e);
+        yPos += 8;
       }
     } else {
-      console.warn('[PDF Generator] Letter body is empty!');
-    }
-    
-    // Closing - only if provided
-    const closingStr = String(closing || '').trim();
-    if (closingStr) {
-      pdf.text(closingStr, leftMargin, yPos, { angle: 0 });
       yPos += 8;
     }
-    
-    // Signature - only if provided
-    const sigStr = String(signature || '').trim();
-    if (sigStr) {
-      const sigLines = sigStr.split('\n').filter(l => l.trim());
-      if (sigLines.length > 0) {
-        pdf.text(sigLines, leftMargin, yPos, { angle: 0 });
-        yPos += sigLines.length * 5.5 + 10;
+  }
+
+  // Helper: add footer image to current page
+  const addFooter = async () => {
+    if (!includeFooter) return;
+    const footerImg = await loadImageAsDataURL(FOOTER_URL);
+    if (footerImg) {
+      try {
+        const fp = pdf.getImageProperties(footerImg);
+        const fh = Math.min(fp.h * (contentWidth / fp.w), 20);
+        pdf.addImage(footerImg, 'JPEG', leftMargin, pageHeight - fh - 5, contentWidth, fh);
+      } catch (e) {
+        console.warn('[PDF Generator] Footer insert failed:', e);
       }
     }
-    
-  } else if (documentType === 'snapshot' || documentType === 'summary') {
-    // Title block
-    const titleStr = String(title || 'Document').trim();
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(14);
-    if (titleStr) {
-      pdf.text(titleStr.toUpperCase(), leftMargin, yPos, { angle: 0 });
-      yPos += 8;
+  };
+
+  // Helper: check page overflow and add new page if needed
+  const checkPageBreak = async (requiredHeight = 15) => {
+    if (yPos + requiredHeight > pageHeight - bottomMargin) {
+      await addFooter();
+      pdf.addPage();
+      yPos = topMargin + 8;
+      // Re-add header on new pages? No — just reset position
     }
-    
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
-    const matterStr = String(matter || '').trim();
-    if (matterStr) {
-      pdf.text(`Matter: ${matterStr}`, leftMargin, yPos, { angle: 0 });
-      yPos += 6;
-    }
-    const dateStr = String(date || '').trim();
-    if (dateStr) {
-      pdf.text(`Date: ${dateStr}`, leftMargin, yPos, { angle: 0 });
-      yPos += 6;
-    }
-    yPos += 3;
-    
-    // Separator
+  };
+
+  // Helper: write a bold section heading
+  const writeHeading = async (text) => {
+    await checkPageBreak(12);
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(12);
+    const lines = pdf.splitTextToSize(String(text).toUpperCase(), contentWidth);
+    pdf.text(lines, leftMargin, yPos);
+    yPos += lines.length * 6 + 2;
+    // Underline
     pdf.setDrawColor(0);
     pdf.setLineWidth(0.3);
-    pdf.line(leftMargin, yPos, pageWidth - rightMargin, yPos);
-    yPos += 8;
-    
-    // Sections
-    for (const section of sections) {
-      if (yPos > pageHeight - bottomMargin - 30) {
-        if (includeFooter) {
-          try {
-            const footerImg = await loadImageAsDataURL(FOOTER_URL);
-            const footerProps = pdf.getImageProperties(footerImg);
-            const footerHeight = footerProps.h * (175 / footerProps.w);
-            pdf.addImage(footerImg, 'JPEG', leftMargin, pageHeight - bottomMargin - footerHeight, 175, 0);
-          } catch (err) {
-            console.error('[PDF Generator] Footer failed:', err);
-          }
-        }
-        pdf.addPage();
-        yPos = topMargin;
+    pdf.line(leftMargin, yPos - 1, leftMargin + contentWidth, yPos - 1);
+    yPos += 4;
+    pdf.setFont('times', 'normal');
+    pdf.setFontSize(11);
+  };
+
+  // Helper: write body text with line wrapping + page breaks
+  const writeBody = async (text) => {
+    if (!text || !String(text).trim()) return;
+    const clean = cleanForPDF(text);
+    const paragraphs = clean.split('\n');
+    pdf.setFont('times', 'normal');
+    pdf.setFontSize(11);
+    for (const para of paragraphs) {
+      const trimmed = para.trim();
+      if (!trimmed) {
+        yPos += 3; // blank line gap
+        continue;
       }
-      
-      const sectionTitle = String(section.title || '').trim();
-      if (sectionTitle) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(12);
-        const titleLines = pdf.splitTextToSize(sectionTitle.toUpperCase(), contentWidth);
-        if (titleLines && titleLines.length > 0) {
-          pdf.text(titleLines, leftMargin, yPos, { angle: 0 });
-          yPos += (titleLines.length * 6) + 2;
-        }
-        pdf.setFont('helvetica', 'normal');
-      }
-      
-      const sectionContent = String(section.content || '').trim();
-      if (sectionContent) {
-        const contentLines = pdf.splitTextToSize(sectionContent, contentWidth);
-        if (contentLines && contentLines.length > 0) {
-          pdf.setFontSize(11);
-          pdf.text(contentLines, leftMargin, yPos, { angle: 0 });
-          yPos += (contentLines.length * 5.5) + 4;
-        }
-      }
+      const lines = pdf.splitTextToSize(trimmed, contentWidth);
+      await checkPageBreak(lines.length * 5.5 + 2);
+      pdf.text(lines, leftMargin, yPos);
+      yPos += lines.length * 5.5 + 1;
     }
-  } else if (documentType === 'general') {
-    // General document - just body text
-    const titleStr = String(title || 'Document').trim();
-    pdf.setFont('helvetica', 'bold');
+  };
+
+  // ── TITLE ──
+  if (title) {
+    pdf.setFont('times', 'bold');
     pdf.setFontSize(14);
-    if (titleStr) {
-      pdf.text(titleStr.toUpperCase(), leftMargin, yPos, { angle: 0 });
-      yPos += 10;
-    }
-    
-    const bodyStr = String(body || '').trim();
-    if (bodyStr) {
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(11);
-      const bodyLines = pdf.splitTextToSize(bodyStr, contentWidth);
-      if (bodyLines && bodyLines.length > 0) {
-        pdf.text(bodyLines, leftMargin, yPos, { angle: 0 });
-        yPos += bodyLines.length * 5.5;
+    const titleLines = pdf.splitTextToSize(String(title).toUpperCase(), contentWidth);
+    pdf.text(titleLines, leftMargin, yPos);
+    yPos += titleLines.length * 7 + 4;
+  }
+
+  if (matter) {
+    pdf.setFont('times', 'normal');
+    pdf.setFontSize(11);
+    pdf.text(`Matter: ${String(matter)}`, leftMargin, yPos);
+    yPos += 6;
+  }
+
+  if (date) {
+    pdf.setFont('times', 'normal');
+    pdf.setFontSize(11);
+    pdf.text(`Date: ${String(date)}`, leftMargin, yPos);
+    yPos += 6;
+  }
+
+  if (matter || date) {
+    pdf.setDrawColor(0);
+    pdf.setLineWidth(0.3);
+    pdf.line(leftMargin, yPos, leftMargin + contentWidth, yPos);
+    yPos += 6;
+  }
+
+  // ── BODY (plain text / letters) ──
+  if (body && String(body).trim()) {
+    await writeBody(body);
+  }
+
+  // ── SECTIONS (snapshot / summary style) ──
+  if (sections && sections.length > 0) {
+    for (const section of sections) {
+      if (section.title) {
+        await writeHeading(section.title);
+      }
+      if (section.content) {
+        await writeBody(section.content);
+        yPos += 4;
       }
     }
   }
-  
-  // Add footer
-  if (includeFooter) {
-    try {
-      const footerImg = await loadImageAsDataURL(FOOTER_URL);
-      const footerProps = pdf.getImageProperties(footerImg);
-      const footerHeight = footerProps.h * (175 / footerProps.w);
-      pdf.addImage(footerImg, 'JPEG', leftMargin, pageHeight - bottomMargin - footerHeight, 175, 0);
-    } catch (err) {
-      console.error('[PDF Generator] Footer image failed:', err);
-    }
-  }
-  
-  console.log('[PDF Generator] Complete');
-  
-  // Return as blob
+
+  // ── FOOTER on last page ──
+  await addFooter();
+
+  console.log('PDF GENERATED', { type: documentType, title, pages: pdf.getNumberOfPages() });
   return pdf.output('blob');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONVENIENCE: download a PDF blob
+// ─────────────────────────────────────────────────────────────────────────────
+export function downloadPDFBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }

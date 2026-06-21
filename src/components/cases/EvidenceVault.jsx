@@ -19,7 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
 import { useQuery } from "@tanstack/react-query";
-import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
 
 const typeConfig = {
   email:         { icon: Mail,      label: "Email",           color: "bg-primary/10 text-primary" },
@@ -399,43 +399,34 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   });
 
   const handlePrintEvidence = async () => {
-    try {
-      if (!sorted || sorted.length === 0) {
-        toast.error('No evidence to export');
-        return;
-      }
-      
-      const body = sorted.map((ev, i) => {
-        const cfg = typeConfig[ev.file_type] || typeConfig.other;
-        const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMMM yyyy") : "—";
-        const desc = ev.description || ev.extracted_data?.document_summary || "—";
-        return `${i + 1}. ${String(ev.file_name || 'Unknown')}\n   Type: ${cfg.label} | Date: ${dateStr}\n   ${String(desc || '—')}`;
-      }).join("\n\n");
+    console.log('DASHBOARD PRINT CLICKED', { tab: 'evidence', caseId });
+    if (!sorted || sorted.length === 0) {
+      alert('No evidence files to export.');
+      return;
+    }
+    const body = sorted.map((ev, i) => {
+      const cfg = typeConfig[ev.file_type] || typeConfig.other;
+      const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMMM yyyy") : "—";
+      const desc = ev.description || ev.extracted_data?.document_summary || "—";
+      return `${i + 1}. ${ev.file_name || 'Unknown'}\nType: ${cfg.label} | Date: ${dateStr}\n${desc}`;
+    }).join("\n\n");
 
-      const pdfBlob = await generateChaosDocumentPDF({
+    try {
+      console.log('DASHBOARD PDF GENERATOR START', { type: 'evidence' });
+      const blob = await generateChaosDocumentPDF({
         documentType: 'general',
         title: 'Evidence Index',
-        body: String(`EVIDENCE VAULT (${sorted.length} files)\n\n${body}` || '').trim(),
+        body: `EVIDENCE VAULT (${sorted.length} files)\n\n${body}`,
         includeHeader: true,
         includeFooter: true,
       });
-
-      if (!pdfBlob || pdfBlob.size === 0) {
-        throw new Error('Generated PDF is empty');
-      }
-
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      downloadPDFBlob(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      console.log('PDF GENERATED', { type: 'evidence' });
       toast.success('Evidence index PDF downloaded');
     } catch (error) {
-      console.error('[EvidenceVault] PDF generation failed:', error);
-      toast.error('PDF generation failed: ' + error.message);
+      console.error('PDF FAILED', error);
+      alert('PDF failed: ' + error.message);
     }
   };
 
