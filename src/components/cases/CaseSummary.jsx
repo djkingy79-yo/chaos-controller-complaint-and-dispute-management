@@ -81,20 +81,22 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     const html = `<!DOCTYPE html><html><head>
       <title>Case Summary — ${caseItem.title}</title>
       <style>
-        @page { margin: 1.5in; size: A4; }
-        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-        body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-        h1.section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; }
-        h2.section-title { font-size: 12pt; font-weight: bold; margin: 10pt 0 6pt 0; color: #000; }
-        .summary-box { background: white; border: none; padding: 0; margin-bottom: 10pt; }
+        @page { margin: 25mm 25mm 25mm 25mm; size: A4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        @media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; } nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; } a[href]:after, a[href] { content: none !important; display: none !important; } }
+        html, body { margin: 0; padding: 0; background: white; width: 100%; }
+        body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+        .section-title { font-size: 13pt; font-weight: bold; margin: 12pt 0 8pt 0; color: #000; }
+        .summary-box { background: white; border: none; padding: 0; margin-bottom: 10pt; width: 100%; }
         .summary-row td { border: none; padding: 3pt 6pt 3pt 0; font-size: 10pt; color: #000; }
         .summary-row td:first-child { color: #000; font-style: normal; white-space: nowrap; width: 35%; font-weight: bold; }
         .summary-row td:last-child { font-weight: normal; }
+        .print-content { width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; margin-top: 10pt; font-size: 10pt; }
         th { background: white; text-align: left; padding: 4pt 6pt; font-weight: bold; border-bottom: 1px solid #000; font-size: 10pt; color: #000; }
         td { padding: 3pt 6pt; border-bottom: none; vertical-align: top; font-size: 10pt; color: #000; }
         </style>
         </head><body>
+        <div class="print-content">
         <div class="section-title" style="font-size:16pt;margin-bottom:14pt;">Case Summary</div>
         <div class="section-title" style="font-size:13pt;margin-bottom:16pt;">${caseItem.title}</div>
 
@@ -111,6 +113,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
           <tr><td>Escalation Body</td><td>${caseItem.escalation_body || "—"}</td></tr>
         </tbody>
         </table>
+        </div>
         </div>
 
         ${caseItem.issue_summary ? `<div class="section" style="margin-top:14pt;">
