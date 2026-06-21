@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
         ? `⚠️ URGENT: Deadline ${urgencyLabel} — ${deadline.title}`
         : `📅 Deadline Reminder: ${urgencyLabel} — ${deadline.title}`;
       
-      const emailBody = `Hi ${caseOwner.full_name || "there"},
+      const emailBody = `Hi ${caseOwner.full_name || "there"},`
 
 This is an automated reminder from Chaos Controller™.
 

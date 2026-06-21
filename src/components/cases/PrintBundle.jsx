@@ -76,7 +76,7 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   </head><body>
     <div class="letter-page">
       <div class="letterhead-header"></div>
-      <div class="letter-content">${firstPageLines.map(line => `<p>${line || '&nbsp;'}</p>`).join('')}</div>
+      <div class="letter-content" style="white-space: pre-wrap;">${content.replace(/<[^>]*>/g, '')}</div>
     </div>
     ${continuationHTML}
   </body></html>`);
@@ -562,7 +562,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
     return `
     <div class="page">
     <div class="section-title">${ld.label}</div>
-    <div style="margin-top:6pt;">${letterLines.map(line => `<p style="margin:0 0 6pt 0;font-size:11pt;line-height:1.5">${line || '&nbsp;'}</p>`).join('')}</div>
+    <pre style="margin-top:6pt;font-size:10pt;line-height:1.2;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;">${(caseItem[ld.field] || '').replace(/<[^>]*>/g, '')}</pre>
     </div>`;
     }).join("")}
     

@@ -17,9 +17,9 @@ function htmlEmail(bodyHtml) {
 <tr><td style="padding:28px 28px 20px 28px;color:#333333;font-size:14px;line-height:1.7;">
 ${bodyHtml}
 </td></tr>
-<tr><td style="background:#f9f9f9;border-top:1px solid #e0e0e0;padding:16px 24px;text-align:center;color:#666666;font-size:11px;">
-Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#0066cc;text-decoration:none;">chaoscontroller.com.au</a>
-</td></tr>
+<tr><td style="background:#000000;border-top:1px solid #e0e0e0;padding:16px 24px;text-align:center;color:#ffffff;font-size:11px;">
+  Chaos Controller™ &mdash; AI-Powered Consumer Advocacy &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#FFD700;text-decoration:none;">chaoscontroller.com.au</a>
+  </td></tr>
 </table>
 </td></tr>
 </table></body></html>`;
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
           </div>`).join('')}`;
 
       const html = htmlEmail(`
-        <p>Hi <strong style="color:#fff;">${user.full_name || 'there'}</strong>,</p>
+        <p>Hi <strong>${user.full_name || 'there'}</strong>,</p>
         <p>Here's your daily briefing from Chaos Controller™.</p>
         <p style="color:#FFD700;font-weight:bold;margin:20px 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:1px;">Today's Deadlines &mdash; ${todayLabel}</p>
         ${todayRowsHtml}

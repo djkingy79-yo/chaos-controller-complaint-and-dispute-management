@@ -119,7 +119,7 @@ function buildSummaryHTML(caseItem, evidence, events) {
     ${LETTER_DEFS.filter(ld => caseItem[ld.field]).map((ld, idx) => `
     <div class="section" style="page-break-before:always;margin-top:20pt;">
       <div class="section-title">${ld.label}</div>
-      <div style="font-size:10.5pt;line-height:1.2;font-family:'Times New Roman',Times,serif;">${caseItem[ld.field].split('\n').map(l => '<p style="margin:0 0 3pt 0;">' + (l || '&nbsp;') + '</p>').join('')}</div>
+      <pre style="font-size:10pt;line-height:1.2;font-family:'Times New Roman',Times,serif;white-space:pre-wrap;">${(caseItem[ld.field] || '').replace(/<[^>]*>/g, '')}</pre>
     </div>`).join("")}
     </div>
   </body></html>`;
@@ -162,7 +162,7 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
           <div class="letterhead-header"></div>
           <div style="padding:0 25mm 20mm 25mm;">
           <div class="header" style="font-size:12pt;font-weight:bold;color:#000;margin-bottom:10pt;border-bottom:1px solid #000;padding-bottom:4pt;">${ld.label}</div>
-          <div class="content">${caseItem[ld.field].split('\n').map(l => '<p style="margin:0 0 8pt 0;">' + (l || '&nbsp;') + '</p>').join('')}</div>
+          <pre class="content">${(caseItem[ld.field] || '').replace(/<[^>]*>/g, '')}</pre>
           </div>
         </body></html>`;
         lettersFolder.file(`${i + 1}_${ld.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.html`, letterHTML);

@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 <html>
 <head>
   <style>
-    body { font-family: 'Times New Roman', Times, serif; line-height: 1.2; color: #000; background: white; }
+    body { font-family: 'Times New Roman', Times, serif; line-height: 1.2; color: #000; background: white; white-space: pre-wrap; }
     .letterhead-header { width: 100%; height: 80px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
     .content { padding: 0 25mm 20mm 25mm; background: white; }
     .header-section { margin-bottom: 16pt; }
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: userEmail,
       subject: subject,
-      body: body.replace(/<[^>]*>/g, ''), // Strip HTML for plain text
+      body: body,
       from_name: "Chaos Controller™"
     });
     console.log('Monthly report sent');
