@@ -85,7 +85,9 @@ export function openPrintWindow(title, bodyHtml, customCss = '') {
     <title>${title}</title>
     <style>${PRINT_CSS}${customCss}</style>
   </head><body>
+    <div class="letterhead-header"></div>
     ${bodyHtml}
+    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   win.focus();
@@ -112,7 +114,9 @@ export function buildPrintDocument({ title, content, contentType = 'pre', custom
     <title>${title}</title>
     <style>${PRINT_CSS}${customCss}</style>
   </head><body>
+    <div class="letterhead-header"></div>
     ${contentTag}
+    <div class="letterhead-footer"></div>
   </body></html>`;
 }
 
@@ -131,10 +135,12 @@ export function printLetter(title, letterContent, continuationPages = []) {
   const continuationHTML = continuationPages.length > 0 
     ? continuationPages.map(chunk => `
         <div class="letter-continuation" style="page-break-before:always;min-height:297mm;">
+          <div class="letterhead-header"></div>
           <pre style="margin:0 25mm;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${chunk}</pre>
         </div>`).join('')
     : remainingLines.length > 0 ? `
         <div class="letter-continuation" style="page-break-before:always;min-height:297mm;">
+          <div class="letterhead-header"></div>
           <pre style="margin:0 25mm;white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${remainingLines.join('\n')}</pre>
         </div>` 
     : '';
@@ -149,7 +155,9 @@ export function printLetter(title, letterContent, continuationPages = []) {
     </style>
   </head><body>
     <div class="letter-page">
+      <div class="letterhead-header"></div>
       <pre class="print-content" style="white-space:pre-wrap;margin:0 25mm;">${firstPageLines.join('\n')}</pre>
+      <div class="letterhead-footer"></div>
     </div>
     ${continuationHTML}
   </body></html>`);
@@ -171,11 +179,13 @@ export function printTableDocument({ title, heading, subheading = '', tableRows 
     <title>${title}</title>
     <style>${PRINT_CSS}</style>
   </head><body>
+    <div class="letterhead-header"></div>
     <div class="print-content" style="margin:0 25mm;">
       <h1>${heading}</h1>
       ${subheading ? `<h2>${subheading}</h2>` : ''}
       <table>${tableRows}</table>
     </div>
+    <div class="letterhead-footer"></div>
   </body></html>`);
   win.document.close();
   win.focus();
