@@ -12,6 +12,10 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
   const [showDialog, setShowDialog] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
 
+  if (!caseItem) {
+    return null;
+  }
+
   const handleGenerateSummary = async () => {
     setGenerating(true);
     setElapsedTime(0);
