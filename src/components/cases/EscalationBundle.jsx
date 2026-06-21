@@ -424,7 +424,7 @@ export default function EscalationBundle({ caseItem, evidence, events }) {
       letterLines.forEach((line) => {
         if (y > pageH - 18) { addPageFooter(doc, pageNum++); doc.addPage(); y = 14; }
         doc.text(line, margin, y);
-        y += 5.5;
+        y += 6.5;
       });
 
       addPageFooter(doc, pageNum++);
