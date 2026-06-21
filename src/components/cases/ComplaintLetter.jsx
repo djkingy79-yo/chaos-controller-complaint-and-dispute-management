@@ -159,7 +159,7 @@ CASE DETAILS:
     const continuationHTML = continuationPages.map((chunk) => `
       <div class="letter-continuation">
         <div class="continuation-header"></div>
-        <div class="continuation-content">${chunk.split('\n').map(line => `<p style="margin:10pt 0;min-height:18pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="continuation-content">${chunk.split('\n').map(line => `<p style="margin:0 0 4pt 0;min-height:12pt;line-height:1.3;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
       </div>
     `).join('');
     const win = window.open("", "_blank");
@@ -306,10 +306,10 @@ CASE DETAILS:
                 onChange={(e) => setLetter(e.target.value)}
                 rows={22}
                 className="font-body bg-white text-slate-900 w-full"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6" }}
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3" }}
               />
             ) : (
-              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: 0, color: "#000" }}>
+              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3", margin: 0, color: "#000" }}>
                 {letter.split('\n').map((line, i) => (
                   <p key={i} style={{ margin: '0 0 4pt 0', minHeight: '12pt' }}>{line || '\u00A0'}</p>
                 ))}
