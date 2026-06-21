@@ -244,8 +244,8 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
       .letterhead-header { width: 100%; height: 180px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
       .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
-      .letter-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
-      .letter-content p { margin: 0 0 10pt 0; min-height: 18pt; line-height: 1.6; }
+      .letter-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.3; }
+      .letter-content p { margin: 0 0 4pt 0; min-height: 12pt; line-height: 1.3; }
       .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
       .continuation-header { width: 100%; height: 40px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
       .continuation-content { padding: 0 25mm 25mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
@@ -315,7 +315,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
           {/* Smaller professional letterhead banner — page 1 only */}
           <div className="letterhead-banner" style={{ height: '80px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', margin: '0 auto 20pt auto' }}></div>
           {/* Letter body — 1.5 inch margins, Times New Roman 11pt, normal spacing */}
-          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", color: "#000", marginTop: '0', paddingTop: '0' }}>
+          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3", color: "#000", marginTop: '0', paddingTop: '0' }}>
             {editing ? (
               <Textarea
                 value={text}
@@ -327,7 +327,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
             ) : (
               <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: 0, color: "#000" }}>
                 {text.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '0 0 10pt 0', minHeight: '18pt', fontSize: '11pt' }}>{line || '\u00A0'}</p>
+                  <p key={i} style={{ margin: '0 0 4pt 0', minHeight: '12pt', fontSize: '10pt' }}>{line || '\u00A0'}</p>
                 ))}
               </div>
             )}

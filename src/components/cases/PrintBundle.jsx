@@ -64,8 +64,8 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
     .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
     .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
     .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
-    .letter-content { position: relative; padding: 0 25mm 20mm 25mm; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; width: 100%; }
-    .letter-content p { margin: 0 0 10pt 0; min-height: 18pt; font-size: 11pt; }
+    .letter-content { position: relative; padding: 0 25mm 20mm 25mm; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.3; width: 100%; }
+    .letter-content p { margin: 0 0 4pt 0; min-height: 12pt; font-size: 10pt; }
     .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
     .continuation-header { width: 100%; height: 40px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; margin-bottom: 10pt; }
     .continuation-content { padding: 0 25mm 25mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
@@ -567,7 +567,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       return `
     <div class="page">
       <div class="section-title">${ld.label}</div>
-      <div style="margin-top:12pt;">${letterLines.map(line => `<p style="margin:0 0 10pt 0">${line || '&nbsp;'}</p>`).join('')}</div>
+      <div style="margin-top:6pt;">${letterLines.map(line => `<p style="margin:0 0 4pt 0;font-size:10pt;line-height:1.3">${line || '&nbsp;'}</p>`).join('')}</div>
     </div>`;
     }).join("")}
     

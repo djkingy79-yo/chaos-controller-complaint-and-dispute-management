@@ -206,29 +206,29 @@ CASE DETAILS:
                 backgroundColor: '#ffffff'
               }}
             ></div>
-            <div style={{ padding: '0 25mm 0 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", color: "#000" }}>
-              <p style={{ fontSize: '11pt', margin: '0 0 12pt 0', textAlign: 'left', fontWeight: 'bold' }}>{format(new Date(), "d MMMM yyyy")}</p>
+            <div style={{ padding: '0 25mm 0 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3", color: "#000" }}>
+              <p style={{ fontSize: '10pt', margin: '0 0 6pt 0', textAlign: 'left', fontWeight: 'bold' }}>{format(new Date(), "d MMMM yyyy")}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12pt' }}>
                 <div style={{ textAlign: 'left', minWidth: '45%' }}>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>The Complaints Manager</p>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>NRMA Insurance</p>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>GPO Box 438</p>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>Sydney NSW 2001</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>The Complaints Manager</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>NRMA Insurance</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>GPO Box 438</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>Sydney NSW 2001</p>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '45%' }}>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>Mick Gallagher</p>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>14 The Road</p>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>Penrith 2750</p>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>Email: Djkingy79@gmail.com</p>
-                  <p style={{ margin: '0', lineHeight: '1.6', fontSize: '11pt' }}>Mobile: 0413572850</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>Mick Gallagher</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>14 The Road</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>Penrith 2750</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>Email: Djkingy79@gmail.com</p>
+                  <p style={{ margin: '0', lineHeight: '1.3', fontSize: '10pt' }}>Mobile: 0413572850</p>
                 </div>
               </div>
-              <p style={{ margin: '12pt 0 8pt 0', fontWeight: 'bold', fontSize: '11pt' }}>Re: Formal Complaint — Account NRMA09887</p>
-              <p style={{ margin: '0 0 10pt 0', fontSize: '11pt' }}>Dear Sir/Madam,</p>
-              <p style={{ margin: '0 0 10pt 0', fontSize: '11pt' }}>I am writing to formally lodge a complaint regarding...</p>
-              <p style={{ margin: '0 0 10pt 0', fontSize: '11pt', color: '#666', fontStyle: 'italic' }}>Letter body continues...</p>
-              <p style={{ margin: '0 0 14pt 0', fontSize: '11pt' }}>Yours faithfully,</p>
-              <p style={{ margin: '0 0 10pt 0', fontSize: '11pt' }}>Mick Gallagher</p>
+              <p style={{ margin: '6pt 0 4pt 0', fontWeight: 'bold', fontSize: '10pt' }}>Re: Formal Complaint — Account NRMA09887</p>
+              <p style={{ margin: '4pt 0', fontSize: '10pt' }}>Dear Sir/Madam,</p>
+              <p style={{ margin: '4pt 0', fontSize: '10pt' }}>I am writing to formally lodge a complaint regarding...</p>
+              <p style={{ margin: '4pt 0', fontSize: '10pt', color: '#666', fontStyle: 'italic' }}>Letter body continues...</p>
+              <p style={{ margin: '0 0 6pt 0', fontSize: '10pt' }}>Yours faithfully,</p>
+              <p style={{ margin: '0 0 4pt 0', fontSize: '10pt' }}>Mick Gallagher</p>
             </div>
             <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
           </div>
@@ -299,7 +299,7 @@ CASE DETAILS:
               marginBottom: '0'
             }}
           ></div>
-          <div className="bg-white" style={{ padding: '0 25mm 20mm 25mm', marginTop: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", color: "#000" }}>
+          <div className="bg-white" style={{ padding: '0 25mm 20mm 25mm', marginTop: '0', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3", color: "#000" }}>
             {editing ? (
               <Textarea
                 value={letter}
@@ -311,7 +311,7 @@ CASE DETAILS:
             ) : (
               <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.6", margin: 0, color: "#000" }}>
                 {letter.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '0 0 10pt 0', minHeight: '18pt' }}>{line || '\u00A0'}</p>
+                  <p key={i} style={{ margin: '0 0 4pt 0', minHeight: '12pt' }}>{line || '\u00A0'}</p>
                 ))}
               </div>
             )}
