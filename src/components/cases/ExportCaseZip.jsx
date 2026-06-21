@@ -3,7 +3,8 @@ import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, Printer } from "lucide-react";
 import { format } from "date-fns";
-import { DOCUMENT_CSS, LETTERHEAD_URL, FOOTER_URL } from "@/lib/documentFormatEngine";
+import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { DOCUMENT_CSS } from "@/lib/printUtilities";
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },
@@ -132,19 +133,16 @@ function openPrintPreview(caseItem, evidence, events) {
   setTimeout(() => { win.print(); win.close(); }, 500);
 }
 
-// Helper to build letter HTML for ZIP export
-function buildLetterHTML(title, content) {
+// Helper to generate letter PDF blob using unified generator
+async function generateLetterPDF(title, content) {
   const cleanContent = content.replace(/<[^>]*>/g, '');
-  return `<!DOCTYPE html><html><head><title>${title}</title>
-  <style>
-    ${DOCUMENT_CSS}
-    .content { white-space: pre-wrap; word-wrap: break-word; font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; width: 100%; max-width: 100%; margin: 0; padding: 0 17.5mm; box-sizing: border-box; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content">${cleanContent}</div>
-    <div class="letterhead-footer"></div>
-  </body></html>`;
+  return await generateChaosDocumentPDF({
+    documentType: 'letter',
+    title: title,
+    body: cleanContent,
+    includeHeader: true,
+    includeFooter: true,
+  });
 }
 
 export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) {
@@ -157,17 +155,25 @@ export default function ExportCaseZip({ caseItem, evidence = [], events = [] }) 
     const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
     const now = new Date().toLocaleString("en-AU");
 
-    // 1. HTML summary (PDF-style view)
+    console.log('[ExportZIP] Starting export...');
+
+    // 1. HTML summary (for browser viewing/printing)
     zip.file("01_case_summary.html", buildSummaryHTML(caseItem, evidence, events));
 
-    // 2. Individual letters as HTML
+    // 2. Individual letters as PDF (using unified generator)
     const lettersFolder = zip.folder("letters");
-    LETTER_DEFS.forEach((ld, i) => {
+    for (const ld of LETTER_DEFS) {
       if (caseItem[ld.field]) {
-        const letterHTML = buildLetterHTML(ld.label, caseItem[ld.field]);
-        lettersFolder.file(`${i + 1}_${ld.label.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.html`, letterHTML);
+        try {
+          console.log('[ExportZIP] Generating PDF for:', ld.label);
+          const pdfBlob = await generateLetterPDF(ld.label, caseItem[ld.field]);
+          const safeLabel = ld.label.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+          lettersFolder.file(`${safeLabel}.pdf`, pdfBlob);
+        } catch (err) {
+          console.error('[ExportZIP] Letter PDF failed:', ld.label, err);
+        }
       }
-    });
+    }
 
     // 3. Timeline CSV
     if (events.length > 0) {
