@@ -47,32 +47,38 @@ Deno.serve(async (req) => {
     const portalUrl = `https://chaoscontroller.com.au/shared-case/${token}`;
 
     // Send invite email to merchant
-    try {
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: recipientEmail,
-        subject: `Shared Dispute Case: "${caseItem.title}"`,
-        body: `Dear ${recipientName || 'Representative'},
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      to: recipientEmail,
+      subject: `📋 Shared Dispute Case: "${caseItem.title}" — Action May Be Required`,
+      body: `Dear ${recipientName || 'Representative'},
 
-You have been invited to view a formal dispute case submitted via Chaos Controller.
+You have been invited to view a formal dispute case submitted via Chaos Controller™.
 
-CASE DETAILS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CASE DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 Case Reference: ${caseItem.title}
 Organisation: ${caseItem.organisation_name || 'N/A'}
 Category: ${caseItem.category ? caseItem.category.charAt(0).toUpperCase() + caseItem.category.slice(1) : 'N/A'}
-Status: ${caseItem.status?.replace(/_/g, ' ').toUpperCase() || 'ACTIVE'}
+Current Status: ${caseItem.status?.replace(/_/g, ' ').toUpperCase() || 'ACTIVE'}
 
-Access the case portal: ${portalUrl}
+This shared portal allows you to:
+• View the full case status and progress
+• See the case timeline and all documented events
+• Review evidence categories and key deadlines
+• Track checklist completion
 
-This link provides read-only access. You will receive updates when the case status changes.
+ACCESS THE CASE PORTAL:
+${portalUrl}
 
-Chaos Controller - AI-Powered Consumer Advocacy
-This is an automated notification. Do not reply.`,
-        from_name: 'Chaos Controller'
-      });
-    } catch (emailError) {
-      console.error('Email send failed:', emailError.message);
-      // Continue anyway - share was created successfully
-    }
+This link is unique and provides read-only access to this case. You will receive updates when the case status changes.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Chaos Controller™ — AI-Powered Consumer Advocacy
+This is an automated notification. Do not reply to this email.`,
+      from_name: 'Chaos Controller™'
+    });
 
     return Response.json({ success: true, token, portalUrl, shareId: share.id });
   } catch (error) {

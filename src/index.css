@@ -96,22 +96,6 @@
   body {
     @apply bg-background text-foreground font-body;
   }
-  /* Mobile document layout enforcement */
-  h1, h2, h3, h4, h5, h6 {
-    font-size: 24px !important;
-    word-break: break-word;
-    margin-bottom: 16px;
-  }
-  p, span, div, li, td, th, label, input, textarea {
-    font-size: 16px !important;
-    word-break: break-word;
-    line-height: 1.5;
-  }
-  input, textarea {
-    max-width: 100%;
-    word-break: break-word;
-    white-space: normal;
-  }
 }
 
 @layer utilities {
@@ -121,66 +105,20 @@
 }
 
 @media print {
-  /* Force standard paper format */
   @page {
-    size: A4 portrait;
-    margin: 20mm;
+    margin: 25mm 25mm 25mm 25mm;
+    size: A4;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  
-  /* Typography: 12pt body, single spacing */
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-    font-size: 12pt !important;
-    line-height: 1.2 !important;
+  @page:first {
+    margin: 25mm 25mm 25mm 25mm;
   }
   
-  /* Paragraph spacing: single line (12pt) */
-  p {
-    margin: 0 0 12pt 0 !important;
-    padding: 0 !important;
-  }
-  
-  /* Date block: first element, before addresses */
-  .date-block {
-    display: block;
-    margin-bottom: 12pt;
-  }
-  
-  /* Sender address: right-aligned */
-  .sender-address {
-    text-align: right !important;
-    margin-left: auto !important;
-    width: fit-content;
-  }
-  
-  /* Receiver address: left-aligned */
-  .receiver-address {
-    text-align: left !important;
-    margin-right: auto !important;
-  }
-  
-  /* Logo header: full-width at top */
-  .logo-header {
-    display: block;
-    width: 100%;
-    margin-bottom: 20mm;
-  }
-  
-  /* Logo footer: fixed at bottom */
-  .logo-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-  }
-  
-  /* Hide interactive web components */
-  nav, header, footer, button, .sidebar, .agent-chat,
-  .no-print, [role="button"], .print\\:hidden,
-  .navbar, .top-nav, .bottom-nav, .mobile-nav,
+  /* Hide ALL app chrome - maximum aggression */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  nav, header, footer, aside, .no-print, button, [role="button"], .print\\:hidden,
+  .sidebar, .navbar, .top-nav, .bottom-nav, .mobile-nav,
   [class*="nav"], [class*="header"], [class*="footer"],
   [class*="sidebar"], [class*="command-center"], [class*="banner"],
   iframe, .iframe-container, .browser-chrome, .letterhead-banner,
@@ -193,34 +131,28 @@
     padding: 0 !important;
   }
   
-  /* Stretch main document to paper width */
-  .document-container, main, .main-content,
-  .print\\:visible, .letter-page, .print-content, pre {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: block !important;
-    visibility: visible !important;
-  }
-  
-  /* Hide all links and URLs */
-  a[href]:after, a[href] { 
-    content: none !important; 
-    text-decoration: none !important; 
-    color: #000 !important; 
-    display: none !important; 
-  }
+  /* Hide all links and URLs - no raw URL text */
+  a[href]:after, a[href] { content: none !important; text-decoration: none !important; color: #000 !important; display: none !important; }
   
   /* Hide browser print headers/footers */
+  @page { margin-top: 25mm; margin-bottom: 25mm; margin-left: 25mm; margin-right: 25mm; }
   html { -webkit-print-header: none !important; -webkit-print-footer: none !important; }
   body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
   
-  /* Force 20mm content margins */
-  .letter-content, .print-content, pre, main, .main-content, .document-container {
-    margin-left: 20mm !important;
-    margin-right: 20mm !important;
+  /* Show only print content */
+  .print\\:visible, .letter-page, .print-content, pre { display: block !important; visibility: visible !important; }
+  
+  /* Force white background, no banners */
+  body, html, .letter-page, .letter-content { 
+    background: white !important; 
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Force 25mm content margins */
+  .letter-content, .print-content, pre {
+    margin-left: 25mm !important;
+    margin-right: 25mm !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
     width: auto !important;

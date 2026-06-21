@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-async function graphRequest(accessToken, path, options = {}, retryCount = 0) {
+async function graphRequest(accessToken, path, options = {}) {
   const res = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
     ...options,
     headers: {
@@ -9,11 +9,6 @@ async function graphRequest(accessToken, path, options = {}, retryCount = 0) {
       ...(options.headers || {})
     },
   });
-  if (res.status === 429 && retryCount < 3) {
-    const retryAfter = parseInt(res.headers.get('Retry-After')) || Math.pow(2, retryCount);
-    await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-    return graphRequest(accessToken, path, options, retryCount + 1);
-  }
   if (!res.ok) throw new Error(`Graph API error: ${res.status} ${await res.text()}`);
   const text = await res.text();
   return text ? JSON.parse(text) : null;
@@ -66,7 +61,6 @@ async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItem
       categories: ['Chaos Controller'],
       importance: dl.deadline_type === 'tribunal_date' ? 'high' : 'normal'
     };
-    await new Promise(resolve => setTimeout(resolve, 500));
     await graphRequest(accessToken, '/me/events', { method: 'POST', body: JSON.stringify(event) });
     synced.push({ type: 'deadline', title: dl.title, case: caseItem.title });
   }
@@ -90,7 +84,6 @@ async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItem
       reminderMinutesBeforeStart: 0,
       categories: ['Chaos Controller']
     };
-    await new Promise(resolve => setTimeout(resolve, 500));
     await graphRequest(accessToken, '/me/events', { method: 'POST', body: JSON.stringify(task) });
     synced.push({ type: 'task', title: item.label, case: caseItem.title });
   }
@@ -114,7 +107,6 @@ async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItem
       isReminderOn: true,
       reminderMinutesBeforeStart: 60
     };
-    await new Promise(resolve => setTimeout(resolve, 500));
     await graphRequest(accessToken, '/me/events', { method: 'POST', body: JSON.stringify(calEvent) });
     synced.push({ type: 'action_event', title: ev.title, case: caseItem.title });
   }
