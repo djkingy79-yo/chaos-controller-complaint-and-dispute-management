@@ -58,66 +58,38 @@ Deno.serve(async (req) => {
         <!DOCTYPE html>
         <html>
         <head>
-          <style>
-            body { font-family: 'Inter', Arial, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 30px; border: 2px solid #FFD700; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .logo { width: 60px; height: 60px; margin-bottom: 15px; }
-            h1 { color: #b45309; font-size: 24px; margin: 0 0 10px 0; }
-            .badge { background: #FFD700; color: #000; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
-            .section { background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            .label { color: #666666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-            .value { color: #000000; font-size: 16px; font-weight: bold; }
-            .highlight { color: #b45309; font-size: 20px; }
-            .cta { text-align: center; margin-top: 30px; }
-            .button { background: #FFD700; color: #000; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; }
-            .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
-          </style>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/191cbddd0_Untitleddesign.jpg" alt="Chaos Controller" class="logo" />
-              <h1>New Payment Received</h1>
-              <span class="badge">${payment.plan_name} Plan</span>
-            </div>
-
-            <div class="section">
-              <div class="label">Customer Name</div>
-              <div class="value">${payment.user_name || 'Not provided'}</div>
-            </div>
-
-            <div class="section">
-              <div class="label">Customer Email</div>
-              <div class="value">${payment.user_email}</div>
-            </div>
-
-            <div class="section">
-              <div class="label">Plan Selected</div>
-              <div class="value highlight">${payment.plan_name} — ${payment.amount} AUD</div>
-            </div>
-
-            ${payment.payid_reference ? `
-            <div class="section">
-              <div class="label">Payment Reference</div>
-              <div class="value">${payment.payid_reference || 'Not provided'}</div>
-            </div>
-            ` : ''}
-
-            <div class="section">
-              <div class="label">Submitted Date</div>
-              <div class="value">${new Date(payment.created_date).toLocaleString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-            </div>
-
-            <div class="cta">
-              <a href="https://chaoscontroller.com.au/dashboard" style="background:#FFD700;color:#000;padding:14px 40px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;font-size:16px;">Verify Payment in Admin Dashboard</a>
-            </div>
-
-            <div class="footer">
-              <p>Chaos Controller™ — Professional Dispute Management</p>
-              <p>This is an automated notification from your payment system.</p>
-            </div>
-          </div>
+        <body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:20px 0;">
+            <tr><td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:2px solid #FFD700;border-radius:12px;overflow:hidden;">
+                <tr><td style="background:#ffffff;padding:16px 24px;border-bottom:2px solid #FFD700;text-align:center;">
+                  <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/191cbddd0_Untitleddesign.jpg" alt="Chaos Controller" style="height:60px;width:auto;display:inline-block;" />
+                </td></tr>
+                <tr><td style="padding:28px 28px 20px 28px;color:#333333;font-size:14px;line-height:1.7;">
+                  <h1 style="color:#b45309;font-size:24px;margin:0 0 20px 0;text-align:center;">New Payment Received</h1>
+                  <span style="background:#FFD700;color:#000;padding:6px 16px;border-radius:20px;font-weight:bold;font-size:12px;display:inline-block;margin-bottom:20px;">${payment.plan_name} Plan</span>
+                  
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:8px;padding:16px;margin:20px 0;">
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;width:140px;">Customer Name</td><td style="color:#000000;font-weight:bold;">${payment.user_name || 'Not provided'}</td></tr>
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Customer Email</td><td style="color:#000000;font-weight:bold;">${payment.user_email}</td></tr>
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Plan Selected</td><td style="color:#b45309;font-weight:bold;font-size:16px;">${payment.plan_name} — ${payment.amount} AUD</td></tr>
+                    ${payment.payid_reference ? `<tr><td style="padding:6px 0;color:#666666;font-size:12px;">Payment Reference</td><td style="color:#000000;font-weight:bold;">${payment.payid_reference}</td></tr>` : ''}
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Submitted Date</td><td style="color:#000000;font-weight:bold;">${new Date(payment.created_date).toLocaleString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td></tr>
+                  </table>
+                  
+                  <div style="text-align:center;margin-top:30px;">
+                    <a href="https://chaoscontroller.com.au/dashboard" style="background:#FFD700;color:#000;padding:14px 40px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;font-size:16px;">Verify Payment in Admin Dashboard</a>
+                  </div>
+                </td></tr>
+                <tr><td style="background:#f9f9f9;border-top:1px solid #e0e0e0;padding:16px 24px;text-align:center;color:#666666;font-size:11px;">
+                  Chaos Controller™ — Professional Dispute Management &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#0066cc;text-decoration:none;">chaoscontroller.com.au</a>
+                </td></tr>
+              </table>
+            </td></tr>
+          </table>
         </body>
         </html>
       `;
@@ -133,81 +105,71 @@ Deno.serve(async (req) => {
         <!DOCTYPE html>
         <html>
         <head>
-          <style>
-            body { font-family: 'Inter', Arial, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 30px; border: 2px solid #16a34a; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .logo { width: 60px; height: 60px; margin-bottom: 15px; }
-            h1 { color: #16a34a; font-size: 24px; margin: 0 0 10px 0; }
-            .badge { background: #16a34a; color: #000; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block; }
-            .section { background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            .label { color: #666666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-            .value { color: #000000; font-size: 16px; font-weight: bold; }
-            .highlight { color: #b45309; font-size: 20px; }
-            .success { color: #16a34a; font-size: 18px; font-weight: bold; }
-            .cta { text-align: center; margin-top: 30px; }
-            .button { background: #16a34a; color: #fff; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; }
-            .features { background: #fef9e7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            .feature-item { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
-            .check { color: #16a34a; font-weight: bold; }
-            .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
-          </style>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/191cbddd0_Untitleddesign.jpg" alt="Chaos Controller" class="logo" />
-              <h1>Payment Verified!</h1>
-              <span class="badge">${payment.plan_name} Activated</span>
-            </div>
-
-            <div class="section">
-              <p class="success">Your ${payment.plan_name} subscription has been successfully activated!</p>
-            </div>
-
-            <div class="section">
-              <div class="label">Subscription Period</div>
-              <div class="value">
-                ${payment.subscription_expiry 
-                  ? `Until ${new Date(payment.subscription_expiry).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
-                  : 'Active'
-                }
-              </div>
-            </div>
-
-            <div class="features">
-              <div class="label" style="color: #b45309;">What's Included in ${payment.plan_name}:</div>
-              ${payment.plan_name === 'Starter' ? `
-                <div class="feature-item"><span class="check">✓</span> 3 active cases</div>
-                <div class="feature-item"><span class="check">✓</span> Evidence vault — 25 files per case</div>
-                <div class="feature-item"><span class="check">✓</span> AI document scanning & data extraction</div>
-                <div class="feature-item"><span class="check">✓</span> 1st Complaint Letter generator</div>
-                <div class="feature-item"><span class="check">✓</span> Automated case timeline builder</div>
-              ` : payment.plan_name === 'Pro' ? `
-                <div class="feature-item"><span class="check">✓</span> Unlimited active cases</div>
-                <div class="feature-item"><span class="check">✓</span> Unlimited evidence files</div>
-                <div class="feature-item"><span class="check">✓</span> All 6 professional letters</div>
-                <div class="feature-item"><span class="check">✓</span> Tribunal-ready escalation bundles</div>
-                <div class="feature-item"><span class="check">✓</span> Google Calendar & Outlook auto-sync</div>
-                <div class="feature-item"><span class="check">✓</span> Smart checklist with proof tracking</div>
-              ` : `
-                <div class="feature-item"><span class="check">✓</span> Everything in Pro — unlimited</div>
-                <div class="feature-item"><span class="check">✓</span> Full ZIP case bundle export</div>
-                <div class="feature-item"><span class="check">✓</span> Chaos Score & case strength analytics</div>
-                <div class="feature-item"><span class="check">✓</span> Priority email support</div>
-                <div class="feature-item"><span class="check">✓</span> Merchant shared case portals</div>
-              `}
-            </div>
-
-            <div class="cta">
-              <a href="https://chaoscontroller.com.au/dashboard" style="background:#16a34a;color:#fff;padding:14px 40px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;font-size:16px;">Go to Your Dashboard</a>
-            </div>
-
-            <div class="footer">
-              <p>Chaos Controller™ — Professional Dispute Management</p>
-              <p>Questions? Reply to this email or contact chaoscontrollerapp@gmail.com</p>
-            </div>
-          </div>
+        <body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:20px 0;">
+            <tr><td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:2px solid #16a34a;border-radius:12px;overflow:hidden;">
+                <tr><td style="background:#ffffff;padding:16px 24px;border-bottom:2px solid #16a34a;text-align:center;">
+                  <img src="https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/191cbddd0_Untitleddesign.jpg" alt="Chaos Controller" style="height:60px;width:auto;display:inline-block;" />
+                </td></tr>
+                <tr><td style="padding:28px 28px 20px 28px;color:#333333;font-size:14px;line-height:1.7;">
+                  <h1 style="color:#16a34a;font-size:24px;margin:0 0 20px 0;text-align:center;">Payment Verified!</h1>
+                  <span style="background:#16a34a;color:#fff;padding:6px 16px;border-radius:20px;font-weight:bold;font-size:12px;display:inline-block;margin-bottom:20px;">${payment.plan_name} Activated</span>
+                  
+                  <p style="color:#16a34a;font-size:18px;font-weight:bold;margin:20px 0;">Your ${payment.plan_name} subscription has been successfully activated!</p>
+                  
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:8px;padding:16px;margin:20px 0;">
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;width:140px;">Subscription Period</td><td style="color:#000000;font-weight:bold;">
+                      ${payment.subscription_expiry 
+                        ? `Until ${new Date(payment.subscription_expiry).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
+                        : 'Active'
+                      }
+                    </td></tr>
+                  </table>
+                  
+                  <div style="background:#fef9e7;border:1px solid #f59e0b;padding:20px;border-radius:8px;margin:20px 0;">
+                    <div style="color:#b45309;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:bold;">What's Included in ${payment.plan_name}:</div>
+                    ${payment.plan_name === 'Starter' ? `
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">3 active cases</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Evidence vault — 25 files per case</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">AI document scanning & data extraction</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">1st Complaint Letter generator</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Automated case timeline builder</td></tr>
+                      </table>
+                    ` : payment.plan_name === 'Pro' ? `
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Unlimited active cases</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Unlimited evidence files</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">All 6 professional letters</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Tribunal-ready escalation bundles</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Google Calendar & Outlook auto-sync</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Smart checklist with proof tracking</td></tr>
+                      </table>
+                    ` : `
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Everything in Pro — unlimited</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Full ZIP case bundle export</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Chaos Score & case strength analytics</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Priority email support</td></tr>
+                        <tr><td style="padding:4px 0;"><span style="color:#16a34a;font-weight:bold;">✓</span></td><td style="padding:4px 0;color:#333333;font-size:13px;">Merchant shared case portals</td></tr>
+                      </table>
+                    `}
+                  </div>
+                  
+                  <div style="text-align:center;margin-top:30px;">
+                    <a href="https://chaoscontroller.com.au/dashboard" style="background:#16a34a;color:#fff;padding:14px 40px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;font-size:16px;">Go to Your Dashboard</a>
+                  </div>
+                </td></tr>
+                <tr><td style="background:#f9f9f9;border-top:1px solid #e0e0e0;padding:16px 24px;text-align:center;color:#666666;font-size:11px;">
+                  Chaos Controller™ — Professional Dispute Management &nbsp;|&nbsp; <a href="https://chaoscontroller.com.au" style="color:#0066cc;text-decoration:none;">chaoscontroller.com.au</a>
+                </td></tr>
+              </table>
+            </td></tr>
+          </table>
         </body>
         </html>
       `;
