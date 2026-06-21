@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const LOGO_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/4bbb85089_3479CB3F-54C5-465C-A6B0-FE8A5B9E8172.png';
+const LOGO_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/191cbddd0_Untitleddesign.jpg';
 
 function htmlEmail(bodyHtml) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
