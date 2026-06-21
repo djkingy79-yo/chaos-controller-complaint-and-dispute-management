@@ -242,7 +242,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
       body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.6; }
       .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
-      .letterhead-header { width: 100%; height: 180px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
+      .letterhead-header { width: 100%; height: 180px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
       .letterhead-footer { display: none !important; }
       .letter-content { padding: 0 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.5; }
       .letter-content p { margin: 0 0 6pt 0; min-height: 14pt; line-height: 1.5; }
