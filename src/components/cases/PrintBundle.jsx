@@ -102,7 +102,7 @@ function printTimeline(caseItem, events) {
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
     .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .letterhead-footer { display: none !important; }
     .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
@@ -164,7 +164,7 @@ function printEvidence(caseItem, evidence) {
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
     .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .letterhead-footer { display: none !important; }
     .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
@@ -221,7 +221,7 @@ function printChecklist(caseItem, evidence, events) {
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
     .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .letterhead-footer { display: none !important; }
     .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
@@ -264,7 +264,7 @@ function printChecklistItems(caseItem, checklistItems) {
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
     .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .letterhead-footer { display: none !important; }
     .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
@@ -312,7 +312,7 @@ function printDeadlineItems(caseItem, deadlines) {
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
     .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
-    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .letterhead-footer { display: none !important; }
     .print-content { padding: 1.5in 1.5in 1.5in 1.5in; }
     h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
     h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; font-style: normal; }
