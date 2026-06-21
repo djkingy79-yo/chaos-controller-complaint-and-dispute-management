@@ -141,12 +141,13 @@ function buildLetterHTML(title, content) {
   const cleanContent = content.replace(/<[^>]*>/g, '');
   return `<!DOCTYPE html><html><head><title>${title}</title>
   <style>
-    @page { margin: 25mm 25mm 25mm 25mm; size: A4; }
-    @media print { body { -webkit-print-header: ""!important; -webkit-print-footer: ""!important; } a[href]:after, a[href] { content: none!important; display: none!important; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .content { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; margin: 0 25mm; padding: 0; }
+    @page { margin: 25mm 25mm 25mm 25mm; size: A4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @media print { * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } html, body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; } nav, header, footer, button, [class*="chrome"], [class*="url"], [class*="timestamp"] { display: none !important; } a[href]:after, a[href] { content: none !important; display: none !important; } }
+    html, body { margin: 0; padding: 0; background: white; width: 100%; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
+    .letterhead-footer { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; margin: 0; padding: 0; }
+    .content { white-space: pre-wrap; word-wrap: break-word; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; width: 100%; max-width: 100%; margin: 0; padding: 8pt 25mm; box-sizing: border-box; }
   </style>
   </head><body>
     <div class="letterhead-header"></div>
