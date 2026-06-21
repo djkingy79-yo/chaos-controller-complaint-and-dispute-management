@@ -116,17 +116,25 @@ export async function generateChaosDocumentPDF({
   // Add header
   if (includeHeader) {
     try {
+      console.log('[PDF Generator] Loading header image...');
       const headerImg = await loadImageAsDataURL(LETTERHEAD_URL);
+      console.log('[PDF Generator] Header loaded, adding to PDF...');
       pdf.addImage(headerImg, 'JPEG', leftMargin, yPos, 175, 0);
       const imgProps = pdf.getImageProperties(headerImg);
       const imgHeight = imgProps.h * (175 / imgProps.w);
+      console.log('[PDF Generator] Header height:', imgHeight, 'mm');
       yPos += Math.min(imgHeight, 22);
+      console.log('[PDF Generator] yPos after header:', yPos);
     } catch (err) {
       console.error('[PDF Generator] Header image failed:', err);
+      yPos += 22; // Reserve space even if image fails
     }
+  } else {
+    yPos += 22;
   }
   
   yPos += 8;
+  console.log('[PDF Generator] Final yPos before content:', yPos);
   
   // Document-specific formatting
   if (documentType === 'letter') {
@@ -176,15 +184,18 @@ export async function generateChaosDocumentPDF({
         if (trimmed && typeof trimmed === 'string' && trimmed.length > 0) {
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(10);
+          pdf.setTextColor(0, 0, 0); // FORCE BLACK TEXT
+          console.log('[PDF Generator] Text color set to BLACK, yPos:', yPos);
           try {
             const textLines = pdf.splitTextToSize(trimmed, contentWidth);
             console.log('[PDF Generator] splitTextToSize result:', textLines);
             if (textLines && Array.isArray(textLines) && textLines.length > 0) {
+              console.log('[PDF Generator] About to call pdf.text() with', textLines.length, 'lines');
               pdf.text(textLines, leftMargin, yPos);
-              console.log('[PDF Generator] text() rendered', textLines.length, 'lines at y:', yPos);
+              console.log('[PDF Generator] ✅ text() SUCCESS - rendered at y:', yPos);
               yPos += textLines.length * 4.5;
             } else {
-              console.log('[PDF Generator] No text lines to render');
+              console.log('[PDF Generator] ⚠️ No text lines to render (empty array)');
               yPos += 3;
             }
           } catch (textErr) {
@@ -370,16 +381,22 @@ export async function generateChaosDocumentPDF({
     }
   }
   
-  // Add footer
+  // Add footer - ALWAYS add on last page
   if (includeFooter) {
     try {
+      console.log('[PDF Generator] Loading footer image...');
       const footerImg = await loadImageAsDataURL(FOOTER_URL);
+      console.log('[PDF Generator] Footer loaded, adding to PDF...');
       const footerProps = pdf.getImageProperties(footerImg);
       const footerHeight = footerProps.h * (175 / footerProps.w);
+      console.log('[PDF Generator] Footer height:', footerHeight, 'mm at Y:', pageHeight - bottomMargin - footerHeight);
       pdf.addImage(footerImg, 'JPEG', leftMargin, pageHeight - bottomMargin - footerHeight, 175, 0);
+      console.log('[PDF Generator] Footer added successfully');
     } catch (err) {
       console.error('[PDF Generator] Footer image failed:', err);
     }
+  } else {
+    console.log('[PDF Generator] Footer disabled');
   }
   
   console.log('[PDF Generator] Complete');
