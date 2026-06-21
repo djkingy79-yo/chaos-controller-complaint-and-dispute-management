@@ -2,34 +2,33 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, RefreshCw, Printer, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, RefreshCw, Printer, Download, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
-import { printDocument, DOCUMENT_CSS } from "@/lib/documentFormatEngine";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { LETTERHEAD_URL, FOOTER_URL } from "@/lib/documentFormatEngine";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
 /**
  * Clean and parse AI-generated markdown into clean document sections
- * This MUST run before saving or rendering to remove all markdown symbols
  */
 function cleanSnapshotContent(md) {
   if (!md) return { sections: [] };
   
-  // Remove all markdown formatting symbols
   let cleaned = md
-    .replace(/\*\*/g, '')           // Remove bold markers
-    .replace(/\*/g, '')             // Remove italic markers
-    .replace(/^##\s+/gm, '')        // Remove ## headings
-    .replace(/^###\s+/gm, '')       // Remove ### headings
-    .replace(/^- /gm, '')           // Remove bullet points
-    .replace(/^\d+\.\s+/gm, '')     // Remove numbered list markers
-    .replace(/`/g, '')              // Remove code ticks
-    .replace(/^>/gm, '')            // Remove blockquote markers
-    .replace(/---/g, '')            // Remove horizontal rules
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove markdown links, keep text
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/^##\s+/gm, '')
+    .replace(/^###\s+/gm, '')
+    .replace(/^- /gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/`/g, '')
+    .replace(/^>/gm, '')
+    .replace(/---/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .trim();
   
-  // Parse into structured sections
   const lines = cleaned.split('\n');
   const sections = [];
   let currentSection = { title: '', content: [] };
@@ -38,7 +37,6 @@ function cleanSnapshotContent(md) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     
-    // Check if this looks like a section heading (short line, no period, capitalised)
     if (trimmed.length < 60 && !trimmed.endsWith('.') && trimmed.match(/^[A-Z][A-Za-z\s&]+$/)) {
       if (currentSection.content.length > 0) {
         sections.push({ ...currentSection, content: currentSection.content.join('\n') });
@@ -57,81 +55,155 @@ function cleanSnapshotContent(md) {
 }
 
 /**
- * Render cleaned sections to HTML for print/PDF
+ * Generate PDF using jsPDF - NO browser print involved
  */
-function renderSectionsToHtml(sections) {
-  if (!sections || sections.length === 0) return '';
-  
-  return sections.map(section => {
-    const titleHtml = section.title 
-      ? `<div style="font-size:11pt;font-weight:bold;margin:14pt 0 6pt 0;color:#000;text-transform:uppercase;letter-spacing:0.5px;">${section.title}</div>`
-      : '';
-    const contentHtml = section.content
-      ? `<div style="font-size:11pt;line-height:1.4;margin:6pt 0;color:#000;white-space:pre-wrap;word-wrap:break-word;">${section.content}</div>`
-      : '';
-    return titleHtml + contentHtml;
-  }).join('');
-}
-
-function printSnapshot(caseItem, snapshot) {
+async function generateSnapshotPDF(caseItem, snapshot) {
   const { sections } = cleanSnapshotContent(snapshot);
   const today = format(new Date(), "d MMMM yyyy");
+  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
   
-  // Build header in exact required format - NO "Generated:", NO ref, NO timestamp
-  const headerHtml = `
-    <div style="font-size:9pt;font-weight:bold;text-transform:uppercase;color:#000;margin-bottom:18pt;letter-spacing:1px;">CHAOS CONTROLLER™</div>
-    <div style="font-size:14pt;font-weight:bold;color:#000;margin-bottom:4pt;">WEEKLY CASE SNAPSHOT</div>
-    <div style="font-size:10pt;color:#000;margin:12pt 0 20pt 0;line-height:1.6;">
-      <div style="margin-bottom:3pt;"><strong>Matter:</strong> ${caseItem.title}</div>
-      <div style="margin-bottom:3pt;"><strong>Against:</strong> ${caseItem.organisation_name || "Organisation"}</div>
-      <div><strong>Date:</strong> ${today}</div>
-    </div>
-    <div style="border-top:1px solid #000;margin-bottom:16pt;"></div>
-  `;
+  // Create A4 PDF (210mm x 297mm)
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const contentWidth = pageWidth - 35; // 17.5mm margins on each side
+  const leftMargin = 17.5;
+  let yPos = 25; // Start position
+  
+  // Load header image
+  const headerImg = await loadImage(LETTERHEAD_URL);
+  if (headerImg) {
+    pdf.addImage(headerImg, 'JPEG', 0, 0, pageWidth, 15);
+  }
+  
+  yPos = 45; // After header
+  
+  // Title block
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(9);
+  pdf.text('CHAOS CONTROLLER™', leftMargin, yPos);
+  yPos += 8;
+  
+  pdf.setFontSize(14);
+  pdf.text('WEEKLY CASE SNAPSHOT', leftMargin, yPos);
+  yPos += 10;
+  
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Matter: ${caseItem.title}`, leftMargin, yPos);
+  yPos += 6;
+  pdf.text(`Against: ${caseItem.organisation_name || "Organisation"}`, leftMargin, yPos);
+  yPos += 6;
+  pdf.text(`Date: ${today}`, leftMargin, yPos);
+  yPos += 8;
+  
+  // Separator line
+  pdf.setDrawColor(0);
+  pdf.setLineWidth(0.3);
+  pdf.line(leftMargin, yPos, pageWidth - leftMargin, yPos);
+  yPos += 10;
   
   // Render sections
-  const contentHtml = sections.map(section => {
-    const titleHtml = section.title 
-      ? `<div style="font-size:11pt;font-weight:bold;color:#000;margin:14pt 0 6pt 0;text-transform:uppercase;letter-spacing:0.5px;">${section.title}</div>`
-      : '';
-    const contentHtml = section.content
-      ? `<div style="font-size:10.5pt;line-height:1.5;color:#000;margin:6pt 0;white-space:pre-wrap;word-wrap:break-word;">${section.content}</div>`
-      : '';
-    return titleHtml + contentHtml;
-  }).join('');
+  pdf.setFont('times', 'normal');
+  pdf.setFontSize(11);
   
-  // Aggressive inline print CSS to kill ALL browser chrome
-  const printCss = `
-    @page { margin: 25mm 25mm 25mm 25mm !important; size: A4 !important; }
-    @media print {
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
-      html { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
-      body { -webkit-print-header: "" !important; -webkit-print-footer: "" !important; }
-      nav, header, footer, aside, button, iframe, [class*="chrome"], [class*="url"], [class*="timestamp"], [class*="browser"], [class*="nav"], [class*="header"], [class*="footer"] { display: none !important; visibility: hidden !important; }
-      a[href]:after, a[href] { content: none !important; display: none !important; }
-      .no-print { display: none !important; }
+  for (const section of sections) {
+    // Check if we need a new page
+    if (yPos > 250) {
+      pdf.addPage();
+      yPos = 25;
+      // Add footer to previous page
+      const footerImg = await loadImage(FOOTER_URL);
+      if (footerImg) {
+        pdf.addImage(footerImg, 'JPEG', 0, pageHeight - 15, pageWidth, 15);
+      }
     }
-  `;
+    
+    // Section title
+    if (section.title) {
+      pdf.setFont('times', 'bold');
+      pdf.setFontSize(11);
+      const titleLines = pdf.splitTextToSize(section.title.toUpperCase(), contentWidth);
+      pdf.text(titleLines, leftMargin, yPos);
+      yPos += (titleLines.length * 5) + 3;
+      pdf.setFont('times', 'normal');
+    }
+    
+    // Section content
+    if (section.content) {
+      const contentLines = pdf.splitTextToSize(section.content, contentWidth);
+      pdf.text(contentLines, leftMargin, yPos);
+      yPos += (contentLines.length * 5) + 6;
+    }
+  }
   
-  const html = `<!DOCTYPE html><html><head>
-    <title>Weekly Snapshot — ${caseItem.title}</title>
-    <style>${DOCUMENT_CSS}${printCss}</style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="document-content">${headerHtml}${contentHtml}</div>
-    <div class="letterhead-footer"></div>
-  </body></html>`;
-  printDocument(html);
+  // Add footer to last page
+  const footerImg = await loadImage(FOOTER_URL);
+  if (footerImg) {
+    pdf.addImage(footerImg, 'JPEG', 0, pageHeight - 15, pageWidth, 15);
+  }
+  
+  return pdf;
+}
+
+/**
+ * Load image and convert to data URL for jsPDF
+ */
+function loadImage(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/jpeg'));
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+/**
+ * Download PDF file
+ */
+function downloadPDF(pdf, filename) {
+  pdf.save(filename);
+}
+
+/**
+ * Open PDF in new window for printing
+ */
+function openPDFForPrint(pdf, filename) {
+  const pdfBlob = pdf.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  const win = window.open(pdfUrl, '_blank');
+  if (win) {
+    win.onload = () => {
+      setTimeout(() => {
+        win.print();
+      }, 500);
+    };
+  }
+  // Clean up after 2 minutes
+  setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
 }
 
 export default function WeeklySnapshot({ caseItem, evidence = [], events = [] }) {
   const [snapshot, setSnapshot] = useState(null);
   const [generatedAt, setGeneratedAt] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
   const [deadlines, setDeadlines] = useState([]);
 
   useEffect(() => {
-    // Load cached snapshot
     try {
       const cached = localStorage.getItem(SNAPSHOT_CACHE_KEY(caseItem.id));
       if (cached) {
@@ -141,7 +213,6 @@ export default function WeeklySnapshot({ caseItem, evidence = [], events = [] })
       }
     } catch (_) {}
 
-    // Load deadlines
     base44.entities.Deadline.filter({ case_id: caseItem.id })
       .then(setDeadlines)
       .catch(() => {});
@@ -233,6 +304,32 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
     setLoading(false);
   };
 
+  const handlePrintPDF = async () => {
+    setPdfGenerating(true);
+    try {
+      const pdf = await generateSnapshotPDF(caseItem, snapshot);
+      const filename = `Weekly_Snapshot_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      openPDFForPrint(pdf, filename);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    setPdfGenerating(true);
+    try {
+      const pdf = await generateSnapshotPDF(caseItem, snapshot);
+      const filename = `Weekly_Snapshot_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      downloadPDF(pdf, filename);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
+
   const upcomingCount = deadlines.filter(d =>
     d.deadline_date && isAfter(new Date(d.deadline_date), new Date()) &&
     isBefore(new Date(d.deadline_date), addDays(new Date(), 14)) && d.status === "pending"
@@ -260,9 +357,28 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
           </div>
           <div className="flex items-center gap-2">
             {snapshot && (
-              <Button variant="outline" size="sm" onClick={() => printSnapshot(caseItem, snapshot)} className="gap-1.5">
-                <Printer className="w-3.5 h-3.5" /> Print
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleDownloadPDF} 
+                  disabled={pdfGenerating}
+                  className="gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" /> 
+                  {pdfGenerating ? 'Generating...' : 'Download PDF'}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handlePrintPDF} 
+                  disabled={pdfGenerating}
+                  className="gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5" /> 
+                  {pdfGenerating ? 'Generating...' : 'Print PDF'}
+                </Button>
+              </>
             )}
             <Button size="sm" onClick={generateSnapshot} disabled={loading} className="gap-1.5">
               {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
