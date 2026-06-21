@@ -168,7 +168,7 @@ CASE DETAILS:
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content" style="padding:0 25mm 20mm 25mm">${firstPageLines.map(line => `<p style="margin:0 0 10pt 0;min-height:18pt;line-height:1.6;font-size:11pt">${line || '&nbsp;'}</p>`).join('')}</div>
+        <div class="letter-content" style="padding:0 25mm 20mm 25mm">${firstPageLines.map(line => `<p style="margin:0 0 4pt 0;min-height:12pt;line-height:1.3;font-size:10pt">${line || '&nbsp;'}</p>`).join('')}</div>
         <div class="letterhead-footer"></div>
       </div>
       ${continuationHTML}
