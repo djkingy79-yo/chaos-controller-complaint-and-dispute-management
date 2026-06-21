@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Printer, Download, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
-import { generateChaosDocumentPDF } from '@/lib/pdfGenerator';
+import { generateChaosDocumentPDF, LETTERHEAD_URL, FOOTER_URL } from '@/lib/pdfGenerator';
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
@@ -180,20 +180,26 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
       
       console.log('[WeeklySnapshot] PDF blob generated:', !!pdfBlob);
       
-      // Open for print
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const win = window.open(pdfUrl, '_blank');
+      
       if (win) {
         win.onload = () => {
-          setTimeout(() => {
-            win.print();
-          }, 500);
+          setTimeout(() => { win.print(); }, 500);
         };
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+      } else {
+        // Popup blocked - download fallback
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = `Weekly_Snapshot_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+        a.click();
+        alert('Popup blocked - PDF downloaded instead');
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
       }
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
     } catch (error) {
-      console.error('[WeeklySnapshot] PDF generation failed:', error);
-      alert('PDF generation failed: ' + error.message);
+      console.error('[WeeklySnapshot] PDF print failed:', error);
+      alert('Print failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
     }
@@ -215,16 +221,17 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
         includeFooter: true,
       });
       
-      // Download
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `Weekly_Snapshot_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('[WeeklySnapshot] PDF download failed:', error);
-      alert('PDF download failed: ' + error.message);
+      alert('Download failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
     }

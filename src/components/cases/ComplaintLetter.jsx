@@ -133,33 +133,46 @@ CRITICAL RULES:
   };
 
   const handlePrintPDF = async () => {
+    console.log('[ComplaintLetter] Print PDF clicked');
     try {
       const cleanContent = letter.replace(/<[^>]*>/g, '');
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
         title: 'Complaint Letter',
-        body: cleanContent,
+        letterContent: cleanContent,
         includeHeader: true,
         includeFooter: true,
       });
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const win = window.open(pdfUrl, '_blank');
       if (win) {
-        setTimeout(() => { win.print(); }, 500);
+        win.onload = () => {
+          setTimeout(() => { win.print(); }, 500);
+        };
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+      } else {
+        // Popup blocked - download fallback
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = `Complaint_Letter_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+        a.click();
+        toast.success('Popup blocked - PDF downloaded');
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
       }
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
     } catch (error) {
-      toast.error('PDF generation failed: ' + error.message);
+      console.error('[ComplaintLetter] Print failed:', error);
+      toast.error('Print failed: ' + error.message);
     }
   };
 
   const handleDownloadPDF = async () => {
+    console.log('[ComplaintLetter] Download PDF clicked');
     try {
       const cleanContent = letter.replace(/<[^>]*>/g, '');
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
         title: 'Complaint Letter',
-        body: cleanContent,
+        letterContent: cleanContent,
         includeHeader: true,
         includeFooter: true,
       });
@@ -167,10 +180,13 @@ CRITICAL RULES:
       const a = document.createElement('a');
       a.href = url;
       a.download = `Complaint_Letter_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      toast.error('PDF download failed: ' + error.message);
+      console.error('[ComplaintLetter] Download failed:', error);
+      toast.error('Download failed: ' + error.message);
     }
   };
 

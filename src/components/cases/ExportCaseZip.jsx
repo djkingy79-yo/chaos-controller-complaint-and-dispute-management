@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, Printer } from "lucide-react";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
 import { DOCUMENT_CSS } from "@/lib/printUtilities";
 
 const LETTER_DEFS = [

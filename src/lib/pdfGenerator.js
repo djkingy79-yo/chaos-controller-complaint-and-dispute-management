@@ -70,6 +70,7 @@ export function cleanForPDF(content) {
  * @param {string} options.body - Main content
  * @param {string} options.closing - Closing (for letters)
  * @param {string} options.signature - Signature block
+ * @param {string} options.letterContent - Pre-formatted letter content (alternative to structured params)
  * @param {Array} options.sections - Array of {title, content} for snapshots/summaries
  * @param {boolean} options.includeHeader - Include Chaos header (default: true)
  * @param {boolean} options.includeFooter - Include Chaos footer (default: true)
@@ -88,11 +89,13 @@ export async function generateChaosDocumentPDF({
   body = '',
   closing = '',
   signature = '',
+  letterContent = '',
   sections = [],
   includeHeader = true,
   includeFooter = true,
 }) {
   console.log('[PDF Generator] Starting:', documentType, title);
+  console.log('[PDF Generator] Params:', { documentType, hasLetterContent: !!letterContent, hasBody: !!body });
   
   const pdf = new jsPDF({
     orientation: 'portrait',
@@ -127,47 +130,90 @@ export async function generateChaosDocumentPDF({
   
   // Document-specific formatting
   if (documentType === 'letter') {
-    // Date
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
-    pdf.text(date, leftMargin, yPos);
-    yPos += 15;
+    console.log('[PDF Generator] Letter mode');
     
-    // Party details
-    const claimantLines = claimant.split('\n').filter(l => l.trim());
-    const recipientLines = recipient.split('\n').filter(l => l.trim());
-    
-    const maxLines = Math.max(claimantLines.length, recipientLines.length);
-    const claimantHeight = maxLines * 5;
-    
-    pdf.text(claimantLines, pageWidth - rightMargin, yPos, { align: 'right' });
-    pdf.text(recipientLines, leftMargin, yPos);
-    yPos += claimantHeight + 10;
-    
-    // RE line
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(reLine, leftMargin, yPos);
-    yPos += 10;
-    
-    // Greeting
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(greeting, leftMargin, yPos);
-    yPos += 10;
-    
-    // Body
-    const cleanBody = cleanForPDF(body);
-    const bodyLines = pdf.splitTextToSize(cleanBody, contentWidth);
-    pdf.text(bodyLines, leftMargin, yPos);
-    yPos += bodyLines.length * 5.5 + 10;
-    
-    // Closing
-    pdf.text(closing, leftMargin, yPos);
-    yPos += 8;
-    
-    // Signature
-    const sigLines = signature.split('\n');
-    pdf.text(sigLines, leftMargin, yPos);
-    yPos += sigLines.length * 5.5 + 10;
+    // If letterContent is provided (pre-formatted), use it directly
+    if (letterContent) {
+      const cleanContent = cleanForPDF(letterContent);
+      const lines = cleanContent.split('\n');
+      console.log('[PDF Generator] Letter content lines:', lines.length);
+      
+      for (const line of lines) {
+        if (yPos > pageHeight - bottomMargin - 30) {
+          if (includeFooter) {
+            try {
+              const footerImg = await loadImageAsDataURL(FOOTER_URL);
+              const footerProps = pdf.getImageProperties(footerImg);
+              const footerHeight = footerProps.h * (175 / footerProps.w);
+              pdf.addImage(footerImg, 'JPEG', leftMargin, pageHeight - bottomMargin - footerHeight, 175, 0);
+            } catch (err) {
+              console.error('[PDF Generator] Footer failed:', err);
+            }
+          }
+          pdf.addPage();
+          yPos = topMargin;
+          if (includeHeader) {
+            try {
+              const headerImg = await loadImageAsDataURL(LETTERHEAD_URL);
+              pdf.addImage(headerImg, 'JPEG', leftMargin, yPos, 175, 0);
+              const imgProps = pdf.getImageProperties(headerImg);
+              const imgHeight = imgProps.h * (175 / imgProps.w);
+              yPos += Math.min(imgHeight, 22);
+            } catch (err) {
+              console.error('[PDF Generator] Header failed:', err);
+            }
+            yPos += 8;
+          }
+        }
+        
+        const trimmed = line.trim();
+        if (trimmed) {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(10);
+          const textLines = pdf.splitTextToSize(trimmed, contentWidth);
+          pdf.text(textLines, leftMargin, yPos);
+          yPos += textLines.length * 4.5;
+        } else {
+          yPos += 3;
+        }
+      }
+    } else {
+      // Structured letter format
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+      pdf.text(date, leftMargin, yPos);
+      yPos += 15;
+      
+      const claimantLines = claimant.split('\n').filter(l => l.trim());
+      const recipientLines = recipient.split('\n').filter(l => l.trim());
+      
+      const maxLines = Math.max(claimantLines.length, recipientLines.length);
+      const claimantHeight = maxLines * 5;
+      
+      pdf.text(claimantLines, pageWidth - rightMargin, yPos, { align: 'right' });
+      pdf.text(recipientLines, leftMargin, yPos);
+      yPos += claimantHeight + 10;
+      
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(reLine, leftMargin, yPos);
+      yPos += 10;
+      
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(greeting, leftMargin, yPos);
+      yPos += 10;
+      
+      const cleanBody = cleanForPDF(body);
+      const bodyLines = pdf.splitTextToSize(cleanBody, contentWidth);
+      pdf.text(bodyLines, leftMargin, yPos);
+      yPos += bodyLines.length * 5.5 + 10;
+      
+      pdf.text(closing, leftMargin, yPos);
+      yPos += 8;
+      
+      const sigLines = signature.split('\n');
+      pdf.text(sigLines, leftMargin, yPos);
+      yPos += sigLines.length * 5.5 + 10;
+    }
     
   } else if (documentType === 'snapshot' || documentType === 'summary') {
     // Title block

@@ -390,50 +390,94 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handlePrintPDF = async () => {
+    console.log('[LetterSuite] Print PDF clicked', letterType.label);
+    console.log('[LetterSuite] Letter exists:', !!text);
+    console.log('[LetterSuite] Case exists:', !!caseItem);
+    console.log('[LetterSuite] generateChaosDocumentPDF:', typeof generateChaosDocumentPDF);
+    
+    if (!text) {
+      toast.error('No letter content to print');
+      return;
+    }
+    
     try {
       const cleanContent = text.replace(/<[^>]*>/g, '');
+      console.log('[LetterSuite] Generating PDF...', cleanContent.length, 'chars');
+      
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
         title: letterType.label,
-        body: cleanContent,
+        letterContent: cleanContent,
         includeHeader: true,
         includeFooter: true,
       });
+      
+      console.log('[LetterSuite] PDF generated', pdfBlob.size, 'bytes');
+      
+      // Try to open print window
       const pdfUrl = URL.createObjectURL(pdfBlob);
       const win = window.open(pdfUrl, '_blank');
+      
       if (win) {
         win.onload = () => {
+          console.log('[LetterSuite] Print window loaded');
           setTimeout(() => {
             win.print();
           }, 500);
         };
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
+      } else {
+        // Popup blocked - fallback to download
+        console.log('[LetterSuite] Popup blocked, downloading instead');
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+        a.click();
+        toast.success('Popup blocked - PDF downloaded instead');
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
       }
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
     } catch (error) {
       console.error('[LetterSuite] PDF print failed:', error);
-      toast.error('PDF generation failed: ' + error.message);
+      toast.error('Print failed: ' + error.message);
     }
   };
 
   const handleDownloadPDF = async () => {
+    console.log('[LetterSuite] Download PDF clicked', letterType.label);
+    console.log('[LetterSuite] Letter exists:', !!text);
+    
+    if (!text) {
+      toast.error('No letter content to download');
+      return;
+    }
+    
     try {
       const cleanContent = text.replace(/<[^>]*>/g, '');
+      console.log('[LetterSuite] Generating PDF...', cleanContent.length, 'chars');
+      
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
         title: letterType.label,
-        body: cleanContent,
+        letterContent: cleanContent,
         includeHeader: true,
         includeFooter: true,
       });
+      
+      console.log('[LetterSuite] PDF generated', pdfBlob.size, 'bytes');
+      
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      console.log('[LetterSuite] Download initiated');
     } catch (error) {
       console.error('[LetterSuite] PDF download failed:', error);
-      toast.error('PDF download failed: ' + error.message);
+      toast.error('Download failed: ' + error.message);
     }
   };
 
