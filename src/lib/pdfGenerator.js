@@ -128,11 +128,14 @@ export async function generateChaosDocumentPDF({
   // Document-specific formatting
   if (documentType === 'letter') {
     // Date - only if provided
-    if (date && date.trim()) {
+    if (date && String(date).trim()) {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(11);
-      pdf.text(String(date).trim(), leftMargin, yPos);
-      yPos += 15;
+      const dateStr = String(date).trim();
+      if (dateStr) {
+        pdf.text(dateStr, leftMargin, yPos);
+        yPos += 15;
+      }
     }
     
     // Party details - only if provided
@@ -146,10 +149,10 @@ export async function generateChaosDocumentPDF({
       const claimantHeight = maxLines * 5;
       
       if (claimantLines.length > 0) {
-        pdf.text(claimantLines, pageWidth - rightMargin, yPos, { align: 'right' });
+        pdf.text(claimantLines, pageWidth - rightMargin, yPos, { align: 'right', angle: 0 });
       }
       if (recipientLines.length > 0) {
-        pdf.text(recipientLines, leftMargin, yPos);
+        pdf.text(recipientLines, leftMargin, yPos, { angle: 0 });
       }
       yPos += claimantHeight + 10;
     }
@@ -158,7 +161,7 @@ export async function generateChaosDocumentPDF({
     const reLineStr = String(reLine || '').trim();
     if (reLineStr) {
       pdf.setFont('helvetica', 'bold');
-      pdf.text(reLineStr, leftMargin, yPos);
+      pdf.text(reLineStr, leftMargin, yPos, { angle: 0 });
       yPos += 10;
     }
     
@@ -166,7 +169,7 @@ export async function generateChaosDocumentPDF({
     const greetingStr = String(greeting || '').trim();
     if (greetingStr) {
       pdf.setFont('helvetica', 'normal');
-      pdf.text(greetingStr, leftMargin, yPos);
+      pdf.text(greetingStr, leftMargin, yPos, { angle: 0 });
       yPos += 10;
     }
     
@@ -174,8 +177,10 @@ export async function generateChaosDocumentPDF({
     const cleanBody = cleanForPDF(body || '');
     if (cleanBody && cleanBody.trim()) {
       const bodyLines = pdf.splitTextToSize(cleanBody, contentWidth);
-      pdf.text(bodyLines, leftMargin, yPos);
-      yPos += bodyLines.length * 5.5 + 10;
+      if (bodyLines && bodyLines.length > 0) {
+        pdf.text(bodyLines, leftMargin, yPos, { angle: 0 });
+        yPos += bodyLines.length * 5.5 + 10;
+      }
     } else {
       console.warn('[PDF Generator] Letter body is empty!');
     }
@@ -183,16 +188,18 @@ export async function generateChaosDocumentPDF({
     // Closing - only if provided
     const closingStr = String(closing || '').trim();
     if (closingStr) {
-      pdf.text(closingStr, leftMargin, yPos);
+      pdf.text(closingStr, leftMargin, yPos, { angle: 0 });
       yPos += 8;
     }
     
     // Signature - only if provided
     const sigStr = String(signature || '').trim();
     if (sigStr) {
-      const sigLines = sigStr.split('\n');
-      pdf.text(sigLines, leftMargin, yPos);
-      yPos += sigLines.length * 5.5 + 10;
+      const sigLines = sigStr.split('\n').filter(l => l.trim());
+      if (sigLines.length > 0) {
+        pdf.text(sigLines, leftMargin, yPos, { angle: 0 });
+        yPos += sigLines.length * 5.5 + 10;
+      }
     }
     
   } else if (documentType === 'snapshot' || documentType === 'summary') {
@@ -200,19 +207,21 @@ export async function generateChaosDocumentPDF({
     const titleStr = String(title || 'Document').trim();
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(14);
-    pdf.text(titleStr.toUpperCase(), leftMargin, yPos);
-    yPos += 8;
+    if (titleStr) {
+      pdf.text(titleStr.toUpperCase(), leftMargin, yPos, { angle: 0 });
+      yPos += 8;
+    }
     
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
     const matterStr = String(matter || '').trim();
     if (matterStr) {
-      pdf.text(`Matter: ${matterStr}`, leftMargin, yPos);
+      pdf.text(`Matter: ${matterStr}`, leftMargin, yPos, { angle: 0 });
       yPos += 6;
     }
     const dateStr = String(date || '').trim();
     if (dateStr) {
-      pdf.text(`Date: ${dateStr}`, leftMargin, yPos);
+      pdf.text(`Date: ${dateStr}`, leftMargin, yPos, { angle: 0 });
       yPos += 6;
     }
     yPos += 3;
@@ -245,17 +254,21 @@ export async function generateChaosDocumentPDF({
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(12);
         const titleLines = pdf.splitTextToSize(sectionTitle.toUpperCase(), contentWidth);
-        pdf.text(titleLines, leftMargin, yPos);
-        yPos += (titleLines.length * 6) + 2;
+        if (titleLines && titleLines.length > 0) {
+          pdf.text(titleLines, leftMargin, yPos, { angle: 0 });
+          yPos += (titleLines.length * 6) + 2;
+        }
         pdf.setFont('helvetica', 'normal');
       }
       
       const sectionContent = String(section.content || '').trim();
       if (sectionContent) {
         const contentLines = pdf.splitTextToSize(sectionContent, contentWidth);
-        pdf.setFontSize(11);
-        pdf.text(contentLines, leftMargin, yPos);
-        yPos += (contentLines.length * 5.5) + 4;
+        if (contentLines && contentLines.length > 0) {
+          pdf.setFontSize(11);
+          pdf.text(contentLines, leftMargin, yPos, { angle: 0 });
+          yPos += (contentLines.length * 5.5) + 4;
+        }
       }
     }
   } else if (documentType === 'general') {
@@ -263,16 +276,20 @@ export async function generateChaosDocumentPDF({
     const titleStr = String(title || 'Document').trim();
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(14);
-    pdf.text(titleStr.toUpperCase(), leftMargin, yPos);
-    yPos += 10;
+    if (titleStr) {
+      pdf.text(titleStr.toUpperCase(), leftMargin, yPos, { angle: 0 });
+      yPos += 10;
+    }
     
     const bodyStr = String(body || '').trim();
     if (bodyStr) {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(11);
       const bodyLines = pdf.splitTextToSize(bodyStr, contentWidth);
-      pdf.text(bodyLines, leftMargin, yPos);
-      yPos += bodyLines.length * 5.5;
+      if (bodyLines && bodyLines.length > 0) {
+        pdf.text(bodyLines, leftMargin, yPos, { angle: 0 });
+        yPos += bodyLines.length * 5.5;
+      }
     }
   }
   
