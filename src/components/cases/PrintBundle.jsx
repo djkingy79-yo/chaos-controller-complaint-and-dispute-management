@@ -51,7 +51,7 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   const continuationHTML = continuationPages.map((chunk, idx) => `
     <div class="letter-continuation">
       <div class="continuation-header"></div>
-      <div class="continuation-content"><pre>${chunk}</pre></div>
+      <div class="continuation-content">${chunk.replace(/\n/g, '<br>')}</div>
     </div>
   `).join('');
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
@@ -60,20 +60,20 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   <style>
     @page { margin: 0; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.6; }
     .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
     .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
     .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
-    .letter-content { position: relative; padding: 1.5in 1.5in 1.5in 1.5in; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; width: 100%; }
+    .letter-content { position: relative; padding: 25mm 25mm 0 25mm; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.6; width: 100%; }
     .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
     .continuation-header { width: 100%; height: 40px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; margin-bottom: 10pt; }
-    .continuation-content { padding: 0 1.5in 1.5in 1.5in; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-    pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.0; margin: 0; color: #000; }
+    .continuation-content { padding: 0 25mm 25mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.6; }
+    p { margin: 6pt 0; min-height: 14pt; }
   </style>
   </head><body>
     <div class="letter-page">
       <div class="letterhead-header"></div>
-      <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
+      <div class="letter-content">${firstPageLines.map(line => `<p>${line || '&nbsp;'}</p>`).join('')}</div>
       <div class="letterhead-footer"></div>
     </div>
     ${continuationHTML}
@@ -427,7 +427,7 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       .toc-num { font-weight: bold; color: #1a1a2e; min-width: 25pt; font-size: 10pt; }
       .toc-title { font-size: 10pt; font-weight: bold; flex: 1; }
       
-      pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.6; margin: 0; }
+      p { margin: 6pt 0; min-height: 14pt; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.6; }
       
       .footer { margin-top: 25pt; padding-top: 6pt; border-top: 0.5pt solid #ccc; font-size: 8pt; color: #888; display: flex; justify-content: space-between; font-family: 'Times New Roman', Times, serif; }
       
@@ -560,11 +560,14 @@ function printBundle(caseItem, evidence, events, checklistItems) {
       </div>
 
       <!-- LETTERS -->
-    ${presentLetters.map((ld, idx) => `
+    ${presentLetters.map((ld, idx) => {
+      const letterLines = (caseItem[ld.field] || '').split('\n');
+      return `
     <div class="page">
       <div class="section-title">${ld.label}</div>
-      <pre style="margin-top:12pt;">${caseItem[ld.field]}</pre>
-    </div>`).join("")}
+      <div style="margin-top:12pt;">${letterLines.map(line => `<p>${line || '&nbsp;'}</p>`).join('')}</div>
+    </div>`;
+    }).join("")}
     
   </body></html>`);
   win.document.close();
