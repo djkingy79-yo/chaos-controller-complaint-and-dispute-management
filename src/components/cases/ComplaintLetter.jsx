@@ -84,13 +84,23 @@ export default function ComplaintLetter({ caseItem }) {
 
   CRITICAL RULES:
   1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
-  2. Use STANDARD BUSINESS LETTER FORMAT with DATE FIRST.
+  2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
 
   FORMATTING REQUIREMENTS:
-  1. FIRST line: TODAY'S DATE in bold - **${today}**
-  2. RIGHT SIDE (below date): Sender's full name, address lines, email, phone (each on separate lines, right-aligned in your mind)
-  3. LEFT SIDE (below date, opposite sender): Complaint handler name, organisation name, complaints address, complaints email
-  4. Then: Re: line, salutation, body, closing
+  1. FIRST line: TODAY'S DATE - ${today} (bold when rendered)
+  2. LEFT SIDE (below date): Sender's full name, address lines, email, phone (each on separate lines)
+  3. RIGHT SIDE (below date, opposite sender): Complaint handler name, organisation name, complaints address, complaints email
+  4. Then: Re: line, salutation, body paragraphs, closing
+  
+  STRUCTURE:
+  - Date first (left aligned)
+  - Sender address (left aligned, below date)
+  - Recipient address (right aligned, opposite sender)
+  - Re: line
+  - Salutation
+  - Body paragraphs
+  - Closing (Yours faithfully,)
+  - Sender name
 
   COMPLAINANT DETAILS:
 - Name: ${client.name || "not provided — omit name line"}
@@ -140,15 +150,19 @@ CASE DETAILS:
       continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
     }
     const continuationHTML = continuationPages.map((chunk, idx) => `
-      <div class="letter-continuation"><pre>${chunk}</pre></div>
+      <div class="letter-continuation">
+        <div class="continuation-header"></div>
+        <div class="continuation-content"><pre>${chunk}</pre></div>
+      </div>
     `).join('');
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head><title>Complaint Letter</title>
     <style>${getLetterPageStyles()}</style>
     </head><body>
       <div class="letter-page">
-        <div class="letterhead-banner"></div>
+        <div class="letterhead-header"></div>
         <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
+        <div class="letterhead-footer"></div>
       </div>
       ${continuationHTML}
     </body></html>`);
@@ -209,7 +223,7 @@ CASE DETAILS:
 
       {/* Letterhead Preview */}
       <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-        <div className="letterhead-banner" style={{ height: '80px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top', marginBottom: '20pt' }}></div>
+        <div className="letterhead-header" style={{ height: '180px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center top' }}></div>
         <div className="px-12 pb-8 bg-white" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
           {editing ? (
             <Textarea
@@ -225,6 +239,7 @@ CASE DETAILS:
             </pre>
           )}
         </div>
+        <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
       </div>
     </div>
   );

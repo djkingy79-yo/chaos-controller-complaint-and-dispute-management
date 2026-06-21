@@ -49,25 +49,32 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
     continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
   }
   const continuationHTML = continuationPages.map((chunk, idx) => `
-    <div class="letter-continuation"><pre>${chunk}</pre></div>
+    <div class="letter-continuation">
+      <div class="continuation-header"></div>
+      <div class="continuation-content"><pre>${chunk}</pre></div>
+    </div>
   `).join('');
   const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head><title>${label} — ${caseItem.title}</title>
   <style>
-    @page { margin: 1.5in; size: A4; }
+    @page { margin: 0; size: A4; }
     @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
     body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
-    .letterhead-banner { width: 100%; height: 80px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/06f2e0b00_E004AFA7-44DA-44FD-BE4D-38601D2B1F03.png'); background-size: contain; background-repeat: no-repeat; background-position: center top; margin-bottom: 20pt; }
     .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
-    .letter-content { position: relative; padding: 0; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; width: 100%; }
-    .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
+    .letterhead-header { width: 100%; height: 180px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; }
+    .letterhead-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center bottom; }
+    .letter-content { position: relative; padding: 1.5in 1.5in 1.5in 1.5in; margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; width: 100%; }
+    .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
+    .continuation-header { width: 100%; height: 40px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: contain; background-repeat: no-repeat; background-position: center top; margin-bottom: 10pt; }
+    .continuation-content { padding: 0 1.5in 1.5in 1.5in; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.0; }
     pre { white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.0; margin: 0; color: #000; }
   </style>
   </head><body>
     <div class="letter-page">
-      <div class="letterhead-banner"></div>
+      <div class="letterhead-header"></div>
       <div class="letter-content"><pre>${firstPageLines.join('\n')}</pre></div>
+      <div class="letterhead-footer"></div>
     </div>
     ${continuationHTML}
   </body></html>`);
