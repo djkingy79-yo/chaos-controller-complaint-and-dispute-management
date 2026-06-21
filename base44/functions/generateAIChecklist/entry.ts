@@ -52,7 +52,7 @@ For each item specify:
 - requires_proof: true/false
 - priority: critical|high|medium|low`;
 
-    const result = await base44.integrations.Core.InvokeLLM({
+    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: {
         type: "object",
