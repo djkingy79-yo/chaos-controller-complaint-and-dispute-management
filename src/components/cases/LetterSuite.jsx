@@ -391,10 +391,21 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
   const handlePrintPDF = async () => {
     try {
-      const cleanContent = text.replace(/<[^>]*>/g, '');
+      if (!text || !text.trim()) {
+        toast.error('No letter content to print');
+        return;
+      }
+      
+      const cleanContent = String(text || '').replace(/<[^>]*>/g, '').trim();
+      
+      if (!cleanContent) {
+        toast.error('Letter content is empty after cleaning');
+        return;
+      }
+      
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
-        title: letterType.label,
+        title: String(letterType.label || 'Letter'),
         body: cleanContent,
         includeHeader: true,
         includeFooter: true,
@@ -417,10 +428,21 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
   const handleDownloadPDF = async () => {
     try {
-      const cleanContent = text.replace(/<[^>]*>/g, '');
+      if (!text || !text.trim()) {
+        toast.error('No letter content to download');
+        return;
+      }
+      
+      const cleanContent = String(text || '').replace(/<[^>]*>/g, '').trim();
+      
+      if (!cleanContent) {
+        toast.error('Letter content is empty after cleaning');
+        return;
+      }
+      
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'letter',
-        title: letterType.label,
+        title: String(letterType.label || 'Letter'),
         body: cleanContent,
         includeHeader: true,
         includeFooter: true,
@@ -428,8 +450,10 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${letterType.label.replace(/[^a-z0-9]/gi, '_')}_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      a.download = `${String(letterType.label || 'Letter').replace(/[^a-z0-9]/gi, '_')}_${String(caseItem.title || 'Case').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('[LetterSuite] PDF download failed:', error);

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Printer, Download, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
 import { generateChaosDocumentPDF } from '@/lib/pdfGenerator';
+import { toast } from "sonner";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
@@ -163,22 +164,35 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
   const handlePrintPDF = async () => {
     setPdfGenerating(true);
     try {
-      console.log('[WeeklySnapshot] Print PDF clicked');
-      console.log('[WeeklySnapshot] Snapshot exists:', !!snapshot);
-      console.log('[WeeklySnapshot] Case exists:', !!caseItem);
+      if (!snapshot || !caseItem) {
+        toast.error('Snapshot or case data not available');
+        setPdfGenerating(false);
+        return;
+      }
       
       const { sections } = cleanSnapshotContent(snapshot);
+      
+      // Validate sections - ensure all titles and content are valid strings
+      const validatedSections = sections.map(s => ({
+        title: String(s.title || ''),
+        content: String(s.content || '')
+      })).filter(s => s.title || s.content);
+      
+      if (validatedSections.length === 0) {
+        toast.error('No content to generate PDF from');
+        setPdfGenerating(false);
+        return;
+      }
+      
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'snapshot',
         title: 'WEEKLY CASE SNAPSHOT',
-        matter: caseItem.title,
+        matter: String(caseItem.title || 'Case'),
         date: format(new Date(), "d MMMM yyyy"),
-        sections: sections,
+        sections: validatedSections,
         includeHeader: true,
         includeFooter: true,
       });
-      
-      console.log('[WeeklySnapshot] PDF blob generated:', !!pdfBlob);
       
       // Open for print
       const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -193,7 +207,7 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
       setTimeout(() => URL.revokeObjectURL(pdfUrl), 120000);
     } catch (error) {
       console.error('[WeeklySnapshot] PDF generation failed:', error);
-      alert('PDF generation failed: ' + error.message);
+      toast.error('PDF generation failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
     }
@@ -202,15 +216,32 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
   const handleDownloadPDF = async () => {
     setPdfGenerating(true);
     try {
-      console.log('[WeeklySnapshot] Download PDF clicked');
+      if (!snapshot || !caseItem) {
+        toast.error('Snapshot or case data not available');
+        setPdfGenerating(false);
+        return;
+      }
       
       const { sections } = cleanSnapshotContent(snapshot);
+      
+      // Validate sections
+      const validatedSections = sections.map(s => ({
+        title: String(s.title || ''),
+        content: String(s.content || '')
+      })).filter(s => s.title || s.content);
+      
+      if (validatedSections.length === 0) {
+        toast.error('No content to generate PDF from');
+        setPdfGenerating(false);
+        return;
+      }
+      
       const pdfBlob = await generateChaosDocumentPDF({
         documentType: 'snapshot',
         title: 'WEEKLY CASE SNAPSHOT',
-        matter: caseItem.title,
+        matter: String(caseItem.title || 'Case'),
         date: format(new Date(), "d MMMM yyyy"),
-        sections: sections,
+        sections: validatedSections,
         includeHeader: true,
         includeFooter: true,
       });
@@ -219,12 +250,14 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Weekly_Snapshot_${caseItem.title.replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      a.download = `Weekly_Snapshot_${String(caseItem.title || 'Case').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('[WeeklySnapshot] PDF download failed:', error);
-      alert('PDF download failed: ' + error.message);
+      toast.error('PDF download failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
     }
