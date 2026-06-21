@@ -86,13 +86,14 @@ export default function ComplaintLetter({ caseItem }) {
   1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
   2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
   3. The DATE must be the VERY FIRST line at the TOP of the page.
+  4. Address lines must be TIGHT single-spaced with NO gaps.
 
   FORMATTING REQUIREMENTS:
-  1. FIRST line (left aligned): TODAY'S DATE - ${today} - this is the FIRST thing on the page, NO asterisks, NO bold markers, just plain text like "21 June 2026"
+  1. FIRST line (left aligned): TODAY'S DATE - ${today} - PLAIN TEXT ONLY, no asterisks, no bold, no **, just "21 June 2026"
   2. BLANK LINE after date
-  3. RECIPIENT ADDRESS (LEFT SIDE): Complaint handler name, organisation name, complaints address, complaints email
+  3. RECIPIENT ADDRESS (LEFT SIDE) - TIGHT SPACING: Complaint handler name, organisation name, complaints address, complaints email
   4. BLANK LINE
-  5. SENDER ADDRESS (RIGHT SIDE): Full name, address lines, email, phone
+  5. SENDER ADDRESS (RIGHT SIDE) - TIGHT SPACING: Full name, address lines, email, phone
   6. BLANK LINE
   7. Then: Re: line, salutation, body paragraphs, closing
   
@@ -207,20 +208,20 @@ CASE DETAILS:
               }}
             ></div>
             <div style={{ padding: '0 25mm 0 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.3", color: "#000" }}>
-              <p style={{ fontSize: '11pt', margin: '0 0 8pt 0', textAlign: 'left', fontWeight: 'bold' }}>{format(new Date(), "d MMMM yyyy")}</p>
+              <p style={{ fontSize: '11pt', margin: '0 0 8pt 0', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14pt' }}>
                 <div style={{ textAlign: 'left', minWidth: '45%' }}>
-                  <p style={{ margin: '0 0 2pt 0', lineHeight: '1.2', fontSize: '11pt' }}>The Complaints Manager</p>
-                  <p style={{ margin: '0 0 2pt 0', lineHeight: '1.2', fontSize: '11pt' }}>NRMA Insurance</p>
-                  <p style={{ margin: '0 0 2pt 0', lineHeight: '1.2', fontSize: '11pt' }}>GPO Box 438</p>
-                  <p style={{ margin: '0', lineHeight: '1.2', fontSize: '11pt' }}>Sydney NSW 2001</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>The Complaints Manager</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>NRMA Insurance</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>GPO Box 438</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Sydney NSW 2001</p>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '45%' }}>
-                  <p style={{ margin: '0 0 2pt 0', lineHeight: '1.2', fontSize: '11pt' }}>Mick Gallagher</p>
-                  <p style={{ margin: '0 0 2pt 0', lineHeight: '1.2', fontSize: '11pt' }}>14 The Road</p>
-                  <p style={{ margin: '0 0 2pt 0', lineHeight: '1.2', fontSize: '11pt' }}>Penrith 2750</p>
-                  <p style={{ margin: '0 0 2pt 0', lineHeight: '1.2', fontSize: '11pt' }}>Email: Djkingy79@gmail.com</p>
-                  <p style={{ margin: '0', lineHeight: '1.2', fontSize: '11pt' }}>Mobile: 0413572850</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Mick Gallagher</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>14 The Road</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Penrith 2750</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Email: Djkingy79@gmail.com</p>
+                  <p style={{ margin: '0', lineHeight: '1.1', fontSize: '10pt' }}>Mobile: 0413572850</p>
                 </div>
               </div>
               <p style={{ margin: '8pt 0 6pt 0', fontWeight: 'bold', fontSize: '11pt' }}>Re: Formal Complaint — Account NRMA09887</p>
