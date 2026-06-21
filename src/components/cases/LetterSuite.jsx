@@ -60,33 +60,8 @@ function buildPrompt(type, caseItem, client, today) {
   2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
   3. ALWAYS use AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence).
   4. Address lines must be TIGHT single-spaced with NO gaps.
-
-  OUTPUT FORMAT - GENERATE HTML WITH PROPER ALIGNMENT:
-  
-  <div style="text-align:left;margin:0 0 8pt 0">${today}</div>
-  <div style="height:8pt"></div>
-  <div style="text-align:right;line-height:1.1;margin:0 0 8pt 0">
-    ${client.name}<br/>
-    ${client.address}<br/>
-    ${client.email}<br/>
-    ${client.phone}
-  </div>
-  <div style="height:8pt"></div>
-  <div style="text-align:left;line-height:1.1;margin:0 0 8pt 0">
-    ${caseItem.complaint_handler_name || "The Complaints Manager"}<br/>
-    ${caseItem.organisation_name}<br/>
-    ${caseItem.organisation_complaints_address}<br/>
-    ${caseItem.organisation_complaints_email}
-  </div>
-  <div style="height:8pt"></div>
-  <div style="text-align:left;margin:0 0 8pt 0"><strong>Re:</strong> [subject line]</div>
-  <div style="text-align:left;margin:0 0 8pt 0">Dear ${caseItem.complaint_handler_name ? caseItem.complaint_handler_name.split(' ')[0] : "Sir/Madam"},</div>
-  <div style="text-align:left;margin:0 0 8pt 0">[Body paragraphs with 8pt bottom margin each]</div>
-  <div style="text-align:left;margin:0 0 8pt 0">Yours faithfully,</div>
-  <div style="height:12pt"></div>
-  <div style="text-align:left;margin:0">${client.name}</div>
-  
-  CRITICAL: Use the exact HTML structure above with inline styles. NO plain text lines. NO markdown. NO [brackets] for real data - only for subject/body content.
+  5. ABSOLUTELY NO HTML TAGS - no <div>, no <br>, no <p>, no <strong>, no angle brackets of any kind.
+  6. PLAIN TEXT ONLY - just normal text with line breaks.
 
 COMPLAINANT DETAILS:
 - Name: ${client.name || "not provided — omit name line"}
@@ -113,18 +88,35 @@ CASE DETAILS:
 - Today's Date: ${today}`;
 
   const formats = `
-  PLAIN TEXT FORMAT - NO HTML TAGS:
-  1. Line 1: ${today} (plain text)
-  2. Blank line
-  3. Sender address lines (will be RIGHT aligned by CSS)
-  4. Blank line
-  5. Recipient address lines (LEFT aligned)
-  6. Blank line
-  7. Re: line
-  8. Salutation
-  9. Body paragraphs
-  10. Closing
-  NO HTML, NO <div>, NO <br> - plain text only with line breaks.`;
+  CRITICAL: PLAIN TEXT ONLY - ABSOLUTELY NO HTML TAGS:
+  - NO <div>, NO </div>, NO <br>, NO <strong>, NO <p>
+  - NO angle brackets of any kind
+  - Just plain text with normal line breaks
+  - The rendering system will apply formatting automatically
+  
+  FORMAT (plain text lines only):
+  ${today}
+  
+  [Sender Name]
+  [Sender Street Address]
+  [Sender City Postcode]
+  [Sender Email]
+  [Sender Phone]
+  
+  [Recipient Name/Title]
+  [Organisation Name]
+  [Organisation Address]
+  [Organisation Email]
+  
+  Re: [Subject]
+  
+  Dear [Name/Sir/Madam],
+  
+  [Body paragraphs - each separated by one blank line]
+  
+  Yours faithfully,
+  
+  [Sender Name]`;
 
   if (type === "letter1") {
     return `${base}
@@ -137,19 +129,28 @@ CASE DETAILS:
   - State the desired outcome clearly
   ${formats}
 
-  CRITICAL FORMAT WITH HTML FOR PROPER RENDERING:
-  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
-  - Line 2: Blank
-  - Lines 3-7: SENDER ADDRESS RIGHT ALIGNED using HTML:
-    <div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;">
-    <div style="margin:0;line-height:1.1;">Name</div>
-    <div style="margin:0;line-height:1.1;">Street Address</div>
-    <div style="margin:0;line-height:1.1;">City Postcode</div>
-    <div style="margin:0;line-height:1.1;">Email</div>
-    <div style="margin:0;line-height:1.1;">Phone</div>
-    </div>
-  - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
+  FORMAT EXAMPLE (plain text - NO HTML):
+  21 June 2026
+
+  Mick Gallagher
+  14 The Road
+  Penrith 2750
+  Djkingy79@gmail.com
+  0413572850
+
+  The Complaints Manager
+  NRMA Insurance
+  GPO Box 438
+  Sydney NSW 2001
+
+  Re: Formal Complaint
+
+  Dear Sir/Madam,
+
+  [Body text]
+
+  Yours faithfully,
+  Mick Gallagher`;
   }
 
   if (type === "letter2") {
@@ -163,19 +164,28 @@ CASE DETAILS:
   - Mention you have documented evidence ready for external submission
   ${formats}
 
-  CRITICAL FORMAT WITH HTML FOR PROPER RENDERING:
-  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
-  - Line 2: Blank
-  - Lines 3-7: SENDER ADDRESS RIGHT ALIGNED using HTML:
-    <div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;">
-    <div style="margin:0;line-height:1.1;">Name</div>
-    <div style="margin:0;line-height:1.1;">Street Address</div>
-    <div style="margin:0;line-height:1.1;">City Postcode</div>
-    <div style="margin:0;line-height:1.1;">Email</div>
-    <div style="margin:0;line-height:1.1;">Phone</div>
-    </div>
-  - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
+  FORMAT EXAMPLE (plain text - NO HTML):
+  21 June 2026
+
+  Mick Gallagher
+  14 The Road
+  Penrith 2750
+  Djkingy79@gmail.com
+  0413572850
+
+  The Complaints Manager
+  NRMA Insurance
+  GPO Box 438
+  Sydney NSW 2001
+
+  Re: Formal Complaint
+
+  Dear Sir/Madam,
+
+  [Body text]
+
+  Yours faithfully,
+  Mick Gallagher`;
   }
 
   if (type === "letter3") {
@@ -189,19 +199,28 @@ CASE DETAILS:
   - Very firm, professional, evidence-focused tone
   ${formats}
 
-  CRITICAL FORMAT WITH HTML FOR PROPER RENDERING:
-  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
-  - Line 2: Blank
-  - Lines 3-7: SENDER ADDRESS RIGHT ALIGNED using HTML:
-    <div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;">
-    <div style="margin:0;line-height:1.1;">Name</div>
-    <div style="margin:0;line-height:1.1;">Street Address</div>
-    <div style="margin:0;line-height:1.1;">City Postcode</div>
-    <div style="margin:0;line-height:1.1;">Email</div>
-    <div style="margin:0;line-height:1.1;">Phone</div>
-    </div>
-  - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
+  FORMAT EXAMPLE (plain text - NO HTML):
+  21 June 2026
+
+  Mick Gallagher
+  14 The Road
+  Penrith 2750
+  Djkingy79@gmail.com
+  0413572850
+
+  The Complaints Manager
+  NRMA Insurance
+  GPO Box 438
+  Sydney NSW 2001
+
+  Re: Formal Complaint
+
+  Dear Sir/Madam,
+
+  [Body text]
+
+  Yours faithfully,
+  Mick Gallagher`;
   }
 
   if (type === "accept_offer") {
@@ -216,19 +235,28 @@ CASE DETAILS:
   - Use Australian English spelling throughout
   ${formats}
 
-  CRITICAL FORMAT WITH HTML FOR PROPER RENDERING:
-  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
-  - Line 2: Blank
-  - Lines 3-7: SENDER ADDRESS RIGHT ALIGNED using HTML:
-    <div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;">
-    <div style="margin:0;line-height:1.1;">Name</div>
-    <div style="margin:0;line-height:1.1;">Street Address</div>
-    <div style="margin:0;line-height:1.1;">City Postcode</div>
-    <div style="margin:0;line-height:1.1;">Email</div>
-    <div style="margin:0;line-height:1.1;">Phone</div>
-    </div>
-  - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
+  FORMAT EXAMPLE (plain text - NO HTML):
+  21 June 2026
+
+  Mick Gallagher
+  14 The Road
+  Penrith 2750
+  Djkingy79@gmail.com
+  0413572850
+
+  The Complaints Manager
+  NRMA Insurance
+  GPO Box 438
+  Sydney NSW 2001
+
+  Re: Formal Complaint
+
+  Dear Sir/Madam,
+
+  [Body text]
+
+  Yours faithfully,
+  Mick Gallagher`;
   }
 
   if (type === "deny_offer") {
@@ -243,19 +271,28 @@ CASE DETAILS:
   - Firm, reasoned, professional tone
   ${formats}
 
-  CRITICAL FORMAT WITH HTML FOR PROPER RENDERING:
-  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
-  - Line 2: Blank
-  - Lines 3-7: SENDER ADDRESS RIGHT ALIGNED using HTML:
-    <div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;">
-    <div style="margin:0;line-height:1.1;">Name</div>
-    <div style="margin:0;line-height:1.1;">Street Address</div>
-    <div style="margin:0;line-height:1.1;">City Postcode</div>
-    <div style="margin:0;line-height:1.1;">Email</div>
-    <div style="margin:0;line-height:1.1;">Phone</div>
-    </div>
-  - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
+  FORMAT EXAMPLE (plain text - NO HTML):
+  21 June 2026
+
+  Mick Gallagher
+  14 The Road
+  Penrith 2750
+  Djkingy79@gmail.com
+  0413572850
+
+  The Complaints Manager
+  NRMA Insurance
+  GPO Box 438
+  Sydney NSW 2001
+
+  Re: Formal Complaint
+
+  Dear Sir/Madam,
+
+  [Body text]
+
+  Yours faithfully,
+  Mick Gallagher`;
   }
 
   if (type === "escalation") {
@@ -272,19 +309,28 @@ CASE DETAILS:
   - Professional, comprehensive, factual tone
   ${formats}
 
-  CRITICAL FORMAT WITH HTML FOR PROPER RENDERING:
-  - Line 1: Date only (e.g., "21 June 2026") - plain text, no bold, no asterisks
-  - Line 2: Blank
-  - Lines 3-7: SENDER ADDRESS RIGHT ALIGNED using HTML:
-    <div style="text-align:right;line-height:1.1;margin:0 0 8pt 0;">
-    <div style="margin:0;line-height:1.1;">Name</div>
-    <div style="margin:0;line-height:1.1;">Street Address</div>
-    <div style="margin:0;line-height:1.1;">City Postcode</div>
-    <div style="margin:0;line-height:1.1;">Email</div>
-    <div style="margin:0;line-height:1.1;">Phone</div>
-    </div>
-  - Line 8: Blank
-  - Lines 9-12: Recipient address LEFT aligned (tight single-spaced, NO gaps)`;
+  FORMAT EXAMPLE (plain text - NO HTML):
+  21 June 2026
+
+  Mick Gallagher
+  14 The Road
+  Penrith 2750
+  Djkingy79@gmail.com
+  0413572850
+
+  The Complaints Manager
+  NRMA Insurance
+  GPO Box 438
+  Sydney NSW 2001
+
+  Re: Formal Complaint
+
+  Dear Sir/Madam,
+
+  [Body text]
+
+  Yours faithfully,
+  Mick Gallagher`;
   }
 
   return base;
@@ -329,26 +375,27 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handlePrint = () => {
-    const win = window.open("", "_blank");
-    win.document.write(`<!DOCTYPE html><html><head><title>${letterType.label}</title>
-    <style>
-      @page { margin: 0; size: A4; }
-      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-      body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-      .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
-      .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: contain; background-repeat: no-repeat; background-position: center top; background-color: #ffffff; }
-      .letterhead-footer { display: none !important; }
-      .letter-content { padding: 8pt 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    </style>
-    </head><body>
-      <div class="letter-page">
-        <div class="letterhead-header"></div>
-        <div class="letter-content">${text}</div>
-      </div>
-    </body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => { win.print(); win.close(); }, 500);
+  const cleanText = text.replace(/<[^>]*>/g, '');
+  const win = window.open("", "_blank");
+  win.document.write(`<!DOCTYPE html><html><head><title>${letterType.label}</title>
+  <style>
+    @page { margin: 0; size: A4; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
+    .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
+    .letterhead-footer { display: none !important; }
+    .letter-content { padding: 8pt 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
+  </style>
+  </head><body>
+    <div class="letter-page">
+      <div class="letterhead-header"></div>
+      <div class="letter-content">${cleanText}</div>
+    </div>
+  </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); win.close(); }, 500);
   };
 
   const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[.*?\]/.test(text);
@@ -413,10 +460,11 @@ function LetterEditor({ letterType, caseItem, evidence }) {
             ) : (
               <div className="letter-content" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000" }}>
                 {(() => {
-                  const lines = text.split('\n');
-                  let senderLines = [];
-                  let recipientLines = [];
-                  let bodyLines = [];
+                  const cleanText = text.replace(/<[^>]*>/g, '');
+                  const lines = cleanText.split('\n');
+                  const senderLines = [];
+                  const recipientLines = [];
+                  const bodyLines = [];
                   let inSender = true;
                   let foundBlank = false;
                   

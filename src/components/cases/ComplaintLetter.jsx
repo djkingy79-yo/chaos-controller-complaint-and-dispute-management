@@ -80,7 +80,7 @@ export default function ComplaintLetter({ caseItem }) {
       }, []).join("\n    ")
     : accountNumbers;
 
-  const prompt = `AUSTRALIAN BUSINESS LETTER FORMAT - PLAIN TEXT ONLY (no HTML tags):
+  const prompt = `AUSTRALIAN BUSINESS LETTER FORMAT - PLAIN TEXT ONLY (ABSOLUTELY NO HTML TAGS):
 
 ${today}
 
@@ -103,12 +103,13 @@ Dear Sir/Madam,
 Yours faithfully,
 ${client.name || ""}
 
-CRITICAL:
-- Plain text ONLY - NO HTML tags, NO <div>, NO <br>
-- Sender address (lines after date) will be RIGHT aligned by our CSS
-- Recipient address will be LEFT aligned
+CRITICAL RULES:
+- ABSOLUTELY NO HTML TAGS - no <div>, no </div>, no <br>, no <p>, no <strong>
+- NO angle brackets of any kind
+- Plain text lines only with normal line breaks
+- Sender address will be RIGHT aligned automatically
+- Recipient address will be LEFT aligned automatically
 - Use actual data, NO [brackets] except for body content
-- Tight spacing - one blank line between sections
 - Case: ${caseItem.issue_summary}. Desired: ${caseItem.desired_outcome}.`;
 
     const result = await base44.integrations.Core.InvokeLLM({ prompt });
