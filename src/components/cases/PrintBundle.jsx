@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren } from "lucide-react";
 import { format } from "date-fns";
+import { printLetter, printTableDocument } from "@/lib/printUtilities";
 
 
 const LETTER_DEFS = [
@@ -37,8 +38,7 @@ function buildClientContext(caseItem, evidence) {
   return merged;
 }
 
-function printLetter(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
-  const client = buildClientContext(caseItem, evidence);
+function printLetterBundle(caseItem, evidence, field = "complaint_letter", label = "1st Complaint Letter") {
   const content = caseItem[field] || `No ${label} generated yet.`;
   const cleanContent = content.replace(/<[^>]*>/g, '');
   const lines = cleanContent.split('\n');
@@ -48,38 +48,7 @@ function printLetter(caseItem, evidence, field = "complaint_letter", label = "1s
   for (let i = 0; i < remainingLines.length; i += 55) {
     continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
   }
-  const continuationHTML = continuationPages.map((chunk) => `
-    <div class="letter-continuation">
-      <div class="continuation-header"></div>
-      <pre class="continuation-content" style="white-space:pre-wrap;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.2;">${chunk}</pre>
-    </div>
-  `).join('');
-  const caseRef = `CC-${caseItem.id.slice(0, 8).toUpperCase()}`;
-  const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>${label}</title>
-  <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    @media print { 
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      @page { margin: 25mm 20mm 20mm 20mm; }
-    }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .letter-content { padding: 8pt 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; white-space: pre-wrap; }
-    .letter-continuation { position: relative; width: 100%; min-height: 297mm; page-break-before: always; background: white; }
-    .continuation-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; }
-  </style>
-  </head><body>
-    <div class="letter-page">
-      <div class="letterhead-header"></div>
-      <pre class="letter-content" style="white-space:pre-wrap;margin:0;">${firstPageLines.join('\n')}</pre>
-    </div>
-    ${continuationHTML}
-  </body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 500);
+  printLetter(label, firstPageLines.join('\n'), continuationPages);
 }
 
 function printTimeline(caseItem, events) {
@@ -92,32 +61,7 @@ function printTimeline(caseItem, events) {
       <td style="padding:6pt 8pt;font-size:10pt;color:#000;">${ev.description || ""}</td>
     </tr>
   `).join("");
-
-  const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Timeline</title>
-  <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .print-content { padding: 8pt 25mm 20mm 25mm; }
-    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="print-content">
-      <h1>Case Timeline</h1>
-      <h2>${caseItem.title}</h2>
-      <table>${rows}</table>
-    </div>
-  </body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 500);
+  printTableDocument({ title: "Timeline", heading: "Case Timeline", subheading: caseItem.title, tableRows: rows });
 }
 
 function printEvidence(caseItem, evidence) {
@@ -147,32 +91,7 @@ function printEvidence(caseItem, evidence) {
       </tr>
     `).join("");
   }
-
-  const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Evidence Index</title>
-  <style>
-    @page { margin: 25mm 20mm 20mm 20mm; size: A4; }
-    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .print-content { padding: 8pt 25mm 20mm 25mm; }
-    h1 { font-size: 13pt; font-weight: bold; margin-bottom: 8pt; color: #000; }
-    h2 { font-size: 11pt; font-weight: bold; margin-bottom: 10pt; color: #000; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
-    th { background: white; text-align: left; padding: 4pt 6pt; font-size: 10pt; font-weight: bold; border-bottom: 1px solid #000; }
-    td { padding: 3pt 6pt; border-bottom: none; font-size: 10pt; color: #000; }
-  </style>
-  </head><body>
-    <div class="letterhead-header"></div>
-    <div class="print-content">
-      <h1>Evidence Index</h1>
-      <h2>${caseItem.title}</h2>
-      <table>${tableRows}</table>
-    </div>
-  </body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 500);
+  printTableDocument({ title: "Evidence Index", heading: "Evidence Index", subheading: `${caseItem.title} — ${evidence.length} documents`, tableRows: tableRows });
 }
 
 function printChecklist(caseItem, evidence, events) {
@@ -571,7 +490,7 @@ export default function PrintBundle({ caseItem, evidence, events }) {
         {LETTER_DEFS.map((ld) => (
           <button
             key={ld.field}
-            onClick={() => printLetter(caseItem, evidence, ld.field, ld.label)}
+            onClick={() => printLetterBundle(caseItem, evidence, ld.field, ld.label)}
             className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group"
           >
             <div className="flex items-center gap-3 mb-2">

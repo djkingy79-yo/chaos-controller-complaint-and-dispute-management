@@ -8,7 +8,7 @@ import { Copy, RefreshCw, Pencil, Check, Loader2, Printer, FileText, Lock } from
 import LetterTemplateManager from "./LetterTemplateManager";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { LETTERHEAD_URL, CONTINUATION_PAGE_URL, getLetterPageStyles } from "./LetterheadBanner";
+import { printLetter, LETTERHEAD_URL, FOOTER_URL } from "@/lib/printUtilities";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -375,27 +375,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handlePrint = () => {
-  const cleanText = text.replace(/<[^>]*>/g, '');
-  const win = window.open("", "_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>${letterType.label}</title>
-  <style>
-    @page { margin: 0; size: A4; }
-    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    body { margin: 0; padding: 0; background: white; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-    .letter-page { position: relative; width: 100%; min-height: 297mm; background: white; }
-    .letterhead-header { width: 100%; height: 60px; background-image: url('${LETTERHEAD_URL}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; background-color: #ffffff; }
-    .letterhead-footer { display: none !important; }
-    .letter-content { padding: 8pt 25mm 20mm 25mm; font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.2; }
-  </style>
-  </head><body>
-    <div class="letter-page">
-      <div class="letterhead-header"></div>
-      <div class="letter-content">${cleanText}</div>
-    </div>
-  </body></html>`);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); win.close(); }, 500);
+    printLetter(letterType.label, text, []);
   };
 
   const hasPlaceholders = /\[Your Name\]|\[Your Address\]|\[.*?\]/.test(text);
