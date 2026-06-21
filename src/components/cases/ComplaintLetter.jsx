@@ -144,17 +144,16 @@ CASE DETAILS:
 
   const handlePrint = () => {
     const lines = letter.split('\n');
-    // First page: ~45 lines with 1.5 inch margins, continuation: ~55 lines
     const firstPageLines = lines.slice(0, 45);
     const remainingLines = lines.slice(45);
     const continuationPages = [];
     for (let i = 0; i < remainingLines.length; i += 55) {
       continuationPages.push(remainingLines.slice(i, i + 55).join('\n'));
     }
-    const continuationHTML = continuationPages.map((chunk, idx) => `
+    const continuationHTML = continuationPages.map((chunk) => `
       <div class="letter-continuation">
         <div class="continuation-header"></div>
-        <div class="continuation-content">${chunk.replace(/\n/g, '<br>')}</div>
+        <div class="continuation-content">${chunk.split('\n').map(line => `<p style="margin:3pt 0;min-height:10pt;line-height:1.0">${line || '&nbsp;'}</p>`).join('')}</div>
       </div>
     `).join('');
     const win = window.open("", "_blank");
@@ -163,7 +162,7 @@ CASE DETAILS:
     </head><body>
       <div class="letter-page">
         <div class="letterhead-header"></div>
-        <div class="letter-content">${firstPageLines.join('<br>')}</div>
+        <div class="letter-content">${firstPageLines.map(line => `<p style="margin:3pt 0;min-height:10pt;line-height:1.0">${line || '&nbsp;'}</p>`).join('')}</div>
         <div class="letterhead-footer"></div>
       </div>
       ${continuationHTML}
@@ -201,29 +200,29 @@ CASE DETAILS:
                 backgroundColor: '#ffffff'
               }}
             ></div>
-            <div style={{ padding: '25mm 25mm 0 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6", color: "#000" }}>
-              <p style={{ fontSize: '13pt', fontWeight: 'bold', margin: '0 0 12pt 0', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12pt' }}>
+            <div style={{ padding: '25mm 25mm 0 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
+              <p style={{ fontSize: '13pt', fontWeight: 'bold', margin: '0 0 8pt 0', textAlign: 'left' }}>{format(new Date(), "d MMMM yyyy")}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8pt' }}>
                 <div style={{ textAlign: 'left', minWidth: '45%' }}>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>The Complaints Manager</p>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>NRMA Insurance</p>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>GPO Box 438</p>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>Sydney NSW 2001</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>The Complaints Manager</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>NRMA Insurance</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>GPO Box 438</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>Sydney NSW 2001</p>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '45%' }}>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>Mick Gallagher</p>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>14 The Road</p>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>Penrith 2750</p>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>Email: Djkingy79@gmail.com</p>
-                  <p style={{ margin: '0', lineHeight: '1.0' }}>Mobile: 0413572850</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>Mick Gallagher</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>14 The Road</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>Penrith 2750</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>Email: Djkingy79@gmail.com</p>
+                  <p style={{ margin: '0', lineHeight: '1.0', fontSize: '10pt' }}>Mobile: 0413572850</p>
                 </div>
               </div>
-              <p style={{ margin: '12pt 0', fontWeight: 'bold' }}>Re: Formal Complaint — Account NRMA09887</p>
-              <p style={{ margin: '12pt 0' }}>Dear Sir/Madam,</p>
-              <p style={{ margin: '6pt 0' }}>I am writing to formally lodge a complaint regarding...</p>
-              <p style={{ margin: '6pt 0', color: '#666', fontStyle: 'italic' }}>Letter body continues...</p>
-              <p style={{ margin: '12pt 0' }}>Yours faithfully,</p>
-              <p style={{ margin: '6pt 0' }}>Mick Gallagher</p>
+              <p style={{ margin: '8pt 0 4pt 0', fontWeight: 'bold', fontSize: '10pt' }}>Re: Formal Complaint — Account NRMA09887</p>
+              <p style={{ margin: '4pt 0', fontSize: '10pt' }}>Dear Sir/Madam,</p>
+              <p style={{ margin: '4pt 0', fontSize: '10pt' }}>I am writing to formally lodge a complaint regarding...</p>
+              <p style={{ margin: '4pt 0', fontSize: '10pt', color: '#666', fontStyle: 'italic' }}>Letter body continues...</p>
+              <p style={{ margin: '8pt 0 4pt 0', fontSize: '10pt' }}>Yours faithfully,</p>
+              <p style={{ margin: '4pt 0', fontSize: '10pt' }}>Mick Gallagher</p>
             </div>
             <div className="letterhead-footer" style={{ height: '60px', backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom' }}></div>
           </div>
@@ -293,19 +292,19 @@ CASE DETAILS:
               backgroundColor: '#ffffff'
             }}
           ></div>
-          <div className="bg-white" style={{ padding: '25mm 25mm 25mm 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6", color: "#000" }}>
+          <div className="bg-white" style={{ padding: '25mm 25mm 25mm 25mm', fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", color: "#000" }}>
             {editing ? (
               <Textarea
                 value={letter}
                 onChange={(e) => setLetter(e.target.value)}
                 rows={22}
                 className="font-body bg-white text-slate-900 w-full"
-                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6" }}
+                style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0" }}
               />
             ) : (
-              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.6", margin: 0, color: "#000" }}>
+              <div className="text-slate-900 w-full" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.0", margin: 0, color: "#000" }}>
                 {letter.split('\n').map((line, i) => (
-                  <p key={i} style={{ margin: '6pt 0', minHeight: '14pt' }}>{line || '\u00A0'}</p>
+                  <p key={i} style={{ margin: '0', lineHeight: '1.0', minHeight: '11pt' }}>{line || '\u00A0'}</p>
                 ))}
               </div>
             )}
