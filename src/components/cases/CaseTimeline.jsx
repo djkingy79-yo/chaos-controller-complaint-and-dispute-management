@@ -19,10 +19,11 @@ import {
   Loader2,
   CalendarPlus,
   Download,
+  Printer,
   Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 
 const eventTypeConfig = {
@@ -105,32 +106,47 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
     }
   };
 
-  const handleTimelinePDF = async () => {
-    console.log('DASHBOARD PRINT CLICKED', { tab: 'timeline', caseId });
-    if (!sorted || sorted.length === 0) {
-      alert('No timeline events to export.');
-      return;
-    }
+  const buildTimelineBlob = async () => {
+    if (!sorted || sorted.length === 0) throw new Error('No timeline events to export.');
     const body = sorted.map(ev => {
       const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : 'Undated';
       return `${dateStr} — ${ev.title || 'Event'}\nType: ${(ev.event_type || '').replace(/_/g, ' ')}\n${ev.description || ''}`;
     }).join("\n\n");
+    const blob = await generateChaosDocumentPDF({
+      documentType: 'general',
+      title: 'Case Timeline',
+      body: `CASE TIMELINE (${sorted.length} events)\n\n${body}`,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    return blob;
+  };
 
+  const handleTimelinePDF = async () => {
     try {
-      const blob = await generateChaosDocumentPDF({
-        documentType: 'general',
-        title: 'Case Timeline',
-        body: `CASE TIMELINE (${sorted.length} events)\n\n${body}`,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      const blob = await buildTimelineBlob();
       downloadPDFBlob(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
       else toast.success('Timeline PDF downloaded');
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);
+    }
+  };
+
+  const handleTimelinePrint = async () => {
+    try {
+      const blob = await buildTimelineBlob();
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      const opened = openPDFForPrint(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) {
+        toast.warning('Print preview was blocked. PDF downloaded instead.');
+        downloadPDFBlob(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      }
+    } catch (error) {
+      console.error('PRINT PDF FAILED', error);
+      toast.error('Print PDF failed: ' + error.message);
     }
   };
 
@@ -146,9 +162,14 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
         <h3 className="font-heading font-semibold text-foreground">Timeline</h3>
         <div className="flex items-center gap-2 flex-wrap">
           {sorted.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleTimelinePDF} className="gap-1.5 text-xs">
-              <Download className="w-3.5 h-3.5" /> PDF
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={handleTimelinePDF} className="gap-1.5 text-xs">
+                <Download className="w-3.5 h-3.5" /> Download PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleTimelinePrint} className="gap-1.5 text-xs">
+                <Printer className="w-3.5 h-3.5" /> Print PDF
+              </Button>
+            </>
           )}
           <Button variant="outline" size="sm" onClick={handleAIGenerate} disabled={generating} className="gap-1.5 text-xs">
             {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}

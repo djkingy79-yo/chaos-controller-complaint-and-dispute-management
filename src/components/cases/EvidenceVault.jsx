@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Upload, FileText, Image, Mail, FileCheck, Loader2,
   Trash2, ExternalLink, Plus, ScanLine, Camera, Tag, FileDigit,
-  HardDrive, Search, Printer,
+  HardDrive, Search, Printer, Download,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -19,7 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
 import { useQuery } from "@tanstack/react-query";
-import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { detectIndustry } from "@/lib/industryClassifier";
 
 const typeConfig = {
@@ -410,36 +410,49 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
     return new Date(a.created_date) - new Date(b.created_date);
   });
 
-  const handlePrintEvidence = async () => {
-    console.log('DASHBOARD PRINT CLICKED', { tab: 'evidence', caseId });
-    if (!sorted || sorted.length === 0) {
-      alert('No evidence files to export.');
-      return;
-    }
+  const buildEvidenceBlob = async () => {
+    if (!sorted || sorted.length === 0) throw new Error('No evidence files to export.');
     const body = sorted.map((ev, i) => {
       const cfg = typeConfig[ev.file_type] || typeConfig.other;
       const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMMM yyyy") : "—";
       const desc = ev.description || ev.extracted_data?.document_summary || "—";
       return `${i + 1}. ${ev.file_name || 'Unknown'}\nType: ${cfg.label} | Date: ${dateStr}\n${desc}`;
     }).join("\n\n");
+    const blob = await generateChaosDocumentPDF({
+      documentType: 'general',
+      title: 'Evidence Index',
+      body: `EVIDENCE VAULT (${sorted.length} files)\n\n${body}`,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    return blob;
+  };
 
+  const handlePrintEvidence = async () => {
     try {
-      console.log('DASHBOARD PDF GENERATOR START', { type: 'evidence' });
-      const blob = await generateChaosDocumentPDF({
-        documentType: 'general',
-        title: 'Evidence Index',
-        body: `EVIDENCE VAULT (${sorted.length} files)\n\n${body}`,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      const blob = await buildEvidenceBlob();
       downloadPDFBlob(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      console.log('PDF GENERATED', { type: 'evidence' });
       if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
       else toast.success('Evidence index PDF downloaded');
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);
+    }
+  };
+
+  const handlePrintEvidencePrint = async () => {
+    try {
+      const blob = await buildEvidenceBlob();
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      const opened = openPDFForPrint(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) {
+        toast.warning('Print preview was blocked. PDF downloaded instead.');
+        downloadPDFBlob(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      }
+    } catch (error) {
+      console.error('PRINT PDF FAILED', error);
+      toast.error('Print PDF failed: ' + error.message);
     }
   };
 
@@ -456,7 +469,10 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
           <h3 className="font-heading font-semibold text-foreground">Evidence Vault</h3>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handlePrintEvidence}>
-              <Printer className="w-3.5 h-3.5" /> PDF
+              <Download className="w-3.5 h-3.5" /> Download PDF
+            </Button>
+            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handlePrintEvidencePrint}>
+              <Printer className="w-3.5 h-3.5" /> Print PDF
             </Button>
             <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowScanner(true)} disabled={!canUpload}>
               <Camera className="w-3.5 h-3.5" /> Scan Doc

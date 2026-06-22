@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, AlertTriangle, XCircle, Lock, Plus, Upload, Trash2, ClipboardList, Download } from "lucide-react";
-import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { CheckCircle2, AlertTriangle, XCircle, Lock, Plus, Upload, Trash2, ClipboardList, Download, Printer } from "lucide-react";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -34,7 +34,7 @@ const defaultItems = [
   { label: "Ready for escalation", category: "escalation", requires_proof: false },
 ];
 
-async function downloadChecklistPDF(items, caseName) {
+async function buildChecklistBlob(items, caseName) {
   const body = [
     `SMART CHECKLIST — ${caseName}`,
     `Generated: ${format(new Date(), 'd MMMM yyyy')}`,
@@ -55,9 +55,24 @@ async function downloadChecklistPDF(items, caseName) {
     includeFooter: true,
   });
   if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+  return blob;
+}
+
+async function downloadChecklistPDF(items, caseName) {
+  const blob = await buildChecklistBlob(items, caseName);
   downloadPDFBlob(blob, `Checklist_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
   else toast.success('Checklist PDF downloaded');
+}
+
+async function printChecklistPDF(items, caseName) {
+  const blob = await buildChecklistBlob(items, caseName);
+  if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+  const opened = openPDFForPrint(blob, `Checklist_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  if (!opened) {
+    toast.warning('Print preview was blocked. PDF downloaded instead.');
+    downloadPDFBlob(blob, `Checklist_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  }
 }
 
 export default function SmartChecklist() {
@@ -125,9 +140,14 @@ export default function SmartChecklist() {
             <Button variant="outline" onClick={handleSeedChecklist}>Generate Default Checklist</Button>
           )}
           {selectedCase && items.length > 0 && (
-            <Button variant="outline" className="gap-2" onClick={() => downloadChecklistPDF(items, cases.find(c=>c.id===selectedCase)?.title || 'Case').catch(e => alert('PDF failed: ' + e.message))}>
-              <Download className="w-4 h-4" /> Download PDF
-            </Button>
+            <>
+              <Button variant="outline" className="gap-2" onClick={() => downloadChecklistPDF(items, cases.find(c=>c.id===selectedCase)?.title || 'Case').catch(e => alert('PDF failed: ' + e.message))}>
+                <Download className="w-4 h-4" /> Download PDF
+              </Button>
+              <Button variant="outline" className="gap-2" onClick={() => printChecklistPDF(items, cases.find(c=>c.id===selectedCase)?.title || 'Case').catch(e => toast.error('Print PDF failed: ' + e.message))}>
+                <Printer className="w-4 h-4" /> Print PDF
+              </Button>
+            </>
           )}
           {selectedCase && (
             <Dialog open={open} onOpenChange={setOpen}>

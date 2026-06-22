@@ -263,3 +263,22 @@ export function downloadPDFBlob(blob, filename) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRINT: open PDF in new tab/window and trigger browser print dialog inside that tab.
+// Returns true if window opened successfully, false if popup blocked.
+// Caller should fallback to downloadPDFBlob() when this returns false.
+// ─────────────────────────────────────────────────────────────────────────────
+export function openPDFForPrint(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  if (!win || win.closed || typeof win.closed === 'undefined') {
+    URL.revokeObjectURL(url);
+    return false;
+  }
+  win.addEventListener('load', () => {
+    try { win.print(); } catch (e) { /* mobile Safari may block — window still open */ }
+  });
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
+  return true;
+}

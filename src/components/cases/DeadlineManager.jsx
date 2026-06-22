@@ -9,9 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { differenceInDays, format } from "date-fns";
-import { Sparkles, Plus, Loader2, Clock, AlertTriangle, CheckCircle2, Trash2, Download } from "lucide-react";
+import { Sparkles, Plus, Loader2, Clock, AlertTriangle, CheckCircle2, Trash2, Download, Printer } from "lucide-react";
 import { toast } from "sonner";
-import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 
 export default function DeadlineManager({ caseItem, evidence = [] }) {
   const queryClient = useQueryClient();
@@ -137,35 +137,51 @@ Return as JSON array only. Each deadline must have:
     }
   };
 
-  const handleDownloadPDF = async () => {
-    console.log('DASHBOARD PRINT CLICKED', { tab: 'deadlines', caseId: caseItem?.id });
-    if (!deadlines.length) {
-      alert('No deadlines to export.');
-      return;
-    }
-    const sorted = [...deadlines].sort((a, b) => new Date(a.deadline_date || 0) - new Date(b.deadline_date || 0));
-    const body = sorted.map(d => {
+  const buildDeadlinesBlob = async () => {
+    if (!deadlines.length) throw new Error('No deadlines to export.');
+    const sortedDl = [...deadlines].sort((a, b) => new Date(a.deadline_date || 0) - new Date(b.deadline_date || 0));
+    const body = sortedDl.map(d => {
       const daysLeft = d.deadline_date ? differenceInDays(new Date(d.deadline_date), new Date()) : null;
       const urgency = daysLeft === null ? 'No date' : daysLeft < 0 ? `OVERDUE by ${Math.abs(daysLeft)} days` : daysLeft === 0 ? 'DUE TODAY' : `${daysLeft} days remaining`;
       return `${d.title}\nDue: ${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : 'No date'} | ${urgency}\nType: ${(d.deadline_type || '').replace(/_/g, ' ')} | Responsibility: ${d.responsibility || 'user'}\n${d.notes || ''}`;
     }).join('\n\n');
+    const blob = await generateChaosDocumentPDF({
+      documentType: 'general',
+      title: 'Deadline War Room',
+      matter: caseItem.title,
+      date: format(new Date(), 'd MMMM yyyy'),
+      body: `DEADLINES (${sortedDl.length} items)\n\n${body}`,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    return blob;
+  };
 
+  const handleDownloadPDF = async () => {
     try {
-      const blob = await generateChaosDocumentPDF({
-        documentType: 'general',
-        title: 'Deadline War Room',
-        matter: caseItem.title,
-        date: format(new Date(), 'd MMMM yyyy'),
-        body: `DEADLINES (${sorted.length} items)\n\n${body}`,
-        includeHeader: true,
-        includeFooter: true,
-      });
+      const blob = await buildDeadlinesBlob();
       downloadPDFBlob(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
       else toast.success('Deadlines PDF downloaded');
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);
+    }
+  };
+
+  const handlePrintPDF = async () => {
+    try {
+      const blob = await buildDeadlinesBlob();
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      const opened = openPDFForPrint(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) {
+        toast.warning('Print preview was blocked. PDF downloaded instead.');
+        downloadPDFBlob(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      }
+    } catch (error) {
+      console.error('PRINT PDF FAILED', error);
+      toast.error('Print PDF failed: ' + error.message);
     }
   };
 
@@ -181,9 +197,14 @@ Return as JSON array only. Each deadline must have:
         <h3 className="font-heading font-semibold text-foreground">Deadlines</h3>
         <div className="flex items-center gap-2 flex-wrap">
           {sorted.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 text-xs">
-              <Download className="w-3.5 h-3.5" /> PDF
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 text-xs">
+                <Download className="w-3.5 h-3.5" /> Download PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handlePrintPDF} className="gap-1.5 text-xs">
+                <Printer className="w-3.5 h-3.5" /> Print PDF
+              </Button>
+            </>
           )}
           <Button
             size="sm"

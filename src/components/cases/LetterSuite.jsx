@@ -4,11 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, RefreshCw, Pencil, Check, Loader2, Download, FileText, Lock } from "lucide-react";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Download, Printer, FileText, Lock } from "lucide-react";
 import LetterTemplateManager from "./LetterTemplateManager";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -389,31 +389,46 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     }
   };
 
-  const handleDownloadPDF = async () => {
-    console.log('DASHBOARD PRINT CLICKED', { tab: 'letter', letter: letterType.key });
-    if (!text || !text.trim()) {
-      alert(`No content for ${letterType.label}. Generate the letter first.`);
-      return;
-    }
+  const buildLetterBlob = async () => {
+    if (!text || !text.trim()) throw new Error(`No content for ${letterType.label}. Generate the letter first.`);
     const cleanContent = String(text).replace(/<[^>]*>/g, '').trim();
+    const blob = await generateChaosDocumentPDF({
+      documentType: 'general',
+      title: letterType.label,
+      body: cleanContent,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    return blob;
+  };
+
+  const letterFilename = `${String(letterType.label).replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+
+  const handleDownloadPDF = async () => {
     try {
-      console.log('DASHBOARD PDF GENERATOR START', { type: 'letter', letter: letterType.key });
-      const blob = await generateChaosDocumentPDF({
-        documentType: 'general',
-        title: letterType.label,
-        body: cleanContent,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
-      const filename = `${String(letterType.label).replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-      downloadPDFBlob(blob, filename);
-      console.log('PDF GENERATED', { type: 'letter', letter: letterType.key });
+      const blob = await buildLetterBlob();
+      downloadPDFBlob(blob, letterFilename);
       if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
       else toast.success(`${letterType.label} PDF downloaded`);
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);
+    }
+  };
+
+  const handlePrintPDF = async () => {
+    try {
+      const blob = await buildLetterBlob();
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      const opened = openPDFForPrint(blob, letterFilename);
+      if (!opened) {
+        toast.warning('Print preview was blocked. PDF downloaded instead.');
+        downloadPDFBlob(blob, letterFilename);
+      }
+    } catch (error) {
+      console.error('PRINT PDF FAILED', error);
+      toast.error('Print PDF failed: ' + error.message);
     }
   };
 
@@ -439,6 +454,9 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </Button>
               <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 text-xs">
                 <Download className="w-3.5 h-3.5" /> Download PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handlePrintPDF} className="gap-1.5 text-xs">
+                <Printer className="w-3.5 h-3.5" /> Print PDF
               </Button>
               <Button
                 variant="outline" size="sm"

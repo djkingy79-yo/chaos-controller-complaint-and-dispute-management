@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, RefreshCw, Download, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, RefreshCw, Download, Printer, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob } from '@/lib/pdfGenerator';
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from '@/lib/pdfGenerator';
 import { toast } from "sonner";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
@@ -161,44 +161,54 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
     setLoading(false);
   };
 
+  const buildSnapshotBlob = async () => {
+    if (!snapshot) throw new Error('Generate the snapshot first before downloading.');
+    const { sections } = cleanSnapshotContent(snapshot);
+    const validatedSections = sections
+      .map(s => ({ title: String(s.title || ''), content: String(s.content || '') }))
+      .filter(s => s.title || s.content);
+    if (validatedSections.length === 0) throw new Error('No content found in snapshot.');
+    const blob = await generateChaosDocumentPDF({
+      documentType: 'snapshot',
+      title: 'Weekly Case Snapshot',
+      matter: String(caseItem.title || 'Case'),
+      date: format(new Date(), "d MMMM yyyy"),
+      sections: validatedSections,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    return blob;
+  };
+
   const handleDownloadPDF = async () => {
-    console.log('DASHBOARD PRINT CLICKED', { tab: 'weekly-snapshot', caseId: caseItem?.id });
     setPdfGenerating(true);
-    if (!snapshot) {
-      alert('Generate the snapshot first before downloading.');
-      setPdfGenerating(false);
-      return;
-    }
     try {
-      const { sections } = cleanSnapshotContent(snapshot);
-      const validatedSections = sections
-        .map(s => ({ title: String(s.title || ''), content: String(s.content || '') }))
-        .filter(s => s.title || s.content);
-
-      if (validatedSections.length === 0) {
-        alert('No content found in snapshot to generate PDF from.');
-        setPdfGenerating(false);
-        return;
-      }
-
-      console.log('DASHBOARD PDF GENERATOR START', { type: 'snapshot' });
-      const blob = await generateChaosDocumentPDF({
-        documentType: 'snapshot',
-        title: 'Weekly Case Snapshot',
-        matter: String(caseItem.title || 'Case'),
-        date: format(new Date(), "d MMMM yyyy"),
-        sections: validatedSections,
-        includeHeader: true,
-        includeFooter: true,
-      });
-      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      const blob = await buildSnapshotBlob();
       downloadPDFBlob(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      console.log('PDF GENERATED', { type: 'snapshot' });
       if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
       else toast.success('Weekly Snapshot PDF downloaded');
     } catch (error) {
       console.error('PDF FAILED', error);
       alert('PDF failed: ' + error.message);
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
+
+  const handlePrintPDF = async () => {
+    setPdfGenerating(true);
+    try {
+      const blob = await buildSnapshotBlob();
+      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+      const opened = openPDFForPrint(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) {
+        toast.warning('Print preview was blocked. PDF downloaded instead.');
+        downloadPDFBlob(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      }
+    } catch (error) {
+      console.error('PRINT PDF FAILED', error);
+      toast.error('Print PDF failed: ' + error.message);
     } finally {
       setPdfGenerating(false);
     }
@@ -231,16 +241,15 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
           </div>
           <div className="flex items-center gap-2">
             {snapshot && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleDownloadPDF} 
-                disabled={pdfGenerating}
-                className="gap-1.5"
-              >
-                <Download className="w-3.5 h-3.5" /> 
-                {pdfGenerating ? 'Generating...' : 'Download PDF'}
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={pdfGenerating} className="gap-1.5">
+                  <Download className="w-3.5 h-3.5" />
+                  {pdfGenerating ? 'Generating...' : 'Download PDF'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handlePrintPDF} disabled={pdfGenerating} className="gap-1.5">
+                  <Printer className="w-3.5 h-3.5" /> Print PDF
+                </Button>
+              </>
             )}
             <Button size="sm" onClick={generateSnapshot} disabled={loading} className="gap-1.5">
               {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}

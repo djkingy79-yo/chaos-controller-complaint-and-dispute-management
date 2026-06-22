@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren, BarChart2, Download, Loader2 } from "lucide-react";
+import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren, BarChart2, Download, Loader2, BookOpen } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 
 const LETTER_DEFS = [
@@ -15,30 +15,93 @@ const LETTER_DEFS = [
   { field: "letter_escalation", label: "Escalation Letter" },
 ];
 
+async function buildBlob({ type, title, body, sections, matter, date }) {
+  const blob = await generateChaosDocumentPDF({
+    documentType: type || 'general',
+    title,
+    body,
+    sections,
+    matter,
+    date,
+    includeHeader: true,
+    includeFooter: true,
+  });
+  if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+  return blob;
+}
+
 async function generateAndDownload({ type, title, body, sections, matter, date }) {
-  console.log('DASHBOARD PRINT CLICKED', { type, title });
-  console.log('DASHBOARD PDF GENERATOR START', { type });
   try {
-    const blob = await generateChaosDocumentPDF({
-      documentType: type || 'general',
-      title,
-      body,
-      sections,
-      matter,
-      date,
-      includeHeader: true,
-      includeFooter: true,
-    });
-    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    const blob = await buildBlob({ type, title, body, sections, matter, date });
     const filename = `${String(title || 'Document').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
     downloadPDFBlob(blob, filename);
-    console.log('PDF GENERATED', { type, title });
     if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
     else toast.success(`${title} downloaded`);
   } catch (error) {
     console.error('PDF FAILED', error);
     alert('PDF failed: ' + error.message);
   }
+}
+
+async function generateAndPrint({ type, title, body, sections, matter, date }) {
+  try {
+    const blob = await buildBlob({ type, title, body, sections, matter, date });
+    const filename = `${String(title || 'Document').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
+    const opened = openPDFForPrint(blob, filename);
+    if (!opened) {
+      toast.warning('Print preview was blocked. PDF downloaded instead.');
+      downloadPDFBlob(blob, filename);
+    }
+  } catch (error) {
+    console.error('PRINT PDF FAILED', error);
+    toast.error('Print PDF failed: ' + error.message);
+  }
+}
+
+// ── Print variants (open in new tab + print) ──────────────────────────────
+async function handleTimelinePDFPrint(caseItem, events) {
+  if (!events || events.length === 0) { alert('No timeline events to print.'); return; }
+  const sorted = [...events].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
+  const body = sorted.map(ev => `${ev.event_date ? format(new Date(ev.event_date), 'd MMM yyyy') : 'Undated'} — ${ev.title}\nType: ${(ev.event_type || '').replace(/_/g, ' ')}\n${ev.description || ''}`).join('\n\n');
+  await generateAndPrint({ type: 'general', title: 'Case Timeline', body: `CASE TIMELINE (${sorted.length} events)\n\n${body}` });
+}
+async function handleEvidencePDFPrint(caseItem, evidence) {
+  if (!evidence || evidence.length === 0) { alert('No evidence files to print.'); return; }
+  const sorted = [...evidence].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
+  const body = sorted.map((ev, i) => `${i + 1}. ${ev.file_name}\nType: ${(ev.file_type || '').replace(/_/g, ' ')} | Date: ${ev.event_date ? format(new Date(ev.event_date), 'd MMM yyyy') : 'No date'}\n${ev.description || ev.extracted_data?.document_summary || ''}`).join('\n\n');
+  await generateAndPrint({ type: 'general', title: 'Evidence Index', body: `EVIDENCE INDEX (${sorted.length} files)\n\n${body}` });
+}
+async function handleChecklistPDFPrint(caseItem, checklistItems) {
+  if (!checklistItems || checklistItems.length === 0) { alert('No checklist items to print.'); return; }
+  const body = checklistItems.map(item => `${item.status === 'complete' ? '[x]' : '[ ]'} ${item.label}\nCategory: ${(item.category || '').replace(/_/g, ' ')} | Status: ${(item.status || '').toUpperCase()}`).join('\n\n');
+  await generateAndPrint({ type: 'general', title: 'Smart Checklist', body: `SMART CHECKLIST (${checklistItems.length} items)\n\n${body}` });
+}
+async function handleDeadlinesPDFPrint(caseItem, deadlines) {
+  if (!deadlines || deadlines.length === 0) { alert('No deadlines to print.'); return; }
+  const sorted = [...deadlines].sort((a, b) => new Date(a.deadline_date || 0) - new Date(b.deadline_date || 0));
+  const body = sorted.map(d => {
+    const daysLeft = d.deadline_date ? differenceInDays(new Date(d.deadline_date), new Date()) : null;
+    const urgency = daysLeft === null ? 'No date' : daysLeft < 0 ? `OVERDUE by ${Math.abs(daysLeft)} days` : daysLeft === 0 ? 'DUE TODAY' : `${daysLeft} days remaining`;
+    return `${d.title}\nDue: ${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : 'No date'} | ${urgency}\nType: ${(d.deadline_type || '').replace(/_/g, ' ')} | Status: ${(d.status || '').toUpperCase()}`;
+  }).join('\n\n');
+  await generateAndPrint({ type: 'general', title: 'Deadline War Room', body: `DEADLINES (${sorted.length} items)\n\n${body}` });
+}
+async function handleWeeklySnapshotPDFPrint(caseItem, evidence, events, deadlines) {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const twoWeeksAhead = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const recentEvents = (events || []).filter(e => e.event_date && new Date(e.event_date) > weekAgo);
+  const upcomingDeadlines = (deadlines || []).filter(d => d.deadline_date && new Date(d.deadline_date) > now && new Date(d.deadline_date) < twoWeeksAhead && d.status === 'pending');
+  const overdueDeadlines = (deadlines || []).filter(d => d.deadline_date && new Date(d.deadline_date) < now && d.status === 'pending');
+  const sections = [
+    { title: 'Case Overview', content: `Title: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || '—'}\nStatus: ${(caseItem.status || '').replace(/_/g, ' ')}\nCategory: ${caseItem.category || '—'}` },
+    { title: 'Weekly Activity', content: `This Week: ${recentEvents.length} new events\nUpcoming (14 days): ${upcomingDeadlines.length} deadlines\nOverdue: ${overdueDeadlines.length} items\nTotal Evidence: ${(evidence || []).length} files` },
+    { title: 'Recent Activity (Last 7 Days)', content: recentEvents.length > 0 ? recentEvents.map(e => `[${e.event_date}] ${e.title}`).join('\n') : 'No new events this week.' },
+    { title: 'Upcoming Deadlines', content: upcomingDeadlines.length > 0 ? upcomingDeadlines.map(d => `${d.title} — Due ${d.deadline_date}`).join('\n') : 'No upcoming deadlines in the next 14 days.' },
+    { title: 'Overdue Items', content: overdueDeadlines.length > 0 ? overdueDeadlines.map(d => `${d.title} — Was due ${d.deadline_date} (OVERDUE)`).join('\n') : 'No overdue items.' },
+  ];
+  await generateAndPrint({ type: 'snapshot', title: 'Weekly Case Snapshot', matter: caseItem.title, date: format(now, 'd MMMM yyyy'), sections });
 }
 
 async function handleLetterPDF(caseItem, ld) {
@@ -114,19 +177,11 @@ async function handleDeadlinesPDF(caseItem, deadlines) {
   await generateAndDownload({ type: 'general', title: 'Deadline War Room', body: `DEADLINES (${sorted.length} items)\n\n${body}` });
 }
 
-async function handleCaseSummaryPDF(caseItem, evidence, events, deadlines) {
-  console.log('DASHBOARD PRINT CLICKED', { tab: 'summary', caseId: caseItem?.id });
-  const hasSummary = !!caseItem?.issue_summary;
-  const timelineCount = events?.length || 0;
-  const evidenceCount = evidence?.length || 0;
-  const deadlineCount = deadlines?.length || 0;
-  console.log('DATA AVAILABLE', { hasSummary, timelineCount, evidenceCount, deadlineCount });
-
+function buildSummaryBody(caseItem, evidence, events, deadlines) {
   const upcomingDeadlines = (deadlines || [])
     .filter(d => d.status === 'pending' && d.deadline_date)
     .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
     .slice(0, 5);
-
   const deadlineLines = upcomingDeadlines.length > 0
     ? upcomingDeadlines.map(d => {
         const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
@@ -134,8 +189,7 @@ async function handleCaseSummaryPDF(caseItem, evidence, events, deadlines) {
         return `${d.title} — Due: ${format(new Date(d.deadline_date), 'd MMM yyyy')} | ${urgency}`;
       }).join('\n')
     : 'No upcoming deadlines.';
-
-  const body = [
+  return [
     'CASE DETAILS',
     `Organisation: ${caseItem.organisation_name || '—'}`,
     `Status: ${(caseItem.status || '').replace(/_/g, ' ').toUpperCase()}`,
@@ -152,16 +206,18 @@ async function handleCaseSummaryPDF(caseItem, evidence, events, deadlines) {
     'DESIRED OUTCOME',
     caseItem.desired_outcome || '—',
     '',
-    `STATISTICS`,
-    `Evidence Files: ${evidenceCount}`,
-    `Timeline Events: ${timelineCount}`,
-    `Upcoming Deadlines: ${deadlineCount}`,
+    'STATISTICS',
+    `Evidence Files: ${(evidence || []).length}`,
+    `Timeline Events: ${(events || []).length}`,
+    `Upcoming Deadlines: ${upcomingDeadlines.length}`,
     '',
-    `UPCOMING DEADLINES`,
+    'UPCOMING DEADLINES',
     deadlineLines,
   ].join('\n');
+}
 
-  await generateAndDownload({ type: 'general', title: 'Case Summary Report', body });
+async function handleCaseSummaryPDF(caseItem, evidence, events, deadlines) {
+  await generateAndDownload({ type: 'general', title: 'Case Summary Report', body: buildSummaryBody(caseItem, evidence, events, deadlines) });
 }
 
 async function handleWeeklySnapshotPDF(caseItem, evidence, events, deadlines) {
@@ -245,21 +301,32 @@ export default function PrintBundle({ caseItem, evidence, events }) {
     }
   };
 
-  const PDFButton = ({ id, label, icon: Icon, iconColor, description, onClick, fullWidth }) => (
-    <button
-      onClick={() => run(id, onClick)}
-      disabled={loadingPDF === id}
-      className={`bg-card border border-border rounded-xl p-4 text-left hover:border-primary/30 hover:shadow-md transition-all group disabled:opacity-60 ${fullWidth ? 'col-span-full' : ''}`}
-    >
+  const PDFButton = ({ id, label, icon: Icon, iconColor, description, onClick, onPrint, fullWidth }) => (
+    <div className={`bg-card border border-border rounded-xl p-4 ${fullWidth ? 'col-span-full' : ''}`}>
       <div className="flex items-center gap-3 mb-2">
         <div className={`p-2 rounded-lg ${iconColor}`}>
-          {loadingPDF === id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
+          {(loadingPDF === id || loadingPDF === id + '_print') ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
         </div>
         <span className="font-medium text-sm text-foreground">{label}</span>
-        <Download className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
-      <p className="text-xs text-muted-foreground">{description}</p>
-    </button>
+      <p className="text-xs text-muted-foreground mb-3">{description}</p>
+      <div className="flex gap-2">
+        <button
+          onClick={() => run(id, onClick)}
+          disabled={!!loadingPDF}
+          className="flex-1 flex items-center justify-center gap-1.5 text-xs border border-border rounded-lg py-1.5 hover:border-primary/40 hover:bg-primary/5 transition-colors disabled:opacity-50"
+        >
+          <Download className="w-3 h-3" /> Download PDF
+        </button>
+        <button
+          onClick={() => run(id + '_print', onPrint)}
+          disabled={!!loadingPDF}
+          className="flex-1 flex items-center justify-center gap-1.5 text-xs border border-border rounded-lg py-1.5 hover:border-primary/40 hover:bg-primary/5 transition-colors disabled:opacity-50"
+        >
+          <Printer className="w-3 h-3" /> Print PDF
+        </button>
+      </div>
+    </div>
   );
 
   return (
@@ -275,15 +342,27 @@ export default function PrintBundle({ caseItem, evidence, events }) {
             <p className="text-xs text-muted-foreground">Download complete case bundle as PDF</p>
           </div>
         </div>
-        <Button
-          onClick={() => run('bundle', () => handleCaseSummaryPDF(caseItem, evidence, events, deadlines))}
-          disabled={loadingPDF === 'bundle'}
-          className="w-full gap-2 mb-2 h-10 text-base font-bold"
-          size="lg"
-        >
-          {loadingPDF === 'bundle' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          {loadingPDF === 'bundle' ? 'Generating PDF...' : 'Download Case Summary PDF'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => run('bundle', () => handleCaseSummaryPDF(caseItem, evidence, events, deadlines))}
+            disabled={!!loadingPDF}
+            className="flex-1 gap-2 h-10 font-bold"
+            size="lg"
+          >
+            {loadingPDF === 'bundle' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {loadingPDF === 'bundle' ? 'Generating...' : 'Download Case Summary PDF'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => run('bundle_print', () => generateAndPrint({ type: 'general', title: 'Case Summary Report', body: buildSummaryBody(caseItem, evidence, events, deadlines) }))}
+            disabled={!!loadingPDF}
+            className="flex-1 gap-2 h-10 font-bold"
+            size="lg"
+          >
+            {loadingPDF === 'bundle_print' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+            {loadingPDF === 'bundle_print' ? 'Generating...' : 'Print Case Summary PDF'}
+          </Button>
+        </div>
       </div>
 
       <div>
@@ -299,8 +378,9 @@ export default function PrintBundle({ caseItem, evidence, events }) {
             label={ld.label}
             icon={FileText}
             iconColor="bg-primary/10"
-            description={caseItem[ld.field] ? 'Download PDF letter' : 'Not yet generated — go to Letters tab'}
+            description={caseItem[ld.field] ? 'Download or print PDF letter' : 'Not yet generated — go to Letters tab'}
             onClick={() => handleLetterPDF(caseItem, ld)}
+            onPrint={() => generateAndPrint({ type: 'general', title: ld.label, body: caseItem[ld.field] || '' })}
           />
         ))}
 
@@ -309,8 +389,9 @@ export default function PrintBundle({ caseItem, evidence, events }) {
           label="Chronological Timeline"
           icon={Clock}
           iconColor="bg-warning/10"
-          description={`Download all ${events?.length || 0} events in date order`}
+          description={`${events?.length || 0} events in date order`}
           onClick={() => handleTimelinePDF(caseItem, events)}
+          onPrint={() => handleTimelinePDFPrint(caseItem, events)}
           fullWidth
         />
 
@@ -319,8 +400,9 @@ export default function PrintBundle({ caseItem, evidence, events }) {
           label="Evidence Index"
           icon={FolderOpen}
           iconColor="bg-success/10"
-          description={`Download indexed list of ${evidence?.length || 0} documents`}
+          description={`${evidence?.length || 0} documents indexed`}
           onClick={() => handleEvidencePDF(caseItem, evidence)}
+          onPrint={() => handleEvidencePDFPrint(caseItem, evidence)}
         />
 
         <PDFButton
@@ -328,8 +410,9 @@ export default function PrintBundle({ caseItem, evidence, events }) {
           label="Smart Checklist"
           icon={ClipboardList}
           iconColor="bg-accent/10"
-          description={`Download ${checklistItems.length} AI-generated action items`}
+          description={`${checklistItems.length} action items`}
           onClick={() => handleChecklistPDF(caseItem, checklistItems)}
+          onPrint={() => handleChecklistPDFPrint(caseItem, checklistItems)}
         />
 
         <PDFButton
@@ -337,8 +420,9 @@ export default function PrintBundle({ caseItem, evidence, events }) {
           label="Deadline War Room"
           icon={Siren}
           iconColor="bg-destructive/10"
-          description={`Download all ${deadlines.length} deadlines with urgency status`}
+          description={`${deadlines.length} deadlines with urgency status`}
           onClick={() => handleDeadlinesPDF(caseItem, deadlines)}
+          onPrint={() => handleDeadlinesPDFPrint(caseItem, deadlines)}
           fullWidth
         />
 
@@ -347,8 +431,9 @@ export default function PrintBundle({ caseItem, evidence, events }) {
           label="Weekly Snapshot Report"
           icon={BarChart2}
           iconColor="bg-accent/10"
-          description="Download weekly activity summary & upcoming actions"
+          description="Weekly activity summary & upcoming actions"
           onClick={() => handleWeeklySnapshotPDF(caseItem, evidence, events, deadlines)}
+          onPrint={() => handleWeeklySnapshotPDFPrint(caseItem, evidence, events, deadlines)}
           fullWidth
         />
       </div>
