@@ -1,66 +1,118 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { FileText, Sparkles, Loader2, CheckCircle2, AlertCircle, Clock, TrendingUp, Mail } from "lucide-react";
+import { FileText, Sparkles, Loader2, CheckCircle2, AlertCircle, Clock, TrendingUp, ShieldAlert, Download, Printer, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { format } from "date-fns";
 
-export default function ExecutiveSummaryGenerator({ caseItem }) {
+function buildSummaryBody(summary, caseItem) {
+  const s = summary;
+  const lines = [
+    'CASE OVERVIEW',
+    s.case_overview || '—',
+    '',
+    'ESTABLISHED FACTS',
+    ...(s.facts || []).map(f => `• ${f}`),
+    '',
+    'TIMELINE SUMMARY',
+    s.timeline_summary || '—',
+    '',
+    'EVIDENCE SUMMARY',
+    ...(s.evidence_summary || []).map(e => `• ${e}`),
+    '',
+    'ISSUES IDENTIFIED',
+    ...(s.issues_identified || []).map(i => `• ${i}`),
+    '',
+    'CASE STRENGTHS',
+    ...(s.strengths || []).map(x => `• ${x}`),
+    '',
+    'WEAKNESSES / RISKS',
+    ...(s.weaknesses || []).map(x => `• ${x}`),
+    '',
+    'MISSING EVIDENCE',
+    ...(s.missing_evidence?.length ? s.missing_evidence.map(x => `• ${x}`) : ['• None identified']),
+    '',
+    'RECOMMENDED NEXT ACTIONS',
+    ...(s.next_actions || []).map(x => `• ${x}`),
+    '',
+    'ESCALATION PATH',
+    s.escalation_path || '—',
+  ];
+  return lines.join('\n');
+}
+
+export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated }) {
   const { toast } = useToast();
   const [generating, setGenerating] = useState(false);
   const [summary, setSummary] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [errorDetail, setErrorDetail] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
-  if (!caseItem) {
-    return null;
-  }
+  if (!caseItem) return null;
 
   const handleGenerateSummary = async () => {
     setGenerating(true);
     setElapsedTime(0);
-    
-    const timerInterval = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
-    
+    setErrorDetail(null);
+
+    console.log('CASE SUMMARY START', { caseId: caseItem.id, caseTitle: caseItem.title });
+
+    const timerInterval = setInterval(() => setElapsedTime(prev => prev + 1), 1000);
+
     try {
-      const response = await base44.functions.invoke('generateExecutiveSummary', {
-        caseId: caseItem.id
-      });
-      
+      console.log('CASE SUMMARY: invoking generateExecutiveSummary backend function');
+
+      const response = await base44.functions.invoke('generateExecutiveSummary', { caseId: caseItem.id });
+
       clearInterval(timerInterval);
-      
-      if (response.data?.success && response.data?.summary) {
-        setSummary(response.data);
-        setShowDialog(true);
-        
-        // Save summary to case entity for persistent storage
-        try {
-          await base44.entities.Case.update(caseItem.id, {
-            executive_summary: JSON.stringify(response.data.summary)
-          });
-          console.log("Executive summary saved to database successfully");
-          toast({
-            title: "✓ Summary Generated & Saved",
-            description: `AI analyzed your case in ${elapsedTime + 1} seconds. Summary persisted.`,
-          });
-        } catch (saveError) {
-          console.error("Failed to save executive summary to database:", saveError);
-          toast({
-            title: "⚠ Summary Generated (Not Saved)",
-            description: "Summary displayed but failed to save. Refresh may lose it.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        throw new Error(response.data?.error || "AI did not return a summary");
+
+      console.log('CASE SUMMARY AI RESPONSE RECEIVED', {
+        status: response.status,
+        hasData: !!response.data,
+        success: response.data?.success,
+        errorFromServer: response.data?.error,
+        summaryKeys: response.data?.summary ? Object.keys(response.data.summary) : [],
+      });
+
+      if (!response.data?.success || !response.data?.summary) {
+        const serverError = response.data?.error || 'Server returned no summary';
+        console.error('CASE SUMMARY GENERATION FAILED — server error', serverError);
+        throw new Error(serverError);
       }
+
+      const summaryData = response.data.summary;
+      setSummary(summaryData);
+      setShowDialog(true);
+
+      console.log('CASE SUMMARY DATABASE SAVED (by backend)');
+
+      if (onSummaryGenerated) onSummaryGenerated(summaryData);
+
+      toast({
+        title: "✓ Case Summary Generated",
+        description: `Analysis complete in ${elapsedTime + 1}s. Summary saved to case.`,
+      });
     } catch (error) {
       clearInterval(timerInterval);
+
+      const msg = error?.response?.data?.error || error?.message || 'Unknown error';
+      const status = error?.response?.status;
+      console.error('CASE SUMMARY GENERATION FAILED', {
+        message: msg,
+        status,
+        isNetworkError: !error?.response,
+        isTimeout: msg?.toLowerCase().includes('timeout'),
+        stack: error?.stack,
+      });
+
+      setErrorDetail(msg);
       toast({
         title: "✗ Generation Failed",
-        description: error.message || "Please try again",
+        description: msg,
         variant: "destructive",
       });
     } finally {
@@ -68,180 +120,229 @@ export default function ExecutiveSummaryGenerator({ caseItem }) {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    if (!summary) return;
+    setPdfLoading(true);
+    try {
+      const body = buildSummaryBody(summary, caseItem);
+      const blob = await generateChaosDocumentPDF({
+        documentType: 'general',
+        title: `Case Summary — ${caseItem.title}`,
+        body,
+        includeHeader: true,
+        includeFooter: true,
+      });
+      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      downloadPDFBlob(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast({ title: "PDF Downloaded" });
+    } catch (err) {
+      console.error('CASE SUMMARY PDF DOWNLOAD FAILED', err);
+      toast({ title: "PDF Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handlePrintPDF = async () => {
+    if (!summary) return;
+    setPdfLoading(true);
+    try {
+      const body = buildSummaryBody(summary, caseItem);
+      const blob = await generateChaosDocumentPDF({
+        documentType: 'general',
+        title: `Case Summary — ${caseItem.title}`,
+        body,
+        includeHeader: true,
+        includeFooter: true,
+      });
+      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      const opened = await openPDFForPrint(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) {
+        toast({ title: "Print blocked", description: "Downloading instead (Safari/popup blocker)." });
+        downloadPDFBlob(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      } else {
+        toast({ title: "PDF opened — use browser Share/Print" });
+      }
+    } catch (err) {
+      console.error('CASE SUMMARY PDF PRINT FAILED', err);
+      toast({ title: "Print Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   return (
     <>
-      <Button
-        onClick={handleGenerateSummary}
-        disabled={generating}
-        variant="outline"
-        className="gap-2"
-      >
-        {generating ? (
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button
+          onClick={handleGenerateSummary}
+          disabled={generating}
+          variant="outline"
+          className="gap-2"
+        >
+          {generating ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Analysing Case...</>
+          ) : (
+            <><Sparkles className="w-4 h-4" /> Generate Case Summary</>
+          )}
+        </Button>
+
+        {summary && (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Analysing Case...
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-4 h-4" />
-            Generate Case Summary
+            <Button variant="outline" size="sm" onClick={() => setShowDialog(true)} className="gap-1.5 text-xs">
+              <FileText className="w-3.5 h-3.5" /> View Summary
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={pdfLoading} className="gap-1.5 text-xs">
+              <Download className="w-3.5 h-3.5" /> Download PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handlePrintPDF} disabled={pdfLoading} className="gap-1.5 text-xs">
+              <Printer className="w-3.5 h-3.5" /> Print PDF
+            </Button>
           </>
         )}
-      </Button>
 
-      {/* Loading Timer Box */}
+        {errorDetail && !generating && (
+          <span className="text-xs text-destructive flex items-center gap-1">
+            <AlertTriangle className="w-3.5 h-3.5" /> {errorDetail}
+          </span>
+        )}
+      </div>
+
+      {/* Loading Overlay */}
       {generating && (
         <div className="fixed bottom-6 right-6 bg-card border-2 border-primary/40 rounded-xl p-4 shadow-2xl z-50 min-w-[280px] animate-in slide-in-from-bottom-4 fade-in duration-300">
           <div className="flex items-center gap-3">
             <div className="relative">
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
-              <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold text-foreground">Generating Summary...</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                AI is analysing your case file
-              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">AI is analysing your complete case file</p>
               <div className="flex items-center gap-2 mt-2">
                 <Clock className="w-3.5 h-3.5 text-primary" />
-                <span className="text-lg font-mono font-bold text-primary">
-                  {elapsedTime}s
-                </span>
+                <span className="text-lg font-mono font-bold text-primary">{elapsedTime}s</span>
               </div>
             </div>
           </div>
           <div className="mt-3 bg-secondary/50 rounded-full h-2 overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-linear"
-              style={{ width: `${Math.min((elapsedTime / 60) * 100, 100)}%` }}
-            />
+            <div className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-linear" style={{ width: `${Math.min((elapsedTime / 60) * 100, 95)}%` }} />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-            Typically takes 15-30 seconds
-          </p>
+          <p className="text-[10px] text-muted-foreground mt-1.5 text-center">Typically 20–40 seconds</p>
         </div>
       )}
 
+      {/* Summary Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <FileText className="w-6 h-6" />
-              Case Summary — {caseItem.title}
+              <FileText className="w-6 h-6" /> Case Summary — {caseItem.title}
             </DialogTitle>
-            <DialogDescription className="text-sm">
-              AI-powered analysis of your complete case file
-            </DialogDescription>
+            <DialogDescription>AI-powered analysis of your complete case file</DialogDescription>
           </DialogHeader>
 
           {summary && (
-            <div className="space-y-6 mt-4">
-              {/* Case Overview */}
-              <div className="bg-gradient-to-br from-primary/10 via-card to-accent/5 border border-primary/30 rounded-xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  <h3 className="font-heading font-bold text-lg">Case Overview</h3>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {summary.summary.summary}
-                </p>
+            <div className="space-y-5 mt-4">
+              {/* PDF actions inside dialog */}
+              <div className="flex gap-2 justify-end border-b border-border pb-3">
+                <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={pdfLoading} className="gap-1.5 text-xs">
+                  <Download className="w-3.5 h-3.5" /> Download PDF
+                </Button>
+                <Button variant="outline" size="sm" onClick={handlePrintPDF} disabled={pdfLoading} className="gap-1.5 text-xs">
+                  <Printer className="w-3.5 h-3.5" /> Print PDF
+                </Button>
               </div>
 
-              {/* Case Strength Assessment */}
-              {summary.summary.case_strength_assessment && (
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className="w-5 h-5 text-accent" />
-                    <h3 className="font-heading font-bold text-lg">Case Strength Assessment</h3>
-                  </div>
-                  <p className="text-sm leading-relaxed">
-                    {summary.summary.case_strength_assessment}
-                  </p>
-                </div>
+              <Section icon={<TrendingUp className="w-5 h-5 text-primary" />} title="Case Overview" gradient>
+                <p className="text-sm leading-relaxed">{summary.case_overview}</p>
+              </Section>
+
+              {summary.facts?.length > 0 && (
+                <Section icon={<CheckCircle2 className="w-5 h-5 text-success" />} title="Established Facts">
+                  <BulletList items={summary.facts} color="bg-success" />
+                </Section>
               )}
 
-              {/* Key Issues */}
-              <div className="bg-card border border-border rounded-xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle className="w-5 h-5 text-warning" />
-                  <h3 className="font-heading font-bold text-lg">Key Issues</h3>
-                </div>
-                <ul className="space-y-2">
-                  {summary.summary.key_issues.map((issue, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-warning shrink-0 mt-1.5" />
-                      <span>{issue}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Evidence Analysis */}
-              <div className="bg-card border border-border rounded-xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-5 h-5 text-success" />
-                  <h3 className="font-heading font-bold text-lg">Evidence Analysis</h3>
-                </div>
-                <ul className="space-y-2">
-                  {summary.summary.evidence_analysis.map((highlight, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" />
-                      <span>{highlight}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Correspondence Summary */}
-              {summary.summary.correspondence_summary && (
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Mail className="w-5 h-5 text-primary" />
-                    <h3 className="font-heading font-bold text-lg">Correspondence History</h3>
-                  </div>
-                  <p className="text-sm leading-relaxed">
-                    {summary.summary.correspondence_summary}
-                  </p>
-                </div>
+              {summary.timeline_summary && (
+                <Section icon={<Clock className="w-5 h-5 text-accent" />} title="Timeline Summary">
+                  <p className="text-sm leading-relaxed">{summary.timeline_summary}</p>
+                </Section>
               )}
 
-              {/* Next Steps */}
-              <div className="bg-gradient-to-br from-accent/10 via-card to-primary/5 border border-accent/30 rounded-xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle2 className="w-5 h-5 text-accent" />
-                  <h3 className="font-heading font-bold text-lg">Recommended Next Steps</h3>
-                </div>
-                <ul className="space-y-2">
-                  {summary.summary.next_steps.map((step, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 mt-1.5" />
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ul>
+              {summary.evidence_summary?.length > 0 && (
+                <Section icon={<FileText className="w-5 h-5 text-primary" />} title="Evidence Summary">
+                  <BulletList items={summary.evidence_summary} color="bg-primary" />
+                </Section>
+              )}
+
+              {summary.issues_identified?.length > 0 && (
+                <Section icon={<AlertCircle className="w-5 h-5 text-warning" />} title="Issues Identified">
+                  <BulletList items={summary.issues_identified} color="bg-warning" />
+                </Section>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {summary.strengths?.length > 0 && (
+                  <Section icon={<CheckCircle2 className="w-5 h-5 text-success" />} title="Strengths">
+                    <BulletList items={summary.strengths} color="bg-success" />
+                  </Section>
+                )}
+                {summary.weaknesses?.length > 0 && (
+                  <Section icon={<ShieldAlert className="w-5 h-5 text-destructive" />} title="Weaknesses / Risks">
+                    <BulletList items={summary.weaknesses} color="bg-destructive" />
+                  </Section>
+                )}
               </div>
 
-              {/* Critical Deadlines */}
-              {summary.summary.critical_deadlines && summary.summary.critical_deadlines.length > 0 && (
-                <div className="bg-destructive/10 border-2 border-destructive/40 rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Clock className="w-5 h-5 text-destructive" />
-                    <h3 className="font-heading font-bold text-lg text-destructive">Critical Deadlines</h3>
-                  </div>
-                  <ul className="space-y-2">
-                    {summary.summary.critical_deadlines.map((deadline, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 text-sm font-semibold text-destructive">
-                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                        <span>{deadline}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              {summary.missing_evidence?.length > 0 && (
+                <Section icon={<AlertTriangle className="w-5 h-5 text-warning" />} title="Missing Evidence">
+                  <BulletList items={summary.missing_evidence} color="bg-warning" />
+                </Section>
+              )}
+
+              <Section icon={<CheckCircle2 className="w-5 h-5 text-accent" />} title="Recommended Next Actions" gradient accent>
+                <BulletList items={summary.next_actions || []} color="bg-accent" />
+              </Section>
+
+              {summary.escalation_path && (
+                <Section icon={<TrendingUp className="w-5 h-5 text-primary" />} title="Escalation Path">
+                  <p className="text-sm leading-relaxed">{summary.escalation_path}</p>
+                </Section>
               )}
             </div>
           )}
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function Section({ icon, title, children, gradient, accent }) {
+  const base = gradient
+    ? accent
+      ? "bg-gradient-to-br from-accent/10 via-card to-primary/5 border border-accent/30"
+      : "bg-gradient-to-br from-primary/10 via-card to-accent/5 border border-primary/30"
+    : "bg-card border border-border";
+  return (
+    <div className={`rounded-xl p-5 ${base}`}>
+      <div className="flex items-center gap-2 mb-3">
+        {icon}
+        <h3 className="font-heading font-bold text-base">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function BulletList({ items, color }) {
+  return (
+    <ul className="space-y-2">
+      {items.map((item, idx) => (
+        <li key={idx} className="flex items-start gap-2.5 text-sm">
+          <div className={`w-1.5 h-1.5 rounded-full ${color} shrink-0 mt-1.5`} />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
