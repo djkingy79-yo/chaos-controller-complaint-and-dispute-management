@@ -15,6 +15,7 @@ import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagM
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
+import LetterHeader, { buildLetterHeaderData } from "@/components/cases/LetterHeader.jsx";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -647,7 +648,26 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       {text ? (
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
           <div className="letterhead-banner" style={{ height: '60px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', backgroundPosition: 'center center', margin: '0 auto 0 auto' }}></div>
-          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000", marginTop: '0', paddingTop: '8pt' }}>
+          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000", marginTop: '0', paddingTop: '16pt' }}>
+            {/* Structured letter header — date, two-column address, RE line, rule */}
+            {!editing && (() => {
+              const client = buildClientContext(caseItem, evidence);
+              const reLabels = {
+                letter1: `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+                letter2: `SECOND FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+                letter3: `THIRD AND FINAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+                accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
+                deny_offer: `REJECTION OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
+                escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem.organisation_name || "Organisation"}`,
+              };
+              return (
+                <LetterHeader
+                  caseItem={caseItem}
+                  client={client}
+                  reSubject={reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`}
+                />
+              );
+            })()}
             {editing ? (
               <Textarea
                 value={text}
@@ -657,8 +677,8 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5" }}
               />
             ) : (
-              <pre style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.2", margin: 0, whiteSpace: 'pre-wrap', color: "#000" }}>
-                {text.replace(/<[^>]*>/g, '')}
+              <pre style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.15", margin: 0, whiteSpace: 'pre-wrap', color: "#000" }}>
+                {text.replace(/<[^>]*>/g, '').replace(/^[\s\S]*?(?=Dear\s)/i, '')}
               </pre>
             )}
           </div>
