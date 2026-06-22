@@ -4,8 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, AlertTriangle, XCircle, Lock, Upload, Trash2, Calendar, Target, FileText } from "lucide-react";
+import { CheckCircle2, AlertTriangle, XCircle, Lock, Upload, Trash2, Calendar, Target, FileText, Download, Printer, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 
 const statusConfig = {
   complete: { label: "Complete", icon: CheckCircle2, className: "text-success", badge: "bg-success/15 text-success" },
@@ -24,6 +27,52 @@ const priorityConfig = {
 export default function GeneratedChecklist({ caseId, caseItem }) {
   const queryClient = useQueryClient();
   const [uploadingId, setUploadingId] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(null);
+
+  const buildChecklistBlob = async (items) => {
+    const body = items.map(item => {
+      const tick = item.status === 'complete' ? '[x]' : '[ ]';
+      const pri = (item.priority || 'medium').toUpperCase();
+      return `${tick} [${pri}] ${item.label}\nCategory: ${(item.category || '').replace(/_/g, ' ')} | Status: ${(item.status || '').toUpperCase()}${item.notes ? '\n' + item.notes : ''}`;
+    }).join('\n\n');
+    const blob = await generateChaosDocumentPDF({
+      documentType: 'general',
+      title: 'Smart Checklist',
+      body: `SMART CHECKLIST (${items.length} items)\n\n${body}`,
+      includeHeader: true,
+      includeFooter: true,
+    });
+    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+    return blob;
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!items.length) { toast.warning('No checklist items to export.'); return; }
+    setPdfLoading('download');
+    try {
+      const blob = await buildChecklistBlob(items);
+      downloadPDFBlob(blob, `Checklist_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success('Checklist PDF downloaded');
+    } catch (err) {
+      toast.error('PDF failed: ' + err.message);
+    } finally {
+      setPdfLoading(null);
+    }
+  };
+
+  const handlePrintPDF = async () => {
+    if (!items.length) { toast.warning('No checklist items to print.'); return; }
+    setPdfLoading('print');
+    try {
+      const blob = await buildChecklistBlob(items);
+      const opened = await openPDFForPrint(blob, `Checklist_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, `Checklist_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
+    } catch (err) {
+      toast.error('Print failed: ' + err.message);
+    } finally {
+      setPdfLoading(null);
+    }
+  };
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["checklist", caseId],
@@ -91,13 +140,23 @@ export default function GeneratedChecklist({ caseId, caseItem }) {
     <div className="space-y-4">
       {/* Progress Summary */}
       <div className="bg-card rounded-xl border border-border p-5 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h3 className="font-heading font-black text-base text-foreground">
             Escalation Checklist
           </h3>
-          <Badge className="bg-primary/15 text-primary border-primary/30">
-            {completionRate}% Complete
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-primary/15 text-primary border-primary/30">
+              {completionRate}% Complete
+            </Badge>
+            <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={!!pdfLoading} className="gap-1.5 text-xs">
+              {pdfLoading === 'download' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              Download PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handlePrintPDF} disabled={!!pdfLoading} className="gap-1.5 text-xs">
+              {pdfLoading === 'print' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
+              Print PDF
+            </Button>
+          </div>
         </div>
         
         <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
@@ -119,7 +178,7 @@ export default function GeneratedChecklist({ caseId, caseItem }) {
       <div className="space-y-2">
         {items.map((item, idx) => {
           const StatusIcon = statusConfig[item.status]?.icon || Lock;
-          const priority = priorityConfig[item.priority] || priorityConfig.medium;
+          const priority = priorityConfig[item.priority] || priorityConfig.low;
           
           return (
             <motion.div

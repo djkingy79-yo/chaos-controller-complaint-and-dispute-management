@@ -21,6 +21,8 @@ import {
   Download,
   Printer,
   Sparkles,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
@@ -40,6 +42,7 @@ const eventTypeConfig = {
 
 export default function CaseTimeline({ caseId, events, caseItem }) {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null); // holds event object being edited
   const [form, setForm] = useState({ title: "", description: "", event_type: "incident", event_date: new Date().toISOString().split("T")[0] });
   const [addingToCalendar, setAddingToCalendar] = useState(null);
   const [generating, setGenerating] = useState(false);
@@ -53,6 +56,35 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
       setForm({ title: "", description: "", event_type: "incident", event_date: new Date().toISOString().split("T")[0] });
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.TimelineEvent.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
+      setEditingEvent(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.TimelineEvent.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["timeline", caseId] }),
+  });
+
+  const handleEditOpen = (ev) => {
+    setEditingEvent({
+      id: ev.id,
+      title: ev.title || "",
+      description: ev.description || "",
+      event_type: ev.event_type || "incident",
+      event_date: ev.event_date || new Date().toISOString().split("T")[0],
+    });
+  };
+
+  const handleDelete = (ev) => {
+    if (window.confirm(`Delete event "${ev.title}"? This cannot be undone.`)) {
+      deleteMutation.mutate(ev.id);
+    }
+  };
 
   const handleAddToCalendar = async (event) => {
     if (!event.event_date) return;
@@ -229,6 +261,55 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
         </div>
       </div>
 
+      {/* Edit Event Dialog */}
+      <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Timeline Event</DialogTitle>
+          </DialogHeader>
+          {editingEvent && (
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>Event Type</Label>
+                <Select value={editingEvent.event_type} onValueChange={(v) => setEditingEvent({ ...editingEvent, event_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="incident">Incident</SelectItem>
+                    <SelectItem value="complaint">Complaint</SelectItem>
+                    <SelectItem value="response">Response</SelectItem>
+                    <SelectItem value="deadline">Deadline</SelectItem>
+                    <SelectItem value="escalation">Escalation</SelectItem>
+                    <SelectItem value="evidence">Evidence</SelectItem>
+                    <SelectItem value="resolution">Resolution</SelectItem>
+                    <SelectItem value="action_required">Action Required</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <Input type="date" value={editingEvent.event_date} onChange={(e) => setEditingEvent({ ...editingEvent, event_date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Title</Label>
+                <Input value={editingEvent.title} onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Details (optional)</Label>
+                <Textarea value={editingEvent.description} onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })} rows={3} />
+              </div>
+              <Button
+                onClick={() => updateMutation.mutate({ id: editingEvent.id, data: { title: editingEvent.title, description: editingEvent.description, event_type: editingEvent.event_type, event_date: editingEvent.event_date } })}
+                disabled={!editingEvent.title || updateMutation.isPending}
+                className="w-full gap-2"
+              >
+                {updateMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {sorted.length === 0 ? (
         <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-8 text-center">
           <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
@@ -254,22 +335,41 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
                     <span className="text-xs text-muted-foreground font-mono">
                       {ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : format(new Date(ev.created_date), "d MMM yyyy")}
                     </span>
-                    {ev.event_type === 'deadline' && ev.event_date && (
+                    <div className="flex items-center gap-1">
+                      {ev.event_type === 'deadline' && ev.event_date && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => handleAddToCalendar(ev)}
+                          disabled={addingToCalendar === ev.id}
+                        >
+                          {addingToCalendar === ev.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <CalendarPlus className="w-3 h-3" />
+                          )}
+                          Add to Calendar
+                        </Button>
+                      )}
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => handleAddToCalendar(ev)}
-                        disabled={addingToCalendar === ev.id}
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => handleEditOpen(ev)}
                       >
-                        {addingToCalendar === ev.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <CalendarPlus className="w-3 h-3" />
-                        )}
-                        Add to Calendar
+                        <Pencil className="w-3 h-3" />
                       </Button>
-                    )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDelete(ev)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-sm font-medium text-foreground mt-0.5">{ev.title}</p>
                   {ev.description && (

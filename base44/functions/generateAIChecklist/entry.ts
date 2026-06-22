@@ -89,8 +89,9 @@ For each item specify:
         label: item.label,
         category: item.category,
         status: "missing",
+        priority: item.priority || "medium",
         requires_proof: item.requires_proof,
-        notes: `Priority: ${item.priority}. Target: ${deadlineDate.toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
+        notes: `Target: ${deadlineDate.toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
       });
       createdItems.push(checklistItem);
 

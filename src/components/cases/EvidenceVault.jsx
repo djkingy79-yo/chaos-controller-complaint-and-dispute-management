@@ -21,7 +21,7 @@ import { getActiveSubscription } from "@/lib/subscription";
 import { useQuery } from "@tanstack/react-query";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
-import { detectIndustry } from "@/lib/industryClassifier";
+import { detectIndustry, detectIndustryDebug } from "@/lib/industryClassifier";
 
 const typeConfig = {
   email:         { icon: Mail,      label: "Email",           color: "bg-primary/10 text-primary" },
@@ -312,11 +312,16 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
 
     // Auto-classify industry from merchant name or document text
     if (!caseItem?.category || caseItem.category === 'other') {
-      const detectedCategory = detectIndustry(extracted.merchant_name) ||
-        detectIndustry(extracted.issue_summary) ||
-        detectIndustry(extracted.document_summary);
-      if (detectedCategory && detectedCategory !== caseItem?.category) {
-        caseUpdates.category = detectedCategory;
+      const debugResult = detectIndustryDebug({
+        organisation_name: extracted.merchant_name || '',
+        respondent: extracted.merchant_name || '',
+        issue: extracted.issue_summary || '',
+        description: extracted.document_summary || '',
+        issue_details: extracted.extracted_text?.slice(0, 500) || '',
+      });
+      console.log('[EvidenceVault] OCR industry detection:', debugResult);
+      if (debugResult.category && debugResult.category !== 'other' && debugResult.category !== caseItem?.category) {
+        caseUpdates.category = debugResult.category;
       }
     }
 

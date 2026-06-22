@@ -32,6 +32,17 @@
       ],
       "default": "missing"
     },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium",
+      "description": "Priority level of this checklist item"
+    },
     "proof_url": {
       "type": "string",
       "description": "URL of proof document"
