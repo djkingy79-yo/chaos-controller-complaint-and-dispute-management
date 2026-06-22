@@ -25,6 +25,7 @@ import {
 import { format } from "date-fns";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
+import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 
 const eventTypeConfig = {
   incident: { icon: AlertCircle, color: "text-destructive", bg: "bg-destructive/10" },
@@ -124,29 +125,29 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
   };
 
   const handleTimelinePDF = async () => {
+    pdfDiagStart({ tab: 'Timeline', action: 'Download PDF', caseId, hasCase: !!caseItem, hasData: sorted.length > 0 });
+    if (!sorted.length) { pdfDiagMissingData({ tab: 'Timeline', action: 'Download PDF', dataName: 'timeline events' }); return; }
     try {
       const blob = await buildTimelineBlob();
+      pdfDiagBlobCreated({ tab: 'Timeline', action: 'Download PDF', blob });
       downloadPDFBlob(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      else toast.success('Timeline PDF downloaded');
+      pdfDiagSuccess({ tab: 'Timeline', action: 'Download PDF' });
     } catch (error) {
-      console.error('PDF FAILED', error);
-      alert('PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Timeline', action: 'Download PDF', error });
     }
   };
 
   const handleTimelinePrint = async () => {
+    pdfDiagStart({ tab: 'Timeline', action: 'Print PDF', caseId, hasCase: !!caseItem, hasData: sorted.length > 0 });
+    if (!sorted.length) { pdfDiagMissingData({ tab: 'Timeline', action: 'Print PDF', dataName: 'timeline events' }); return; }
     try {
       const blob = await buildTimelineBlob();
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      const opened = openPDFForPrint(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (!opened) {
-        toast.warning('Print preview was blocked. PDF downloaded instead.');
-        downloadPDFBlob(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      }
+      pdfDiagBlobCreated({ tab: 'Timeline', action: 'Print PDF', blob });
+      const opened = await openPDFForPrint(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, `Timeline_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
+      pdfDiagSuccess({ tab: 'Timeline', action: 'Print PDF' });
     } catch (error) {
-      console.error('PRINT PDF FAILED', error);
-      toast.error('Print PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Timeline', action: 'Print PDF', error });
     }
   };
 

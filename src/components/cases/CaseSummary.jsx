@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { format, differenceInDays, isPast, parseISO } from "date-fns";
 import { Printer, FileText, TrendingUp, AlertCircle, CheckCircle2, Clock, Mail, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
+import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 
 
 const STATUS_LABELS = {
@@ -61,56 +62,40 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
     .slice(0, 5);
 
-  const handleSummaryPDF = async () => {
-    console.log('DASHBOARD PRINT CLICKED', { tab: 'summary', caseId: caseItem?.id });
+  const buildSummaryBody = () => {
     const client = buildClientContext(caseItem, evidence);
-
     const deadlineLines = upcomingDeadlines.length > 0
-      ? upcomingDeadlines.map(d => {
-          const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
-          const urgency = daysLeft < 0 ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? "TODAY" : `${daysLeft} days`;
-          return `${d.title} — Due: ${format(new Date(d.deadline_date), "d MMM yyyy")} | ${urgency}`;
-        }).join("\n")
-      : "No upcoming deadlines.";
+      ? upcomingDeadlines.map(d => { const dl = differenceInDays(new Date(d.deadline_date), new Date()); return `${d.title} — Due: ${format(new Date(d.deadline_date), 'd MMM yyyy')} | ${dl < 0 ? `OVERDUE (${Math.abs(dl)}d)` : dl === 0 ? 'TODAY' : `${dl} days`}`; }).join('\n')
+      : 'No upcoming deadlines.';
+    return ['CASE DETAILS', `Organisation: ${caseItem.organisation_name || '—'}`, `Status: ${STATUS_LABELS[caseItem.status] || caseItem.status || '—'}`, `Category: ${caseItem.category || '—'}`, `Priority: ${PRIORITY_LABELS[caseItem.priority] || caseItem.priority || '—'}`, `Complainant: ${client.name || '—'}`, `Account #: ${caseItem.account_number || '—'}`, `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`, `Escalation Body: ${caseItem.escalation_body || '—'}`, '', 'ISSUE SUMMARY', caseItem.issue_summary || '—', '', 'DESIRED OUTCOME', caseItem.desired_outcome || '—', '', `UPCOMING DEADLINES (${upcomingDeadlines.length})`, deadlineLines].join('\n');
+  };
 
-    const body = [
-      'CASE DETAILS',
-      `Organisation: ${caseItem.organisation_name || '—'}`,
-      `Status: ${STATUS_LABELS[caseItem.status] || caseItem.status || '—'}`,
-      `Category: ${caseItem.category || '—'}`,
-      `Priority: ${PRIORITY_LABELS[caseItem.priority] || caseItem.priority || '—'}`,
-      `Complainant: ${client.name || '—'}`,
-      `Account #: ${caseItem.account_number || '—'}`,
-      `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`,
-      `Escalation Body: ${caseItem.escalation_body || '—'}`,
-      '',
-      'ISSUE SUMMARY',
-      caseItem.issue_summary || '—',
-      '',
-      'DESIRED OUTCOME',
-      caseItem.desired_outcome || '—',
-      '',
-      `UPCOMING DEADLINES (${upcomingDeadlines.length})`,
-      deadlineLines,
-    ].join('\n');
-
+  const handleSummaryPDF = async () => {
+    pdfDiagStart({ tab: 'Summary', action: 'Download PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!caseItem?.title });
+    if (!caseItem) { pdfDiagMissingData({ tab: 'Summary', action: 'Download PDF', dataName: 'case data' }); return; }
     try {
-      console.log('DASHBOARD PDF GENERATOR START', { type: 'summary' });
-      const blob = await generateChaosDocumentPDF({
-        documentType: 'general',
-        title: 'Case Summary',
-        body,
-        includeHeader: true,
-        includeFooter: true,
-      });
+      const blob = await generateChaosDocumentPDF({ documentType: 'general', title: 'Case Summary', body: buildSummaryBody(), includeHeader: true, includeFooter: true });
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      pdfDiagBlobCreated({ tab: 'Summary', action: 'Download PDF', blob });
       downloadPDFBlob(blob, `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      console.log('PDF GENERATED', { type: 'summary' });
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      else toast.success('Case summary PDF downloaded');
+      pdfDiagSuccess({ tab: 'Summary', action: 'Download PDF' });
     } catch (error) {
-      console.error('PDF FAILED', error);
-      alert('PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Summary', action: 'Download PDF', error });
+    }
+  };
+
+  const handleSummaryPrint = async () => {
+    pdfDiagStart({ tab: 'Summary', action: 'Print PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!caseItem?.title });
+    if (!caseItem) { pdfDiagMissingData({ tab: 'Summary', action: 'Print PDF', dataName: 'case data' }); return; }
+    try {
+      const blob = await generateChaosDocumentPDF({ documentType: 'general', title: 'Case Summary', body: buildSummaryBody(), includeHeader: true, includeFooter: true });
+      if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
+      pdfDiagBlobCreated({ tab: 'Summary', action: 'Print PDF', blob });
+      const opened = await openPDFForPrint(blob, `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
+      pdfDiagSuccess({ tab: 'Summary', action: 'Print PDF' });
+    } catch (error) {
+      pdfDiagFail({ tab: 'Summary', action: 'Print PDF', error });
     }
   };
 
@@ -118,9 +103,14 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h3 className="font-heading font-semibold text-foreground">Case Summary</h3>
-        <Button variant="outline" size="sm" onClick={handleSummaryPDF} className="gap-1.5 text-xs">
-          <Download className="w-3.5 h-3.5" /> PDF
-        </Button>
+        <div className="flex gap-1.5">
+          <Button variant="outline" size="sm" onClick={handleSummaryPDF} className="gap-1.5 text-xs">
+            <Download className="w-3.5 h-3.5" /> Download PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSummaryPrint} className="gap-1.5 text-xs">
+            <Printer className="w-3.5 h-3.5" /> Print PDF
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

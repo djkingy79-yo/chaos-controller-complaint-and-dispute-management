@@ -5,6 +5,7 @@ import { Printer, FileText, Clock, FolderOpen, Package, ClipboardList, Siren, Ba
 import { format, differenceInDays } from "date-fns";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
+import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 
 const LETTER_DEFS = [
   { field: "complaint_letter", label: "1st Complaint Letter" },
@@ -31,31 +32,29 @@ async function buildBlob({ type, title, body, sections, matter, date }) {
 }
 
 async function generateAndDownload({ type, title, body, sections, matter, date }) {
+  pdfDiagStart({ tab: 'Bundle', action: `Download: ${title}`, caseId: null, hasCase: true, hasData: !!(body || sections?.length) });
   try {
     const blob = await buildBlob({ type, title, body, sections, matter, date });
     const filename = `${String(title || 'Document').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    pdfDiagBlobCreated({ tab: 'Bundle', action: `Download: ${title}`, blob });
     downloadPDFBlob(blob, filename);
-    if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-    else toast.success(`${title} downloaded`);
+    pdfDiagSuccess({ tab: 'Bundle', action: `Download: ${title}` });
   } catch (error) {
-    console.error('PDF FAILED', error);
-    alert('PDF failed: ' + error.message);
+    pdfDiagFail({ tab: 'Bundle', action: `Download: ${title}`, error });
   }
 }
 
 async function generateAndPrint({ type, title, body, sections, matter, date }) {
+  pdfDiagStart({ tab: 'Bundle', action: `Print: ${title}`, caseId: null, hasCase: true, hasData: !!(body || sections?.length) });
   try {
     const blob = await buildBlob({ type, title, body, sections, matter, date });
     const filename = `${String(title || 'Document').replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-    if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-    const opened = openPDFForPrint(blob, filename);
-    if (!opened) {
-      toast.warning('Print preview was blocked. PDF downloaded instead.');
-      downloadPDFBlob(blob, filename);
-    }
+    pdfDiagBlobCreated({ tab: 'Bundle', action: `Print: ${title}`, blob });
+    const opened = await openPDFForPrint(blob, filename);
+    if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, filename); }
+    pdfDiagSuccess({ tab: 'Bundle', action: `Print: ${title}` });
   } catch (error) {
-    console.error('PRINT PDF FAILED', error);
-    toast.error('Print PDF failed: ' + error.message);
+    pdfDiagFail({ tab: 'Bundle', action: `Print: ${title}`, error });
   }
 }
 

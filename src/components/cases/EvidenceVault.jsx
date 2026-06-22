@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
 import { useQuery } from "@tanstack/react-query";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 import { detectIndustry } from "@/lib/industryClassifier";
 
 const typeConfig = {
@@ -430,29 +431,29 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
   };
 
   const handlePrintEvidence = async () => {
+    pdfDiagStart({ tab: 'Evidence', action: 'Download PDF', caseId, hasCase: !!caseItem, hasData: sorted.length > 0 });
+    if (!sorted.length) { pdfDiagMissingData({ tab: 'Evidence', action: 'Download PDF', dataName: 'evidence files' }); return; }
     try {
       const blob = await buildEvidenceBlob();
+      pdfDiagBlobCreated({ tab: 'Evidence', action: 'Download PDF', blob });
       downloadPDFBlob(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      else toast.success('Evidence index PDF downloaded');
+      pdfDiagSuccess({ tab: 'Evidence', action: 'Download PDF' });
     } catch (error) {
-      console.error('PDF FAILED', error);
-      alert('PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Evidence', action: 'Download PDF', error });
     }
   };
 
   const handlePrintEvidencePrint = async () => {
+    pdfDiagStart({ tab: 'Evidence', action: 'Print PDF', caseId, hasCase: !!caseItem, hasData: sorted.length > 0 });
+    if (!sorted.length) { pdfDiagMissingData({ tab: 'Evidence', action: 'Print PDF', dataName: 'evidence files' }); return; }
     try {
       const blob = await buildEvidenceBlob();
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      const opened = openPDFForPrint(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (!opened) {
-        toast.warning('Print preview was blocked. PDF downloaded instead.');
-        downloadPDFBlob(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      }
+      pdfDiagBlobCreated({ tab: 'Evidence', action: 'Print PDF', blob });
+      const opened = await openPDFForPrint(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, `Evidence_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
+      pdfDiagSuccess({ tab: 'Evidence', action: 'Print PDF' });
     } catch (error) {
-      console.error('PRINT PDF FAILED', error);
-      toast.error('Print PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Evidence', action: 'Print PDF', error });
     }
   };
 

@@ -24,6 +24,7 @@ import SmartChecklist from "@/components/cases/SmartChecklist";
 import GeneratedChecklist from "@/components/cases/GeneratedChecklist";
 import OutlookDeadlineSync from "@/components/cases/OutlookDeadlineSync";
 import DeadlineManager from "@/components/cases/DeadlineManager";
+import PDFDebugPanel from "@/components/cases/PDFDebugPanel";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
@@ -215,6 +216,7 @@ export default function CaseDetail() {
           </Tabs>
         </div>
       </div>
+      <PDFDebugPanel />
     </div>
   );
 }

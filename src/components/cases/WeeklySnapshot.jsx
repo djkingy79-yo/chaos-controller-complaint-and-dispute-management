@@ -6,6 +6,7 @@ import { Loader2, RefreshCw, Download, Printer, CalendarDays, TrendingUp, AlertT
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from '@/lib/pdfGenerator';
 import { toast } from "sonner";
+import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 
 const SNAPSHOT_CACHE_KEY = (caseId) => `weekly_snapshot_${caseId}`;
 
@@ -182,33 +183,33 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
   };
 
   const handleDownloadPDF = async () => {
+    pdfDiagStart({ tab: 'Weekly Snapshot', action: 'Download PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!snapshot });
+    if (!snapshot) { pdfDiagMissingData({ tab: 'Weekly Snapshot', action: 'Download PDF', dataName: 'snapshot (generate it first)' }); return; }
     setPdfGenerating(true);
     try {
       const blob = await buildSnapshotBlob();
+      pdfDiagBlobCreated({ tab: 'Weekly Snapshot', action: 'Download PDF', blob });
       downloadPDFBlob(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      else toast.success('Weekly Snapshot PDF downloaded');
+      pdfDiagSuccess({ tab: 'Weekly Snapshot', action: 'Download PDF' });
     } catch (error) {
-      console.error('PDF FAILED', error);
-      alert('PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Weekly Snapshot', action: 'Download PDF', error });
     } finally {
       setPdfGenerating(false);
     }
   };
 
   const handlePrintPDF = async () => {
+    pdfDiagStart({ tab: 'Weekly Snapshot', action: 'Print PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!snapshot });
+    if (!snapshot) { pdfDiagMissingData({ tab: 'Weekly Snapshot', action: 'Print PDF', dataName: 'snapshot (generate it first)' }); return; }
     setPdfGenerating(true);
     try {
       const blob = await buildSnapshotBlob();
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      const opened = openPDFForPrint(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (!opened) {
-        toast.warning('Print preview was blocked. PDF downloaded instead.');
-        downloadPDFBlob(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      }
+      pdfDiagBlobCreated({ tab: 'Weekly Snapshot', action: 'Print PDF', blob });
+      const opened = await openPDFForPrint(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
+      pdfDiagSuccess({ tab: 'Weekly Snapshot', action: 'Print PDF' });
     } catch (error) {
-      console.error('PRINT PDF FAILED', error);
-      toast.error('Print PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Weekly Snapshot', action: 'Print PDF', error });
     } finally {
       setPdfGenerating(false);
     }

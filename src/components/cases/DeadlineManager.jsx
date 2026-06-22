@@ -12,6 +12,7 @@ import { differenceInDays, format } from "date-fns";
 import { Sparkles, Plus, Loader2, Clock, AlertTriangle, CheckCircle2, Trash2, Download, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 
 export default function DeadlineManager({ caseItem, evidence = [] }) {
   const queryClient = useQueryClient();
@@ -159,29 +160,29 @@ Return as JSON array only. Each deadline must have:
   };
 
   const handleDownloadPDF = async () => {
+    pdfDiagStart({ tab: 'Deadlines', action: 'Download PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: deadlines.length > 0 });
+    if (!deadlines.length) { pdfDiagMissingData({ tab: 'Deadlines', action: 'Download PDF', dataName: 'deadlines' }); return; }
     try {
       const blob = await buildDeadlinesBlob();
+      pdfDiagBlobCreated({ tab: 'Deadlines', action: 'Download PDF', blob });
       downloadPDFBlob(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      else toast.success('Deadlines PDF downloaded');
+      pdfDiagSuccess({ tab: 'Deadlines', action: 'Download PDF' });
     } catch (error) {
-      console.error('PDF FAILED', error);
-      alert('PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Deadlines', action: 'Download PDF', error });
     }
   };
 
   const handlePrintPDF = async () => {
+    pdfDiagStart({ tab: 'Deadlines', action: 'Print PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: deadlines.length > 0 });
+    if (!deadlines.length) { pdfDiagMissingData({ tab: 'Deadlines', action: 'Print PDF', dataName: 'deadlines' }); return; }
     try {
       const blob = await buildDeadlinesBlob();
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      const opened = openPDFForPrint(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (!opened) {
-        toast.warning('Print preview was blocked. PDF downloaded instead.');
-        downloadPDFBlob(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      }
+      pdfDiagBlobCreated({ tab: 'Deadlines', action: 'Print PDF', blob });
+      const opened = await openPDFForPrint(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
+      pdfDiagSuccess({ tab: 'Deadlines', action: 'Print PDF' });
     } catch (error) {
-      console.error('PRINT PDF FAILED', error);
-      toast.error('Print PDF failed: ' + error.message);
+      pdfDiagFail({ tab: 'Deadlines', action: 'Print PDF', error });
     }
   };
 

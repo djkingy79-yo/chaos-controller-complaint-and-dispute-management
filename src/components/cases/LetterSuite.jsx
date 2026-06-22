@@ -9,6 +9,7 @@ import LetterTemplateManager from "./LetterTemplateManager";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
+import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
@@ -406,29 +407,29 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const letterFilename = `${String(letterType.label).replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
 
   const handleDownloadPDF = async () => {
+    pdfDiagStart({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!text });
+    if (!text || !text.trim()) { pdfDiagMissingData({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', dataName: 'letter content (generate letter first)' }); return; }
     try {
       const blob = await buildLetterBlob();
+      pdfDiagBlobCreated({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', blob });
       downloadPDFBlob(blob, letterFilename);
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      else toast.success(`${letterType.label} PDF downloaded`);
+      pdfDiagSuccess({ tab: `Letter: ${letterType.label}`, action: 'Download PDF' });
     } catch (error) {
-      console.error('PDF FAILED', error);
-      alert('PDF failed: ' + error.message);
+      pdfDiagFail({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', error });
     }
   };
 
   const handlePrintPDF = async () => {
+    pdfDiagStart({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!text });
+    if (!text || !text.trim()) { pdfDiagMissingData({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', dataName: 'letter content (generate letter first)' }); return; }
     try {
       const blob = await buildLetterBlob();
-      if (blob._warnings?.length) toast.warning('PDF generated but branding image failed to load.');
-      const opened = openPDFForPrint(blob, letterFilename);
-      if (!opened) {
-        toast.warning('Print preview was blocked. PDF downloaded instead.');
-        downloadPDFBlob(blob, letterFilename);
-      }
+      pdfDiagBlobCreated({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', blob });
+      const opened = await openPDFForPrint(blob, letterFilename);
+      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, letterFilename); }
+      pdfDiagSuccess({ tab: `Letter: ${letterType.label}`, action: 'Print PDF' });
     } catch (error) {
-      console.error('PRINT PDF FAILED', error);
-      toast.error('Print PDF failed: ' + error.message);
+      pdfDiagFail({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', error });
     }
   };
 
