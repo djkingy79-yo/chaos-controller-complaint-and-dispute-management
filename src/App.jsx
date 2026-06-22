@@ -24,22 +24,17 @@ import Directories from '@/pages/Directories';
 
 import AdminDashboard from '@/pages/AdminDashboard';
 import Payments from '@/pages/Payments';
-import CalendarView from '@/pages/CalendarView';
-import CalendarSync from '@/pages/CalendarSync';
 import HelpGuide from '@/pages/HelpGuide';
 import TemplateLibrary from '@/pages/TemplateLibrary';
 import QnA from '@/pages/QnA';
-import SampleReports from '@/pages/SampleReports';
 import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import SharedCasePortal from '@/pages/SharedCasePortal';
 import SamplePreviews from '@/pages/SamplePreviews';
-import EscalatedCases from '@/pages/EscalatedCases';
 import MerchantLogin from '@/pages/MerchantLogin';
 import MerchantPortal from '@/pages/MerchantPortal';
 import MerchantResponsesDashboard from '@/pages/MerchantResponsesDashboard';
 import Notifications from '@/pages/Notifications';
-import Analytics from '@/pages/Analytics';
 import UserSettings from '@/pages/UserSettings';
 import CaseTemplates from '@/pages/CaseTemplates';
 
@@ -71,19 +66,14 @@ const AuthenticatedApp = () => {
           <Route path="/directories" element={<Directories />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/calendar" element={<CalendarView />} />
-          <Route path="/calendar-sync" element={<CalendarSync />} />
           <Route path="/help" element={<HelpGuide />} />
           <Route path="/templates" element={<TemplateLibrary />} />
           <Route path="/qna" element={<QnA />} />
-          <Route path="/sample-reports" element={<SampleReports />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/sample-previews" element={<SamplePreviews />} />
-          <Route path="/escalation" element={<EscalatedCases />} />
           <Route path="/merchant-responses" element={<MerchantResponsesDashboard />} />
           <Route path="/notifications" element={<Notifications />} />
-          <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/templates" element={<CaseTemplates />} />
         </Route>

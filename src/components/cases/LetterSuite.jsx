@@ -397,6 +397,8 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [text, setText] = useState(caseItem[field] || "");
   const [editing, setEditing] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generateStatus, setGenerateStatus] = useState("");
+  const [generateTimedOut, setGenerateTimedOut] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
 
   // Load last send log for this letter for status badge
@@ -429,25 +431,43 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
   const handleGenerate = async () => {
     setGenerating(true);
+    setGenerateTimedOut(false);
+    setGenerateStatus("Rebuilding your letter… analysing evidence");
+
+    // After 15s update status; after 60s show timeout warning
+    const statusTimer = setTimeout(() => setGenerateStatus("Almost there… writing your letter"), 15000);
+    const timeoutTimer = setTimeout(() => {
+      setGenerateTimedOut(true);
+      setGenerateStatus("Taking longer than usual… still working");
+    }, 60000);
+
     try {
       const client = buildClientContext(caseItem, evidence);
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today, evidence);
       const result = await base44.integrations.Core.InvokeLLM({ prompt, model: 'claude_sonnet_4_6' });
+      clearTimeout(statusTimer);
+      clearTimeout(timeoutTimer);
       updateMutation.mutate({ [field]: result }, {
         onSuccess: () => {
           setText(result);
-          toast.success(`${letterType.label} generated and saved`);
           setGenerating(false);
+          setGenerateStatus("");
+          toast.success(`${letterType.label} generated and saved`);
         },
         onError: () => {
-          toast.error("Letter generated but failed to save. Please try again.");
           setGenerating(false);
+          setGenerateStatus("");
+          toast.error("Letter generated but failed to save. Please try again.");
         }
       });
     } catch (e) {
-      toast.error("Generation failed: " + e.message);
+      clearTimeout(statusTimer);
+      clearTimeout(timeoutTimer);
       setGenerating(false);
+      setGenerateStatus("");
+      setGenerateTimedOut(false);
+      toast.error("Generation failed: " + e.message);
     }
   };
 
@@ -558,12 +578,19 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </Button>
             </>
           )}
-          <Button size="sm" onClick={handleGenerate} disabled={generating} className="gap-1.5 text-xs">
+          <Button size="sm" onClick={handleGenerate} disabled={generating} className="gap-1.5 text-xs min-w-[140px]">
             {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            {text ? "Regenerate" : "Generate Letter"}
+            {generating ? (generateTimedOut ? "Still working…" : "Generating…") : (text ? "Regenerate" : "Generate Letter")}
           </Button>
         </div>
       </div>
+
+      {generating && generateStatus && (
+        <div className="bg-primary/10 border border-primary/30 rounded-lg px-4 py-2.5 text-xs text-primary font-medium flex items-center gap-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+          {generateStatus}
+        </div>
+      )}
 
       {hasPlaceholders && !generating && (
         <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3 text-xs text-destructive font-medium">
@@ -665,11 +692,18 @@ export default function LetterSuite({ caseItem }) {
         <TabsList className="flex-wrap h-auto gap-1">
           {LETTER_TYPES.map(lt => {
             const locked = !hasPlanAccess(subscription, lt.minPlan);
+            const hasContent = !!caseItem[lt.field];
+            // Sent = EmailLog with status 'sent' exists — checked via caseItem context not available here,
+            // so we derive: no content = grey dot, has content = green dot (sent is shown inside the editor)
             return (
               <TabsTrigger key={lt.key} value={lt.key} className="text-xs gap-1">
                 {locked && <Lock className="w-3 h-3 opacity-60" />}
                 {lt.label}
-                {!locked && caseItem[lt.field] && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />}
+                {!locked && (
+                  hasContent
+                    ? <span className="ml-1 w-1.5 h-1.5 rounded-full bg-green-500 inline-block" title="Generated" />
+                    : <span className="ml-1 w-1.5 h-1.5 rounded-full bg-gray-400/50 inline-block" title="Not generated" />
+                )}
               </TabsTrigger>
             );
           })}

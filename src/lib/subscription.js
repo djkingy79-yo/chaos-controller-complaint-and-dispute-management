@@ -46,13 +46,13 @@ export function getUpgradePrice(currentPlan, targetPlan) {
   
   const currentPrice = PLAN_PRICES[currentPlan];
   const targetPrice = PLAN_PRICES[targetPlan];
-  const priceDifference = targetPrice - currentPrice;
+  const priceDifference = parseFloat((targetPrice - currentPrice).toFixed(2));
   
   return {
     from_plan: currentPlan,
     to_plan: targetPlan,
     original_price: targetPrice,
     upgrade_price: priceDifference,
-    savings: currentPrice
+    savings: parseFloat(currentPrice.toFixed(2))
   };
 }

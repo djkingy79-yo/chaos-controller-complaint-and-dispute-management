@@ -141,7 +141,7 @@ export default function Payments() {
       user_email: user.email,
       user_name: user.full_name,
       plan_name: selectedPlan.name,
-      amount: upgradeInfo ? `$${upgradeInfo.upgrade_price}` : selectedPlan.price,
+      amount: upgradeInfo ? `$${upgradeInfo.upgrade_price.toFixed(2)}` : selectedPlan.price,
       payid_reference: payRef,
       status: "pending",
       subscription_active: false,
