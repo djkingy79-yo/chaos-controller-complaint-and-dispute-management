@@ -14,6 +14,8 @@
         "tenancy",
         "telco",
         "utilities",
+        "government",
+        "education",
         "other"
       ],
       "description": "Industry category of the dispute"
