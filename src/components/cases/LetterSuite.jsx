@@ -391,6 +391,22 @@ ${letterHistory}`;
   return base;
 }
 
+// Map letter key -> the timestamp field to stamp when the letter is sent/emailed
+const SENT_TIMESTAMP_MAP = {
+  letter1: "first_complaint_sent_at",
+  letter2: "second_complaint_sent_at",
+  letter3: "third_complaint_sent_at",
+  escalation: "escalated_at",
+};
+
+// Map letter key -> progress_stage to set after send
+const SENT_STAGE_MAP = {
+  letter1: "awaiting_first_response",
+  letter2: "awaiting_second_response",
+  letter3: "awaiting_final_response",
+  escalation: "escalated",
+};
+
 function LetterEditor({ letterType, caseItem, evidence }) {
   const queryClient = useQueryClient();
   const field = letterType.field;
@@ -408,6 +424,26 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     enabled: !!caseItem?.id,
   });
   const lastLog = emailLogs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+
+  // Stamp complaint sent timestamp and progress stage when a letter is emailed for the first time
+  const handleLetterSent = async () => {
+    const tsField = SENT_TIMESTAMP_MAP[letterType.key];
+    const stageField = SENT_STAGE_MAP[letterType.key];
+    if (!tsField || caseItem[tsField]) return; // only stamp once
+    const updates = { [tsField]: new Date().toISOString() };
+    if (stageField) updates.progress_stage = stageField;
+    await base44.entities.Case.update(caseItem.id, updates);
+    // Create timeline event for the send
+    await base44.entities.TimelineEvent.create({
+      case_id: caseItem.id,
+      event_date: format(new Date(), "yyyy-MM-dd"),
+      title: `${letterType.label} sent to ${caseItem.organisation_name || "organisation"}`,
+      description: `${letterType.label} formally submitted via email.`,
+      event_type: "complaint",
+      is_action_required: false,
+    });
+    queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+  };
 
   const handleApplyTemplate = (content) => {
     setText(content);
@@ -653,6 +689,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       <LetterEmailDialog
         open={emailOpen}
         onClose={() => { setEmailOpen(false); refetchLogs(); }}
+        onSent={handleLetterSent}
         caseItem={caseItem}
         letterType={letterType}
         letterText={text}

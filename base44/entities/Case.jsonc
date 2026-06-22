@@ -35,6 +35,30 @@
       "default": "draft",
       "description": "Current status of the case"
     },
+    "progress_stage": {
+      "type": "string",
+      "enum": [
+        "case_created",
+        "first_complaint_sent",
+        "awaiting_first_response",
+        "first_no_response",
+        "second_complaint_sent",
+        "awaiting_second_response",
+        "second_no_response",
+        "third_complaint_sent",
+        "awaiting_final_response",
+        "final_no_response",
+        "escalation_ready",
+        "escalated",
+        "offer_received",
+        "offer_accepted",
+        "offer_denied",
+        "resolved",
+        "closed"
+      ],
+      "default": "case_created",
+      "description": "Granular dispute lifecycle stage"
+    },
     "organisation_name": {
       "type": "string"
     },
@@ -122,6 +146,56 @@
     "executive_summary": {
       "type": "string",
       "description": "AI-generated executive summary (JSON string)"
+    },
+    "first_complaint_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "first_response_received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "first_no_response_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "second_complaint_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "second_response_received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "second_no_response_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "third_complaint_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "third_response_received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "third_no_response_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "escalated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "escalation_reference": {
+      "type": "string"
+    },
+    "final_outcome": {
+      "type": "string"
+    },
+    "final_outcome_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

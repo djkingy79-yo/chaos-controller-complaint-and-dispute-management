@@ -28,6 +28,7 @@ async function blobToBase64(blob) {
 export default function LetterEmailDialog({
   open,
   onClose,
+  onSent,
   caseItem,
   letterType,    // { key, label, field }
   letterText,    // raw text content of the letter
@@ -126,6 +127,7 @@ export default function LetterEmailDialog({
         toast.success(`Email sent successfully to ${recipientEmail}`);
         refetchLogs();
         queryClient.invalidateQueries({ queryKey: ['emailLogs'] });
+        if (onSent) await onSent();
         // Auto-close dialog after 1.5 seconds
         setTimeout(() => {
           onClose();
