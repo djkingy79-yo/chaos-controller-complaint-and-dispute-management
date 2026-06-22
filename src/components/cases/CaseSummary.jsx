@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { format, differenceInDays, isPast, parseISO } from "date-fns";
-import { Printer, FileText, TrendingUp, AlertCircle, CheckCircle2, Clock, Mail, Download } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
+import { Printer, FileText, TrendingUp, AlertCircle, CheckCircle2, Clock, Mail, Download, ShieldAlert, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
-
 
 const STATUS_LABELS = {
   draft: "Draft",
@@ -27,14 +26,52 @@ const PRIORITY_LABELS = {
   urgent: "URGENT",
 };
 
-function buildClientContext(caseItem, evidence) {
-  return {
-    name: caseItem.complainant_name || "",
-    address: caseItem.complainant_address || "",
-    email: caseItem.complainant_email || "",
-    phone: caseItem.complainant_phone || "",
-    accounts: caseItem.account_number ? [caseItem.account_number] : [],
-  };
+// Parse saved executive_summary JSON — handles both old schema and new schema,
+// and the old "response" wrapper that some legacy records have.
+function parseExecutiveSummary(raw) {
+  if (!raw) return null;
+  try {
+    let parsed = JSON.parse(raw);
+    // Unwrap legacy { response: {...} } wrapper
+    if (parsed?.response && typeof parsed.response === 'object') parsed = parsed.response;
+    return parsed;
+  } catch (e) {
+    console.error("Failed to parse executive summary:", e);
+    return null;
+  }
+}
+
+// Detect which schema version we have
+function isNewSchema(s) {
+  return !!(s?.case_overview || s?.facts || s?.issues_identified || s?.next_actions);
+}
+
+function buildPDFBody(s, caseItem) {
+  if (isNewSchema(s)) {
+    const lines = [
+      'CASE OVERVIEW', s.case_overview || '—', '',
+      'ESTABLISHED FACTS', ...(s.facts || []).map(f => `• ${f}`), '',
+      'TIMELINE SUMMARY', s.timeline_summary || '—', '',
+      'EVIDENCE SUMMARY', ...(s.evidence_summary || []).map(e => `• ${e}`), '',
+      'ISSUES IDENTIFIED', ...(s.issues_identified || []).map(i => `• ${i}`), '',
+      'CASE STRENGTHS', ...(s.strengths || []).map(x => `• ${x}`), '',
+      'WEAKNESSES / RISKS', ...(s.weaknesses || []).map(x => `• ${x}`), '',
+      'MISSING EVIDENCE', ...(s.missing_evidence?.length ? s.missing_evidence.map(x => `• ${x}`) : ['• None identified']), '',
+      'RECOMMENDED NEXT ACTIONS', ...(s.next_actions || []).map(x => `• ${x}`), '',
+      'ESCALATION PATH', s.escalation_path || '—',
+    ];
+    return lines.join('\n');
+  }
+  // Legacy schema fallback
+  const lines = [
+    'CASE OVERVIEW', s.summary || '—', '',
+    'KEY ISSUES', ...(s.key_issues || []).map(x => `• ${x}`), '',
+    'EVIDENCE ANALYSIS', ...(s.evidence_analysis || []).map(x => `• ${x}`), '',
+    'CORRESPONDENCE SUMMARY', s.correspondence_summary || '—', '',
+    'RECOMMENDED NEXT STEPS', ...(s.next_steps || []).map(x => `• ${x}`), '',
+    'CASE STRENGTH ASSESSMENT', s.case_strength_assessment || '—',
+  ];
+  return lines.join('\n');
 }
 
 export default function CaseSummary({ caseItem, evidence, events }) {
@@ -47,70 +84,60 @@ export default function CaseSummary({ caseItem, evidence, events }) {
   const [executiveSummary, setExecutiveSummary] = useState(null);
 
   useEffect(() => {
-    if (caseItem?.executive_summary) {
-      try {
-        setExecutiveSummary(JSON.parse(caseItem.executive_summary));
-      } catch (e) {
-        console.error("Failed to parse executive summary:", e);
-      }
-    }
+    const parsed = parseExecutiveSummary(caseItem?.executive_summary);
+    setExecutiveSummary(parsed);
   }, [caseItem?.executive_summary]);
 
-  const today = format(new Date(), "d MMMM yyyy");
   const upcomingDeadlines = deadlines
     .filter((d) => d.status === "pending" && d.deadline_date)
     .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
     .slice(0, 5);
 
-  const buildSummaryBody = () => {
-    const client = buildClientContext(caseItem, evidence);
-    const deadlineLines = upcomingDeadlines.length > 0
-      ? upcomingDeadlines.map(d => { const dl = differenceInDays(new Date(d.deadline_date), new Date()); return `${d.title} — Due: ${format(new Date(d.deadline_date), 'd MMM yyyy')} | ${dl < 0 ? `OVERDUE (${Math.abs(dl)}d)` : dl === 0 ? 'TODAY' : `${dl} days`}`; }).join('\n')
-      : 'No upcoming deadlines.';
-    return ['CASE DETAILS', `Organisation: ${caseItem.organisation_name || '—'}`, `Status: ${STATUS_LABELS[caseItem.status] || caseItem.status || '—'}`, `Category: ${caseItem.category || '—'}`, `Priority: ${PRIORITY_LABELS[caseItem.priority] || caseItem.priority || '—'}`, `Complainant: ${client.name || '—'}`, `Account #: ${caseItem.account_number || '—'}`, `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`, `Escalation Body: ${caseItem.escalation_body || '—'}`, '', 'ISSUE SUMMARY', caseItem.issue_summary || '—', '', 'DESIRED OUTCOME', caseItem.desired_outcome || '—', '', `UPCOMING DEADLINES (${upcomingDeadlines.length})`, deadlineLines].join('\n');
-  };
-
-  const handleSummaryPDF = async () => {
-    pdfDiagStart({ tab: 'Summary', action: 'Download PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!caseItem?.title });
-    if (!caseItem) { pdfDiagMissingData({ tab: 'Summary', action: 'Download PDF', dataName: 'case data' }); return; }
+  const handleDownloadPDF = async () => {
+    pdfDiagStart({ tab: 'Summary', action: 'Download PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!executiveSummary });
+    if (!executiveSummary) { pdfDiagMissingData({ tab: 'Summary', action: 'Download PDF', dataName: 'AI summary — generate it first' }); return; }
     try {
-      const blob = await generateChaosDocumentPDF({ documentType: 'general', title: 'Case Summary', body: buildSummaryBody(), includeHeader: true, includeFooter: true });
+      const blob = await generateChaosDocumentPDF({ documentType: 'general', title: `Case Summary — ${caseItem.title}`, body: buildPDFBody(executiveSummary, caseItem), includeHeader: true, includeFooter: true });
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       pdfDiagBlobCreated({ tab: 'Summary', action: 'Download PDF', blob });
-      downloadPDFBlob(blob, `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      downloadPDFBlob(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       pdfDiagSuccess({ tab: 'Summary', action: 'Download PDF' });
     } catch (error) {
       pdfDiagFail({ tab: 'Summary', action: 'Download PDF', error });
     }
   };
 
-  const handleSummaryPrint = async () => {
-    pdfDiagStart({ tab: 'Summary', action: 'Print PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!caseItem?.title });
-    if (!caseItem) { pdfDiagMissingData({ tab: 'Summary', action: 'Print PDF', dataName: 'case data' }); return; }
+  const handlePrintPDF = async () => {
+    pdfDiagStart({ tab: 'Summary', action: 'Print PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!executiveSummary });
+    if (!executiveSummary) { pdfDiagMissingData({ tab: 'Summary', action: 'Print PDF', dataName: 'AI summary — generate it first' }); return; }
     try {
-      const blob = await generateChaosDocumentPDF({ documentType: 'general', title: 'Case Summary', body: buildSummaryBody(), includeHeader: true, includeFooter: true });
+      const blob = await generateChaosDocumentPDF({ documentType: 'general', title: `Case Summary — ${caseItem.title}`, body: buildPDFBody(executiveSummary, caseItem), includeHeader: true, includeFooter: true });
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       pdfDiagBlobCreated({ tab: 'Summary', action: 'Print PDF', blob });
-      const opened = await openPDFForPrint(blob, `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, `Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
+      const opened = await openPDFForPrint(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      if (!opened) { toast.warning('Print blocked — downloading instead (Safari/popup blocker).'); downloadPDFBlob(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
       pdfDiagSuccess({ tab: 'Summary', action: 'Print PDF' });
     } catch (error) {
       pdfDiagFail({ tab: 'Summary', action: 'Print PDF', error });
     }
   };
 
+  const newSchema = executiveSummary ? isNewSchema(executiveSummary) : false;
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h3 className="font-heading font-semibold text-foreground">Case Summary</h3>
-        <div className="flex gap-1.5">
-          <Button variant="outline" size="sm" onClick={handleSummaryPDF} className="gap-1.5 text-xs">
-            <Download className="w-3.5 h-3.5" /> Download PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleSummaryPrint} className="gap-1.5 text-xs">
-            <Printer className="w-3.5 h-3.5" /> Print PDF
-          </Button>
-        </div>
+        {executiveSummary && (
+          <div className="flex gap-1.5">
+            <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-1.5 text-xs">
+              <Download className="w-3.5 h-3.5" /> Download PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handlePrintPDF} className="gap-1.5 text-xs">
+              <Printer className="w-3.5 h-3.5" /> Print PDF
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -149,7 +176,6 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         </div>
       </div>
 
-      {/* Issue Summary */}
       {caseItem.issue_summary && (
         <div className="bg-card border border-border rounded-xl p-4">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Issue Summary</h4>
@@ -157,7 +183,6 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         </div>
       )}
 
-      {/* Desired Outcome */}
       {caseItem.desired_outcome && (
         <div className="bg-card border border-border rounded-xl p-4">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Desired Outcome</h4>
@@ -191,7 +216,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         )}
       </div>
 
-      {/* AI Executive Summary */}
+      {/* AI Case Assessment — renders both new and legacy schema */}
       {executiveSummary && (
         <div className="space-y-4 mt-6">
           <div className="flex items-center gap-2">
@@ -199,109 +224,113 @@ export default function CaseSummary({ caseItem, evidence, events }) {
             <h3 className="font-heading font-bold text-lg text-foreground">AI Case Assessment</h3>
           </div>
 
-          {/* Case Overview */}
-          <div className="bg-gradient-to-br from-primary/10 via-card to-accent/5 border border-primary/30 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <h4 className="font-heading font-bold text-base">Case Overview</h4>
-            </div>
+          {/* Case Overview (new: case_overview, legacy: summary) */}
+          <SummarySection icon={<TrendingUp className="w-5 h-5 text-primary" />} title="Case Overview" gradient>
             <p className="text-sm text-foreground leading-relaxed">
-              {executiveSummary.summary}
+              {newSchema ? executiveSummary.case_overview : executiveSummary.summary}
             </p>
-          </div>
+          </SummarySection>
 
-          {/* Case Strength */}
-          {executiveSummary.case_strength_assessment && (
-            <div className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="w-5 h-5 text-accent" />
-                <h4 className="font-heading font-bold text-base">Case Strength Assessment</h4>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed">
-                {executiveSummary.case_strength_assessment}
-              </p>
+          {/* Facts (new only) */}
+          {newSchema && executiveSummary.facts?.length > 0 && (
+            <SummarySection icon={<CheckCircle2 className="w-5 h-5 text-success" />} title="Established Facts">
+              <BulletList items={executiveSummary.facts} dotColor="bg-success" />
+            </SummarySection>
+          )}
+
+          {/* Timeline Summary (new only) */}
+          {newSchema && executiveSummary.timeline_summary && (
+            <SummarySection icon={<Clock className="w-5 h-5 text-accent" />} title="Timeline Summary">
+              <p className="text-sm text-foreground leading-relaxed">{executiveSummary.timeline_summary}</p>
+            </SummarySection>
+          )}
+
+          {/* Evidence Summary (new: evidence_summary, legacy: evidence_analysis) */}
+          {(newSchema ? executiveSummary.evidence_summary : executiveSummary.evidence_analysis)?.length > 0 && (
+            <SummarySection icon={<CheckCircle2 className="w-5 h-5 text-success" />} title="Evidence Summary">
+              <BulletList
+                items={newSchema ? executiveSummary.evidence_summary : executiveSummary.evidence_analysis}
+                dotColor="bg-success"
+                useCheckIcon
+              />
+            </SummarySection>
+          )}
+
+          {/* Issues Identified (new: issues_identified, legacy: key_issues) */}
+          {(newSchema ? executiveSummary.issues_identified : executiveSummary.key_issues)?.length > 0 && (
+            <SummarySection icon={<AlertCircle className="w-5 h-5 text-warning" />} title="Issues Identified">
+              <BulletList
+                items={newSchema ? executiveSummary.issues_identified : executiveSummary.key_issues}
+                dotColor="bg-warning"
+              />
+            </SummarySection>
+          )}
+
+          {/* Strengths / Weaknesses (new only, side by side) */}
+          {newSchema && (executiveSummary.strengths?.length > 0 || executiveSummary.weaknesses?.length > 0) && (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {executiveSummary.strengths?.length > 0 && (
+                <SummarySection icon={<CheckCircle2 className="w-5 h-5 text-success" />} title="Strengths">
+                  <BulletList items={executiveSummary.strengths} dotColor="bg-success" />
+                </SummarySection>
+              )}
+              {executiveSummary.weaknesses?.length > 0 && (
+                <SummarySection icon={<ShieldAlert className="w-5 h-5 text-destructive" />} title="Weaknesses / Risks">
+                  <BulletList items={executiveSummary.weaknesses} dotColor="bg-destructive" />
+                </SummarySection>
+              )}
             </div>
           )}
 
-          {/* Key Issues */}
-          {executiveSummary.key_issues?.length > 0 && (
-            <div className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertCircle className="w-5 h-5 text-warning" />
-                <h4 className="font-heading font-bold text-base">Key Issues</h4>
-              </div>
-              <ul className="space-y-2">
-                {executiveSummary.key_issues.map((issue, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
-                    <div className="w-1.5 h-1.5 rounded-full bg-warning shrink-0 mt-1.5" />
-                    <span>{issue}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Case Strength Assessment (legacy only) */}
+          {!newSchema && executiveSummary.case_strength_assessment && (
+            <SummarySection icon={<TrendingUp className="w-5 h-5 text-accent" />} title="Case Strength Assessment">
+              <p className="text-sm text-foreground leading-relaxed">{executiveSummary.case_strength_assessment}</p>
+            </SummarySection>
           )}
 
-          {/* Evidence Analysis */}
-          {executiveSummary.evidence_analysis?.length > 0 && (
-            <div className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle2 className="w-5 h-5 text-success" />
-                <h4 className="font-heading font-bold text-base">Evidence Highlights</h4>
-              </div>
-              <ul className="space-y-2">
-                {executiveSummary.evidence_analysis.map((highlight, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                    <span>{highlight}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Missing Evidence (new only) */}
+          {newSchema && executiveSummary.missing_evidence?.length > 0 && (
+            <SummarySection icon={<AlertTriangle className="w-5 h-5 text-warning" />} title="Missing Evidence">
+              <BulletList items={executiveSummary.missing_evidence} dotColor="bg-warning" />
+            </SummarySection>
           )}
 
-          {/* Correspondence Summary */}
-          {executiveSummary.correspondence_summary && (
-            <div className="bg-card border border-border rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Mail className="w-5 h-5 text-primary" />
-                <h4 className="font-heading font-bold text-base">Correspondence History</h4>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed">
-                {executiveSummary.correspondence_summary}
-              </p>
-            </div>
+          {/* Correspondence Summary (legacy only) */}
+          {!newSchema && executiveSummary.correspondence_summary && (
+            <SummarySection icon={<Mail className="w-5 h-5 text-primary" />} title="Correspondence History">
+              <p className="text-sm text-foreground leading-relaxed">{executiveSummary.correspondence_summary}</p>
+            </SummarySection>
           )}
 
-          {/* Next Steps */}
-          {executiveSummary.next_steps?.length > 0 && (
-            <div className="bg-gradient-to-br from-accent/10 via-card to-primary/5 border border-accent/30 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle2 className="w-5 h-5 text-accent" />
-                <h4 className="font-heading font-bold text-base">Recommended Next Steps</h4>
-              </div>
-              <ul className="space-y-2">
-                {executiveSummary.next_steps.map((step, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 mt-1.5" />
-                    <span>{step}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Next Actions (new: next_actions, legacy: next_steps) */}
+          {(newSchema ? executiveSummary.next_actions : executiveSummary.next_steps)?.length > 0 && (
+            <SummarySection icon={<CheckCircle2 className="w-5 h-5 text-accent" />} title="Recommended Next Actions" accent>
+              <BulletList
+                items={newSchema ? executiveSummary.next_actions : executiveSummary.next_steps}
+                dotColor="bg-accent"
+              />
+            </SummarySection>
           )}
 
-          {/* Critical Deadlines */}
-          {executiveSummary.critical_deadlines?.length > 0 && (
+          {/* Escalation Path (new only) */}
+          {newSchema && executiveSummary.escalation_path && (
+            <SummarySection icon={<TrendingUp className="w-5 h-5 text-primary" />} title="Escalation Path">
+              <p className="text-sm text-foreground leading-relaxed">{executiveSummary.escalation_path}</p>
+            </SummarySection>
+          )}
+
+          {/* Critical Deadlines (legacy only) */}
+          {!newSchema && executiveSummary.critical_deadlines?.length > 0 && (
             <div className="bg-destructive/10 border-2 border-destructive/40 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="w-5 h-5 text-destructive" />
                 <h4 className="font-heading font-bold text-lg text-destructive">Critical Deadlines</h4>
               </div>
               <ul className="space-y-2">
-                {executiveSummary.critical_deadlines.map((deadline, idx) => (
+                {executiveSummary.critical_deadlines.map((d, idx) => (
                   <li key={idx} className="flex items-start gap-2.5 text-sm font-semibold text-destructive">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{deadline}</span>
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /><span>{d}</span>
                   </li>
                 ))}
               </ul>
@@ -310,5 +339,38 @@ export default function CaseSummary({ caseItem, evidence, events }) {
         </div>
       )}
     </div>
+  );
+}
+
+function SummarySection({ icon, title, children, gradient, accent }) {
+  const bg = gradient
+    ? "bg-gradient-to-br from-primary/10 via-card to-accent/5 border border-primary/30"
+    : accent
+    ? "bg-gradient-to-br from-accent/10 via-card to-primary/5 border border-accent/30"
+    : "bg-card border border-border";
+  return (
+    <div className={`rounded-xl p-5 ${bg}`}>
+      <div className="flex items-center gap-2 mb-3">
+        {icon}
+        <h4 className="font-heading font-bold text-base">{title}</h4>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function BulletList({ items, dotColor, useCheckIcon }) {
+  return (
+    <ul className="space-y-2">
+      {items.map((item, idx) => (
+        <li key={idx} className="flex items-start gap-2.5 text-sm text-foreground">
+          {useCheckIcon
+            ? <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+            : <div className={`w-1.5 h-1.5 rounded-full ${dotColor} shrink-0 mt-1.5`} />
+          }
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
