@@ -10,6 +10,7 @@ import { Mail, Loader2, CheckCircle2, XCircle, RefreshCw, Paperclip } from "luci
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { buildLetterHeaderData } from "@/components/cases/LetterHeader.jsx";
 
 // Convert a Blob to a standard base64 string (not URL-safe)
 async function blobToBase64(blob) {
@@ -83,12 +84,34 @@ export default function LetterEmailDialog({
       // Always attach the letter PDF if checked
       if (attachLetter) {
         const cleanContent = String(letterText).replace(/<[^>]*>/g, '').trim();
+        // Build structured header from case data (same as preview)
+        const client = {
+          name: caseItem?.complainant_name || "",
+          address: caseItem?.complainant_address || "",
+          email: caseItem?.complainant_email || "",
+          phone: caseItem?.complainant_phone || "",
+          accounts: caseItem?.account_number ? [caseItem.account_number] : [],
+          policies: [],
+          amounts: [],
+          dates: [],
+        };
+        const headerData = buildLetterHeaderData(caseItem, client);
+        const labelMap = {
+          letter1: `FORMAL COMPLAINT — ${caseItem?.organisation_name || "Organisation"}`,
+          letter2: `SECOND FORMAL COMPLAINT — ${caseItem?.organisation_name || "Organisation"}`,
+          letter3: `THIRD AND FINAL COMPLAINT — ${caseItem?.organisation_name || "Organisation"}`,
+          accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${caseItem?.organisation_name || "Organisation"}`,
+          deny_offer: `REJECTION OF SETTLEMENT OFFER — ${caseItem?.organisation_name || "Organisation"}`,
+          escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem?.organisation_name || "Organisation"}`,
+        };
+        const reSubject = labelMap[letterType?.key] || `FORMAL COMPLAINT — ${caseItem?.organisation_name || "Organisation"}`;
         const blob = await generateChaosDocumentPDF({
-          documentType: 'general',
+          documentType: 'letter',
           title: letterType.label,
           body: cleanContent,
-          includeHeader: true,
+          includeHeader: false,
           includeFooter: true,
+          letterHeader: { ...headerData, reSubject },
         });
         if (!blob || blob.size === 0) throw new Error('Letter PDF could not be generated.');
         const b64 = await blobToBase64(blob);
