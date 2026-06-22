@@ -9,7 +9,6 @@ import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download, Bar
 import CaseStatusControl from "@/components/cases/CaseStatusControl";
 import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
-import VisualTimeline from "@/components/cases/VisualTimeline";
 import LetterSuite from "@/components/cases/LetterSuite";
 import ChaosScore from "@/components/cases/ChaosScore";
 import PrintBundle from "@/components/cases/PrintBundle";
