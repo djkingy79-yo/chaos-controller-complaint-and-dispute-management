@@ -122,10 +122,16 @@ Deno.serve(async (req) => {
                   <p style="color:#16a34a;font-size:18px;font-weight:bold;margin:20px 0;">Your ${payment.plan_name} subscription has been successfully activated!</p>
                   
                   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:8px;padding:16px;margin:20px 0;">
-                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;width:140px;">Subscription Period</td><td style="color:#000000;font-weight:bold;">
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;width:160px;">Customer Name</td><td style="color:#000000;font-weight:bold;">${payment.user_name || '—'}</td></tr>
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Customer Email</td><td style="color:#000000;font-weight:bold;">${payment.user_email}</td></tr>
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Plan Activated</td><td style="color:#16a34a;font-weight:bold;font-size:15px;">${payment.plan_name}</td></tr>
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Amount Paid</td><td style="color:#000000;font-weight:bold;">${payment.amount} AUD</td></tr>
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Transaction ID</td><td style="color:#000000;font-weight:bold;font-size:11px;">${payment.id}</td></tr>
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Payment Date</td><td style="color:#000000;font-weight:bold;">${new Date(payment.verified_date || payment.updated_date || payment.created_date).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}</td></tr>
+                    <tr><td style="padding:6px 0;color:#666666;font-size:12px;">Subscription Active Until</td><td style="color:#000000;font-weight:bold;">
                       ${payment.subscription_expiry 
-                        ? `Until ${new Date(payment.subscription_expiry).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
-                        : 'Active'
+                        ? new Date(payment.subscription_expiry).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })
+                        : 'Ongoing'
                       }
                     </td></tr>
                   </table>

@@ -113,8 +113,8 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
     onChange({ ...data, [current.key]: value });
     // Auto-classify industry when organisation name is entered
     if (current.key === 'organisation_name' && value && onCategoryDetected) {
-      const detected = detectIndustry(value);
-      if (detected) onCategoryDetected(detected);
+      const detected = detectIndustry({ organisation_name: value });
+      if (detected && detected !== 'other') onCategoryDetected(detected);
     }
   };
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { FileText, Sparkles, Loader2, CheckCircle2, AlertCircle, Clock, TrendingUp, ShieldAlert, Download, Printer, AlertTriangle } from "lucide-react";
+import { FileText, Sparkles, Loader2, CheckCircle2, AlertCircle, Clock, TrendingUp, ShieldAlert, Download, Printer, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
@@ -202,9 +202,18 @@ export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated
         )}
 
         {errorDetail && !generating && (
-          <span className="text-xs text-destructive flex items-center gap-1">
-            <AlertTriangle className="w-3.5 h-3.5" /> {errorDetail}
-          </span>
+          <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">
+            <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+            <span className="text-xs text-destructive flex-1">{errorDetail}</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleGenerateSummary}
+              className="h-6 text-xs px-2 gap-1 border-destructive/40 text-destructive hover:bg-destructive/10"
+            >
+              <RefreshCw className="w-3 h-3" /> Retry
+            </Button>
+          </div>
         )}
       </div>
 

@@ -176,47 +176,211 @@ async function handleDeadlinesPDF(caseItem, deadlines) {
   await generateAndDownload({ type: 'general', title: 'Deadline War Room', body: `DEADLINES (${sorted.length} items)\n\n${body}` });
 }
 
-function buildSummaryBody(caseItem, evidence, events, deadlines) {
-  const upcomingDeadlines = (deadlines || [])
-    .filter(d => d.status === 'pending' && d.deadline_date)
-    .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
-    .slice(0, 5);
-  const deadlineLines = upcomingDeadlines.length > 0
-    ? upcomingDeadlines.map(d => {
-        const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
-        const urgency = daysLeft < 0 ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? 'TODAY' : `${daysLeft} days`;
-        return `${d.title} — Due: ${format(new Date(d.deadline_date), 'd MMM yyyy')} | ${urgency}`;
-      }).join('\n')
-    : 'No upcoming deadlines.';
-  return [
-    'CASE DETAILS',
-    `Organisation: ${caseItem.organisation_name || '—'}`,
-    `Status: ${(caseItem.status || '').replace(/_/g, ' ').toUpperCase()}`,
-    `Category: ${caseItem.category || '—'}`,
-    `Priority: ${(caseItem.priority || '').toUpperCase()}`,
-    `Complainant: ${caseItem.complainant_name || '—'}`,
-    `Account #: ${caseItem.account_number || '—'}`,
-    `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`,
-    `Escalation Body: ${caseItem.escalation_body || '—'}`,
+function buildSummaryBody(caseItem, evidence, events, deadlines, checklistItems) {
+  const now = new Date();
+  const allDeadlines = deadlines || [];
+  const allEvents = events || [];
+  const allEvidence = evidence || [];
+  const allChecklist = checklistItems || [];
+
+  const sortedDeadlines = [...allDeadlines].sort((a, b) => new Date(a.deadline_date || 0) - new Date(b.deadline_date || 0));
+  const sortedEvents = [...allEvents].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
+  const sortedEvidence = [...allEvidence].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
+
+  const completedChecklist = allChecklist.filter(i => i.status === 'complete');
+  const pendingChecklist = allChecklist.filter(i => i.status !== 'complete');
+  const overdueDeadlines = sortedDeadlines.filter(d => d.deadline_date && new Date(d.deadline_date) < now && d.status === 'pending');
+  const upcomingDeadlines = sortedDeadlines.filter(d => d.deadline_date && new Date(d.deadline_date) >= now && d.status === 'pending');
+
+  // Parse AI summary if available
+  let aiSummary = null;
+  if (caseItem.executive_summary) {
+    try { aiSummary = JSON.parse(caseItem.executive_summary); } catch(e) {}
+  }
+
+  const letterStatus = [
+    { label: '1st Complaint Letter', field: 'complaint_letter' },
+    { label: '2nd Complaint Letter', field: 'complaint_letter_2' },
+    { label: '3rd Complaint Letter', field: 'complaint_letter_3' },
+    { label: 'Accept Offer Letter', field: 'letter_accept_offer' },
+    { label: 'Deny Offer Letter', field: 'letter_deny_offer' },
+    { label: 'Escalation Letter', field: 'letter_escalation' },
+  ];
+
+  const lines = [
+    '========================================',
+    'CHAOS CONTROLLER - COMPLETE CASE REPORT',
+    '========================================',
+    `Generated: ${format(now, 'd MMMM yyyy, h:mm a')}`,
     '',
-    'ISSUE SUMMARY',
+    '----------------------------------------',
+    'SECTION 1 - CASE INFORMATION',
+    '----------------------------------------',
+    `Case Title: ${caseItem.title || '—'}`,
+    `Organisation: ${caseItem.organisation_name || '—'}`,
+    `Industry Category: ${(caseItem.category || '—').toUpperCase()}`,
+    `Status: ${(caseItem.status || '').replace(/_/g, ' ').toUpperCase()}`,
+    `Priority: ${(caseItem.priority || '').toUpperCase()}`,
+    `Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`,
+    `Response Deadline: ${caseItem.response_deadline ? format(new Date(caseItem.response_deadline), 'd MMMM yyyy') : '—'}`,
+    `Escalation Body: ${caseItem.escalation_body || '—'}`,
+    `Account/Reference: ${caseItem.account_number || '—'}`,
+    '',
+    '----------------------------------------',
+    'SECTION 2 - COMPLAINANT DETAILS',
+    '----------------------------------------',
+    `Full Name: ${caseItem.complainant_name || '—'}`,
+    `Address: ${caseItem.complainant_address || '—'}`,
+    `Email: ${caseItem.complainant_email || '—'}`,
+    `Phone: ${caseItem.complainant_phone || '—'}`,
+    '',
+    '----------------------------------------',
+    'SECTION 3 - ORGANISATION DETAILS',
+    '----------------------------------------',
+    `Organisation: ${caseItem.organisation_name || '—'}`,
+    `Complaints Address: ${caseItem.organisation_complaints_address || '—'}`,
+    `Complaints Email: ${caseItem.organisation_complaints_email || '—'}`,
+    `Complaint Handler: ${caseItem.complaint_handler_name || '—'}`,
+    '',
+    '----------------------------------------',
+    'SECTION 4 - COMPLAINT DETAILS',
+    '----------------------------------------',
+    'Issue Summary:',
     caseItem.issue_summary || '—',
     '',
-    'DESIRED OUTCOME',
+    'Full Details:',
+    caseItem.issue_details || '—',
+    '',
+    'Desired Outcome:',
     caseItem.desired_outcome || '—',
+    caseItem.notes ? `\nNotes: ${caseItem.notes}` : '',
     '',
-    'STATISTICS',
-    `Evidence Files: ${(evidence || []).length}`,
-    `Timeline Events: ${(events || []).length}`,
-    `Upcoming Deadlines: ${upcomingDeadlines.length}`,
-    '',
-    'UPCOMING DEADLINES',
-    deadlineLines,
-  ].join('\n');
+    '----------------------------------------',
+    'SECTION 5 - DASHBOARD METRICS',
+    '----------------------------------------',
+    `Evidence Files Uploaded: ${allEvidence.length}`,
+    `Timeline Events Recorded: ${allEvents.length}`,
+    `Total Deadlines: ${allDeadlines.length}`,
+    `Overdue Deadlines: ${overdueDeadlines.length}`,
+    `Checklist Items Total: ${allChecklist.length}`,
+    `Checklist Complete: ${completedChecklist.length}`,
+    `Checklist Pending: ${pendingChecklist.length}`,
+    `Letters Generated: ${letterStatus.filter(l => caseItem[l.field]).length} of 6`,
+  ].filter(l => l !== undefined);
+
+  // AI Assessment
+  lines.push('');
+  lines.push('----------------------------------------');
+  lines.push('SECTION 6 - AI CASE ASSESSMENT');
+  lines.push('----------------------------------------');
+  if (aiSummary) {
+    if (aiSummary.case_overview) { lines.push('Case Overview:'); lines.push(aiSummary.case_overview); lines.push(''); }
+    if (aiSummary.facts?.length) { lines.push('Established Facts:'); aiSummary.facts.forEach(f => lines.push(`- ${f}`)); lines.push(''); }
+    if (aiSummary.timeline_summary) { lines.push('Timeline Summary:'); lines.push(aiSummary.timeline_summary); lines.push(''); }
+    if (aiSummary.evidence_summary?.length) { lines.push('Evidence Summary:'); aiSummary.evidence_summary.forEach(e => lines.push(`- ${e}`)); lines.push(''); }
+    if (aiSummary.strengths?.length) { lines.push('Case Strengths:'); aiSummary.strengths.forEach(s => lines.push(`- ${s}`)); lines.push(''); }
+    if (aiSummary.weaknesses?.length) { lines.push('Weaknesses / Risks:'); aiSummary.weaknesses.forEach(w => lines.push(`- ${w}`)); lines.push(''); }
+    if (aiSummary.missing_evidence?.length) { lines.push('Missing Evidence:'); aiSummary.missing_evidence.forEach(m => lines.push(`- ${m}`)); lines.push(''); }
+    if (aiSummary.next_actions?.length) { lines.push('Recommended Next Actions:'); aiSummary.next_actions.forEach(a => lines.push(`- ${a}`)); lines.push(''); }
+    if (aiSummary.escalation_path) { lines.push('Escalation Path:'); lines.push(aiSummary.escalation_path); }
+  } else {
+    lines.push('AI Case Assessment not yet generated.');
+    lines.push('Go to the Summary tab and click Generate Case Summary to produce this section.');
+  }
+
+  // Evidence
+  lines.push('');
+  lines.push('----------------------------------------');
+  lines.push('SECTION 7 - EVIDENCE INDEX');
+  lines.push('----------------------------------------');
+  if (sortedEvidence.length > 0) {
+    sortedEvidence.forEach((ev, i) => {
+      lines.push(`${i + 1}. ${ev.file_name}`);
+      lines.push(`   Type: ${(ev.file_type || 'other').replace(/_/g, ' ')} | Date: ${ev.event_date ? format(new Date(ev.event_date), 'd MMM yyyy') : 'No date'}`);
+      if (ev.description) lines.push(`   Description: ${ev.description}`);
+      if (ev.extracted_data?.document_summary) lines.push(`   OCR Summary: ${ev.extracted_data.document_summary.slice(0, 300)}`);
+      lines.push('');
+    });
+  } else {
+    lines.push('No evidence files uploaded.');
+  }
+
+  // Timeline
+  lines.push('');
+  lines.push('----------------------------------------');
+  lines.push('SECTION 8 - CASE TIMELINE');
+  lines.push('----------------------------------------');
+  if (sortedEvents.length > 0) {
+    sortedEvents.forEach(ev => {
+      lines.push(`${ev.event_date ? format(new Date(ev.event_date), 'd MMM yyyy') : 'Undated'} - ${ev.title}`);
+      lines.push(`   Type: ${(ev.event_type || '').replace(/_/g, ' ')}${ev.is_action_required ? ' [ACTION REQUIRED]' : ''}`);
+      if (ev.description) lines.push(`   ${ev.description}`);
+      lines.push('');
+    });
+  } else {
+    lines.push('No timeline events recorded.');
+  }
+
+  // Deadlines
+  lines.push('');
+  lines.push('----------------------------------------');
+  lines.push('SECTION 9 - DEADLINES');
+  lines.push('----------------------------------------');
+  if (sortedDeadlines.length > 0) {
+    sortedDeadlines.forEach(d => {
+      const daysLeft = d.deadline_date ? differenceInDays(new Date(d.deadline_date), now) : null;
+      const urgency = daysLeft === null ? '' : daysLeft < 0 ? ` [OVERDUE by ${Math.abs(daysLeft)} days]` : daysLeft === 0 ? ' [DUE TODAY]' : ` [${daysLeft} days remaining]`;
+      lines.push(`${d.title}`);
+      lines.push(`   Due: ${d.deadline_date ? format(new Date(d.deadline_date), 'd MMMM yyyy') : 'No date'}${urgency}`);
+      lines.push(`   Type: ${(d.deadline_type || '').replace(/_/g, ' ')} | Status: ${(d.status || '').toUpperCase()} | Responsibility: ${d.responsibility || 'user'}`);
+      if (d.notes) lines.push(`   Notes: ${d.notes}`);
+      lines.push('');
+    });
+  } else {
+    lines.push('No deadlines recorded.');
+  }
+
+  // Checklist
+  lines.push('');
+  lines.push('----------------------------------------');
+  lines.push('SECTION 10 - CHECKLIST');
+  lines.push('----------------------------------------');
+  if (allChecklist.length > 0) {
+    lines.push(`Complete: ${completedChecklist.length} | Pending: ${pendingChecklist.length}`);
+    lines.push('');
+    allChecklist.forEach(item => {
+      const tick = item.status === 'complete' ? 'YES -' : 'NO  -';
+      lines.push(`${tick} ${item.label}`);
+      lines.push(`       Category: ${(item.category || '').replace(/_/g, ' ')} | Priority: ${item.priority || 'medium'} | Status: ${(item.status || '').toUpperCase()}`);
+    });
+  } else {
+    lines.push('No checklist items. Generate checklist from the Checklist tab.');
+  }
+
+  // Letters
+  lines.push('');
+  lines.push('----------------------------------------');
+  lines.push('SECTION 11 - GENERATED LETTERS');
+  lines.push('----------------------------------------');
+  letterStatus.forEach(lt => {
+    const content = caseItem[lt.field];
+    if (content) {
+      lines.push(`${lt.label}:`);
+      lines.push('');
+      lines.push(content.replace(/<[^>]*>/g, ''));
+      lines.push('');
+      lines.push('----------------------------------------');
+    } else {
+      lines.push(`${lt.label}: Not yet generated.`);
+    }
+    lines.push('');
+  });
+
+  return lines.join('\n');
 }
 
-async function handleCaseSummaryPDF(caseItem, evidence, events, deadlines) {
-  await generateAndDownload({ type: 'general', title: 'Case Summary Report', body: buildSummaryBody(caseItem, evidence, events, deadlines) });
+async function handleCaseSummaryPDF(caseItem, evidence, events, deadlines, checklistItems) {
+  await generateAndDownload({ type: 'general', title: 'Complete Case Report', body: buildSummaryBody(caseItem, evidence, events, deadlines, checklistItems) });
 }
 
 async function handleWeeklySnapshotPDF(caseItem, evidence, events, deadlines) {
@@ -343,7 +507,7 @@ export default function PrintBundle({ caseItem, evidence, events }) {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => run('bundle', () => handleCaseSummaryPDF(caseItem, evidence, events, deadlines))}
+            onClick={() => run('bundle', () => handleCaseSummaryPDF(caseItem, evidence, events, deadlines, checklistItems))}
             disabled={!!loadingPDF}
             className="flex-1 gap-2 h-10 font-bold"
             size="lg"
@@ -353,7 +517,7 @@ export default function PrintBundle({ caseItem, evidence, events }) {
           </Button>
           <Button
             variant="outline"
-            onClick={() => run('bundle_print', () => generateAndPrint({ type: 'general', title: 'Case Summary Report', body: buildSummaryBody(caseItem, evidence, events, deadlines) }))}
+            onClick={() => run('bundle_print', () => generateAndPrint({ type: 'general', title: 'Complete Case Report', body: buildSummaryBody(caseItem, evidence, events, deadlines, checklistItems) }))}
             disabled={!!loadingPDF}
             className="flex-1 gap-2 h-10 font-bold"
             size="lg"

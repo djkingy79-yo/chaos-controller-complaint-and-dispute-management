@@ -107,7 +107,7 @@ export default function Layout() {
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-foreground h-10 w-10"
-                onClick={() => base44.auth.logout()}
+                onClick={() => { try { localStorage.removeItem('b44_token'); sessionStorage.removeItem('b44_token'); } catch(e){} base44.auth.logout('/login'); }}
                 title="Sign Out"
                 aria-label="Sign out"
               >
@@ -188,7 +188,7 @@ export default function Layout() {
                 {/* Divider + Logout */}
                 <div className="border-t border-border mt-3 pt-3">
                   <button
-                    onClick={() => { setMenuOpen(false); base44.auth.logout(); }}
+                    onClick={() => { setMenuOpen(false); try { localStorage.removeItem('b44_token'); sessionStorage.removeItem('b44_token'); } catch(e){} base44.auth.logout('/login'); }}
                     className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-base font-bold text-destructive hover:bg-destructive/10 transition-all"
                   >
                     <LogOut className="w-5 h-5 shrink-0" />
