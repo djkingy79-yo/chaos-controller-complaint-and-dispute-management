@@ -67,6 +67,8 @@ export function cleanForPDF(content) {
     .replace(/^>/gm, '')
     .replace(/---/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Strip non-latin / unicode characters that corrupt jsPDF Times font
+    .replace(/[^\x00-\x7F]/g, '')
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n');
 }
@@ -276,14 +278,14 @@ export async function openPDFForPrint(blob, filename = 'document.pdf') {
       URL.revokeObjectURL(url);
       return false;
     }
-    win.onload = () => {
-      try {
-        win.focus();
-        win.print();
-      } catch (error) {
-        console.error('Print PDF failed:', error);
-      }
-    };
+    // Wait for load event, then print. Fallback setTimeout for Safari
+    // which may not fire onload reliably for blob URLs.
+    win.addEventListener('load', () => {
+      try { win.focus(); win.print(); } catch (e) { console.error('Print after load failed:', e); }
+    });
+    setTimeout(() => {
+      try { win.focus(); win.print(); } catch (e) { console.error('Print fallback failed:', e); }
+    }, 1500);
     setTimeout(() => URL.revokeObjectURL(url), 60000);
     return true;
   } catch (error) {

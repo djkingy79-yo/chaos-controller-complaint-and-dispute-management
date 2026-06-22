@@ -133,44 +133,44 @@ function buildDashboardPDFBody(caseItem, executiveSummary, evidence, events, dea
   const lines = [
     `CASE DASHBOARD REPORT`,
     `Generated: ${dateStr}`,
-    `Case: ${caseItem.title || '—'}`,
+    `Case: ${caseItem.title || '-'}`,
     '',
-    '══════════════════════════════════════════',
-    'SECTION 1 — DASHBOARD SNAPSHOT',
-    '══════════════════════════════════════════',
+    '----------------------------------------',
+    'SECTION 1 - DASHBOARD SNAPSHOT',
+    '----------------------------------------',
     `Status:            ${STATUS_LABELS[caseItem.status] || caseItem.status || '—'}`,
     `Priority:          ${PRIORITY_LABELS[caseItem.priority] || caseItem.priority || '—'}`,
-    `Organisation:      ${caseItem.organisation_name || '—'}`,
-    `Complainant:       ${caseItem.complainant_name || '—'}`,
-    `Account #:         ${caseItem.account_number || '—'}`,
-    `Incident Date:     ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '—'}`,
-    `Category:          ${caseItem.category || '—'}`,
-    `Escalation Body:   ${caseItem.escalation_body || '—'}`,
+    `Organisation:      ${caseItem.organisation_name || '-'}`,
+    `Complainant:       ${caseItem.complainant_name || '-'}`,
+    `Account #:         ${caseItem.account_number || '-'}`,
+    `Incident Date:     ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '-'}`,
+    `Category:          ${caseItem.category || '-'}`,
+    `Escalation Body:   ${caseItem.escalation_body || '-'}`,
     `Evidence Files:    ${evidence.length}`,
     `Timeline Events:   ${events.length}`,
     `Upcoming Deadlines: ${upcomingDeadlines.length}`,
     '',
-    '══════════════════════════════════════════',
-    'SECTION 2 — DISPUTE PROGRESS TRACKER',
-    '══════════════════════════════════════════',
+    '----------------------------------------',
+    'SECTION 2 - DISPUTE PROGRESS TRACKER',
+    '----------------------------------------',
     ...STAGES.map((stage, i) => {
       const mark = i < currentStageIndex ? '[COMPLETE]' : i === currentStageIndex ? '[CURRENT] ' : '[PENDING] ';
       return `  ${mark} ${stage}`;
     }),
     '',
-    '══════════════════════════════════════════',
-    'SECTION 3 — MATTER STRENGTH',
-    '══════════════════════════════════════════',
+    '----------------------------------------',
+    'SECTION 3 - MATTER STRENGTH',
+    '----------------------------------------',
     `Overall Score: ${score}%`,
     '',
-    ...scoreItems.map(item => `  ${item.ok === true ? '[✓]' : item.ok === false ? '[✗]' : '[~]'} ${item.label}`),
+    ...scoreItems.map(item => `  ${item.ok === true ? 'YES -' : item.ok === false ? 'NO  -' : 'N/A -'} ${item.label}`),
     '',
   ];
 
   if (upcomingDeadlines.length > 0) {
-    lines.push('══════════════════════════════════════════');
-    lines.push('SECTION 4 — UPCOMING DEADLINES');
-    lines.push('══════════════════════════════════════════');
+    lines.push('----------------------------------------');
+    lines.push('SECTION 4 - UPCOMING DEADLINES');
+    lines.push('----------------------------------------');
     upcomingDeadlines.forEach(d => {
       const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
       const tag = daysLeft < 0 ? `OVERDUE ${Math.abs(daysLeft)}d` : daysLeft === 0 ? 'TODAY' : `${daysLeft}d remaining`;
@@ -180,24 +180,24 @@ function buildDashboardPDFBody(caseItem, executiveSummary, evidence, events, dea
     lines.push('');
   }
 
-  lines.push('══════════════════════════════════════════');
-  lines.push('SECTION 5 — ISSUE SUMMARY');
-  lines.push('══════════════════════════════════════════');
-  lines.push(caseItem.issue_summary || '— Not provided —');
+  lines.push('----------------------------------------');
+  lines.push('SECTION 5 - ISSUE SUMMARY');
+  lines.push('----------------------------------------');
+  lines.push(caseItem.issue_summary || 'Not provided');
   lines.push('');
 
   if (caseItem.desired_outcome) {
-    lines.push('══════════════════════════════════════════');
-    lines.push('SECTION 6 — DESIRED OUTCOME');
-    lines.push('══════════════════════════════════════════');
+    lines.push('----------------------------------------');
+    lines.push('SECTION 6 - DESIRED OUTCOME');
+    lines.push('----------------------------------------');
     lines.push(caseItem.desired_outcome);
     lines.push('');
   }
 
   if (executiveSummary) {
-    lines.push('══════════════════════════════════════════');
-    lines.push('SECTION 7 — AI CASE ASSESSMENT');
-    lines.push('══════════════════════════════════════════');
+    lines.push('----------------------------------------');
+    lines.push('SECTION 7 - AI CASE ASSESSMENT');
+    lines.push('----------------------------------------');
     lines.push('');
 
     if (isNewSchema(executiveSummary)) {
