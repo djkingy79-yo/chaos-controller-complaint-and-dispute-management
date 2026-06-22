@@ -82,7 +82,7 @@ export default function MerchantInvite({ caseItem }) {
     }
   };
 
-  const getShareUrl = (token) => `https://app.base44.com/6a2ac3b012e45642b1f94671/shared-case/${token}`;
+  const getShareUrl = (token) => `https://chaoscontroller.com.au/shared-case/${token}`;
 
   return (
     <div className="bg-card rounded-xl border border-border p-4 space-y-4">

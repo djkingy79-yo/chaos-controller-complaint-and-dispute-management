@@ -3,12 +3,14 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, RefreshCw, Pencil, Check, Loader2, Download, Printer, FileText, Lock } from "lucide-react";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Download, Printer, FileText, Lock, Mail, CheckCircle2, XCircle } from "lucide-react";
 import LetterTemplateManager from "./LetterTemplateManager";
+import LetterEmailDialog from "./LetterEmailDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL, FOOTER_URL } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL } from "@/lib/pdfGenerator";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
@@ -343,6 +345,15 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [text, setText] = useState(caseItem[field] || "");
   const [editing, setEditing] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+
+  // Load last send log for this letter for status badge
+  const { data: emailLogs = [], refetch: refetchLogs } = useQuery({
+    queryKey: ['emailLogs', caseItem?.id, letterType?.key],
+    queryFn: () => base44.entities.EmailLog.filter({ case_id: caseItem?.id, letter_type: letterType?.key }),
+    enabled: !!caseItem?.id,
+  });
+  const lastLog = emailLogs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
 
   const handleApplyTemplate = (content) => {
     setText(content);
@@ -360,7 +371,6 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     onError: (error) => {
       console.error("Failed to save letter:", error);
       toast.error("Failed to save letter. Please try again.");
-      // Revert local state to match database
       setText(caseItem[field] || "");
     },
   });
@@ -372,7 +382,6 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today);
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
-      // Only update local state after successful save
       updateMutation.mutate({ [field]: result }, {
         onSuccess: () => {
           setText(result);
@@ -438,9 +447,30 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h3 className="font-heading font-semibold text-foreground" style={{ fontSize: "12pt" }}>{letterType.label}</h3>
-          <p className="text-xs text-muted-foreground" style={{ fontSize: "10pt" }}>{letterType.description}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div>
+            <h3 className="font-heading font-semibold text-foreground" style={{ fontSize: "12pt" }}>{letterType.label}</h3>
+            <p className="text-xs text-muted-foreground" style={{ fontSize: "10pt" }}>{letterType.description}</p>
+          </div>
+          {/* Send status badge */}
+          {lastLog && (
+            lastLog.status === 'sent' ? (
+              <Badge className="bg-green-500/15 text-green-700 border-green-500/30 gap-1 text-[10px]">
+                <CheckCircle2 className="w-3 h-3" />
+                Sent {lastLog.sent_at ? format(new Date(lastLog.sent_at), "d MMM") : ''}
+              </Badge>
+            ) : lastLog.status === 'failed' ? (
+              <Badge className="bg-destructive/10 text-destructive border-destructive/30 gap-1 text-[10px]">
+                <XCircle className="w-3 h-3" />
+                Failed
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px]">Pending</Badge>
+            )
+          )}
+          {!lastLog && text && (
+            <Badge variant="outline" className="text-muted-foreground text-[10px]">Not Sent</Badge>
+          )}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <LetterTemplateManager
@@ -458,6 +488,13 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </Button>
               <Button variant="outline" size="sm" onClick={handlePrintPDF} className="gap-1.5 text-xs">
                 <Printer className="w-3.5 h-3.5" /> Print PDF
+              </Button>
+              <Button
+                variant="outline" size="sm"
+                onClick={() => setEmailOpen(true)}
+                className="gap-1.5 text-xs border-primary/40 text-primary hover:bg-primary/10"
+              >
+                <Mail className="w-3.5 h-3.5" /> Send Email
               </Button>
               <Button
                 variant="outline" size="sm"
@@ -482,9 +519,18 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         </div>
       )}
 
+      {/* Last failed send detail */}
+      {lastLog?.status === 'failed' && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-2.5 text-xs text-destructive flex items-center justify-between gap-2">
+          <span><strong>Send failed:</strong> {lastLog.error_message || 'Unknown error'}</span>
+          <Button size="sm" variant="destructive" className="h-6 text-xs px-2" onClick={() => setEmailOpen(true)}>
+            Retry
+          </Button>
+        </div>
+      )}
+
       {text ? (
         <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-          {/* Thinner, longer header banner */}
           <div className="letterhead-banner" style={{ height: '60px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', backgroundPosition: 'center center', margin: '0 auto 0 auto' }}></div>
           <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000", marginTop: '0', paddingTop: '8pt' }}>
             {editing ? (
@@ -501,14 +547,13 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </pre>
             )}
           </div>
-          {/* Extended footer banner */}
-          <div 
+          <div
             className="w-full"
-            style={{ 
-              height: '60px', 
-              backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`, 
-              backgroundSize: '100% 100%', 
-              backgroundRepeat: 'no-repeat', 
+            style={{
+              height: '60px',
+              backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`,
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
               backgroundPosition: 'center center',
               backgroundColor: '#ffffff'
             }}
@@ -524,6 +569,16 @@ function LetterEditor({ letterType, caseItem, evidence }) {
           </Button>
         </div>
       )}
+
+      {/* Email send dialog */}
+      <LetterEmailDialog
+        open={emailOpen}
+        onClose={() => { setEmailOpen(false); refetchLogs(); }}
+        caseItem={caseItem}
+        letterType={letterType}
+        letterText={text}
+        evidence={evidence}
+      />
     </div>
   );
 }

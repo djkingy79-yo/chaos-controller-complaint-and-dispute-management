@@ -1,0 +1,66 @@
+{
+  "name": "EmailLog",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "Associated case ID"
+    },
+    "letter_type": {
+      "type": "string",
+      "enum": [
+        "letter1",
+        "letter2",
+        "letter3",
+        "accept_offer",
+        "deny_offer",
+        "escalation"
+      ],
+      "description": "Which letter was sent"
+    },
+    "recipient_email": {
+      "type": "string",
+      "description": "Email address the letter was sent to"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Email subject line"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the email was sent"
+    },
+    "gmail_message_id": {
+      "type": "string",
+      "description": "Gmail API message ID returned on successful send"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sent",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Send status"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error detail if status is failed"
+    },
+    "attachment_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of filenames attached to this email"
+    }
+  },
+  "required": [
+    "case_id",
+    "letter_type",
+    "recipient_email",
+    "subject"
+  ]
+}
