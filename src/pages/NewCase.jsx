@@ -10,18 +10,9 @@ import GuidedQuestions from "@/components/cases/GuidedQuestions";
 import DocumentUploadStep from "@/components/cases/DocumentUploadStep";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
+import { detectIndustry, getEscalationBody } from "@/lib/industryClassifier";
 
 const PAYID_EMAIL = "djkingy79@gmail.com";
-
-const escalationBodies = {
-  banking: "Australian Financial Complaints Authority (AFCA)",
-  insurance: "Australian Financial Complaints Authority (AFCA)",
-  tenancy: "NSW Civil and Administrative Tribunal (NCAT)",
-  telco: "Telecommunications Industry Ombudsman (TIO)",
-  utilities: "Energy & Water Ombudsman",
-  government: "Commonwealth Ombudsman",
-  other: "Relevant ombudsman or tribunal",
-};
 
 const PLANS = [
   { name: "Starter", price: "$9.99", desc: "Single dispute", features: ["3 active cases", "AI doc scanning", "1st complaint letter", "Deadline tracker", "PDF export"] },
@@ -117,7 +108,7 @@ LETTER INSTRUCTIONS:
 2. Re: line — e.g. "Re: Formal Complaint — ${f.account_number ? "Account " + f.account_number : f.issue_summary || f.issue_type || category}"
 3. Salutation: "Dear ${f.complaint_handler_name || "Sir/Madam"},"
 4. Detail the issue firmly. Give a 21-day deadline from today (${today}).
-5. Mention ${escalationBodies[category]} as next step if unresolved.
+5. Mention ${getEscalationBody(category)} as next step if unresolved.
 6. Close: "Yours faithfully," then ${f.complainant_name || "the complainant's name"}.
 7. NEVER write bracket placeholders.`;
 
@@ -127,11 +118,13 @@ LETTER INSTRUCTIONS:
   };
 
   const handleCreate = () => {
+    const detectedCategory = detectIndustry(formData) !== 'other' ? detectIndustry(formData) : category;
+    const finalCategory = detectedCategory || category || 'other';
     const deadline = new Date();
     deadline.setDate(deadline.getDate() + 21);
     createCaseMutation.mutate({
-      title: `${formData.issue_type || category} — ${formData.organisation_name || "Unknown"}`,
-      category,
+      title: `${formData.issue_type || finalCategory} — ${formData.organisation_name || "Unknown"}`,
+      category: finalCategory,
       status: "draft",
       organisation_name: formData.organisation_name || "",
       organisation_complaints_address: formData.organisation_complaints_address || "",
@@ -148,7 +141,7 @@ LETTER INSTRUCTIONS:
       desired_outcome: formData.desired_outcome || "",
       complaint_letter: complaintLetter,
       response_deadline: deadline.toISOString().split("T")[0],
-      escalation_body: escalationBodies[category] || "",
+      escalation_body: getEscalationBody(finalCategory),
       priority: "medium",
       notes: `${uploadedFiles.length} document${uploadedFiles.length !== 1 ? "s" : ""} uploaded`,
     });
