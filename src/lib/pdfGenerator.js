@@ -55,6 +55,17 @@ function loadImageAsDataURL(url, label) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// BODY STRIPPER — removes AI-generated header block, returns body from "Dear" onwards
+// ─────────────────────────────────────────────────────────────────────────────
+export function stripToLetterBody(text) {
+  if (!text) return '';
+  const clean = String(text).replace(/<[^>]*>/g, '');
+  const dearMatch = clean.search(/\bDear\b/i);
+  if (dearMatch === -1) return clean.trim();
+  return clean.slice(dearMatch).trim();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONTENT CLEANER
 // ─────────────────────────────────────────────────────────────────────────────
 export function cleanForPDF(content) {
@@ -86,6 +97,7 @@ export async function generateChaosDocumentPDF({
   sections = [],
   includeHeader = true,
   includeFooter = true,
+  letterHeader = null,  // { receiverLines, senderLines, today, reSubject }
 }) {
   console.log('PDF GENERATOR START', { type: documentType, title });
 
@@ -195,34 +207,75 @@ export async function generateChaosDocumentPDF({
     }
   };
 
-  // ── TITLE ──
-  if (title) {
-    pdf.setFont('times', 'bold');
-    pdf.setFontSize(14);
-    const titleLines = pdf.splitTextToSize(String(title).toUpperCase(), contentWidth);
-    pdf.text(titleLines, leftMargin, yPos);
-    yPos += titleLines.length * 7 + 4;
-  }
+  // ── FORMAL LETTER HEADER (mutually exclusive with title/matter/date block) ──
+  if (letterHeader) {
+    const { receiverLines = [], senderLines = [], today = '', reSubject = '' } = letterHeader;
+    const lineH = 5.5;
+    const colWidth = contentWidth / 2 - 5;
+    const rightCol = leftMargin + contentWidth / 2 + 5;
 
-  if (matter) {
+    // Date — right aligned
     pdf.setFont('times', 'normal');
     pdf.setFontSize(11);
-    pdf.text(`Matter: ${String(matter)}`, leftMargin, yPos);
-    yPos += 6;
-  }
+    if (today) {
+      pdf.text(today, leftMargin + contentWidth, yPos, { align: 'right' });
+    }
+    yPos += lineH * 2;
 
-  if (date) {
-    pdf.setFont('times', 'normal');
-    pdf.setFontSize(11);
-    pdf.text(`Date: ${String(date)}`, leftMargin, yPos);
-    yPos += 6;
-  }
+    // Two-column address block: receiver left, sender right
+    const maxLines = Math.max(receiverLines.length, senderLines.length);
+    const addrStartY = yPos;
+    for (let i = 0; i < receiverLines.length; i++) {
+      pdf.text(String(receiverLines[i]), leftMargin, addrStartY + i * lineH);
+    }
+    for (let i = 0; i < senderLines.length; i++) {
+      pdf.text(String(senderLines[i]), rightCol, addrStartY + i * lineH);
+    }
+    yPos = addrStartY + maxLines * lineH + lineH;
 
-  if (matter || date) {
+    // RE line — bold
+    if (reSubject) {
+      pdf.setFont('times', 'bold');
+      pdf.text(`Re: ${reSubject}`, leftMargin, yPos);
+      pdf.setFont('times', 'normal');
+      yPos += lineH + 2;
+    }
+
+    // Horizontal rule
     pdf.setDrawColor(0);
     pdf.setLineWidth(0.3);
     pdf.line(leftMargin, yPos, leftMargin + contentWidth, yPos);
-    yPos += 6;
+    yPos += lineH;
+  } else {
+    // ── TITLE (non-letter documents only) ──
+    if (title) {
+      pdf.setFont('times', 'bold');
+      pdf.setFontSize(14);
+      const titleLines = pdf.splitTextToSize(String(title).toUpperCase(), contentWidth);
+      pdf.text(titleLines, leftMargin, yPos);
+      yPos += titleLines.length * 7 + 4;
+    }
+
+    if (matter) {
+      pdf.setFont('times', 'normal');
+      pdf.setFontSize(11);
+      pdf.text(`Matter: ${String(matter)}`, leftMargin, yPos);
+      yPos += 6;
+    }
+
+    if (date) {
+      pdf.setFont('times', 'normal');
+      pdf.setFontSize(11);
+      pdf.text(`Date: ${String(date)}`, leftMargin, yPos);
+      yPos += 6;
+    }
+
+    if (matter || date) {
+      pdf.setDrawColor(0);
+      pdf.setLineWidth(0.3);
+      pdf.line(leftMargin, yPos, leftMargin + contentWidth, yPos);
+      yPos += 6;
+    }
   }
 
   // ── BODY ──

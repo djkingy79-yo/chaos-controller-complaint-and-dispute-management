@@ -10,7 +10,7 @@ import LetterTemplateManager from "./LetterTemplateManager";
 import LetterEmailDialog from "./LetterEmailDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL, stripToLetterBody } from "@/lib/pdfGenerator";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
@@ -510,13 +510,25 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
   const buildLetterBlob = async () => {
     if (!text || !text.trim()) throw new Error(`No content for ${letterType.label}. Generate the letter first.`);
-    const cleanContent = String(text).replace(/<[^>]*>/g, '').trim();
+    const client = buildClientContext(caseItem, evidence);
+    const headerData = buildLetterHeaderData(caseItem, client);
+    const reLabels = {
+      letter1: `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+      letter2: `SECOND FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+      letter3: `THIRD AND FINAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+      accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
+      deny_offer: `REJECTION OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
+      escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem.organisation_name || "Organisation"}`,
+    };
+    const reSubject = reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`;
+    const strippedBody = stripToLetterBody(text);
     const blob = await generateChaosDocumentPDF({
-      documentType: 'general',
+      documentType: 'letter',
       title: letterType.label,
-      body: cleanContent,
+      body: strippedBody,
       includeHeader: true,
       includeFooter: true,
+      letterHeader: { ...headerData, reSubject },
     });
     if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
     return blob;

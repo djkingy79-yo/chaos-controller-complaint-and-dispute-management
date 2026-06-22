@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Loader2, CheckCircle2, XCircle, RefreshCw, Paperclip } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF, stripToLetterBody } from "@/lib/pdfGenerator";
 import { buildLetterHeaderData } from "@/components/cases/LetterHeader.jsx";
 
 // Convert a Blob to a standard base64 string (not URL-safe)
@@ -83,7 +83,7 @@ export default function LetterEmailDialog({
 
       // Always attach the letter PDF if checked
       if (attachLetter) {
-        const cleanContent = String(letterText).replace(/<[^>]*>/g, '').trim();
+        const cleanContent = stripToLetterBody(letterText);
         // Build structured header from case data (same as preview)
         const client = {
           name: caseItem?.complainant_name || "",
