@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob } from "@/lib/pdfGenerator";
+import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 
 // ── Letter definitions ────────────────────────────────────────────────────────
@@ -141,24 +141,24 @@ function buildAISummaryBody(raw) {
   if (isNew) {
     return [
       "CASE OVERVIEW", s.case_overview || "-", "",
-      "ESTABLISHED FACTS", ...(s.facts||[]).map(f => `• ${f}`), "",
+      "ESTABLISHED FACTS", ...(s.facts||[]).map(f => `- ${f}`), "",
       "TIMELINE SUMMARY", s.timeline_summary || "-", "",
-      "EVIDENCE SUMMARY", ...(s.evidence_summary||[]).map(e => `• ${e}`), "",
-      "ISSUES IDENTIFIED", ...(s.issues_identified||[]).map(i => `• ${i}`), "",
-      "CASE STRENGTHS", ...(s.strengths||[]).map(x => `• ${x}`), "",
-      "WEAKNESSES / RISKS", ...(s.weaknesses||[]).map(x => `• ${x}`), "",
-      "MISSING EVIDENCE", ...(s.missing_evidence?.length ? s.missing_evidence.map(x => `• ${x}`) : ["• None identified"]), "",
-      "RECOMMENDED NEXT ACTIONS", ...(s.next_actions||[]).map(x => `• ${x}`), "",
+      "EVIDENCE SUMMARY", ...(s.evidence_summary||[]).map(e => `- ${e}`), "",
+      "ISSUES IDENTIFIED", ...(s.issues_identified||[]).map(i => `- ${i}`), "",
+      "CASE STRENGTHS", ...(s.strengths||[]).map(x => `- ${x}`), "",
+      "WEAKNESSES / RISKS", ...(s.weaknesses||[]).map(x => `- ${x}`), "",
+      "MISSING EVIDENCE", ...(s.missing_evidence?.length ? s.missing_evidence.map(x => `- ${x}`) : ["- None identified"]), "",
+      "RECOMMENDED NEXT ACTIONS", ...(s.next_actions||[]).map(x => `- ${x}`), "",
       "ESCALATION PATH", s.escalation_path || "-",
     ].join("\n");
   }
   // Legacy schema
   return [
     "CASE OVERVIEW", s.summary || "-", "",
-    "KEY ISSUES", ...(s.key_issues||[]).map(x => `• ${x}`), "",
-    "EVIDENCE ANALYSIS", ...(s.evidence_analysis||[]).map(x => `• ${x}`), "",
+    "KEY ISSUES", ...(s.key_issues||[]).map(x => `- ${x}`), "",
+    "EVIDENCE ANALYSIS", ...(s.evidence_analysis||[]).map(x => `- ${x}`), "",
     "CORRESPONDENCE SUMMARY", s.correspondence_summary || "-", "",
-    "RECOMMENDED NEXT STEPS", ...(s.next_steps||[]).map(x => `• ${x}`), "",
+    "RECOMMENDED NEXT STEPS", ...(s.next_steps||[]).map(x => `- ${x}`), "",
     "CASE STRENGTH ASSESSMENT", s.case_strength_assessment || "-",
   ].join("\n");
 }
