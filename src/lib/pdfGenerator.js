@@ -265,20 +265,29 @@ export function downloadPDFBlob(blob, filename) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PRINT: open PDF in new tab/window and trigger browser print dialog inside that tab.
-// Returns true if window opened successfully, false if popup blocked.
-// Caller should fallback to downloadPDFBlob() when this returns false.
+// PRINT: open PDF blob in a new tab and trigger the browser print dialog.
+// Returns true on success, false if popup was blocked (caller falls back to download).
 // ─────────────────────────────────────────────────────────────────────────────
-export function openPDFForPrint(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank');
-  if (!win || win.closed || typeof win.closed === 'undefined') {
-    URL.revokeObjectURL(url);
+export async function openPDFForPrint(blob, filename = 'document.pdf') {
+  try {
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (!win) {
+      URL.revokeObjectURL(url);
+      return false;
+    }
+    win.onload = () => {
+      try {
+        win.focus();
+        win.print();
+      } catch (error) {
+        console.error('Print PDF failed:', error);
+      }
+    };
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return true;
+  } catch (error) {
+    console.error('openPDFForPrint failed:', error);
     return false;
   }
-  win.addEventListener('load', () => {
-    try { win.print(); } catch (e) { /* mobile Safari may block — window still open */ }
-  });
-  setTimeout(() => URL.revokeObjectURL(url), 120000);
-  return true;
 }
