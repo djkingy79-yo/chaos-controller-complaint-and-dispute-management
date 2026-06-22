@@ -226,6 +226,18 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
       return;
     }
     
+    // Check file sizes (20MB limit warning)
+    const oversizedFiles = files.filter(f => f.size > 20 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      const fileNames = oversizedFiles.map(f => f.name).join(', ');
+      toast({
+        title: "File Size Warning",
+        description: `The following files exceed 20MB and may fail to upload: ${fileNames}. Consider compressing or splitting large files.`,
+        variant: "warning",
+        duration: 6000,
+      });
+    }
+    
     setUploading(true);
     
     for (const file of files) {

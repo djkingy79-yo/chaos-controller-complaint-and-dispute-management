@@ -11,6 +11,7 @@ import DocumentUploadStep from "@/components/cases/DocumentUploadStep";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
 import { detectIndustry, getEscalationBody } from "@/lib/industryClassifier";
+import { toast } from "sonner";
 
 const PAYID_EMAIL = "djkingy79@gmail.com";
 
@@ -60,6 +61,10 @@ export default function NewCase() {
     onSuccess: (newCase) => {
       queryClient.invalidateQueries({ queryKey: ["cases"] });
       navigate(`/case/${newCase.id}?tab=checklist`);
+    },
+    onError: (error) => {
+      console.error('Case creation failed:', error);
+      toast.error('Case could not be saved. Please try again.');
     },
   });
 

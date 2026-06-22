@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderOpen, AlertTriangle, CheckCircle2, Clock, Shield, Flame, Trophy, TrendingUp, Scale, CreditCard } from "lucide-react";
+import { Plus, FolderOpen, AlertTriangle, CheckCircle2, Clock, Shield, Flame, Trophy, TrendingUp, Scale, CreditCard, AlertCircle } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import CaseCard from "@/components/dashboard/CaseCard";
 import ActionItems from "@/components/dashboard/ActionItems";
 import CommandCentre from "@/components/dashboard/CommandCentre";
 import GoogleTasksSync from "@/components/dashboard/GoogleTasksSync";
+import { format } from "date-fns";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -40,59 +41,93 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* Subscription Status Banner */}
       {payment && (
-            <div className={`rounded-xl border-2 p-4 ${
-              payment.status === 'verified' && payment.subscription_active
-                ? 'bg-green-500/10 border-green-500/30'
-                : payment.status === 'pending'
-                ? 'bg-warning/10 border-warning/30'
-                : 'bg-destructive/10 border-destructive/30'
-            }`}>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    payment.status === 'verified' && payment.subscription_active
-                      ? 'bg-green-500/15'
-                      : 'bg-warning/15'
-                  }`}>
-                    {payment.status === 'verified' && payment.subscription_active ? (
-                      <CheckCircle2 className="w-6 h-6 text-green-500" />
-                    ) : (
-                      <Clock className="w-6 h-6 text-warning" />
-                    )}
-                  </div>
-                  <div>
-                    <p className={`font-black ${
-                      payment.status === 'verified' && payment.subscription_active
-                        ? 'text-green-500'
-                        : 'text-warning'
-                    }`}>
-                      {payment.status === 'verified' && payment.subscription_active
-                        ? `${payment.plan_name} Plan — Active`
-                        : payment.status === 'pending'
-                        ? 'Payment Pending Verification'
-                        : 'Payment Status Unknown'}
-                    </p>
-                    <p className="text-xs text-foreground font-bold">
-                      {payment.status === 'verified' && payment.subscription_active
-                        ? payment.subscription_expiry
-                          ? `Expires: ${new Date(payment.subscription_expiry).toLocaleDateString('en-AU', { day: '2-digit', month: 'long', year: 'numeric' })}`
-                          : 'Unlimited access'
-                        : payment.status === 'pending'
-                        ? 'We will verify your payment within a few hours'
-                        : 'Contact support for assistance'}
-                    </p>
+        <>
+          {/* Expiry warning banner (within 7 days) */}
+          {payment.status === 'verified' && payment.subscription_active && payment.subscription_expiry && (() => {
+            const expiryDate = new Date(payment.subscription_expiry);
+            const daysUntilExpiry = Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            if (daysUntilExpiry <= 7 && daysUntilExpiry >= 0) {
+              return (
+                <div className="rounded-xl border-2 p-4 bg-warning/10 border-warning/30">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-warning/15">
+                        <AlertCircle className="w-6 h-6 text-warning" />
+                      </div>
+                      <div>
+                        <p className="font-black text-warning">Subscription Expiring Soon</p>
+                        <p className="text-xs text-foreground font-bold">
+                          Your {payment.plan_name} plan expires in {daysUntilExpiry} {daysUntilExpiry === 1 ? 'day' : 'days'} — {format(expiryDate, "d MMMM yyyy")}
+                        </p>
+                      </div>
+                    </div>
+                    <Link to="/payments">
+                      <Button variant="outline" size="sm" className="border-warning/30 text-warning hover:bg-warning/10">
+                        Renew Now
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-                {payment.status === 'pending' && (
-                  <Link to="/payments">
-                    <Button variant="outline" size="sm" className="border-warning/30 text-warning hover:bg-warning/10">
-                      View Status
-                    </Button>
-                  </Link>
-                )}
+              );
+            }
+            return null;
+          })()}
+          
+          {/* Standard subscription status */}
+          <div className={`rounded-xl border-2 p-4 ${
+            payment.status === 'verified' && payment.subscription_active
+              ? 'bg-green-500/10 border-green-500/30'
+              : payment.status === 'pending'
+              ? 'bg-warning/10 border-warning/30'
+              : 'bg-destructive/10 border-destructive/30'
+          }`}>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${
+                  payment.status === 'verified' && payment.subscription_active
+                    ? 'bg-green-500/15'
+                    : 'bg-warning/15'
+                }`}>
+                  {payment.status === 'verified' && payment.subscription_active ? (
+                    <CheckCircle2 className="w-6 h-6 text-green-500" />
+                  ) : (
+                    <Clock className="w-6 h-6 text-warning" />
+                  )}
+                </div>
+                <div>
+                  <p className={`font-black ${
+                    payment.status === 'verified' && payment.subscription_active
+                      ? 'text-green-500'
+                      : 'text-warning'
+                  }`}>
+                    {payment.status === 'verified' && payment.subscription_active
+                      ? `${payment.plan_name} Plan — Active`
+                      : payment.status === 'pending'
+                      ? 'Payment Pending Verification'
+                      : 'Payment Status Unknown'}
+                  </p>
+                  <p className="text-xs text-foreground font-bold">
+                    {payment.status === 'verified' && payment.subscription_active
+                      ? payment.subscription_expiry
+                        ? `Expires: ${format(new Date(payment.subscription_expiry), "d MMMM yyyy")}`
+                        : 'Unlimited access'
+                      : payment.status === 'pending'
+                      ? 'We will verify your payment within a few hours'
+                      : 'Contact support for assistance'}
+                  </p>
+                </div>
               </div>
+              {payment.status === 'pending' && (
+                <Link to="/payments">
+                  <Button variant="outline" size="sm" className="border-warning/30 text-warning hover:bg-warning/10">
+                    View Status
+                  </Button>
+                </Link>
+              )}
             </div>
-          )}
+          </div>
+        </>
+      )}
 
           {/* Header */}
           <div className="flex flex-col gap-4">

@@ -172,7 +172,7 @@ export default function Layout() {
                       key={item.path}
                       to={item.path}
                       onClick={() => setMenuOpen(false)}
-                      className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-base font-bold transition-all mb-1 ${
+                      className={`flex items-center gap-4 px-4 py-4 sm:py-3.5 rounded-xl text-base font-bold transition-all mb-1 touch-manipulation ${
                         isActive
                           ? "bg-primary text-primary-foreground shadow-md"
                           : "text-foreground hover:bg-secondary/70"

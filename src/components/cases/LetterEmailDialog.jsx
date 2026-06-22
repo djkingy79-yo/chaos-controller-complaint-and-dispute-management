@@ -126,6 +126,10 @@ export default function LetterEmailDialog({
         toast.success(`Email sent successfully to ${recipientEmail}`);
         refetchLogs();
         queryClient.invalidateQueries({ queryKey: ['emailLogs'] });
+        // Auto-close dialog after 1.5 seconds
+        setTimeout(() => {
+          onClose();
+        }, 1500);
       } else {
         throw new Error(res.data?.error || 'Send failed');
       }
