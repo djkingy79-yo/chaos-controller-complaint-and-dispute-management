@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check, X, ArrowLeft, RefreshCw, Link as LinkIcon, Zap } from "lucide-react";
+import { Calendar, Check, X, ArrowLeft, RefreshCw, Link as LinkIcon, Zap, FolderOpen } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 const GOOGLE_CONNECTOR_ID = "6a2f842ded0843ad5cb9ecb7";
@@ -86,6 +86,11 @@ export default function CalendarSync() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Scoped case (from ?caseId= URL param)
+  const urlParams = new URLSearchParams(window.location.search);
+  const scopedCaseId = urlParams.get("caseId") || null;
+  const [scopedCase, setScopedCase] = useState(null);
+
   // Google Calendar state
   const [googleConnected, setGoogleConnected] = useState(false);
   const [googleSyncing, setGoogleSyncing] = useState(false);
@@ -105,7 +110,8 @@ export default function CalendarSync() {
 
   const checkGoogle = async () => {
     try {
-      const res = await base44.functions.invoke("syncCalendar", { action: "check" });
+      const payload = scopedCaseId ? { action: "check", caseId: scopedCaseId } : { action: "check" };
+      const res = await base44.functions.invoke("syncCalendar", payload);
       setGoogleConnected(res.data?.connected || false);
       setGoogleEvents(res.data?.events || []);
       setGoogleSyncedCount(res.data?.syncedCount || 0);
@@ -118,7 +124,8 @@ export default function CalendarSync() {
 
   const syncGoogle = async () => {
     try {
-      const res = await base44.functions.invoke("syncCalendar", { action: "sync" });
+      const payload = scopedCaseId ? { action: "sync", caseId: scopedCaseId } : { action: "sync" };
+      const res = await base44.functions.invoke("syncCalendar", payload);
       setGoogleEvents(res.data?.events || []);
       setGoogleSyncedCount(res.data?.syncedCount || 0);
       setGoogleTotal(res.data?.totalDeadlines || 0);
@@ -132,7 +139,8 @@ export default function CalendarSync() {
 
   const checkOutlook = async () => {
     try {
-      const res = await base44.functions.invoke("syncOutlookCalendar", {});
+      const payload = scopedCaseId ? { caseId: scopedCaseId } : {};
+      const res = await base44.functions.invoke("syncOutlookCalendar", payload);
       setOutlookConnected(true);
       setOutlookItems(res.data?.items || []);
       setOutlookSyncedCount(res.data?.synced || 0);
@@ -157,7 +165,15 @@ export default function CalendarSync() {
       if (authed) {
         const me = await base44.auth.me();
         setUser(me);
-        await Promise.all([checkGoogle(), checkOutlook()]);
+        const tasks = [checkGoogle(), checkOutlook()];
+        if (scopedCaseId) {
+          tasks.push(
+            base44.entities.Case.get(scopedCaseId)
+              .then(c => setScopedCase(c))
+              .catch(() => {})
+          );
+        }
+        await Promise.all(tasks);
       }
       setLoading(false);
     });
@@ -213,18 +229,34 @@ export default function CalendarSync() {
           </div>
           <div>
             <h1 className="font-heading font-bold text-2xl text-foreground">Calendar Sync</h1>
-            <p className="text-sm text-muted-foreground">Auto-sync deadlines & actions to Google Calendar and Outlook</p>
+            <p className="text-sm text-muted-foreground">
+              {scopedCaseId
+                ? `Syncing calendar for: ${scopedCase ? scopedCase.title : "Loading case…"}`
+                : "Auto-sync deadlines & actions to Google Calendar and Outlook"}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Auto-sync notice */}
-      <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-3 flex items-center gap-3">
-        <Zap className="w-4 h-4 text-primary shrink-0" />
-        <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">Fully automated:</span> Every new deadline, checklist action, and case status change is synced instantly — no manual steps required.
-        </p>
-      </div>
+      {/* Scoped-case banner or auto-sync notice */}
+      {scopedCaseId ? (
+        <div className="bg-success/5 border border-success/20 rounded-xl px-5 py-3 flex items-center gap-3">
+          <FolderOpen className="w-4 h-4 text-success shrink-0" />
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">Case-scoped sync:</span>{" "}
+            Only deadlines, response dates, hearings, and escalation dates for{" "}
+            <span className="font-semibold text-foreground">{scopedCase?.title || "this case"}</span>{" "}
+            will be synced. To sync all cases, use Calendar Sync from the main menu.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-3 flex items-center gap-3">
+          <Zap className="w-4 h-4 text-primary shrink-0" />
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">Fully automated:</span> Every new deadline, checklist action, and case status change is synced instantly — no manual steps required.
+          </p>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         <CalendarCard
