@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -435,6 +435,8 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const timedOutRef = React.useRef(false);
+  const abortControllerRef = React.useRef(null);
 
   // Elapsed timer — ticks every second while generating
   useEffect(() => {
@@ -510,21 +512,30 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const handleGenerate = async () => {
     if (generating) return; // Block duplicate clicks
     console.log(`[LetterGen] START — letter: ${letterType.key}, case: ${caseItem.id}`);
+
+    // Reset timeout ref — must happen before any awaits
+    timedOutRef.current = false;
+
+    // Abort any previous in-flight request
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setGenerating(true);
     setGenerateError(null);
 
-    // Phase ticker — cycles through progress messages
+    // Phase ticker — cycles through all 5 phases across 60s window (~12s each)
     let phaseIndex = 0;
     setGenerateStatus(GENERATE_PHASES[0]);
     const phaseTicker = setInterval(() => {
       phaseIndex = Math.min(phaseIndex + 1, GENERATE_PHASES.length - 1);
       setGenerateStatus(GENERATE_PHASES[phaseIndex]);
-    }, 18000);
+    }, 12000);
 
-    // Hard timeout — stop spinner and show retry after 90s
-    let timedOut = false;
+    // Hard 60s timeout — fires if backend hasn't responded
     const hardTimeout = setTimeout(() => {
-      timedOut = true;
+      timedOutRef.current = true;
+      abortController.abort(); // cancel the pending fetch
       clearInterval(phaseTicker);
       setGenerating(false);
       setGenerateStatus("");
@@ -537,58 +548,52 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today, evidence);
 
-      const promptBytes = new Blob([prompt]).size;
-      console.log(`[LetterGen] Payload — caseId: ${caseItem.id}, letter: ${letterType.key}, promptBytes: ${promptBytes}, evidenceCount: ${(evidence||[]).length}`);
+      console.log(`[LetterGen] Payload — caseId: ${caseItem.id}, letter: ${letterType.key}, promptBytes: ${new Blob([prompt]).size}, evidenceCount: ${(evidence||[]).length}`);
+      console.log(`[LetterGen] Backend request sent — ${letterType.key} @ ${new Date().toISOString()}`);
 
       const aiStart = Date.now();
-      console.log(`[LetterGen] Backend request sent — letter: ${letterType.key} @ ${new Date().toISOString()}`);
       const response = await base44.functions.invoke('generateLetter', { prompt, caseId: caseItem.id, letterType: letterType.key });
       const aiMs = Date.now() - aiStart;
+
+      // Discard stale response if timeout already fired
+      if (timedOutRef.current) {
+        console.warn(`[LetterGen] Late response discarded — timeout already fired (took ${aiMs}ms)`);
+        return;
+      }
 
       if (response.data?.error) {
         throw new Error(response.data.error);
       }
 
       const result = response.data?.result;
-      console.log(`[LetterGen] Backend response — length: ${result?.length ?? 0}, AI took: ${response.data?.aiMs ?? '?'}ms, total: ${aiMs}ms @ ${new Date().toISOString()}`);
+      console.log(`[LetterGen] Response — length: ${result?.length ?? 0}, aiMs: ${response.data?.aiMs ?? '?'}, totalMs: ${aiMs}`);
 
-      if (timedOut) {
-        console.warn(`[LetterGen] Late backend response discarded — timeout already fired (took ${aiMs}ms total)`);
-        return;
-      }
-
-      // Guard: empty/null content is a failure
       if (!result || !result.trim()) {
         throw new Error("AI returned empty content. Please try again.");
       }
 
       setGenerateStatus("Saving letter…");
-      const saveStart = Date.now();
-      console.log(`[LetterGen] DB save start — field: ${field} @ ${new Date().toISOString()}`);
+      console.log(`[LetterGen] DB save — field: ${field}`);
       await updateMutation.mutateAsync({ [field]: result });
-      console.log(`[LetterGen] DB save complete — took: ${Date.now() - saveStart}ms @ ${new Date().toISOString()}`);
 
-      // Immediately update local state — letter appears without page refresh
+      // Only update state if still not timed out (DB save can be slow too)
+      if (timedOutRef.current) return;
+
       setText(result);
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
       setGenerateError(null);
       toast.success(`${letterType.label} generated`);
+      console.log(`[LetterGen] DONE — ${letterType.key}`);
     } catch (e) {
-      if (timedOut) return; // Timeout already handled
-      // Extract the real failure reason — Axios wraps network errors in e.response
+      // Swallow AbortError and any error that fires after timeout
+      if (timedOutRef.current || e.name === 'AbortError' || e.code === 'ERR_CANCELED') return;
+
       const httpStatus = e.response?.status;
-      const serverMsg = e.response?.data?.error || e.response?.data?.message || JSON.stringify(e.response?.data);
-      const errorCode = e.code; // e.g. ERR_NETWORK, ECONNABORTED
-      console.error(`[LetterGen] ERROR —`, {
-        message: e.message,
-        code: errorCode,
-        httpStatus,
-        serverMsg,
-        responseData: e.response?.data,
-        stack: e.stack?.split('\n').slice(0,4).join(' | '),
-      });
-      // Build a human-readable error: prefer server message > HTTP status > message > fallback
-      const displayError = serverMsg && serverMsg !== 'undefined'
+      const serverMsg = e.response?.data?.error || e.response?.data?.message;
+      const errorCode = e.code;
+      console.error(`[LetterGen] ERROR —`, { message: e.message, code: errorCode, httpStatus, serverMsg });
+
+      const displayError = serverMsg
         ? `${httpStatus ? `HTTP ${httpStatus}: ` : ''}${serverMsg}`
         : httpStatus
           ? `HTTP ${httpStatus}: ${e.message}`
@@ -597,7 +602,8 @@ function LetterEditor({ letterType, caseItem, evidence }) {
             : e.message || "Generation failed. Please try again.";
       setGenerateError(displayError);
     } finally {
-      if (!timedOut) {
+      // Only clean up spinner if timeout hasn't already done it
+      if (!timedOutRef.current) {
         clearInterval(phaseTicker);
         clearTimeout(hardTimeout);
         setGenerating(false);
