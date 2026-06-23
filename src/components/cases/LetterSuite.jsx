@@ -420,7 +420,7 @@ const GENERATE_PHASES = [
   "Almost done…",
 ];
 
-const HARD_TIMEOUT_MS = 90000; // 90 seconds hard stop
+const HARD_TIMEOUT_MS = 60000; // 60 seconds hard stop
 
 function LetterEditor({ letterType, caseItem, evidence }) {
   const queryClient = useQueryClient();
@@ -537,11 +537,16 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today, evidence);
 
-      console.log(`[LetterGen] AI request sent — letter: ${letterType.key}`);
+      const aiStart = Date.now();
+      console.log(`[LetterGen] AI request sent — letter: ${letterType.key} @ ${new Date().toISOString()}`);
       const result = await base44.integrations.Core.InvokeLLM({ prompt, model: 'claude_sonnet_4_6' });
-      console.log(`[LetterGen] AI response received — length: ${result?.length ?? 0}`);
+      const aiMs = Date.now() - aiStart;
+      console.log(`[LetterGen] AI response received — length: ${result?.length ?? 0}, AI took: ${aiMs}ms @ ${new Date().toISOString()}`);
 
-      if (timedOut) return; // Timeout already fired — discard late response
+      if (timedOut) {
+        console.warn(`[LetterGen] Late AI response discarded — timeout already fired (AI took ${aiMs}ms)`);
+        return; // Timeout already fired — discard late response
+      }
 
       // Guard: empty/null content is a failure
       if (!result || !result.trim()) {
@@ -549,9 +554,10 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       }
 
       setGenerateStatus("Saving letter…");
-      console.log(`[LetterGen] Saving to case field: ${field}`);
+      const saveStart = Date.now();
+      console.log(`[LetterGen] DB save start — field: ${field} @ ${new Date().toISOString()}`);
       await updateMutation.mutateAsync({ [field]: result });
-      console.log(`[LetterGen] Save complete — letter: ${letterType.key}`);
+      console.log(`[LetterGen] DB save complete — took: ${Date.now() - saveStart}ms @ ${new Date().toISOString()}`);
 
       // Immediately update local state — letter appears without page refresh
       setText(result);
