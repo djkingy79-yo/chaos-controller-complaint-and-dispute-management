@@ -121,7 +121,7 @@ function scoreFromCase(caseItem, evidence, events) {
     caseItem.status !== "resolved" &&
     caseItem.status !== "closed";
 
-  return { score, items, readyToEscalate };
+  return { score, items, readyToEscalate, noResponseRecorded, escalationCriteriaMet };
 }
 
 const statusIcon = {
@@ -144,7 +144,7 @@ const barColor = (score) => {
 
 export default function ChaosScore({ caseItem, evidence, events }) {
   const navigate = useNavigate();
-  const { score, items, readyToEscalate } = scoreFromCase(caseItem, evidence, events);
+  const { score, items, readyToEscalate, noResponseRecorded, escalationCriteriaMet } = scoreFromCase(caseItem, evidence, events);
 
   const handleEscalate = () => {
     if (caseItem.category === "banking" || caseItem.category === "insurance") {
@@ -204,11 +204,22 @@ export default function ChaosScore({ caseItem, evidence, events }) {
         ) : (
           <div className="bg-secondary/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground">
-              {score < 50
-                ? "Build your case — document the issue, upload evidence, and send the first complaint."
-                : score < 85
-                ? `${85 - score}% more needed — complete the complaint pathway to unlock escalation.`
-                : "Complaint pathway must be completed before escalating."}
+              {(() => {
+                // Derive the most accurate stage label from actual case fields
+                if (!caseItem.first_complaint_sent_at && !caseItem.complaint_letter) {
+                  return "Build your case — document the issue, upload evidence, and draft the first complaint.";
+                }
+                if (!caseItem.first_complaint_sent_at) {
+                  return "Case in progress — send the first complaint letter to the organisation.";
+                }
+                if (caseItem.first_complaint_sent_at && !noResponseRecorded) {
+                  return "Awaiting response — response deadline has not yet passed or outcome not recorded.";
+                }
+                if (noResponseRecorded && !escalationCriteriaMet) {
+                  return "Next complaint stage required — send the 2nd/final complaint before escalating.";
+                }
+                return `${85 - score}% more needed — complete the complaint pathway to unlock escalation.`;
+              })()}
             </p>
           </div>
         )}
