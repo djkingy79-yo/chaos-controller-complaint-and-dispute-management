@@ -420,7 +420,7 @@ const GENERATE_PHASES = [
   "Almost done…",
 ];
 
-const HARD_TIMEOUT_MS = 60000; // 60 seconds hard stop
+const HARD_TIMEOUT_MS = 90000; // 90 seconds — backend cold start can take ~50s
 
 function LetterEditor({ letterType, caseItem, evidence }) {
   const queryClient = useQueryClient();
@@ -530,7 +530,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     const phaseTicker = setInterval(() => {
       phaseIndex = Math.min(phaseIndex + 1, GENERATE_PHASES.length - 1);
       setGenerateStatus(GENERATE_PHASES[phaseIndex]);
-    }, 12000);
+    }, 18000);
 
     // Hard 60s timeout — fires if backend hasn't responded
     const hardTimeout = setTimeout(() => {
