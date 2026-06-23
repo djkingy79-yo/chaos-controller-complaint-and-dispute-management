@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, RefreshCw, Pencil, Check, Loader2, Download, Printer, FileText, Lock, Mail, CheckCircle2, XCircle } from "lucide-react";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Download, Printer, FileText, Lock, Mail, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import LetterTemplateManager from "./LetterTemplateManager";
 import LetterEmailDialog from "./LetterEmailDialog";
 import { toast } from "sonner";
@@ -417,6 +421,9 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [generateStatus, setGenerateStatus] = useState("");
   const [generateTimedOut, setGenerateTimedOut] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Sync text from caseItem when the field or caseItem updates (fixes all-tabs-same-letter bug)
   useEffect(() => {
@@ -465,6 +472,22 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Case.update(caseItem.id, data),
   });
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      // Null out only this letter's field — all other case data untouched
+      await base44.entities.Case.update(caseItem.id, { [field]: null });
+      setText("");
+      queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+      toast.success(`${letterType.label} deleted`);
+    } catch (e) {
+      toast.error("Failed to delete letter: " + e.message);
+    } finally {
+      setDeleting(false);
+      setDeleteConfirmOpen(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (generating) return;
@@ -633,7 +656,23 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </Button>
             </>
           )}
-          <Button size="sm" onClick={handleGenerate} disabled={generating} className="gap-1.5 text-xs min-w-[140px]">
+          {text && (
+            <Button
+              variant="outline" size="sm"
+              onClick={() => setDeleteConfirmOpen(true)}
+              disabled={deleting || generating}
+              className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+            >
+              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Delete
+            </Button>
+          )}
+          <Button
+            size="sm"
+            onClick={text ? () => setRegenConfirmOpen(true) : handleGenerate}
+            disabled={generating || deleting}
+            className="gap-1.5 text-xs min-w-[140px]"
+          >
             {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
             {generating ? (generateTimedOut ? "Still working…" : "Generating…") : (text ? "Regenerate" : "Generate Letter")}
           </Button>
@@ -722,6 +761,47 @@ function LetterEditor({ letterType, caseItem, evidence }) {
           </Button>
         </div>
       )}
+
+      {/* Delete confirmation */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this letter?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This cannot be undone. You can generate a new one afterwards.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+              Delete Letter
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Regenerate confirmation */}
+      <AlertDialog open={regenConfirmOpen} onOpenChange={setRegenConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Regenerate this letter?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will replace the current version with a newly generated one. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setRegenConfirmOpen(false); handleGenerate(); }}>
+              Regenerate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Email send dialog */}
       <LetterEmailDialog
