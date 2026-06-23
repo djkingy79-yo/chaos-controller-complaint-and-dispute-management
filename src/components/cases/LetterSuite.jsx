@@ -537,15 +537,24 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today, evidence);
 
+      const promptBytes = new Blob([prompt]).size;
+      console.log(`[LetterGen] Payload — caseId: ${caseItem.id}, letter: ${letterType.key}, promptBytes: ${promptBytes}, evidenceCount: ${(evidence||[]).length}`);
+
       const aiStart = Date.now();
-      console.log(`[LetterGen] AI request sent — letter: ${letterType.key} @ ${new Date().toISOString()}`);
-      const result = await base44.integrations.Core.InvokeLLM({ prompt, model: 'claude_sonnet_4_6' });
+      console.log(`[LetterGen] Backend request sent — letter: ${letterType.key} @ ${new Date().toISOString()}`);
+      const response = await base44.functions.invoke('generateLetter', { prompt, caseId: caseItem.id, letterType: letterType.key });
       const aiMs = Date.now() - aiStart;
-      console.log(`[LetterGen] AI response received — length: ${result?.length ?? 0}, AI took: ${aiMs}ms @ ${new Date().toISOString()}`);
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      const result = response.data?.result;
+      console.log(`[LetterGen] Backend response — length: ${result?.length ?? 0}, AI took: ${response.data?.aiMs ?? '?'}ms, total: ${aiMs}ms @ ${new Date().toISOString()}`);
 
       if (timedOut) {
-        console.warn(`[LetterGen] Late AI response discarded — timeout already fired (AI took ${aiMs}ms)`);
-        return; // Timeout already fired — discard late response
+        console.warn(`[LetterGen] Late backend response discarded — timeout already fired (took ${aiMs}ms total)`);
+        return;
       }
 
       // Guard: empty/null content is a failure
@@ -566,8 +575,27 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       toast.success(`${letterType.label} generated`);
     } catch (e) {
       if (timedOut) return; // Timeout already handled
-      console.error(`[LetterGen] ERROR — ${e.message}`);
-      setGenerateError(e.message || "Generation failed. Please try again.");
+      // Extract the real failure reason — Axios wraps network errors in e.response
+      const httpStatus = e.response?.status;
+      const serverMsg = e.response?.data?.error || e.response?.data?.message || JSON.stringify(e.response?.data);
+      const errorCode = e.code; // e.g. ERR_NETWORK, ECONNABORTED
+      console.error(`[LetterGen] ERROR —`, {
+        message: e.message,
+        code: errorCode,
+        httpStatus,
+        serverMsg,
+        responseData: e.response?.data,
+        stack: e.stack?.split('\n').slice(0,4).join(' | '),
+      });
+      // Build a human-readable error: prefer server message > HTTP status > message > fallback
+      const displayError = serverMsg && serverMsg !== 'undefined'
+        ? `${httpStatus ? `HTTP ${httpStatus}: ` : ''}${serverMsg}`
+        : httpStatus
+          ? `HTTP ${httpStatus}: ${e.message}`
+          : errorCode
+            ? `${errorCode}: ${e.message}`
+            : e.message || "Generation failed. Please try again.";
+      setGenerateError(displayError);
     } finally {
       if (!timedOut) {
         clearInterval(phaseTicker);
