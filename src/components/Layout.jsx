@@ -20,7 +20,10 @@ import {
   HelpCircle,
   MessageSquare,
   Bell,
-  Settings
+  Settings,
+  CalendarDays,
+  RefreshCw,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -34,6 +37,9 @@ const navItems = [
   { path: "/notifications", label: "Notifications", icon: Bell },
   { path: "/deadlines", label: "Deadlines", icon: Siren },
   { path: "/checklist", label: "Checklist", icon: ClipboardList },
+  { path: "/calendar", label: "Calendar", icon: CalendarDays },
+  { path: "/calendar-sync", label: "Calendar Sync", icon: RefreshCw },
+  { path: "/directories", label: "Contacts Directory", icon: Building2 },
   { path: "/templates", label: "Template Library", icon: FileText },
   { path: "/merchant-responses", label: "Merchant Responses", icon: MessageSquare },
   { path: "/settings", label: "Settings", icon: Settings },

@@ -37,6 +37,8 @@ import MerchantResponsesDashboard from '@/pages/MerchantResponsesDashboard';
 import Notifications from '@/pages/Notifications';
 import UserSettings from '@/pages/UserSettings';
 import CaseTemplates from '@/pages/CaseTemplates';
+import CalendarView from '@/pages/CalendarView';
+import CalendarSync from '@/pages/CalendarSync';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -76,6 +78,8 @@ const AuthenticatedApp = () => {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/templates" element={<CaseTemplates />} />
+          <Route path="/calendar" element={<CalendarView />} />
+          <Route path="/calendar-sync" element={<CalendarSync />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
