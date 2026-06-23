@@ -1,0 +1,50 @@
+{
+  "name": "LetterGenerationLock",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "ID of the case being generated"
+    },
+    "letter_type": {
+      "type": "string",
+      "enum": [
+        "letter1",
+        "letter2",
+        "letter3",
+        "accept_offer",
+        "deny_offer",
+        "escalation"
+      ],
+      "description": "Which letter type is being generated"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "generating",
+        "completed",
+        "failed"
+      ],
+      "default": "generating",
+      "description": "Current generation status"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When generation started"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When generation completed or failed"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error detail if status is failed"
+    }
+  },
+  "required": [
+    "case_id",
+    "letter_type"
+  ]
+}

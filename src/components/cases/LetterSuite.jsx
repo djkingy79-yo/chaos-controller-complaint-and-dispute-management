@@ -564,9 +564,18 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const response = await base44.functions.invoke('generateLetter', { prompt, caseId: caseItem.id, letterType: letterType.key });
       const aiMs = Date.now() - aiStart;
 
-      // Discard stale response if timeout already fired
+      // Discard if timeout already fired — backend saved it, the query refresh will pick it up
       if (timedOutRef.current) {
-        console.warn(`[LetterGen] Late response discarded — timeout already fired (took ${aiMs}ms)`);
+        console.warn(`[LetterGen] Late response arrived after timeout (${aiMs}ms) — backend saved, query refresh will render it`);
+        queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+        return;
+      }
+
+      // Backend reported another request is already generating — stay in loading state
+      if (response.data?.existing) {
+        console.log(`[LetterGen] Already generating on backend — waiting`);
+        setGenerateStatus("Already generating on server — please wait…");
+        // Keep spinner running; the case query refresh on timeout will surface the result
         return;
       }
 
@@ -581,14 +590,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         throw new Error("AI returned empty content. Please try again.");
       }
 
-      // Backend already saved to DB — just update local state and invalidate
-      if (timedOutRef.current) {
-        // Timeout already fired but response arrived — backend saved it, just refresh
-        console.log(`[LetterGen] Late response arrived after timeout — backend saved, refreshing`);
-        queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
-        return;
-      }
-
+      // Backend already saved to DB — update local state and invalidate
       setText(result);
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
       setGenerateError(null);
