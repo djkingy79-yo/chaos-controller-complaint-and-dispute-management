@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, ArrowLeft, Building2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, Building2, Loader2 } from "lucide-react";
 import OrgPicker from "@/components/directories/OrgPicker";
 import { detectIndustry } from "@/lib/industryClassifier";
 
@@ -102,7 +102,7 @@ const caseFields = {
   ],
 };
 
-export default function GuidedQuestions({ category, data, onChange, onNext, onBack, onCategoryDetected }) {
+export default function GuidedQuestions({ category, data, onChange, onNext, onBack, onCategoryDetected, isSubmitting = false }) {
   const specificFields = caseFields[category] || caseFields.other;
   const allQuestions = [...complainantFields, ...specificFields];
   const [step, setStep] = useState(0);
@@ -238,9 +238,18 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
         <Button variant="outline" onClick={handleBack} className="gap-2 h-14 px-8 text-lg font-black border-2">
           <ArrowLeft className="w-5 h-5" /> Back
         </Button>
-        <Button onClick={handleNext} disabled={!canProceed} className="gap-2 h-14 px-8 text-lg font-black bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg shadow-primary/30">
-          {step < allQuestions.length - 1 ? "Continue" : "Review Case"}
-          <ArrowRight className="w-5 h-5" />
+        <Button
+          onClick={handleNext}
+          disabled={!canProceed || (step === allQuestions.length - 1 && isSubmitting)}
+          className="gap-2 h-14 px-8 text-lg font-black bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg shadow-primary/30"
+        >
+          {step < allQuestions.length - 1 ? (
+            <>Continue <ArrowRight className="w-5 h-5" /></>
+          ) : isSubmitting ? (
+            <><Loader2 className="w-5 h-5 animate-spin" /> Creating case…</>
+          ) : (
+            <>Create Case Now <ArrowRight className="w-5 h-5" /></>
+          )}
         </Button>
       </div>
     </div>

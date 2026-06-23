@@ -147,6 +147,10 @@
       "type": "string",
       "description": "AI-generated executive summary (JSON string)"
     },
+    "creation_request_id": {
+      "type": "string",
+      "description": "Idempotency key \u2014 UUID generated once per create attempt to prevent duplicate submissions"
+    },
     "first_complaint_sent_at": {
       "type": "string",
       "format": "date-time"

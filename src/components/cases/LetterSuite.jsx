@@ -539,7 +539,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       clearInterval(phaseTicker);
       setGenerating(false);
       setGenerateStatus("");
-      setGenerateError("Letter generation timed out. Please try again.");
+      setGenerateError("Letter generation took too long to respond. The server may still be processing — please wait 30 seconds and retry.");
       console.error(`[LetterGen] TIMEOUT — exceeded ${HARD_TIMEOUT_MS / 1000}s, letter: ${letterType.key}`);
     }, HARD_TIMEOUT_MS);
 

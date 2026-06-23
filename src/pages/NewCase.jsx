@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, ArrowLeft, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,77 +35,96 @@ export default function NewCase() {
   const activeSub = getActiveSubscription(user, payments);
   const hasSubscription = !!activeSub;
 
-  // steps: 0=upload, 2=category, 3=questions, 4=generating, 5=review
+  // steps: 0=upload, 2=category, 3=questions
   const [step, setStep] = useState(0);
   const [category, setCategory] = useState("");
   const [formData, setFormData] = useState({});
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const createCaseMutation = useMutation({
-    mutationFn: async (data) => {
-      const newCase = await base44.entities.Case.create(data);
-      if (uploadedFiles.length > 0) {
-        await base44.entities.Evidence.bulkCreate(
-          uploadedFiles.map((file) => ({ ...file, case_id: newCase.id, scan_status: "pending" }))
-        );
-      }
-      // Auto-generate AI checklist
-      try {
-        await base44.functions.invoke('generateAIChecklist', { caseId: newCase.id });
-      } catch (err) {
-        console.error('Failed to auto-generate checklist:', err);
-      }
-      return newCase;
-    },
-    onSuccess: (newCase) => {
-      queryClient.invalidateQueries({ queryKey: ["cases"] });
-      navigate(`/case/${newCase.id}?tab=letters`);
-    },
-    onError: (error) => {
-      console.error('Case creation failed:', error);
-      toast.error('Case could not be saved. Please try again.');
-    },
-  });
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleUploadComplete = async (files, detectedCategory) => {
     setUploadedFiles(files);
-    // Auto-set category if detected
     if (detectedCategory) {
       setCategory(detectedCategory);
-      // Skip category selection, go straight to questions
       setStep(3);
     } else {
-      // No category detected, show category selector
       setStep(2);
     }
   };
 
-  const handleCreate = () => {
-    const detectedCategory = detectIndustry(formData) !== 'other' ? detectIndustry(formData) : category;
-    const finalCategory = detectedCategory || category || 'other';
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + 21);
-    createCaseMutation.mutate({
-      title: `${formData.issue_type || finalCategory} — ${formData.organisation_name || "Unknown"}`,
-      category: finalCategory,
-      status: "draft",
-      organisation_name: formData.organisation_name || "",
-      organisation_complaints_address: formData.organisation_complaints_address || "",
-      organisation_complaints_email: formData.organisation_complaints_email || "",
-      complaint_handler_name: formData.complaint_handler_name || "",
-      complainant_name: formData.complainant_name || "",
-      complainant_address: formData.complainant_address || "",
-      complainant_email: formData.complainant_email || "",
-      complainant_phone: formData.complainant_phone || "",
-      account_number: formData.account_number || "",
-      incident_date: formData.incident_date || "",
-      issue_summary: formData.issue_summary || "",
-      issue_details: formData.issue_details || "",
-      desired_outcome: formData.desired_outcome || "",
-      response_deadline: deadline.toISOString().split("T")[0],
-      escalation_body: getEscalationBody(finalCategory),
-      priority: "medium",
-      notes: `${uploadedFiles.length} document${uploadedFiles.length !== 1 ? "s" : ""} uploaded`,
-    });
+  const handleCreate = async () => {
+    // Hard guard — block all repeat submissions
+    if (isCreating) return;
+    setIsCreating(true);
+
+    try {
+      const detectedCategory = detectIndustry(formData) !== 'other' ? detectIndustry(formData) : category;
+      const finalCategory = detectedCategory || category || 'other';
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + 21);
+
+      // --- Idempotency: generate a unique request ID for this attempt ---
+      const creationRequestId = crypto.randomUUID();
+
+      // --- Duplicate guard: same user + same org + same issue within 5 minutes ---
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const recentCases = await base44.entities.Case.filter({ created_by_id: user?.id });
+      const duplicate = recentCases.find(c =>
+        c.organisation_name?.toLowerCase() === (formData.organisation_name || "").toLowerCase() &&
+        c.issue_summary?.toLowerCase() === (formData.issue_summary || "").toLowerCase() &&
+        new Date(c.created_date) > new Date(fiveMinutesAgo)
+      );
+      if (duplicate) {
+        console.warn('[NewCase] Duplicate detected — navigating to existing case:', duplicate.id);
+        queryClient.invalidateQueries({ queryKey: ["cases"] });
+        navigate(`/case/${duplicate.id}?tab=letters`);
+        return;
+      }
+
+      // --- Create the case record immediately ---
+      const newCase = await base44.entities.Case.create({
+        title: `${formData.issue_type || finalCategory} — ${formData.organisation_name || "Unknown"}`,
+        category: finalCategory,
+        status: "draft",
+        organisation_name: formData.organisation_name || "",
+        organisation_complaints_address: formData.organisation_complaints_address || "",
+        organisation_complaints_email: formData.organisation_complaints_email || "",
+        complaint_handler_name: formData.complaint_handler_name || "",
+        complainant_name: formData.complainant_name || "",
+        complainant_address: formData.complainant_address || "",
+        complainant_email: formData.complainant_email || "",
+        complainant_phone: formData.complainant_phone || "",
+        account_number: formData.account_number || "",
+        incident_date: formData.incident_date || "",
+        issue_summary: formData.issue_summary || "",
+        issue_details: formData.issue_details || "",
+        desired_outcome: formData.desired_outcome || "",
+        response_deadline: deadline.toISOString().split("T")[0],
+        escalation_body: getEscalationBody(finalCategory),
+        priority: "medium",
+        notes: `${uploadedFiles.length} document${uploadedFiles.length !== 1 ? "s" : ""} uploaded`,
+        creation_request_id: creationRequestId,
+      });
+
+      // --- Navigate IMMEDIATELY — do not wait for background tasks ---
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      navigate(`/case/${newCase.id}?tab=letters`);
+
+      // --- Background: link evidence and kick off AI tasks (fire-and-forget) ---
+      if (uploadedFiles.length > 0) {
+        base44.entities.Evidence.bulkCreate(
+          uploadedFiles.map((file) => ({ ...file, case_id: newCase.id, scan_status: "pending" }))
+        ).catch(err => console.error('[NewCase] Evidence link failed:', err));
+      }
+      base44.functions.invoke('generateAIChecklist', { caseId: newCase.id })
+        .catch(err => console.error('[NewCase] Checklist generation failed:', err));
+
+    } catch (error) {
+      console.error('[NewCase] Case creation failed:', error);
+      toast.error('Case could not be saved. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const stepLabels = ["Upload", "Category", "Details", "Review"];
@@ -238,6 +257,7 @@ export default function NewCase() {
               onNext={handleCreate}
               onBack={() => setStep(2)}
               onCategoryDetected={(detected) => setCategory(detected)}
+              isSubmitting={isCreating}
             />
           </motion.div>
         )}
