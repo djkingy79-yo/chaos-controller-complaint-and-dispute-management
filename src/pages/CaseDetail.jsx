@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, Download, BarChart2, CalendarDays, CheckSquare, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, BarChart2, CalendarDays, CheckSquare, AlertTriangle, Trash2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import CaseStatusControl from "@/components/cases/CaseStatusControl";
 import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
@@ -27,8 +32,22 @@ import PDFDebugPanel from "@/components/cases/PDFDebugPanel";
 
 export default function CaseDetail() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id: caseId } = useParams();
   const { user } = useAuth();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => base44.entities.Case.delete(caseId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      toast.success("Case deleted");
+      navigate("/cases");
+    },
+    onError: (err) => {
+      toast.error("Failed to delete case: " + (err.message || "Unknown error"));
+    },
+  });
 
   // Preserve tab state in URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -106,7 +125,39 @@ export default function CaseDetail() {
             <p className="text-sm text-muted-foreground mt-1">{caseItem.issue_summary}</p>
           )}
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setDeleteOpen(true)}
+          disabled={deleteMutation.isPending}
+          className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 shrink-0"
+        >
+          {deleteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+          Delete Case
+        </Button>
       </div>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this case?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the case, letters, timeline, checklist, deadlines and case notes. Evidence files may remain in storage unless separately removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+              Delete Case
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Top Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
