@@ -31,8 +31,8 @@ export default function CaseCalendarSync({ caseItem }) {
 
   const handleGoogleConnect = async () => {
     try {
-      const url = await base44.connectors.getAppUserConnectURL(GOOGLE_CONNECTOR_ID);
-      const popup = window.open(url, "_blank");
+      const connectUrl = await base44.connectors.connectAppUser(GOOGLE_CONNECTOR_ID);
+      const popup = window.open(connectUrl, "_blank");
       const timer = setInterval(async () => {
         if (!popup || popup.closed) {
           clearInterval(timer);
@@ -49,10 +49,15 @@ export default function CaseCalendarSync({ caseItem }) {
     setGoogleSyncing(true);
     try {
       const res = await base44.functions.invoke("syncCalendar", { action: "sync", caseId: caseItem.id });
-      const count = res.data?.syncedCount || 0;
-      setGoogleSyncedCount(count);
+      const newCount = res.data?.syncedCount || 0;
+      const updatedCount = res.data?.updatedCount || 0;
+      const total = newCount + updatedCount;
+      setGoogleSyncedCount(total);
       setGoogleConnected(true);
-      toast.success(`${count} deadline${count !== 1 ? "s" : ""} synced to Google Calendar`);
+      toast.success(total > 0
+        ? `${newCount > 0 ? `${newCount} added` : ""}${newCount > 0 && updatedCount > 0 ? ", " : ""}${updatedCount > 0 ? `${updatedCount} updated` : ""} in Google Calendar`
+        : "Calendar already up to date"
+      );
     } catch (e) {
       toast.error("Google sync failed: " + e.message);
     } finally {

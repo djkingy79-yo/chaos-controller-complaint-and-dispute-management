@@ -108,18 +108,42 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    // Check connection status — test by fetching calendar list
+    if (action === 'check') {
+      try {
+        const accessToken = await getToken(base44);
+        const res = await fetch(
+          'https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=1',
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        return Response.json({ connected: res.ok });
+      } catch {
+        return Response.json({ connected: false });
+      }
+    }
+
     const accessToken = await getToken(base44);
 
     if (action === 'sync') {
-      const allCases = await base44.entities.Case.filter({ created_by_id: user.id });
-      const activeCases = allCases.filter(c => !['resolved', 'closed'].includes(c.status));
-      const activeCaseIds = activeCases.map(c => c.id);
+      const { caseId: filterCaseId } = payload;
 
+      let casesToSync = [];
+      if (filterCaseId) {
+        // Single case sync (from case dashboard)
+        const cases = await base44.entities.Case.filter({ id: filterCaseId, created_by_id: user.id });
+        casesToSync = cases.slice(0, 1);
+      } else {
+        // Full sync (from Calendar Sync page)
+        const allCases = await base44.entities.Case.filter({ created_by_id: user.id });
+        casesToSync = allCases.filter(c => !['resolved', 'closed'].includes(c.status));
+      }
+
+      const activeCaseIds = casesToSync.map(c => c.id);
       const pendingDeadlines = activeCaseIds.length > 0
-        ? (await base44.entities.Deadline.filter({ case_id: { $in: activeCaseIds }, status: 'pending' })).filter(d => d.deadline_date)
+        ? (await base44.entities.Deadline.filter({ case_id: { $in: activeCaseIds } })).filter(d => d.deadline_date && d.status !== 'completed')
         : [];
 
-      const timeMin = new Date().toISOString();
+      const timeMin = new Date(Date.now() - 365 * 86400000).toISOString();
       const calRes = await fetch(
         `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=250&timeMin=${timeMin}&q=Chaos+Controller`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -132,16 +156,17 @@ Deno.serve(async (req) => {
       }
 
       let syncedCount = 0;
+      let updatedCount = 0;
       for (const deadline of pendingDeadlines) {
-        const caseInfo = activeCases.find(c => c.id === deadline.case_id);
+        const caseInfo = casesToSync.find(c => c.id === deadline.case_id);
         if (!caseInfo) continue;
         if (existingByDeadlineId[deadline.id]) {
-          await updateCalendarEvent(accessToken, existingByDeadlineId[deadline.id].id, deadline, caseInfo);
+          if (await updateCalendarEvent(accessToken, existingByDeadlineId[deadline.id].id, deadline, caseInfo)) updatedCount++;
         } else if (await createCalendarEvent(accessToken, deadline, caseInfo)) {
           syncedCount++;
         }
       }
-      return Response.json({ success: true, events: calData.items || [], syncedCount, totalDeadlines: pendingDeadlines.length });
+      return Response.json({ success: true, events: calData.items || [], syncedCount, updatedCount, totalDeadlines: pendingDeadlines.length });
     }
 
     if (action === 'delete') {

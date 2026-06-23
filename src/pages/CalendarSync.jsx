@@ -165,8 +165,8 @@ export default function CalendarSync() {
 
   const handleGoogleConnect = async () => {
     try {
-      const url = await base44.connectors.getAppUserConnectURL(GOOGLE_CONNECTOR_ID);
-      const popup = window.open(url, "_blank");
+      const connectUrl = await base44.connectors.connectAppUser(GOOGLE_CONNECTOR_ID);
+      const popup = window.open(connectUrl, "_blank");
       const timer = setInterval(() => {
         if (!popup || popup.closed) { clearInterval(timer); syncGoogle(); }
       }, 500);
