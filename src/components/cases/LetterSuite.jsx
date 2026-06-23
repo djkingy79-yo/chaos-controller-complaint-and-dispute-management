@@ -754,7 +754,8 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       ) : (
         <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-10 text-center">
           <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground mb-3">No {letterType.label} generated yet.</p>
+          <p className="text-sm text-muted-foreground mb-1">No {letterType.label} generated yet.</p>
+          <p className="text-xs text-muted-foreground mb-4">Upload evidence and complete your timeline before generating.</p>
           <Button onClick={handleGenerate} disabled={generating} className="gap-2">
             {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             {generating ? "Generating..." : `Generate ${letterType.label}`}

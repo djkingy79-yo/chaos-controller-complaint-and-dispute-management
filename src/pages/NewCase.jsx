@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Shield, Loader2, CheckCircle2, ArrowLeft, Upload, Lock, FolderOpen } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowLeft, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CategorySelector from "@/components/cases/CategorySelector";
 import GuidedQuestions from "@/components/cases/GuidedQuestions";
@@ -40,8 +40,6 @@ export default function NewCase() {
   const [category, setCategory] = useState("");
   const [formData, setFormData] = useState({});
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [complaintLetter, setComplaintLetter] = useState("");
-
   const createCaseMutation = useMutation({
     mutationFn: async (data) => {
       const newCase = await base44.entities.Case.create(data);
@@ -60,7 +58,7 @@ export default function NewCase() {
     },
     onSuccess: (newCase) => {
       queryClient.invalidateQueries({ queryKey: ["cases"] });
-      navigate(`/case/${newCase.id}?tab=checklist`);
+      navigate(`/case/${newCase.id}?tab=letters`);
     },
     onError: (error) => {
       console.error('Case creation failed:', error);
@@ -79,47 +77,6 @@ export default function NewCase() {
       // No category detected, show category selector
       setStep(2);
     }
-  };
-
-  const generateComplaint = async () => {
-    setStep(4);
-    const f = formData;
-    const today = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
-
-    const complainantBlock = [f.complainant_name, f.complainant_address, f.complainant_email ? `Email: ${f.complainant_email}` : null, f.complainant_phone ? `Mobile: ${f.complainant_phone}` : null, today].filter(Boolean).join("\n");
-    const recipientBlock = [f.complaint_handler_name || "The Complaints Manager", f.organisation_name, f.organisation_complaints_address || null, f.organisation_complaints_email ? `Email: ${f.organisation_complaints_email}` : null].filter(Boolean).join("\n");
-
-    const prompt = `You are a professional consumer advocacy assistant in Australia. Generate a formal complaint letter for this dispute. Use Australian English spelling throughout (e.g. organise, recognise, behaviour, honour, colour).
-
-CRITICAL RULE: NEVER use bracket placeholders like [Name], [Address], [Date] or similar. If a detail is not provided, omit that line entirely.
-
-COMPLAINANT BLOCK (top-right of letter):
-${complainantBlock}
-
-RECIPIENT BLOCK (left side, below complainant block):
-${recipientBlock}
-
-CASE DETAILS:
-- Industry: ${category}
-- Issue Type: ${f.issue_type || ""}
-- Account/Reference Number: ${f.account_number || "not provided — omit"}
-- Incident Date: ${f.incident_date || "not provided — omit"}
-- Issue Summary: ${f.issue_summary || ""}
-- Full Details: ${f.issue_details || ""}
-- Desired Outcome: ${f.desired_outcome || ""}
-
-LETTER INSTRUCTIONS:
-1. Format as a formal business letter.
-2. Re: line — e.g. "Re: Formal Complaint — ${f.account_number ? "Account " + f.account_number : f.issue_summary || f.issue_type || category}"
-3. Salutation: "Dear ${f.complaint_handler_name || "Sir/Madam"},"
-4. Detail the issue firmly. Give a 21-day deadline from today (${today}).
-5. Mention ${getEscalationBody(category)} as next step if unresolved.
-6. Close: "Yours faithfully," then ${f.complainant_name || "the complainant's name"}.
-7. NEVER write bracket placeholders.`;
-
-    const result = await base44.integrations.Core.InvokeLLM({ prompt });
-    setComplaintLetter(result);
-    setStep(5);
   };
 
   const handleCreate = () => {
@@ -144,7 +101,6 @@ LETTER INSTRUCTIONS:
       issue_summary: formData.issue_summary || "",
       issue_details: formData.issue_details || "",
       desired_outcome: formData.desired_outcome || "",
-      complaint_letter: complaintLetter,
       response_deadline: deadline.toISOString().split("T")[0],
       escalation_body: getEscalationBody(finalCategory),
       priority: "medium",
@@ -279,88 +235,14 @@ LETTER INSTRUCTIONS:
               category={category}
               data={formData}
               onChange={setFormData}
-              onNext={generateComplaint}
+              onNext={handleCreate}
               onBack={() => setStep(2)}
               onCategoryDetected={(detected) => setCategory(detected)}
             />
           </motion.div>
         )}
 
-        {/* Step 4: Generating */}
-        {step === 4 && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-12">
-            <div className="relative mb-6">
-              <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-primary/20 animate-pulse" />
-              </div>
-            </div>
-            <h3 className="font-heading font-bold text-lg text-foreground mb-2">AI Is Building Your Case</h3>
-            <p className="text-sm text-muted-foreground font-medium">Generating professional complaint letter...</p>
-            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-            </div>
-          </motion.div>
-        )}
 
-        {/* Step 5: Review */}
-        {step === 5 && (
-          <motion.div key="review" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8">
-            <div className="relative overflow-hidden bg-gradient-to-br from-success/15 to-green-500/10 border-2 border-success/40 rounded-2xl p-8">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-success/10 rounded-bl-full" />
-              <div className="relative flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-success/30 to-success/40 rounded-xl shadow-lg">
-                  <CheckCircle2 className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h2 className="font-heading font-black text-foreground text-3xl">Complaint Letter Generated</h2>
-                  <p className="text-base text-foreground font-bold mt-1">Review your professional complaint letter</p>
-                </div>
-              </div>
-              <div className="bg-white border-2 border-border rounded-xl p-6 shadow-inner">
-                <pre className="whitespace-pre-wrap text-base font-body leading-relaxed text-foreground">
-                  {complaintLetter}
-                </pre>
-              </div>
-            </div>
-
-            <div className="bg-card border-2 border-border rounded-2xl p-8 shadow-xl">
-              <h3 className="font-heading font-black text-2xl text-foreground mb-6 flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <FolderOpen className="w-6 h-6 text-primary" />
-                </div>
-                Case Summary
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-6">
-                {[
-                  { label: "Complainant", value: formData.complainant_name },
-                  { label: "Organisation", value: formData.organisation_name },
-                  { label: "Industry", value: category },
-                  { label: "Issue Type", value: formData.issue_type },
-                  { label: "Account No.", value: formData.account_number },
-                  { label: "Incident Date", value: formData.incident_date },
-                ].filter(item => item.value).map(({ label, value }) => (
-                  <div key={label} className="p-4 bg-secondary/30 rounded-xl border border-border">
-                    <span className="text-sm font-black text-muted-foreground uppercase tracking-wider">{label}</span>
-                    <p className="text-lg font-black text-foreground mt-1 capitalize">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <Button variant="outline" onClick={() => setStep(3)} className="gap-2 h-14 px-8 text-lg font-black border-2">
-                <ArrowLeft className="w-5 h-5" /> Edit Answers
-              </Button>
-              <Button onClick={handleCreate} disabled={createCaseMutation.isPending} className="flex-1 gap-2 h-14 text-lg font-black bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg shadow-primary/30">
-                {createCaseMutation.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
-                Create Case
-              </Button>
-            </div>
-          </motion.div>
-        )}
       </AnimatePresence>
     </div>
   );
