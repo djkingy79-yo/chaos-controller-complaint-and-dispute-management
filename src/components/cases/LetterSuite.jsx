@@ -420,7 +420,7 @@ const GENERATE_PHASES = [
   "Almost done…",
 ];
 
-const HARD_TIMEOUT_MS = 90000; // 90 seconds — backend cold start can take ~50s
+const HARD_TIMEOUT_MS = 130000; // 130 seconds — backend AI responses are regularly taking 87–107s in production
 
 function LetterEditor({ letterType, caseItem, evidence }) {
   const queryClient = useQueryClient();
@@ -530,7 +530,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     const phaseTicker = setInterval(() => {
       phaseIndex = Math.min(phaseIndex + 1, GENERATE_PHASES.length - 1);
       setGenerateStatus(GENERATE_PHASES[phaseIndex]);
-    }, 18000);
+    }, 24000); // 24s per phase × 5 phases = 120s coverage window
 
     // Hard 60s timeout — fires if backend hasn't responded
     const hardTimeout = setTimeout(() => {
