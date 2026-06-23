@@ -101,27 +101,51 @@
     },
     "complaint_letter": {
       "type": "string",
-      "description": "1st formal complaint letter"
+      "description": "Legacy field \u2014 do not use for LetterSuite"
     },
     "complaint_letter_2": {
       "type": "string",
-      "description": "2nd complaint letter (follow-up)"
+      "description": "Legacy field \u2014 do not use for LetterSuite"
     },
     "complaint_letter_3": {
       "type": "string",
-      "description": "3rd and final internal complaint letter"
+      "description": "Legacy field \u2014 do not use for LetterSuite"
     },
     "letter_accept_offer": {
       "type": "string",
-      "description": "Letter accepting a settlement offer"
+      "description": "Legacy field \u2014 do not use for LetterSuite"
     },
     "letter_deny_offer": {
       "type": "string",
-      "description": "Letter rejecting an unsatisfactory offer"
+      "description": "Legacy field \u2014 do not use for LetterSuite"
     },
     "letter_escalation": {
       "type": "string",
-      "description": "Escalation letter to external body"
+      "description": "Legacy field \u2014 do not use for LetterSuite"
+    },
+    "first_complaint_letter": {
+      "type": "string",
+      "description": "LetterSuite: 1st formal complaint letter"
+    },
+    "second_complaint_letter": {
+      "type": "string",
+      "description": "LetterSuite: 2nd complaint letter (follow-up)"
+    },
+    "third_complaint_letter": {
+      "type": "string",
+      "description": "LetterSuite: 3rd and final internal complaint letter"
+    },
+    "accept_offer_letter": {
+      "type": "string",
+      "description": "LetterSuite: Letter accepting a settlement offer"
+    },
+    "deny_offer_letter": {
+      "type": "string",
+      "description": "LetterSuite: Letter rejecting an unsatisfactory offer"
+    },
+    "escalation_letter": {
+      "type": "string",
+      "description": "LetterSuite: Escalation letter to external body"
     },
     "response_deadline": {
       "type": "string",

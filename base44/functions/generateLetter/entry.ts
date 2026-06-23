@@ -1,13 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// Maps frontend letterType keys to Case entity field names
+// Maps frontend letterType keys to dedicated Case entity fields (NOT the legacy complaint_letter fields)
 const LETTER_FIELD_MAP = {
-  letter1: 'complaint_letter',
-  letter2: 'complaint_letter_2',
-  letter3: 'complaint_letter_3',
-  accept_offer: 'letter_accept_offer',
-  deny_offer: 'letter_deny_offer',
-  escalation: 'letter_escalation',
+  letter1: 'first_complaint_letter',
+  letter2: 'second_complaint_letter',
+  letter3: 'third_complaint_letter',
+  accept_offer: 'accept_offer_letter',
+  deny_offer: 'deny_offer_letter',
+  escalation: 'escalation_letter',
+};
+
+// Per-type word limits injected into the prompt
+const WORD_LIMITS = {
+  letter1: '700–1,000 words',
+  letter2: '600–900 words',
+  letter3: '600–900 words',
+  accept_offer: '350–600 words',
+  deny_offer: '500–800 words',
+  escalation: '900–1,200 words',
 };
 
 // Stale lock threshold — if a lock is older than this, treat it as abandoned and allow retry
@@ -34,7 +44,6 @@ Deno.serve(async (req) => {
     }
 
     // --- GENERATION LOCK CHECK ---
-    // Prevent duplicate AI calls for the same case + letter type
     const existingLocks = await base44.asServiceRole.entities.LetterGenerationLock.filter({
       case_id: caseId,
       letter_type: letterType,
@@ -42,7 +51,6 @@ Deno.serve(async (req) => {
 
     const activeLock = existingLocks.find(l => {
       if (l.status !== 'generating') return false;
-      // Treat locks older than STALE_LOCK_MS as abandoned (crashed generation)
       const age = Date.now() - new Date(l.started_at).getTime();
       return age < STALE_LOCK_MS;
     });
@@ -56,15 +64,6 @@ Deno.serve(async (req) => {
       }, { status: 202 });
     }
 
-    // Check if already completed — return saved letter without re-running AI
-    const caseRecord = await base44.asServiceRole.entities.Case.get(caseId);
-    if (caseRecord && caseRecord[field] && caseRecord[field].trim()) {
-      // Only return cached if there's no active regen request (prompt length > 500 = real regen, not a check)
-      // We don't block regeneration — the user explicitly chose to regenerate
-      // So we only short-circuit on first-time generates where letter already exists
-      // (This path is hit if frontend refreshed after backend saved but before frontend knew)
-    }
-
     // --- CREATE LOCK ---
     const lock = await base44.asServiceRole.entities.LetterGenerationLock.create({
       case_id: caseId,
@@ -73,13 +72,18 @@ Deno.serve(async (req) => {
       started_at: new Date().toISOString(),
     });
 
-    console.log(`[generateLetter] START — user: ${user.id}, caseId: ${caseId}, letterType: ${letterType}, lockId: ${lock.id}, promptBytes: ${new TextEncoder().encode(prompt).length}`);
+    console.log(`[generateLetter] START — user: ${user.id}, caseId: ${caseId}, letterType: ${letterType}, field: ${field}, lockId: ${lock.id}`);
 
-    let result = null;
+    // Append strict word-limit instruction to every prompt
+    const wordLimit = WORD_LIMITS[letterType] || '600–900 words';
+    const boundedPrompt = `${prompt}
+
+STRICT WORD LIMIT: This letter must be ${wordLimit}. Do not exceed the word limit. Do not include unnecessary repetition. Do not restate the entire evidence history unless directly relevant. Write tightly and forcefully. Every sentence must carry weight. Stop when the point is made.`;
+
     try {
       const aiStart = Date.now();
-      result = await base44.integrations.Core.InvokeLLM({
-        prompt,
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: boundedPrompt,
         model: 'claude_sonnet_4_6',
       });
       const aiMs = Date.now() - aiStart;
@@ -90,11 +94,10 @@ Deno.serve(async (req) => {
         throw new Error('AI returned empty content. Please try again.');
       }
 
-      // Save letter to Case record — persists even if frontend timed out
+      // Save to dedicated field — never complaint_letter
       await base44.asServiceRole.entities.Case.update(caseId, { [field]: result });
       console.log(`[generateLetter] DB save complete — field: ${field}, caseId: ${caseId}`);
 
-      // Mark lock completed
       await base44.asServiceRole.entities.LetterGenerationLock.update(lock.id, {
         status: 'completed',
         completed_at: new Date().toISOString(),
@@ -103,12 +106,11 @@ Deno.serve(async (req) => {
       return Response.json({ result, aiMs, saved: true });
 
     } catch (aiError) {
-      // Mark lock failed so Retry is allowed
       await base44.asServiceRole.entities.LetterGenerationLock.update(lock.id, {
         status: 'failed',
         completed_at: new Date().toISOString(),
         error_message: aiError.message,
-      }).catch(() => {}); // best-effort
+      }).catch(() => {});
 
       console.error(`[generateLetter] AI ERROR — ${aiError.message}`);
       return Response.json({ error: aiError.message || 'Generation failed' }, { status: 500 });

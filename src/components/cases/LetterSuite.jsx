@@ -52,12 +52,12 @@ function buildClientContext(caseItem, evidenceList) {
 
 // minPlan: "Starter" | "Pro" | "Command"
 const LETTER_TYPES = [
-  { key: "letter1", label: "1st Complaint", field: "complaint_letter", description: "Initial formal complaint to the organisation", minPlan: "Starter" },
-  { key: "letter2", label: "2nd Complaint", field: "complaint_letter_2", description: "Follow-up when no response or unsatisfactory response", minPlan: "Pro" },
-  { key: "letter3", label: "3rd Complaint", field: "complaint_letter_3", description: "Final demand before external escalation", minPlan: "Pro" },
-  { key: "accept_offer", label: "Accept Offer", field: "letter_accept_offer", description: "Formally accept a settlement offer", minPlan: "Pro" },
-  { key: "deny_offer", label: "Deny Offer", field: "letter_deny_offer", description: "Reject an unsatisfactory offer and state reasons", minPlan: "Pro" },
-  { key: "escalation", label: "Escalation Letter", field: "letter_escalation", description: "Formal complaint to external body (AFCA, TIO, NCAT, etc.)", minPlan: "Command" },
+  { key: "letter1", label: "1st Complaint", field: "first_complaint_letter", description: "Initial formal complaint to the organisation", minPlan: "Starter" },
+  { key: "letter2", label: "2nd Complaint", field: "second_complaint_letter", description: "Follow-up when no response or unsatisfactory response", minPlan: "Pro" },
+  { key: "letter3", label: "3rd Complaint", field: "third_complaint_letter", description: "Final demand before external escalation", minPlan: "Pro" },
+  { key: "accept_offer", label: "Accept Offer", field: "accept_offer_letter", description: "Formally accept a settlement offer", minPlan: "Pro" },
+  { key: "deny_offer", label: "Deny Offer", field: "deny_offer_letter", description: "Reject an unsatisfactory offer and state reasons", minPlan: "Pro" },
+  { key: "escalation", label: "Escalation Letter", field: "escalation_letter", description: "Formal complaint to external body (AFCA, TIO, NCAT, etc.)", minPlan: "Command" },
 ];
 
 function buildPrompt(type, caseItem, client, today, evidenceList) {
