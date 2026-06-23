@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -418,6 +418,11 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [generateTimedOut, setGenerateTimedOut] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
 
+  // Sync text from caseItem when the field or caseItem updates (fixes all-tabs-same-letter bug)
+  useEffect(() => {
+    setText(caseItem[field] || "");
+  }, [caseItem.id, field, caseItem[field]]);
+
   // Load last send log for this letter for status badge
   const { data: emailLogs = [], refetch: refetchLogs } = useQuery({
     queryKey: ['emailLogs', caseItem?.id, letterType?.key],
@@ -446,32 +451,27 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
   };
 
-  const handleApplyTemplate = (content) => {
+  const handleApplyTemplate = async (content) => {
     setText(content);
-    updateMutation.mutate({ [field]: content });
+    try {
+      await updateMutation.mutateAsync({ [field]: content });
+      queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+    } catch {
+      toast.error("Failed to save template. Please try again.");
+    }
     setEditing(false);
   };
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Case.update(caseItem.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
-      setEditing(false);
-      toast.success("Letter saved successfully");
-    },
-    onError: (error) => {
-      console.error("Failed to save letter:", error);
-      toast.error("Failed to save letter. Please try again.");
-      setText(caseItem[field] || "");
-    },
   });
 
   const handleGenerate = async () => {
+    if (generating) return;
     setGenerating(true);
     setGenerateTimedOut(false);
     setGenerateStatus("Rebuilding your letter… analysing evidence");
 
-    // After 15s update status; after 60s show timeout warning
     const statusTimer = setTimeout(() => setGenerateStatus("Almost there… writing your letter"), 15000);
     const timeoutTimer = setTimeout(() => {
       setGenerateTimedOut(true);
@@ -485,26 +485,20 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const result = await base44.integrations.Core.InvokeLLM({ prompt, model: 'claude_sonnet_4_6' });
       clearTimeout(statusTimer);
       clearTimeout(timeoutTimer);
-      updateMutation.mutate({ [field]: result }, {
-        onSuccess: () => {
-          setText(result);
-          setGenerating(false);
-          setGenerateStatus("");
-          toast.success(`${letterType.label} generated and saved`);
-        },
-        onError: () => {
-          setGenerating(false);
-          setGenerateStatus("");
-          toast.error("Letter generated but failed to save. Please try again.");
-        }
-      });
+      // Save to this letter's specific field — never overwrites other letter fields
+      await updateMutation.mutateAsync({ [field]: result });
+      // Immediately update local state — letter appears without page refresh
+      setText(result);
+      queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+      toast.success(`${letterType.label} generated and saved`);
     } catch (e) {
       clearTimeout(statusTimer);
       clearTimeout(timeoutTimer);
+      toast.error("Generation failed: " + e.message);
+    } finally {
       setGenerating(false);
       setGenerateStatus("");
       setGenerateTimedOut(false);
-      toast.error("Generation failed: " + e.message);
     }
   };
 
@@ -619,7 +613,19 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               </Button>
               <Button
                 variant="outline" size="sm"
-                onClick={() => { if (editing) updateMutation.mutate({ [field]: text }); setEditing(!editing); }}
+                onClick={async () => {
+                  if (editing) {
+                    try {
+                      await updateMutation.mutateAsync({ [field]: text });
+                      queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+                      toast.success("Letter saved");
+                    } catch {
+                      toast.error("Failed to save. Please try again.");
+                      return;
+                    }
+                  }
+                  setEditing(!editing);
+                }}
                 className="gap-1.5 text-xs"
               >
                 {editing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
