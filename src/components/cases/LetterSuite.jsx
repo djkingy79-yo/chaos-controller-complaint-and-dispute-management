@@ -602,16 +602,17 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
       const httpStatus = e.response?.status;
       const serverMsg = e.response?.data?.error || e.response?.data?.message;
-      const errorCode = e.code;
-      console.error(`[LetterGen] ERROR —`, { message: e.message, code: errorCode, httpStatus, serverMsg });
+      console.error(`[LetterGen] ERROR —`, { message: e.message, httpStatus, serverMsg });
 
-      const displayError = serverMsg
-        ? `${httpStatus ? `HTTP ${httpStatus}: ` : ''}${serverMsg}`
-        : httpStatus
-          ? `HTTP ${httpStatus}: ${e.message}`
-          : errorCode
-            ? `${errorCode}: ${e.message}`
-            : e.message || "Generation failed. Please try again.";
+      // Show friendly message — never expose provider/server error details to users
+      const isTransient = httpStatus === 502 || httpStatus === 503 || httpStatus === 504 ||
+        e.message?.includes('502') || e.message?.includes('503') || e.message?.includes('timeout') ||
+        e.message?.includes('network') || e.message?.includes('ECONNRESET');
+      const displayError = (serverMsg && !serverMsg.match(/502|503|504|upstream|provider|network/i))
+        ? serverMsg
+        : isTransient
+          ? 'AI service was temporarily unavailable. Your case is safe. Please retry.'
+          : 'Letter generation failed. Your case is safe. Please retry.';
       setGenerateError(displayError);
     } finally {
       // Only clean up spinner if timeout hasn't already done it

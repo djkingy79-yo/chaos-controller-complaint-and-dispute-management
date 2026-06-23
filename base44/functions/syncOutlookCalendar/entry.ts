@@ -14,36 +14,45 @@ async function graphRequest(accessToken, path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-async function getExistingOutlookEventSubjects(accessToken) {
+// Fetch existing Chaos Controller event IDs keyed by our stable cc_event_id extended property
+async function getExistingOutlookEventIds(accessToken) {
   try {
     const res = await fetch(
-      `https://graph.microsoft.com/v1.0/me/events?$select=subject&$top=500&$filter=startsWith(subject,'⚖️ [Chaos Controller]')`,
+      `https://graph.microsoft.com/v1.0/me/events?$select=id,singleValueExtendedProperties&$expand=singleValueExtendedProperties($filter=id eq 'String {00020329-0000-0000-C000-000000000046} Name cc_event_id')&$top=500`,
       { headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' } }
     );
-    if (!res.ok) {
-      // fallback: fetch all upcoming and filter locally
-      const res2 = await fetch(
-        `https://graph.microsoft.com/v1.0/me/events?$select=subject&$top=500`,
-        { headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' } }
-      );
-      if (!res2.ok) return new Set();
-      const d2 = await res2.json();
-      return new Set((d2.value || []).map(e => e.subject));
-    }
+    if (!res.ok) return new Set();
     const data = await res.json();
-    return new Set((data.value || []).map(e => e.subject));
+    const ids = new Set();
+    for (const ev of (data.value || [])) {
+      const prop = (ev.singleValueExtendedProperties || []).find(p => p.id && p.id.includes('cc_event_id'));
+      if (prop?.value) ids.add(prop.value);
+    }
+    return ids;
   } catch { return new Set(); }
 }
 
-async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItems, timelineEvents, existingSubjects) {
+// Build a stable event ID from case + item identifiers so repeated syncs update rather than duplicate
+function makeCcEventId(type, caseId, itemId) {
+  return `cc_${type}_${caseId}_${itemId}`;
+}
+
+function extendedProp(value) {
+  return [{
+    id: 'String {00020329-0000-0000-C000-000000000046} Name cc_event_id',
+    value: String(value)
+  }];
+}
+
+async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItems, timelineEvents, existingEventIds) {
   const synced = [];
   const caseId = caseItem.id;
 
-  // Sync deadlines as Outlook calendar events (skip already synced by subject)
+  // Sync deadlines as Outlook calendar events — skip if stable ID already synced
   for (const dl of deadlines) {
     if (!dl.deadline_date || dl.status === 'completed') continue;
-    const subject = `⚖️ [Chaos Controller] Deadline: ${dl.title}`;
-    if (existingSubjects.has(subject)) continue; // deduplicate
+    const ccId = makeCcEventId('deadline', caseId, dl.id);
+    if (existingEventIds.has(ccId)) continue;
     const startDate = new Date(dl.deadline_date);
     startDate.setHours(9, 0, 0, 0);
     const endDate = new Date(dl.deadline_date);
@@ -59,39 +68,43 @@ async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItem
       isReminderOn: true,
       reminderMinutesBeforeStart: 1440,
       categories: ['Chaos Controller'],
-      importance: dl.deadline_type === 'tribunal_date' ? 'high' : 'normal'
+      importance: dl.deadline_type === 'tribunal_date' ? 'high' : 'normal',
+      singleValueExtendedProperties: extendedProp(ccId),
     };
     await graphRequest(accessToken, '/me/events', { method: 'POST', body: JSON.stringify(event) });
     synced.push({ type: 'deadline', title: dl.title, case: caseItem.title });
   }
 
-  // Sync pending checklist items as all-day calendar reminders
+  // Sync pending checklist items — skip if stable ID already synced
   const pendingItems = checklistItems.filter(i => i.status !== 'complete');
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(8, 0, 0, 0);
   for (const item of pendingItems) {
-    const taskSubject = `☑️ [CC] ${item.label} — ${caseItem.title}`;
-    if (existingSubjects.has(taskSubject)) continue;
+    const ccId = makeCcEventId('task', caseId, item.id);
+    if (existingEventIds.has(ccId)) continue;
     const tEnd = new Date(tomorrow);
     tEnd.setHours(8, 30, 0, 0);
     const task = {
-      subject: taskSubject,
+      subject: `☑️ [CC] ${item.label} — ${caseItem.title}`,
       body: { contentType: 'text', content: `Case: ${caseItem.title}\nCategory: ${item.category}\nStatus: ${item.status}\n${item.notes || ''}` },
       start: { dateTime: tomorrow.toISOString(), timeZone: 'Australia/Sydney' },
       end: { dateTime: tEnd.toISOString(), timeZone: 'Australia/Sydney' },
       isReminderOn: true,
       reminderMinutesBeforeStart: 0,
-      categories: ['Chaos Controller']
+      categories: ['Chaos Controller'],
+      singleValueExtendedProperties: extendedProp(ccId),
     };
     await graphRequest(accessToken, '/me/events', { method: 'POST', body: JSON.stringify(task) });
     synced.push({ type: 'task', title: item.label, case: caseItem.title });
   }
 
-  // Sync future action-required timeline events
+  // Sync future action-required timeline events — skip if stable ID already synced
   const now = new Date();
   const actionEvents = timelineEvents.filter(e => e.is_action_required && e.event_date && new Date(e.event_date) >= now);
   for (const ev of actionEvents) {
+    const ccId = makeCcEventId('action', caseId, ev.id);
+    if (existingEventIds.has(ccId)) continue;
     const startDate = new Date(ev.event_date);
     startDate.setHours(10, 0, 0, 0);
     const endDate = new Date(ev.event_date);
@@ -105,7 +118,8 @@ async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItem
       start: { dateTime: startDate.toISOString(), timeZone: 'Australia/Sydney' },
       end: { dateTime: endDate.toISOString(), timeZone: 'Australia/Sydney' },
       isReminderOn: true,
-      reminderMinutesBeforeStart: 60
+      reminderMinutesBeforeStart: 60,
+      singleValueExtendedProperties: extendedProp(ccId),
     };
     await graphRequest(accessToken, '/me/events', { method: 'POST', body: JSON.stringify(calEvent) });
     synced.push({ type: 'action_event', title: ev.title, case: caseItem.title });
@@ -136,10 +150,10 @@ Deno.serve(async (req) => {
       const cases = await base44.asServiceRole.entities.Case.filter({ id: dl.case_id });
       const caseItem = cases[0];
       if (!caseItem) return Response.json({ skipped: 'case not found' });
-      const existingSubjects = await getExistingOutlookEventSubjects(accessToken);
-      const subject = `⚖️ [Chaos Controller] Deadline: ${dl.title}`;
-      if (existingSubjects.has(subject)) return Response.json({ skipped: 'already synced' });
-      const synced = await syncCaseToOutlook(accessToken, caseItem, [dl], [], [], existingSubjects);
+      const existingEventIds = await getExistingOutlookEventIds(accessToken);
+      const ccId = makeCcEventId('deadline', caseItem.id, dl.id);
+      if (existingEventIds.has(ccId)) return Response.json({ skipped: 'already synced' });
+      const synced = await syncCaseToOutlook(accessToken, caseItem, [dl], [], [], existingEventIds);
       return Response.json({ success: true, synced: synced.length, items: synced });
     }
 
@@ -158,8 +172,8 @@ Deno.serve(async (req) => {
 
     if (!casesToSync.length) return Response.json({ success: true, synced: 0, items: [] });
 
-    // Fetch existing synced event subjects once to deduplicate across all cases
-    const existingSubjects = await getExistingOutlookEventSubjects(accessToken);
+    // Fetch existing synced event IDs once (stable cc_event_id extended property) to deduplicate across all cases
+    const existingEventIds = await getExistingOutlookEventIds(accessToken);
 
     const allSynced = [];
     for (const caseItem of casesToSync) {
@@ -168,7 +182,7 @@ Deno.serve(async (req) => {
         base44.asServiceRole.entities.ChecklistItem.filter({ case_id: caseItem.id }),
         base44.asServiceRole.entities.TimelineEvent.filter({ case_id: caseItem.id }),
       ]);
-      const synced = await syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItems, timelineEvents, existingSubjects);
+      const synced = await syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItems, timelineEvents, existingEventIds);
       allSynced.push(...synced);
     }
 

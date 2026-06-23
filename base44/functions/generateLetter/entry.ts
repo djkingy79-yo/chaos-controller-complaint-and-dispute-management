@@ -82,10 +82,28 @@ STRICT WORD LIMIT: This letter must be ${wordLimit}. Do not exceed the word limi
 
     try {
       const aiStart = Date.now();
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: boundedPrompt,
-        model: 'claude_sonnet_4_6',
-      });
+      let result;
+      try {
+        result = await base44.integrations.Core.InvokeLLM({
+          prompt: boundedPrompt,
+          model: 'claude_sonnet_4_6',
+        });
+      } catch (providerError) {
+        // Classify transient upstream errors and release lock so retry creates a fresh attempt
+        const isTransient = providerError.message?.includes('502') || providerError.message?.includes('503') ||
+          providerError.message?.includes('504') || providerError.message?.includes('timeout') ||
+          providerError.message?.includes('ECONNRESET') || providerError.message?.includes('network');
+        await base44.asServiceRole.entities.LetterGenerationLock.update(lock.id, {
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          error_message: providerError.message,
+        }).catch(() => {});
+        const userMessage = isTransient
+          ? 'AI service was temporarily unavailable. Your case is safe. Please retry.'
+          : 'Letter generation failed. Your case is safe. Please retry.';
+        console.error(`[generateLetter] PROVIDER ERROR — ${providerError.message}`);
+        return Response.json({ error: userMessage }, { status: isTransient ? 503 : 500 });
+      }
       const aiMs = Date.now() - aiStart;
 
       console.log(`[generateLetter] AI complete — length: ${result?.length ?? 0}, took: ${aiMs}ms`);
