@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, BarChart2, CalendarDays, CheckSquare, AlertTriangle, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Clock, FolderOpen, Loader2, Printer, BarChart2, CalendarDays, CheckSquare, AlertTriangle, Trash2, RefreshCw } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -27,6 +27,7 @@ import ExecutiveSummaryGenerator from "@/components/cases/ExecutiveSummaryGenera
 import SmartChecklist from "@/components/cases/SmartChecklist";
 import GeneratedChecklist from "@/components/cases/GeneratedChecklist";
 import OutlookDeadlineSync from "@/components/cases/OutlookDeadlineSync";
+import CaseCalendarSync from "@/components/cases/CaseCalendarSync";
 import DeadlineManager from "@/components/cases/DeadlineManager";
 import PDFDebugPanel from "@/components/cases/PDFDebugPanel";
 
@@ -195,6 +196,11 @@ export default function CaseDetail() {
       <div className="flex flex-wrap gap-3 justify-end border-t border-border pt-4 mb-4">
         <ExecutiveSummaryGenerator caseItem={caseItem} />
         <ExportCaseZip caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+        <Link to={`/calendar-sync?caseId=${caseId}`}>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs border-primary/40 text-primary hover:bg-primary/10">
+            <RefreshCw className="w-3.5 h-3.5" /> Sync to Google / Outlook Calendar
+          </Button>
+        </Link>
       </div>
 
       {/* Main Grid Layout */}
@@ -255,6 +261,7 @@ export default function CaseDetail() {
             </TabsContent>
             <TabsContent value="deadlines" className="mt-4 space-y-4">
               <DeadlineManager caseItem={caseItem} evidence={evidence} />
+              <CaseCalendarSync caseItem={caseItem} />
               <OutlookDeadlineSync caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="print" className="mt-4">
