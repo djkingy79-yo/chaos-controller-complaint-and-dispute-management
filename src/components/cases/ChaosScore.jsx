@@ -111,11 +111,12 @@ function scoreFromCase(caseItem, evidence, events) {
   }
 
   // Hard gate for "Ready to Escalate":
-  // Score >= 85 AND complaint actually sent AND unresolved response/no-response recorded
+  // Score >= 85 AND complaint sent AND no-response recorded AND escalation pathway actually completed
   const readyToEscalate =
     score >= 85 &&
     !!caseItem.first_complaint_sent_at &&
     noResponseRecorded &&
+    escalationCriteriaMet &&
     caseItem.status !== "escalated" &&
     caseItem.status !== "resolved" &&
     caseItem.status !== "closed";
