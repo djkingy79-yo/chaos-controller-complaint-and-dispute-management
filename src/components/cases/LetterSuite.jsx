@@ -446,8 +446,14 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   }, [generating]);
 
   // Sync text from caseItem when the field or caseItem updates (fixes all-tabs-same-letter bug)
+  // Also clears the timeout sentinel if the backend saved the letter while we were waiting
   useEffect(() => {
-    setText(caseItem[field] || "");
+    const newText = caseItem[field] || "";
+    setText(newText);
+    if (newText && generateError === "__timeout__") {
+      setGenerateError(null);
+      toast.success(`${letterType.label} generated`);
+    }
   }, [caseItem.id, field, caseItem[field]]);
 
   // Load last send log for this letter for status badge
@@ -532,15 +538,18 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       setGenerateStatus(GENERATE_PHASES[phaseIndex]);
     }, 24000); // 24s per phase × 5 phases = 120s coverage window
 
-    // Hard 60s timeout — fires if backend hasn't responded
-    const hardTimeout = setTimeout(() => {
+    // Hard timeout — backend saves to DB directly, so on timeout we just refresh the case
+    // rather than showing an error (the letter may already be saved by the backend)
+    const hardTimeout = setTimeout(async () => {
       timedOutRef.current = true;
-      abortController.abort(); // cancel the pending fetch
       clearInterval(phaseTicker);
       setGenerating(false);
       setGenerateStatus("");
-      setGenerateError("Letter generation took too long to respond. The server may still be processing — please wait 30 seconds and retry.");
-      console.error(`[LetterGen] TIMEOUT — exceeded ${HARD_TIMEOUT_MS / 1000}s, letter: ${letterType.key}`);
+      console.warn(`[LetterGen] TIMEOUT — exceeded ${HARD_TIMEOUT_MS / 1000}s, letter: ${letterType.key} — refreshing case in case backend saved`);
+      // Refresh the case — if the backend completed and saved, the letter will appear
+      queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+      // Show a soft notice rather than an error — not a failure, just slow
+      setGenerateError("__timeout__");
     }, HARD_TIMEOUT_MS);
 
     try {
@@ -572,12 +581,13 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         throw new Error("AI returned empty content. Please try again.");
       }
 
-      setGenerateStatus("Saving letter…");
-      console.log(`[LetterGen] DB save — field: ${field}`);
-      await updateMutation.mutateAsync({ [field]: result });
-
-      // Only update state if still not timed out (DB save can be slow too)
-      if (timedOutRef.current) return;
+      // Backend already saved to DB — just update local state and invalidate
+      if (timedOutRef.current) {
+        // Timeout already fired but response arrived — backend saved it, just refresh
+        console.log(`[LetterGen] Late response arrived after timeout — backend saved, refreshing`);
+        queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+        return;
+      }
 
       setText(result);
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
@@ -776,7 +786,15 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         </div>
       )}
 
-      {generateError && !generating && (
+      {generateError === "__timeout__" && !generating && !text && (
+        <div className="bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 text-xs text-warning-foreground flex items-center justify-between gap-3">
+          <span>⏳ Still generating — the server is processing your letter. This page will update automatically when complete, or click Retry to try again.</span>
+          <Button size="sm" variant="outline" className="h-7 text-xs px-3 shrink-0" onClick={handleGenerate}>
+            Retry
+          </Button>
+        </div>
+      )}
+      {generateError && generateError !== "__timeout__" && !generating && (
         <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3 text-xs text-destructive flex items-center justify-between gap-3">
           <span>⚠️ {generateError}</span>
           <Button size="sm" variant="destructive" className="h-7 text-xs px-3 shrink-0" onClick={handleGenerate}>
