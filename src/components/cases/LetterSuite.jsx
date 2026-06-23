@@ -412,18 +412,36 @@ const SENT_STAGE_MAP = {
   escalation: "escalated",
 };
 
+const GENERATE_PHASES = [
+  "Preparing case facts…",
+  "Reviewing evidence…",
+  "Drafting letter…",
+  "Saving letter…",
+  "Almost done…",
+];
+
+const HARD_TIMEOUT_MS = 90000; // 90 seconds hard stop
+
 function LetterEditor({ letterType, caseItem, evidence }) {
   const queryClient = useQueryClient();
   const field = letterType.field;
   const [text, setText] = useState(caseItem[field] || "");
   const [editing, setEditing] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [generateStatus, setGenerateStatus] = useState("");
-  const [generateTimedOut, setGenerateTimedOut] = useState(false);
+  const [generateStatus, setGenerateStatus] = useState(GENERATE_PHASES[0]);
+  const [generateError, setGenerateError] = useState(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [emailOpen, setEmailOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Elapsed timer — ticks every second while generating
+  useEffect(() => {
+    if (!generating) { setElapsedSeconds(0); return; }
+    const interval = setInterval(() => setElapsedSeconds(s => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [generating]);
 
   // Sync text from caseItem when the field or caseItem updates (fixes all-tabs-same-letter bug)
   useEffect(() => {
@@ -490,38 +508,67 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   };
 
   const handleGenerate = async () => {
-    if (generating) return;
+    if (generating) return; // Block duplicate clicks
+    console.log(`[LetterGen] START — letter: ${letterType.key}, case: ${caseItem.id}`);
     setGenerating(true);
-    setGenerateTimedOut(false);
-    setGenerateStatus("Rebuilding your letter… analysing evidence");
+    setGenerateError(null);
 
-    const statusTimer = setTimeout(() => setGenerateStatus("Almost there… writing your letter"), 15000);
-    const timeoutTimer = setTimeout(() => {
-      setGenerateTimedOut(true);
-      setGenerateStatus("Taking longer than usual… still working");
-    }, 60000);
+    // Phase ticker — cycles through progress messages
+    let phaseIndex = 0;
+    setGenerateStatus(GENERATE_PHASES[0]);
+    const phaseTicker = setInterval(() => {
+      phaseIndex = Math.min(phaseIndex + 1, GENERATE_PHASES.length - 1);
+      setGenerateStatus(GENERATE_PHASES[phaseIndex]);
+    }, 18000);
+
+    // Hard timeout — stop spinner and show retry after 90s
+    let timedOut = false;
+    const hardTimeout = setTimeout(() => {
+      timedOut = true;
+      clearInterval(phaseTicker);
+      setGenerating(false);
+      setGenerateStatus("");
+      setGenerateError("Letter generation timed out. Please try again.");
+      console.error(`[LetterGen] TIMEOUT — exceeded ${HARD_TIMEOUT_MS / 1000}s, letter: ${letterType.key}`);
+    }, HARD_TIMEOUT_MS);
 
     try {
       const client = buildClientContext(caseItem, evidence);
       const today = format(new Date(), "d MMMM yyyy");
       const prompt = buildPrompt(letterType.key, caseItem, client, today, evidence);
+
+      console.log(`[LetterGen] AI request sent — letter: ${letterType.key}`);
       const result = await base44.integrations.Core.InvokeLLM({ prompt, model: 'claude_sonnet_4_6' });
-      clearTimeout(statusTimer);
-      clearTimeout(timeoutTimer);
-      // Save to this letter's specific field — never overwrites other letter fields
+      console.log(`[LetterGen] AI response received — length: ${result?.length ?? 0}`);
+
+      if (timedOut) return; // Timeout already fired — discard late response
+
+      // Guard: empty/null content is a failure
+      if (!result || !result.trim()) {
+        throw new Error("AI returned empty content. Please try again.");
+      }
+
+      setGenerateStatus("Saving letter…");
+      console.log(`[LetterGen] Saving to case field: ${field}`);
       await updateMutation.mutateAsync({ [field]: result });
+      console.log(`[LetterGen] Save complete — letter: ${letterType.key}`);
+
       // Immediately update local state — letter appears without page refresh
       setText(result);
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
-      toast.success(`${letterType.label} generated and saved`);
+      setGenerateError(null);
+      toast.success(`${letterType.label} generated`);
     } catch (e) {
-      clearTimeout(statusTimer);
-      clearTimeout(timeoutTimer);
-      toast.error("Generation failed: " + e.message);
+      if (timedOut) return; // Timeout already handled
+      console.error(`[LetterGen] ERROR — ${e.message}`);
+      setGenerateError(e.message || "Generation failed. Please try again.");
     } finally {
-      setGenerating(false);
-      setGenerateStatus("");
-      setGenerateTimedOut(false);
+      if (!timedOut) {
+        clearInterval(phaseTicker);
+        clearTimeout(hardTimeout);
+        setGenerating(false);
+        setGenerateStatus("");
+      }
     }
   };
 
@@ -674,15 +721,27 @@ function LetterEditor({ letterType, caseItem, evidence }) {
             className="gap-1.5 text-xs min-w-[140px]"
           >
             {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            {generating ? (generateTimedOut ? "Still working…" : "Generating…") : (text ? "Regenerate" : "Generate Letter")}
+            {generating ? "Generating…" : (text ? "Regenerate" : "Generate Letter")}
           </Button>
         </div>
       </div>
 
-      {generating && generateStatus && (
-        <div className="bg-primary/10 border border-primary/30 rounded-lg px-4 py-2.5 text-xs text-primary font-medium flex items-center gap-2">
+      {generating && (
+        <div className="bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 text-xs text-primary font-medium flex items-center gap-3">
           <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
-          {generateStatus}
+          <span className="flex-1">{generateStatus}</span>
+          <span className="font-mono text-primary/70 tabular-nums">
+            {Math.floor(elapsedSeconds / 60)}:{String(elapsedSeconds % 60).padStart(2, '0')}
+          </span>
+        </div>
+      )}
+
+      {generateError && !generating && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3 text-xs text-destructive flex items-center justify-between gap-3">
+          <span>⚠️ {generateError}</span>
+          <Button size="sm" variant="destructive" className="h-7 text-xs px-3 shrink-0" onClick={handleGenerate}>
+            Retry
+          </Button>
         </div>
       )}
 
