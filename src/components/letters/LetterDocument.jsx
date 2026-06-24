@@ -1,15 +1,14 @@
 /**
- * CHAOS CONTROLLER — UNIFIED LETTER DOCUMENT COMPONENT
+ * CHAOS CONTROLLER — UNIFIED LETTER DOCUMENT
  *
- * Single source of truth for letter rendering.
- * Used by: Dashboard preview, Download PDF (html2canvas capture), Print.
+ * Single source of truth for ALL letter rendering:
+ *   - Dashboard preview  (scaled to fit container)
+ *   - Download PDF       (html2canvas capture of the raw 794px node)
+ *   - Print              (iframe print — no browser URL/header/footer)
+ *   - Email attachment   (same capture)
  *
- * CRITICAL RULES:
- * - Width MUST be exactly 794px (96dpi A4 equivalent) so html2canvas capture = A4 PDF.
- * - Every element uses box-sizing: border-box.
- * - No element may overflow width.
- * - overflow-wrap: break-word everywhere.
- * - This component renders the SAME for preview and PDF capture.
+ * The component itself always renders at exactly 794px wide (A4 @ 96dpi).
+ * The parent wraps it in a scaled container for dashboard preview.
  */
 
 import React from "react";
@@ -17,22 +16,20 @@ import React from "react";
 export const LETTERHEAD_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg';
 export const LETTER_FOOTER_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg';
 
-// A4 at 96dpi = 794px wide. Use this as the canonical pixel width.
+// A4 at 96dpi
 const A4_PX_WIDTH = 794;
-// Horizontal padding inside the page (approx 18mm each side at 96dpi)
+// Horizontal padding inside the content area (~18mm at 96dpi)
 const H_PAD = 68;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Section heading names we recognise in AI letter output
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Section headings recognised in AI output ─────────────────────────────────
 const SECTION_HEADINGS = [
   'BACKGROUND',
   'WHAT HAPPENED',
   'RESPONSE RECEIVED',
-  'NAB\'S RESPONSE',
-  'BANK\'S RESPONSE',
-  'INSURER\'S RESPONSE',
-  'ORGANISATION\'S RESPONSE',
+  "NAB'S RESPONSE",
+  "BANK'S RESPONSE",
+  "INSURER'S RESPONSE",
+  "ORGANISATION'S RESPONSE",
   'EVIDENCE RELIED UPON',
   'EVIDENCE PROVIDED',
   'IMPACT',
@@ -41,6 +38,7 @@ const SECTION_HEADINGS = [
   'LEGAL BASIS',
   'LEGAL OBLIGATIONS',
   'RELEVANT RIGHTS',
+  'RELEVANT RIGHTS/OBLIGATIONS',
   'SUMMARY',
   'ESCALATION',
 ];
@@ -54,24 +52,15 @@ function isBullet(line) {
   return /^[-•*]\s+/.test(line.trim());
 }
 
-/**
- * Strips the AI-generated header block (date, addresses, RE line)
- * returning text from "Dear" onwards.
- */
+/** Strip AI-generated address block — return text from "Dear" onwards */
 function stripToBody(text) {
   if (!text) return '';
   const clean = String(text).replace(/<[^>]*>/g, '');
-  const dearIdx = clean.search(/\bDear\b/i);
-  return dearIdx === -1 ? clean.trim() : clean.slice(dearIdx).trim();
+  const idx = clean.search(/\bDear\b/i);
+  return idx === -1 ? clean.trim() : clean.slice(idx).trim();
 }
 
-/**
- * Renders the letter body as structured HTML elements.
- * - Recognises section headings → bold uppercase with underline
- * - Recognises bullet lines → styled list item
- * - Blank lines → paragraph breaks
- * - Everything else → plain paragraph
- */
+/** Render AI letter body as structured React elements */
 function renderBody(text) {
   if (!text) return null;
   const lines = text.split('\n');
@@ -84,14 +73,13 @@ function renderBody(text) {
     const content = paraBuffer.join('\n').trim();
     if (content) {
       elements.push(
-        <p key={key++} style={bodyParaStyle}>{content}</p>
+        <p key={key++} style={styles.para}>{content}</p>
       );
     }
     paraBuffer = [];
   };
 
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
+  for (const raw of lines) {
     const trimmed = raw.trim();
 
     if (!trimmed) {
@@ -102,7 +90,7 @@ function renderBody(text) {
     if (isHeading(trimmed)) {
       flushPara();
       elements.push(
-        <div key={key++} style={headingStyle}>
+        <div key={key++} style={styles.heading}>
           {trimmed.replace(/:$/, '')}
         </div>
       );
@@ -112,9 +100,9 @@ function renderBody(text) {
     if (isBullet(trimmed)) {
       flushPara();
       elements.push(
-        <div key={key++} style={bulletStyle}>
+        <div key={key++} style={styles.bullet}>
           <span style={{ marginRight: 6, flexShrink: 0 }}>•</span>
-          <span style={{ flex: 1, overflowWrap: 'break-word', wordBreak: 'normal' }}>
+          <span style={{ flex: 1, overflowWrap: 'break-word' }}>
             {trimmed.replace(/^[-•*]\s+/, '')}
           </span>
         </div>
@@ -128,70 +116,64 @@ function renderBody(text) {
   return elements;
 }
 
-// ─── Inline styles — all pixel-based, no mm units ─────────────────────────────
+// ─── Shared inline styles ─────────────────────────────────────────────────────
+const BASE_FONT = '"Times New Roman", Times, serif';
+const BASE_SIZE = '13px'; // ≈ 11pt at 96dpi
 
-const bodyParaStyle = {
-  margin: '0 0 10px 0',
-  lineHeight: '1.25',
-  fontFamily: '"Times New Roman", Times, serif',
-  fontSize: '13px',  // ≈11pt at 96dpi
-  color: '#000',
-  textAlign: 'left',
-  overflowWrap: 'break-word',
-  wordBreak: 'normal',
-  maxWidth: '100%',
-  boxSizing: 'border-box',
+const styles = {
+  para: {
+    margin: '0 0 8px 0',
+    lineHeight: '1.25',
+    fontFamily: BASE_FONT,
+    fontSize: BASE_SIZE,
+    color: '#000',
+    overflowWrap: 'break-word',
+    wordBreak: 'normal',
+    boxSizing: 'border-box',
+  },
+  heading: {
+    fontFamily: BASE_FONT,
+    fontSize: BASE_SIZE,
+    fontWeight: 'bold',
+    color: '#000',
+    textTransform: 'uppercase',
+    margin: '16px 0 4px 0',
+    paddingBottom: '3px',
+    borderBottom: '1px solid #000',
+    overflowWrap: 'break-word',
+    boxSizing: 'border-box',
+  },
+  bullet: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    fontFamily: BASE_FONT,
+    fontSize: BASE_SIZE,
+    color: '#000',
+    margin: '0 0 6px 16px',
+    lineHeight: '1.25',
+    overflowWrap: 'break-word',
+    boxSizing: 'border-box',
+  },
+  addressLine: {
+    fontFamily: BASE_FONT,
+    fontSize: BASE_SIZE,
+    color: '#000',
+    lineHeight: '1.4',
+    overflowWrap: 'break-word',
+    wordBreak: 'break-word',
+    boxSizing: 'border-box',
+  },
 };
 
-const headingStyle = {
-  fontFamily: '"Times New Roman", Times, serif',
-  fontSize: '13px',
-  fontWeight: 'bold',
-  color: '#000',
-  textTransform: 'uppercase',
-  margin: '16px 0 4px 0',
-  paddingBottom: '3px',
-  borderBottom: '1px solid #000',
-  overflowWrap: 'break-word',
-  wordBreak: 'normal',
-  maxWidth: '100%',
-  boxSizing: 'border-box',
-};
-
-const bulletStyle = {
-  display: 'flex',
-  alignItems: 'flex-start',
-  fontFamily: '"Times New Roman", Times, serif',
-  fontSize: '13px',
-  color: '#000',
-  margin: '0 0 6px 16px',
-  lineHeight: '1.25',
-  overflowWrap: 'break-word',
-  wordBreak: 'normal',
-  maxWidth: '100%',
-  boxSizing: 'border-box',
-};
-
-/**
- * LetterDocument
- *
- * Props:
- *   receiverLines  string[]
- *   senderLines    string[]
- *   today          string
- *   reSubject      string
- *   bodyText       string   — full AI letter text (header block auto-stripped)
- *   pageNumber     number   — optional
- *   totalPages     number   — optional
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// LetterDocument — always 794px wide. Wrap in <LetterPreviewWrapper> for screen.
+// ─────────────────────────────────────────────────────────────────────────────
 export default function LetterDocument({
   receiverLines = [],
   senderLines = [],
   today = '',
   reSubject = '',
   bodyText = '',
-  pageNumber,
-  totalPages,
 }) {
   const strippedBody = stripToBody(bodyText);
 
@@ -200,7 +182,7 @@ export default function LetterDocument({
       className="letter-page"
       style={{
         width: A4_PX_WIDTH + 'px',
-        minHeight: '1122px',  // A4 at 96dpi = 1122px tall
+        minHeight: '1122px', // A4 at 96dpi
         margin: '0 auto',
         background: '#fff',
         boxSizing: 'border-box',
@@ -208,16 +190,14 @@ export default function LetterDocument({
         flexDirection: 'column',
         position: 'relative',
         overflow: 'hidden',
-        // Shadow for preview only — stripped in print CSS
-        boxShadow: '0 2px 24px rgba(0,0,0,0.12)',
       }}
     >
-      {/* ── LETTERHEAD ── */}
-      <div style={{ width: '100%', flexShrink: 0, boxSizing: 'border-box' }}>
+      {/* ── LETTERHEAD BANNER ── */}
+      <div style={{ width: '100%', flexShrink: 0, lineHeight: 0, boxSizing: 'border-box' }}>
         <img
           src={LETTERHEAD_URL}
           alt="Chaos Controller"
-          style={{ width: '100%', height: 'auto', display: 'block', boxSizing: 'border-box' }}
+          style={{ width: '100%', height: 'auto', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
@@ -227,24 +207,21 @@ export default function LetterDocument({
         className="letter-body"
         style={{
           flex: 1,
-          padding: `18px ${H_PAD}px 24px ${H_PAD}px`,
+          padding: `20px ${H_PAD}px 24px ${H_PAD}px`,
           boxSizing: 'border-box',
           width: '100%',
-          maxWidth: '100%',
           overflow: 'hidden',
           overflowWrap: 'break-word',
-          wordBreak: 'normal',
         }}
       >
-        {/* Date — right */}
+        {/* Date — right aligned */}
         {today && (
           <div style={{
             textAlign: 'right',
-            marginBottom: '22px',
-            fontFamily: '"Times New Roman", Times, serif',
-            fontSize: '13px',
+            marginBottom: '20px',
+            fontFamily: BASE_FONT,
+            fontSize: BASE_SIZE,
             color: '#000',
-            boxSizing: 'border-box',
           }}>
             {today}
           </div>
@@ -256,39 +233,18 @@ export default function LetterDocument({
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '0 32px',
-            marginBottom: '22px',
+            marginBottom: '20px',
             boxSizing: 'border-box',
             width: '100%',
-            overflow: 'hidden',
           }}>
-            <div style={{ overflowWrap: 'break-word', wordBreak: 'normal', boxSizing: 'border-box', overflow: 'hidden' }}>
+            <div style={{ overflow: 'hidden', boxSizing: 'border-box' }}>
               {receiverLines.map((line, i) => (
-                <div key={i} style={{
-                  fontFamily: '"Times New Roman", Times, serif',
-                  fontSize: '13px',
-                  color: '#000',
-                  lineHeight: '1.4',
-                  overflowWrap: 'break-word',
-                  wordBreak: 'break-word',
-                  boxSizing: 'border-box',
-                }}>
-                  {line}
-                </div>
+                <div key={i} style={styles.addressLine}>{line}</div>
               ))}
             </div>
-            <div style={{ overflowWrap: 'break-word', wordBreak: 'normal', boxSizing: 'border-box', overflow: 'hidden' }}>
+            <div style={{ overflow: 'hidden', boxSizing: 'border-box' }}>
               {senderLines.map((line, i) => (
-                <div key={i} style={{
-                  fontFamily: '"Times New Roman", Times, serif',
-                  fontSize: '13px',
-                  color: '#000',
-                  lineHeight: '1.4',
-                  overflowWrap: 'break-word',
-                  wordBreak: 'break-word',
-                  boxSizing: 'border-box',
-                }}>
-                  {line}
-                </div>
+                <div key={i} style={styles.addressLine}>{line}</div>
               ))}
             </div>
           </div>
@@ -297,14 +253,12 @@ export default function LetterDocument({
         {/* RE: subject */}
         {reSubject && (
           <div style={{
-            fontFamily: '"Times New Roman", Times, serif',
-            fontSize: '13px',
+            fontFamily: BASE_FONT,
+            fontSize: BASE_SIZE,
             fontWeight: 'bold',
             color: '#000',
-            marginBottom: '12px',
+            marginBottom: '10px',
             overflowWrap: 'break-word',
-            wordBreak: 'normal',
-            boxSizing: 'border-box',
           }}>
             Re: {reSubject}
           </div>
@@ -314,47 +268,56 @@ export default function LetterDocument({
         <hr style={{
           border: 'none',
           borderTop: '1px solid #000',
-          margin: '0 0 18px 0',
-          boxSizing: 'border-box',
+          margin: '0 0 16px 0',
         }} />
 
         {/* Letter body */}
         <div style={{
-          fontFamily: '"Times New Roman", Times, serif',
-          fontSize: '13px',
+          fontFamily: BASE_FONT,
+          fontSize: BASE_SIZE,
           color: '#000',
           lineHeight: '1.25',
           width: '100%',
-          maxWidth: '100%',
           boxSizing: 'border-box',
-          overflow: 'hidden',
           overflowWrap: 'break-word',
-          wordBreak: 'normal',
         }}>
           {renderBody(strippedBody)}
         </div>
       </div>
 
-      {/* ── FOOTER ── */}
-      <div style={{ width: '100%', flexShrink: 0, marginTop: 'auto', boxSizing: 'border-box' }}>
-        {pageNumber && totalPages && (
-          <div style={{
-            textAlign: 'center',
-            fontFamily: '"Times New Roman", Times, serif',
-            fontSize: '11px',
-            color: '#666',
-            padding: '4px 0',
-            boxSizing: 'border-box',
-          }}>
-            Page {pageNumber} of {totalPages}
-          </div>
-        )}
+      {/* ── FOOTER IMAGE ── */}
+      <div style={{ width: '100%', flexShrink: 0, marginTop: 'auto', lineHeight: 0, boxSizing: 'border-box' }}>
         <img
           src={LETTER_FOOTER_URL}
           alt=""
-          style={{ width: '100%', height: 'auto', display: 'block', boxSizing: 'border-box' }}
+          style={{ width: '100%', height: 'auto', display: 'block' }}
           crossOrigin="anonymous"
         />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LetterPreviewWrapper — scales the 794px LetterDocument to fit any container.
+// Use this in the dashboard. The raw LetterDocument ref is used for PDF capture.
+// ─────────────────────────────────────────────────────────────────────────────
+export function LetterPreviewWrapper({ children }) {
+  return (
+    <div
+      style={{
+        width: '100%',
+        overflowX: 'auto',
+        background: '#f0f0f0',
+        borderRadius: '8px',
+        padding: '16px 0',
+      }}
+    >
+      {/* Centring shell — lets the 794px doc scroll on small screens */}
+      <div style={{ display: 'flex', justifyContent: 'center', minWidth: A4_PX_WIDTH + 'px' }}>
+        <div style={{ boxShadow: '0 2px 24px rgba(0,0,0,0.15)', borderRadius: '2px' }}>
+          {children}
+        </div>
       </div>
     </div>
   );

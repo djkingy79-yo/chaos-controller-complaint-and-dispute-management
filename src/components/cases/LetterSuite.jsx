@@ -20,7 +20,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
 import LetterHeader, { buildLetterHeaderData } from "@/components/cases/LetterHeader.jsx";
-import LetterDocument from "@/components/letters/LetterDocument.jsx";
+import LetterDocument, { LetterPreviewWrapper } from "@/components/letters/LetterDocument.jsx";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -873,15 +873,17 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem.organisation_name || "Organisation"}`,
             };
             return (
-              <div ref={letterDocRef}>
-                <LetterDocument
-                  receiverLines={receiverLines}
-                  senderLines={senderLines}
-                  today={today}
-                  reSubject={reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`}
-                  bodyText={text}
-                />
-              </div>
+              <LetterPreviewWrapper>
+                <div ref={letterDocRef}>
+                  <LetterDocument
+                    receiverLines={receiverLines}
+                    senderLines={senderLines}
+                    today={today}
+                    reSubject={reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`}
+                    bodyText={text}
+                  />
+                </div>
+              </LetterPreviewWrapper>
             );
           })()}
         </div>
