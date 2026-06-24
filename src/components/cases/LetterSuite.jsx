@@ -14,7 +14,7 @@ import LetterTemplateManager from "./LetterTemplateManager";
 import LetterEmailDialog from "./LetterEmailDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL, stripToLetterBody } from "@/lib/pdfGenerator";
+import { captureLetterDocumentPDF, generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL, stripToLetterBody } from "@/lib/pdfGenerator";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
@@ -126,8 +126,35 @@ ${letterHistory}`;
   - NO <div>, NO </div>, NO <br>, NO <strong>, NO <p>
   - NO angle brackets of any kind
   - Just plain text with normal line breaks
-  - The rendering system will apply formatting automatically
-  
+
+  MANDATORY BODY STRUCTURE — use these exact headings on their own line (no colon, uppercase):
+
+  BACKGROUND
+  [1–2 paragraphs: who you are, account details, relationship with the organisation]
+
+  WHAT HAPPENED
+  [Chronological detail: specific dates, amounts, interactions, what went wrong]
+
+  EVIDENCE RELIED UPON
+  - [bullet: document name and what it proves]
+  - [bullet: document name and what it proves]
+
+  IMPACT
+  [How this has affected you financially, practically, emotionally]
+
+  OUTCOME REQUESTED
+  [Specific resolution you are seeking. Firm deadline.]
+
+  NEXT STEPS
+  [State you will escalate to ${caseItem.escalation_body || "the relevant ombudsman"} if not resolved within the deadline]
+
+  LEGAL TONE RULES — MANDATORY:
+  - Do NOT use "scam operation", "deliberately sabotaging", "fraudulent conduct", "designed to extract money through deception" unless user evidence clearly confirms fraud.
+  - Instead use: "conduct raising serious concerns", "apparent non-delivery of services", "misleading or deceptive conduct", "failure to supply services with due care and skill".
+  - For Australian Consumer Law: reference s18 (misleading or deceptive conduct), s60 (due care and skill), s61 (fitness for purpose) only where applicable.
+  - For Banking Code of Practice: reference fair, transparent and timely complaint handling only where applicable.
+  - For ePayments Code: only mention where applicable to the specific transaction type. Do not overstate refund obligations.
+
   FORMAT (plain text lines only):
   ${today}
   
@@ -145,8 +172,30 @@ ${letterHistory}`;
   Re: [Subject]
   
   Dear [Name/Sir/Madam],
-  
-  [Body paragraphs - each separated by one blank line]
+
+  BACKGROUND
+
+  [paragraph]
+
+  WHAT HAPPENED
+
+  [paragraph]
+
+  EVIDENCE RELIED UPON
+
+  - [bullet]
+
+  IMPACT
+
+  [paragraph]
+
+  OUTCOME REQUESTED
+
+  [paragraph]
+
+  NEXT STEPS
+
+  [paragraph]
   
   Yours faithfully,
   
@@ -438,6 +487,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [deleting, setDeleting] = useState(false);
   const timedOutRef = React.useRef(false);
   const abortControllerRef = React.useRef(null);
+  const letterDocRef = React.useRef(null);
 
   // Elapsed timer — ticks every second while generating
   useEffect(() => {
@@ -626,39 +676,14 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     }
   };
 
-  const buildLetterBlob = async () => {
-    if (!text || !text.trim()) throw new Error(`No content for ${letterType.label}. Generate the letter first.`);
-    const client = buildClientContext(caseItem, evidence);
-    const headerData = buildLetterHeaderData(caseItem, client);
-    const reLabels = {
-      letter1: `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-      letter2: `SECOND FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-      letter3: `THIRD AND FINAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-      accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
-      deny_offer: `REJECTION OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
-      escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem.organisation_name || "Organisation"}`,
-    };
-    const reSubject = reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`;
-    const strippedBody = stripToLetterBody(text);
-    const blob = await generateChaosDocumentPDF({
-      documentType: 'letter',
-      title: letterType.label,
-      body: strippedBody,
-      includeHeader: true,
-      includeFooter: true,
-      letterHeader: { ...headerData, reSubject },
-    });
-    if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
-    return blob;
-  };
-
   const letterFilename = `${String(letterType.label).replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
 
   const handleDownloadPDF = async () => {
     pdfDiagStart({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!text });
     if (!text || !text.trim()) { pdfDiagMissingData({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', dataName: 'letter content (generate letter first)' }); return; }
+    if (!letterDocRef.current) { pdfDiagFail({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', error: new Error('Letter preview not mounted') }); return; }
     try {
-      const blob = await buildLetterBlob();
+      const blob = await captureLetterDocumentPDF(letterDocRef.current);
       pdfDiagBlobCreated({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', blob });
       downloadPDFBlob(blob, letterFilename);
       pdfDiagSuccess({ tab: `Letter: ${letterType.label}`, action: 'Download PDF' });
@@ -670,8 +695,9 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const handlePrintPDF = async () => {
     pdfDiagStart({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', caseId: caseItem?.id, hasCase: !!caseItem, hasData: !!text });
     if (!text || !text.trim()) { pdfDiagMissingData({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', dataName: 'letter content (generate letter first)' }); return; }
+    if (!letterDocRef.current) { pdfDiagFail({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', error: new Error('Letter preview not mounted') }); return; }
     try {
-      const blob = await buildLetterBlob();
+      const blob = await captureLetterDocumentPDF(letterDocRef.current);
       pdfDiagBlobCreated({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', blob });
       const opened = await openPDFForPrint(blob, letterFilename);
       if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, letterFilename); }
@@ -847,13 +873,15 @@ function LetterEditor({ letterType, caseItem, evidence }) {
               escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem.organisation_name || "Organisation"}`,
             };
             return (
-              <LetterDocument
-                receiverLines={receiverLines}
-                senderLines={senderLines}
-                today={today}
-                reSubject={reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`}
-                bodyText={text}
-              />
+              <div ref={letterDocRef}>
+                <LetterDocument
+                  receiverLines={receiverLines}
+                  senderLines={senderLines}
+                  today={today}
+                  reSubject={reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`}
+                  bodyText={text}
+                />
+              </div>
             );
           })()}
         </div>

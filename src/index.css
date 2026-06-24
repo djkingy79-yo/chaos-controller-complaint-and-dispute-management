@@ -106,8 +106,14 @@
 
 /* ── LETTER DOCUMENT PRINT STYLES ───────────────────────────────────────── */
 @media print {
+  * {
+    box-sizing: border-box !important;
+  }
+
   body {
     background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .no-print {
@@ -119,6 +125,7 @@
     min-height: 297mm !important;
     margin: 0 auto !important;
     box-shadow: none !important;
+    overflow: hidden !important;
     page-break-after: always;
   }
 
@@ -126,10 +133,16 @@
     font-family: "Times New Roman", Times, serif !important;
     font-size: 11pt !important;
     line-height: 1.25 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
   }
 
   .letter-body p {
     margin: 0 0 10px 0 !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
   }
 }
 

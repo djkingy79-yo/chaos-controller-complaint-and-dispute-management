@@ -2,9 +2,14 @@
  * CHAOS CONTROLLER™ — UNIFIED PDF GENERATOR
  * ALL letters, snapshots, summaries, exports MUST use generateChaosDocumentPDF().
  * No window.print(), no printDocument(), no printLetterUniversal() anywhere.
+ *
+ * For LETTER documents: use captureLetterDocumentPDF(domNode, filename)
+ * which captures the actual rendered LetterDocument component via html2canvas.
+ * This guarantees preview = PDF = print output.
  */
 
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export const LETTERHEAD_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/1d2d51203_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg';
 export const FOOTER_URL = 'https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg';
@@ -303,6 +308,71 @@ export async function generateChaosDocumentPDF({
   // Attach warnings to blob so callers can surface them
   blob._warnings = warnings;
   return blob;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LETTER PDF CAPTURE — renders the actual LetterDocument DOM node into a PDF.
+// This ensures preview = download = print with no separate layout.
+//
+// Usage:
+//   const blob = await captureLetterDocumentPDF(ref.current);
+//   downloadPDFBlob(blob, 'letter.pdf');
+// ─────────────────────────────────────────────────────────────────────────────
+export async function captureLetterDocumentPDF(domNode) {
+  if (!domNode) throw new Error('captureLetterDocumentPDF: domNode is null');
+
+  // Temporarily remove box-shadow so it doesn't bleed into capture
+  const prevShadow = domNode.style.boxShadow;
+  domNode.style.boxShadow = 'none';
+
+  let canvas;
+  try {
+    canvas = await html2canvas(domNode, {
+      scale: 2,                          // retina quality
+      useCORS: true,                     // allow cross-origin images (letterhead/footer)
+      allowTaint: false,
+      backgroundColor: '#ffffff',
+      logging: false,
+      // Use the element's own rendered width so we don't clip
+      windowWidth: domNode.scrollWidth,
+      width: domNode.scrollWidth,
+      height: domNode.scrollHeight,
+    });
+  } finally {
+    domNode.style.boxShadow = prevShadow;
+  }
+
+  // A4 dimensions in mm
+  const A4_W = 210;
+  const A4_H = 297;
+
+  const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  const imgPxW  = canvas.width;
+  const imgPxH  = canvas.height;
+
+  // Scale captured image to fit A4 width; allow multi-page if taller
+  const imgMmH = (imgPxH / imgPxW) * A4_W;
+  const totalPages = Math.ceil(imgMmH / A4_H);
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  for (let page = 0; page < totalPages; page++) {
+    if (page > 0) pdf.addPage();
+
+    // Offset the image vertically so each page shows a different slice
+    const yOffset = -(page * A4_H);
+    pdf.addImage(imgData, 'JPEG', 0, yOffset, A4_W, imgMmH);
+
+    // Page number
+    pdf.setFont('times', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(100);
+    pdf.text(`Page ${page + 1} of ${totalPages}`, A4_W / 2, A4_H - 4, { align: 'center' });
+    pdf.setTextColor(0);
+  }
+
+  console.log('captureLetterDocumentPDF done', { pages: totalPages, imgPxW, imgPxH });
+  return pdf.output('blob');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
