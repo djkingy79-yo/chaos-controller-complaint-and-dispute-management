@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
 import LetterHeader, { buildLetterHeaderData } from "@/components/cases/LetterHeader.jsx";
+import LetterDocument from "@/components/letters/LetterDocument.jsx";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -823,29 +824,9 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       )}
 
       {text ? (
-        <div className="border border-border rounded-lg overflow-hidden shadow-sm bg-white">
-          <div className="letterhead-banner" style={{ height: '60px', backgroundImage: `url(${LETTERHEAD_URL})`, backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat', backgroundPosition: 'center center', margin: '0 auto 0 auto' }}></div>
-          <div className="bg-white px-12 pb-8" style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", color: "#000", marginTop: '0', paddingTop: '16pt' }}>
-            {/* Structured letter header — date, two-column address, RE line, rule */}
-            {!editing && (() => {
-              const client = buildClientContext(caseItem, evidence);
-              const reLabels = {
-                letter1: `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-                letter2: `SECOND FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-                letter3: `THIRD AND FINAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-                accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
-                deny_offer: `REJECTION OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
-                escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem.organisation_name || "Organisation"}`,
-              };
-              return (
-                <LetterHeader
-                  caseItem={caseItem}
-                  client={client}
-                  reSubject={reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`}
-                />
-              );
-            })()}
-            {editing ? (
+        <div className="overflow-hidden rounded-lg shadow-sm border border-border">
+          {editing ? (
+            <div className="bg-white p-4">
               <Textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
@@ -853,23 +834,28 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                 className="font-body bg-white text-slate-900 w-full"
                 style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "11pt", lineHeight: "1.5" }}
               />
-            ) : (
-              <pre style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "10pt", lineHeight: "1.15", margin: 0, whiteSpace: 'pre-wrap', color: "#000" }}>
-                {text.replace(/<[^>]*>/g, '').replace(/^[\s\S]*?(?=Dear\s)/i, '')}
-              </pre>
-            )}
-          </div>
-          <div
-            className="w-full"
-            style={{
-              height: '60px',
-              backgroundImage: `url('https://media.base44.com/images/public/6a2ac3b012e45642b1f94671/af960efe6_C6128B0A-C09C-469B-8922-3D3E5F42AC3D.jpg')`,
-              backgroundSize: '100% 100%',
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'center center',
-              backgroundColor: '#ffffff'
-            }}
-          ></div>
+            </div>
+          ) : (() => {
+            const client = buildClientContext(caseItem, evidence);
+            const { receiverLines, senderLines, today } = buildLetterHeaderData(caseItem, client);
+            const reLabels = {
+              letter1: `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+              letter2: `SECOND FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+              letter3: `THIRD AND FINAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
+              accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
+              deny_offer: `REJECTION OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
+              escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem.organisation_name || "Organisation"}`,
+            };
+            return (
+              <LetterDocument
+                receiverLines={receiverLines}
+                senderLines={senderLines}
+                today={today}
+                reSubject={reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`}
+                bodyText={text}
+              />
+            );
+          })()}
         </div>
       ) : (
         <div className="bg-secondary/30 rounded-lg border border-dashed border-border p-10 text-center">

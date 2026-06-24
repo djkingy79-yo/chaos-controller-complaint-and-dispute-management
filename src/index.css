@@ -104,6 +104,36 @@
   }
 }
 
+/* ── LETTER DOCUMENT PRINT STYLES ───────────────────────────────────────── */
+@media print {
+  body {
+    background: white !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .letter-page {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    page-break-after: always;
+  }
+
+  .letter-body {
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 11pt !important;
+    line-height: 1.25 !important;
+  }
+
+  .letter-body p {
+    margin: 0 0 10px 0 !important;
+  }
+}
+
+/* ── LEGACY PRINT BLOCK ───────────────────────────────────────────────────── */
 @media print {
   @page {
     margin: 25mm 25mm 25mm 25mm;
