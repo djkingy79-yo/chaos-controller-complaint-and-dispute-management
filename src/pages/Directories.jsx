@@ -5,14 +5,13 @@ import MyOrganisations from "@/components/directories/MyOrganisations";
 import { Link } from "react-router-dom";
 import {
   Search, Phone, Globe, Plus, Star, ChevronDown, ChevronUp,
-  AlertCircle, MapPin, Scale, Shield, BookOpen, ArrowLeft
+  AlertCircle, MapPin, ArrowLeft, Scale, Shield, BookOpen, Zap
 } from "lucide-react";
 
-// ─── Brand palette — extracted from Chaos Controller logo ────────────────────
-// The golden yellow from "CONTROLLER" text in the logo
-const BRAND    = "#E8A020";   // primary brand gold-yellow
-const BRAND_DK = "#C4830A";   // darker variant for hover / borders
-const BRAND_LT = "#FEF3D0";   // very light tint for backgrounds
+// ─── Brand colours (Chaos Controller gold) ───────────────────────────────────
+const GOLD   = "#E8A020";
+const GOLD_DK = "#D4930A";
+const GOLD_LT = "#FEF3D0";
 
 const HUB_CATEGORY_MAP = {
   banking:        "Banking & Finance",
@@ -29,6 +28,42 @@ const HUB_CATEGORY_MAP = {
   police:         "Police / AVO / Court",
   employment:     "Employment",
   privacy:        "Privacy / Information Access",
+};
+
+// Short blurbs for category cards (compact, not essays)
+const HUB_SHORT = {
+  banking:        "Banks, insurance, super, credit, hardship, chargebacks",
+  tenancy:        "Rental disputes, bonds, repairs, evictions, housing",
+  utilities:      "Electricity, gas, water, billing, disconnections",
+  telco:          "Mobile, internet, NBN, billing, contracts, speeds",
+  legal:          "Free legal advice, court help, referrals nationwide",
+  government:     "Centrelink, ATO, councils, government agencies",
+  health:         "Doctors, hospitals, Medicare, health practitioners",
+  disability:     "NDIS plans, providers, access, advocacy, carers",
+  "human-rights": "Discrimination, harassment, race, sex, disability, age",
+  dv:             "Family violence, safety, protection orders, crisis support",
+  consumer:       "Defective products, refunds, misleading ads, builders",
+  police:         "Police misconduct, AVOs, court preparation, victims",
+  employment:     "Underpayment, unfair dismissal, workplace bullying",
+  privacy:        "Privacy breaches, data misuse, FOI requests, records",
+};
+
+// Top 3 disputes per hub (compact)
+const HUB_TOP_DISPUTES = {
+  banking:        ["Frozen or closed account", "Chargeback refused", "Insurance claim denied"],
+  tenancy:        ["Bond withheld", "Repairs ignored", "Unlawful eviction"],
+  utilities:      ["Incorrect energy bill", "Wrongful disconnection", "Refused payment plan"],
+  telco:          ["Billed for service not received", "No service or outage", "Contract dispute"],
+  legal:          ["Need free legal advice", "Facing court or tribunal", "AVO or protection order"],
+  government:     ["Centrelink payment stopped", "ATO decision wrong", "Agency not responding"],
+  health:         ["Unsafe medical care", "Hospital complaint", "Medicare billing error"],
+  disability:     ["NDIS access denied", "Plan funding cut", "Provider misconduct"],
+  "human-rights": ["Workplace discrimination", "Sexual harassment", "Racial vilification"],
+  dv:             ["Need safety planning", "AVO or DVO help", "Emergency accommodation"],
+  consumer:       ["Product faulty, no refund", "Misleading advertising", "Builder not completing work"],
+  police:         ["Excessive force", "Unlawful arrest", "AVO served — need help"],
+  employment:     ["Underpaid wages", "Unfair dismissal", "Workplace bullying"],
+  privacy:        ["Data shared without consent", "FOI request refused", "Data breach"],
 };
 
 const ALL_STATES = ["All", "National", "NSW", "VIC", "QLD", "SA", "WA", "TAS", "NT", "ACT"];
@@ -51,69 +86,105 @@ const SERVICE_BADGE = {
   "Human Rights":          `bg-[#FEF3D0] text-black border-[#E8A020]`,
   "Government Complaints": `bg-white text-black border-[#E8A020]`,
   "Court Support":         `bg-white text-black border-[#E8A020]`,
-  "Disability Support":    `bg-[#FEF3D0] text-black border-[#E8A020]`,
 };
 function badge(type) { return SERVICE_BADGE[type] || "bg-white text-black border-[#E8A020]"; }
 
-// ─── Category Hub Card ────────────────────────────────────────────────────────
+// ─── Compact Category Card ────────────────────────────────────────────────────
 function HubCard({ hub, onSelect }) {
+  const topDisputes = HUB_TOP_DISPUTES[hub.id] || [];
+  const shortDesc   = HUB_SHORT[hub.id] || hub.covers?.substring(0, 80);
+
   return (
     <motion.button
       onClick={() => onSelect(hub.id)}
-      whileHover={{ scale: 1.01, boxShadow: `0 8px 32px rgba(232,160,32,0.18)` }}
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="text-left rounded-2xl border-2 bg-white overflow-hidden flex flex-col w-full transition-all"
-      style={{ borderColor: "#E8A020", boxShadow: "0 2px 8px rgba(0,0,0,0.07)" }}
+      whileHover={{ y: -2, boxShadow: `0 8px 24px rgba(232,160,32,0.2)` }}
+      className="text-left bg-white rounded-2xl border-2 overflow-hidden flex flex-col w-full transition-all"
+      style={{ borderColor: GOLD }}
     >
-      {/* Title row */}
-      <div className="px-6 pt-6 pb-5 flex items-center gap-4" style={{ borderBottom: "2px solid #E8A020" }}>
-        <span className="text-4xl leading-none">{hub.emoji}</span>
-        <h3 className="font-black text-black text-2xl md:text-3xl uppercase tracking-tight leading-tight">{hub.title}</h3>
+      {/* Icon + Title */}
+      <div className="px-5 pt-5 pb-4">
+        <div className="text-3xl mb-2">{hub.emoji}</div>
+        <h3 className="font-black text-black text-xl md:text-2xl uppercase tracking-tight leading-tight">
+          {hub.title}
+        </h3>
+        <p className="text-base text-black mt-1.5 leading-6">{shortDesc}</p>
       </div>
 
-      {/* WHAT THIS COVERS */}
-      <div className="px-6 pt-5 pb-4">
-        <p className="text-lg font-black uppercase tracking-widest mb-3" style={{ color: "#C4830A" }}>WHAT THIS COVERS</p>
-        <p className="text-lg text-black leading-8">{hub.covers}</p>
-      </div>
+      {/* Gold divider */}
+      <div className="mx-5 h-0.5" style={{ background: GOLD }} />
 
-      {/* COMMON DISPUTES */}
-      <div className="px-6 pb-4">
-        <p className="text-lg font-black uppercase tracking-widest mb-3" style={{ color: "#C4830A" }}>COMMON DISPUTES</p>
-        <ul className="space-y-2">
-          {hub.disputes.map((d, i) => (
-            <li key={i} className="flex items-start gap-3 text-lg text-black leading-7">
-              <span className="font-black mt-0.5 shrink-0" style={{ color: "#E8A020" }}>✓</span>
+      {/* Top disputes */}
+      <div className="px-5 pt-3 pb-3 flex-1">
+        <ul className="space-y-1.5">
+          {topDisputes.map((d, i) => (
+            <li key={i} className="flex items-start gap-2 text-base text-black leading-6">
+              <span className="font-black shrink-0" style={{ color: GOLD }}>✓</span>
               <span>{d}</span>
             </li>
           ))}
         </ul>
       </div>
 
-      {/* WHO CAN HELP */}
-      <div className="px-6 pb-5 flex-1">
-        <p className="text-lg font-black uppercase tracking-widest mb-3" style={{ color: "#C4830A" }}>WHO CAN HELP</p>
-        <div className="flex flex-wrap gap-2">
-          {hub.who.map(w => (
-            <span key={w}
-              className="text-base font-extrabold px-3 py-1 rounded-full border-2 text-black"
-              style={{ background: "#FEF3D0", borderColor: "#E8A020" }}>
-              {w}
-            </span>
-          ))}
-        </div>
+      {/* Who helps — compact pills */}
+      <div className="px-5 pb-3">
+        <p className="text-sm font-black uppercase tracking-widest mb-2" style={{ color: GOLD_DK }}>WHO HELPS</p>
+        <p className="text-sm text-black font-semibold leading-5">
+          {hub.who.slice(0, 4).join(" • ")}
+          {hub.who.length > 4 && <span className="text-black/50"> +{hub.who.length - 4} more</span>}
+        </p>
       </div>
 
-      {/* CTA button */}
-      <div className="px-6 pb-6">
+      {/* CTA */}
+      <div className="px-5 pb-5">
         <div
-          className="w-full py-4 rounded-xl text-black font-black text-lg uppercase tracking-widest text-center transition-opacity hover:opacity-90"
-          style={{ background: "#E8A020" }}>
-          VIEW {hub.title} CONTACTS →
+          className="w-full py-3 rounded-xl text-black font-black text-base uppercase tracking-widest text-center transition-opacity hover:opacity-85"
+          style={{ background: GOLD }}>
+          VIEW HELP OPTIONS →
         </div>
       </div>
     </motion.button>
+  );
+}
+
+// ─── Category Detail Header (shown after clicking) ────────────────────────────
+function HubDetail({ hub }) {
+  return (
+    <div className="rounded-2xl border-2 bg-white p-6 mb-6" style={{ borderColor: GOLD }}>
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-4xl">{hub.emoji}</span>
+        <div>
+          <h2 className="font-black text-black text-2xl md:text-3xl uppercase tracking-tight">{hub.title}</h2>
+          <p className="text-base text-black mt-0.5">{hub.covers}</p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-5 mt-5">
+        <div>
+          <p className="text-base font-black uppercase tracking-widest mb-3" style={{ color: GOLD_DK }}>COMMON DISPUTES</p>
+          <ul className="space-y-2">
+            {hub.disputes.map((d, i) => (
+              <li key={i} className="flex items-start gap-2 text-base text-black leading-6">
+                <span className="font-black shrink-0" style={{ color: GOLD }}>✓</span>
+                <span>{d}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p className="text-base font-black uppercase tracking-widest mb-3" style={{ color: GOLD_DK }}>WHO CAN HELP</p>
+          <div className="flex flex-wrap gap-2">
+            {hub.who.map(w => (
+              <span key={w} className="text-sm font-bold px-3 py-1 rounded-full border-2 text-black"
+                style={{ background: GOLD_LT, borderColor: GOLD }}>
+                {w}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -122,145 +193,136 @@ function ProviderCard({ p, saved, onToggleSave }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div
-      className="flex flex-col rounded-2xl border-2 bg-white overflow-hidden transition-all hover:shadow-lg"
-      style={{ borderColor: "#E8A020", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
-    >
+    <div className="bg-white rounded-2xl border-2 overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-all"
+      style={{ borderColor: GOLD }}>
+
       {p.emergency && (
-        <div className="px-5 py-2 text-base font-black text-black uppercase tracking-widest"
-          style={{ background: "#E8A020" }}>
+        <div className="px-4 py-2 text-sm font-black text-black uppercase tracking-widest text-center"
+          style={{ background: GOLD }}>
           🆘 EMERGENCY / 24-HOUR SERVICE
         </div>
       )}
 
       {/* Header */}
-      <div className="px-6 pt-6 pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-black text-black text-2xl md:text-3xl leading-tight mb-2">{p.name}</h3>
+      <div className="px-5 pt-5 pb-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <h3 className="font-black text-black text-xl md:text-2xl leading-tight">{p.name}</h3>
             {p.fullName !== p.name && (
-              <p className="text-lg text-black leading-snug mb-3">{p.fullName}</p>
+              <p className="text-sm text-black/70 mt-0.5 leading-snug">{p.fullName}</p>
             )}
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className={`text-base font-extrabold px-3 py-1 rounded-full border-2 ${badge(p.serviceType)}`}>
-                {p.serviceType}
-              </span>
-              <span className="flex items-center gap-1.5 text-lg font-black" style={{ color: "#C4830A" }}>
-                <MapPin className="w-4 h-4" />
-                {p.state}
-              </span>
-            </div>
           </div>
-          <button onClick={() => onToggleSave(p.id)} className="shrink-0 transition-colors mt-1">
-            <Star className="w-7 h-7" style={{ fill: saved ? "#E8A020" : "none", color: saved ? "#E8A020" : "#ccc" }} />
+          <button onClick={() => onToggleSave(p.id)} className="shrink-0 ml-2 mt-0.5">
+            <Star className="w-6 h-6" style={{ fill: saved ? GOLD : "none", color: saved ? GOLD : "#ccc" }} />
           </button>
+        </div>
+
+        {/* Badges */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          <span className={`text-sm font-bold px-3 py-1 rounded-full border-2 ${badge(p.serviceType)}`}>
+            {p.serviceType}
+          </span>
+          <span className="text-sm font-bold px-3 py-1 rounded-full border-2 text-black"
+            style={{ background: GOLD_LT, borderColor: GOLD }}>
+            <MapPin className="w-3 h-3 inline mr-1" style={{ color: GOLD_DK }} />
+            {p.state}
+          </span>
         </div>
       </div>
 
       {/* What they do */}
-      <div className="px-6 pb-4 flex-1">
-        <p className="text-lg font-black uppercase tracking-widest mb-2" style={{ color: "#C4830A" }}>WHAT THEY DO</p>
-        <p className="text-lg text-black leading-8">{p.whatTheyDo}</p>
+      <div className="px-5 pb-4 flex-1">
+        <p className="text-base text-black leading-7">{p.whatTheyDo}</p>
       </div>
 
-      {/* Handles chips */}
+      {/* Handles */}
       {p.handles?.length > 0 && (
-        <div className="px-6 pb-4 flex flex-wrap gap-2">
-          {p.handles.map(h => (
-            <span key={h}
-              className="text-base font-bold px-3 py-1 rounded-full border-2 text-black"
-              style={{ background: "#FEF3D0", borderColor: "#E8A020" }}>
-              {h}
-            </span>
-          ))}
+        <div className="px-5 pb-4">
+          <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: GOLD_DK }}>HANDLES</p>
+          <div className="flex flex-wrap gap-1.5">
+            {p.handles.slice(0, 5).map(h => (
+              <span key={h} className="text-sm font-semibold px-2.5 py-1 rounded-lg border text-black"
+                style={{ background: GOLD_LT, borderColor: GOLD }}>
+                {h}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Contact */}
-      <div className="px-6 pb-4 space-y-2">
-        <p className="text-lg font-black uppercase tracking-widest mb-2" style={{ color: "#C4830A" }}>CONTACT</p>
+      <div className="px-5 pb-4 space-y-2" style={{ borderTop: `1.5px solid ${GOLD}` }}>
+        <div className="pt-3" />
         {p.phone && (
-          <a href={`tel:${p.phone}`} className="flex items-center gap-3 text-lg text-black font-bold hover:underline">
-            <Phone className="w-5 h-5 shrink-0" style={{ color: "#E8A020" }} />
-            <span>{p.phone}</span>
+          <a href={`tel:${p.phone}`} className="flex items-center gap-2 text-base text-black font-bold hover:underline">
+            <Phone className="w-4 h-4 shrink-0" style={{ color: GOLD }} />
+            {p.phone}
           </a>
         )}
         {p.website && (
           <a href={p.website} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-3 text-lg text-black font-bold hover:underline">
-            <Globe className="w-5 h-5 shrink-0" style={{ color: "#E8A020" }} />
-            <span className="truncate">{p.website.replace(/^https?:\/\/(www\.)?/, '')}</span>
+            className="flex items-center gap-2 text-base text-black font-bold hover:underline truncate">
+            <Globe className="w-4 h-4 shrink-0" style={{ color: GOLD }} />
+            {p.website.replace(/^https?:\/\/(www\.)?/, '')}
           </a>
         )}
       </div>
 
       {/* Use this when — collapsible */}
       {p.useThisWhen?.length > 0 && (
-        <div style={{ borderTop: "2px solid #E8A020" }}>
+        <>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="w-full flex items-center justify-between px-6 py-4 text-lg font-black text-black uppercase tracking-widest hover:bg-[#FEF3D0] transition-colors"
-          >
+            className="w-full flex items-center justify-between px-5 py-3 text-sm font-black uppercase tracking-widest text-black transition-colors hover:opacity-80"
+            style={{ background: GOLD_LT, borderTop: `1.5px solid ${GOLD}` }}>
             <span className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" style={{ color: "#E8A020" }} />
+              <AlertCircle className="w-4 h-4" style={{ color: GOLD_DK }} />
               USE THIS WHEN
             </span>
-            {expanded
-              ? <ChevronUp className="w-5 h-5" />
-              : <ChevronDown className="w-5 h-5" />}
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
           <AnimatePresence>
             {expanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="overflow-hidden"
-              >
-                <ul className="px-6 pb-5 space-y-2">
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
+                <ul className="px-5 py-4 space-y-2 bg-white">
                   {p.useThisWhen.map((tip, i) => (
-                    <li key={i} className="flex items-start gap-3 text-lg text-black leading-7">
-                      <span className="font-black mt-0.5 shrink-0" style={{ color: "#E8A020" }}>✓</span>
-                      <span>{tip}</span>
+                    <li key={i} className="flex items-start gap-2 text-base text-black leading-6">
+                      <span className="font-black shrink-0" style={{ color: GOLD }}>✓</span>
+                      {tip}
                     </li>
                   ))}
                 </ul>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </>
       )}
 
       {/* Action buttons */}
-      <div className="px-6 pb-6 pt-4 flex flex-wrap gap-3" style={{ borderTop: "2px solid #E8A020" }}>
-        <Link to="/new-case" className="flex-1 min-w-[140px]">
-          <button
-            className="w-full py-4 rounded-xl text-black font-black text-lg uppercase tracking-widest flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
-            style={{ background: "#E8A020" }}>
-            <Plus className="w-5 h-5" /> CREATE CASE
+      <div className="px-5 pb-5 pt-4 flex gap-2 flex-wrap" style={{ borderTop: `1.5px solid ${GOLD}` }}>
+        <Link to="/new-case" className="flex-1">
+          <button className="w-full py-3 rounded-xl text-black font-black text-base uppercase tracking-widest flex items-center justify-center gap-1.5 transition-opacity hover:opacity-85"
+            style={{ background: GOLD }}>
+            <Plus className="w-4 h-4" /> CREATE CASE
           </button>
         </Link>
-        <div className="flex gap-2 flex-wrap">
-          {p.website && (
-            <a href={p.website} target="_blank" rel="noopener noreferrer">
-              <button
-                className="h-14 px-5 rounded-xl border-2 text-black text-lg font-black uppercase tracking-widest bg-white flex items-center gap-2 transition-colors hover:bg-[#FEF3D0]"
-                style={{ borderColor: "#E8A020" }}>
-                <Globe className="w-5 h-5" style={{ color: "#E8A020" }} /> SITE
-              </button>
-            </a>
-          )}
-          {p.phone && (
-            <a href={`tel:${p.phone}`}>
-              <button
-                className="h-14 px-5 rounded-xl border-2 text-black text-lg font-black uppercase tracking-widest bg-white flex items-center gap-2 transition-colors hover:bg-[#FEF3D0]"
-                style={{ borderColor: "#E8A020" }}>
-                <Phone className="w-5 h-5" style={{ color: "#E8A020" }} /> CALL
-              </button>
-            </a>
-          )}
-        </div>
+        {p.website && (
+          <a href={p.website} target="_blank" rel="noopener noreferrer">
+            <button className="py-3 px-4 rounded-xl border-2 text-black text-base font-black uppercase tracking-widest bg-white flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+              style={{ borderColor: GOLD }}>
+              <Globe className="w-4 h-4" style={{ color: GOLD }} /> SITE
+            </button>
+          </a>
+        )}
+        {p.phone && (
+          <a href={`tel:${p.phone}`}>
+            <button className="py-3 px-4 rounded-xl border-2 text-black text-base font-black uppercase tracking-widest bg-white flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+              style={{ borderColor: GOLD }}>
+              <Phone className="w-4 h-4" style={{ color: GOLD }} /> CALL
+            </button>
+          </a>
+        )}
       </div>
     </div>
   );
@@ -269,13 +331,11 @@ function ProviderCard({ p, saved, onToggleSave }) {
 // ─── State filter pill ────────────────────────────────────────────────────────
 function Pill({ label, active, onClick }) {
   return (
-    <button
-      onClick={onClick}
-      className="text-lg font-black px-5 py-2.5 rounded-full border-2 tracking-wide transition-all whitespace-nowrap"
+    <button onClick={onClick}
+      className="text-sm font-black px-4 py-2 rounded-full border-2 tracking-wide transition-all whitespace-nowrap"
       style={active
-        ? { background: "#E8A020", borderColor: "#E8A020", color: "#000" }
-        : { background: "#fff", borderColor: "#ccc", color: "#000" }}
-    >
+        ? { background: "#000", borderColor: "#000", color: GOLD }
+        : { background: "#fff", borderColor: GOLD, color: "#000" }}>
       {label}
     </button>
   );
@@ -301,6 +361,7 @@ export default function Directories() {
     setShowBrowse(true);
     setStateFilter("All");
     setSearch("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleBack = () => {
@@ -333,41 +394,41 @@ export default function Directories() {
   const hubConfig = selectedHub ? CATEGORY_HUBS.find(h => h.id === selectedHub) : null;
 
   const tabs = [
-    { id: "directory", label: "📋 DIRECTORY" },
-    { id: "saved",     label: `⭐ SAVED${savedIds.size > 0 ? ` (${savedIds.size})` : ""}` },
-    { id: "my-orgs",   label: "🏢 MY ORGANISATIONS" },
+    { id: "directory", label: "Directory" },
+    { id: "saved",     label: `Saved${savedIds.size > 0 ? ` (${savedIds.size})` : ""}` },
+    { id: "my-orgs",   label: "My Organisations" },
   ];
 
   return (
-    <div className="pb-20 min-h-screen" style={{ background: "#FFFDF7" }}>
+    <div className="pb-16 min-h-screen" style={{ background: "#FFFDF7" }}>
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <div
-        className="rounded-2xl bg-white px-7 py-8 mb-8 shadow-md border-2"
-        style={{ borderColor: "#E8A020" }}>
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-4xl">⚡</span>
-          <h1 className="font-black text-black text-4xl md:text-5xl uppercase tracking-tighter">TAKE BACK CONTROL</h1>
+      <div className="rounded-2xl bg-black px-6 py-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Zap className="w-6 h-6" style={{ color: GOLD }} />
+            <h1 className="font-black text-white text-2xl md:text-3xl uppercase tracking-tight">TAKE BACK CONTROL</h1>
+          </div>
+          <p className="text-base text-white/80 leading-6">
+            Find who handles your complaint. Build your case. Escalate properly.
+          </p>
         </div>
-        <p className="font-black text-xl md:text-2xl uppercase tracking-wide mb-3" style={{ color: "#C4830A" }}>
-          Find the organisation responsible. Know your rights. Escalate your complaint.
-        </p>
-        <p className="text-black text-xl md:text-2xl leading-9">
-          Australia-wide complaint, dispute, advocacy and referral directory — {providers.length}+ providers across every state and territory.
-        </p>
+        <Link to="/new-case" className="shrink-0">
+          <button className="px-6 py-3 rounded-xl text-black font-black text-base uppercase tracking-widest transition-opacity hover:opacity-85"
+            style={{ background: GOLD }}>
+            START A CASE →
+          </button>
+        </Link>
       </div>
 
       {/* ── Tabs ──────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-2 mb-8">
+      <div className="flex gap-2 mb-6">
         {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className="flex-1 px-6 py-5 rounded-xl text-xl font-black uppercase tracking-widest border-2 transition-all"
+          <button key={tab.id} onClick={() => { setActiveTab(tab.id); setShowBrowse(false); setSelectedHub(null); }}
+            className="flex-1 py-3 rounded-xl border-2 text-base font-black uppercase tracking-widest transition-all"
             style={activeTab === tab.id
-              ? { background: "#E8A020", borderColor: "#E8A020", color: "#000" }
-              : { background: "#fff", borderColor: "#E8A020", color: "#000" }}
-          >
+              ? { background: "#000", borderColor: "#000", color: GOLD }
+              : { background: "#fff", borderColor: GOLD, color: "#000" }}>
             {tab.label}
           </button>
         ))}
@@ -376,103 +437,92 @@ export default function Directories() {
       {/* ══ TAB: DIRECTORY ════════════════════════════════════════════════ */}
       {activeTab === "directory" && (
         <>
-          {/* CATEGORY HUB CARDS */}
+          {/* CATEGORY HUB GRID */}
           {!showBrowse && (
             <>
-              <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                <div>
-                  <p className="text-lg font-black uppercase tracking-widest mb-1" style={{ color: "#C4830A" }}>WHAT IS YOUR ISSUE?</p>
-                  <h2 className="font-black text-black text-3xl md:text-4xl uppercase tracking-tight">Choose your dispute type</h2>
-                </div>
-                <button
-                  onClick={() => setShowBrowse(true)}
-                  className="text-lg font-black text-black border-2 bg-white px-5 py-3 rounded-xl hover:bg-[#FEF3D0] transition-colors"
-                  style={{ borderColor: "#E8A020" }}>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h2 className="font-black text-black text-xl md:text-2xl uppercase tracking-tight">
+                  What's your issue?
+                </h2>
+                <button onClick={() => setShowBrowse(true)}
+                  className="text-sm font-black px-4 py-2 rounded-xl border-2 bg-white text-black uppercase tracking-widest hover:opacity-80 transition-opacity"
+                  style={{ borderColor: GOLD }}>
                   Browse all {providers.length} →
                 </button>
               </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {CATEGORY_HUBS.map(hub => (
                   <HubCard key={hub.id} hub={hub} onSelect={handleSelectHub} />
                 ))}
               </div>
-              <div className="mt-8 text-center">
-                <button
-                  onClick={() => setShowBrowse(true)}
-                  className="text-xl text-black font-black hover:underline"
-                  style={{ color: "#C4830A" }}>
-                  Browse full directory without filtering →
-                </button>
-              </div>
             </>
           )}
 
-          {/* PROVIDER LIST */}
+          {/* PROVIDER BROWSE VIEW */}
           {showBrowse && (
             <>
-              <div className="flex items-center gap-4 mb-6 flex-wrap">
-                <button
-                  onClick={handleBack}
-                  className="flex items-center gap-2 text-xl text-black font-black border-2 bg-white px-5 py-3 rounded-xl hover:bg-[#FEF3D0] transition-colors"
-                  style={{ borderColor: "#E8A020" }}>
-                  <ArrowLeft className="w-5 h-5" /> BACK
+              {/* Back + breadcrumb */}
+              <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <button onClick={handleBack}
+                  className="flex items-center gap-2 text-base font-black px-4 py-2.5 rounded-xl border-2 bg-white text-black uppercase tracking-widest hover:opacity-80 transition-opacity"
+                  style={{ borderColor: GOLD }}>
+                  <ArrowLeft className="w-4 h-4" /> CATEGORIES
                 </button>
                 {hubConfig && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{hubConfig.emoji}</span>
-                    <h2 className="font-black text-black text-2xl md:text-3xl uppercase tracking-tight">{hubConfig.title}</h2>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{hubConfig.emoji}</span>
+                    <span className="font-black text-black text-xl uppercase tracking-tight">{hubConfig.title}</span>
                   </div>
                 )}
-                <span
-                  className="ml-auto text-lg font-black border-2 px-4 py-2 rounded-xl"
-                  style={{ color: "#C4830A", borderColor: "#E8A020", background: "#FEF3D0" }}>
+                <span className="ml-auto text-sm font-black px-3 py-1.5 rounded-lg border-2"
+                  style={{ color: GOLD_DK, borderColor: GOLD, background: GOLD_LT }}>
                   {filtered.length} providers
                 </span>
               </div>
 
+              {/* Hub detail block (full explanation) */}
+              {hubConfig && <HubDetail hub={hubConfig} />}
+
               {/* Search */}
-              <div className="relative mb-5">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-black/40" />
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search name, service, state..."
-                  className="w-full pl-14 pr-6 py-5 rounded-xl border-2 bg-white text-xl text-black placeholder-black/40 focus:outline-none transition-colors"
-                  style={{ borderColor: "#E8A020" }}
-                />
+              <div className="relative mb-4">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40" />
+                <input value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="Search providers..."
+                  className="w-full pl-12 pr-5 py-4 rounded-xl border-2 bg-white text-lg text-black placeholder-black/40 focus:outline-none"
+                  style={{ borderColor: GOLD }} />
               </div>
 
-              {/* State pills */}
-              <div className="flex items-center gap-3 flex-wrap mb-8">
-                <span className="text-lg font-black uppercase tracking-widest shrink-0" style={{ color: "#C4830A" }}>STATE:</span>
+              {/* State filter pills */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className="text-sm font-black uppercase tracking-widest self-center shrink-0" style={{ color: GOLD_DK }}>STATE:</span>
                 {ALL_STATES.map(s => <Pill key={s} label={s} active={stateFilter === s} onClick={() => setStateFilter(s)} />)}
               </div>
 
+              {/* Results */}
               {filtered.length === 0 ? (
-                <div className="text-center py-20 rounded-2xl border-2 bg-white shadow-sm" style={{ borderColor: "#E8A020" }}>
-                  <Search className="w-12 h-12 mx-auto mb-4 text-black/30" />
-                  <p className="font-black text-black text-2xl">No results found</p>
-                  <p className="text-xl text-black mt-2">Try adjusting your search or filters.</p>
+                <div className="text-center py-16 rounded-2xl border-2 bg-white" style={{ borderColor: GOLD }}>
+                  <Search className="w-10 h-10 mx-auto mb-3 text-black/30" />
+                  <p className="font-black text-black text-xl">No results found</p>
+                  <p className="text-base text-black/60 mt-1">Try adjusting your search or filters.</p>
                 </div>
               ) : selectedHub ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filtered.map(p => <ProviderCard key={p.id} p={p} saved={savedIds.has(p.id)} onToggleSave={toggleSave} />)}
                 </div>
               ) : (
-                <div className="space-y-12">
+                <div className="space-y-10">
                   {Object.entries(grouped).map(([cat, catProviders]) => (
                     <div key={cat}>
-                      <div className="flex items-center gap-4 mb-5">
-                        <div className="h-0.5 flex-1" style={{ background: "#E8A020" }} />
-                        <h3 className="font-black text-black text-2xl uppercase tracking-wide px-2">{cat}</h3>
-                        <span
-                          className="text-lg font-black px-3 py-1 rounded-lg border-2"
-                          style={{ color: "#C4830A", borderColor: "#E8A020", background: "#FEF3D0" }}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="h-0.5 flex-1" style={{ background: GOLD }} />
+                        <h3 className="font-black text-black text-lg uppercase tracking-wide">{cat}</h3>
+                        <span className="text-sm font-black px-2.5 py-1 rounded-lg border-2"
+                          style={{ color: GOLD_DK, borderColor: GOLD, background: GOLD_LT }}>
                           {catProviders.length}
                         </span>
-                        <div className="h-0.5 flex-1" style={{ background: "#E8A020" }} />
+                        <div className="h-0.5 flex-1" style={{ background: GOLD }} />
                       </div>
-                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {catProviders.map(p => <ProviderCard key={p.id} p={p} saved={savedIds.has(p.id)} onToggleSave={toggleSave} />)}
                       </div>
                     </div>
@@ -487,14 +537,14 @@ export default function Directories() {
       {/* ══ TAB: SAVED ════════════════════════════════════════════════════ */}
       {activeTab === "saved" && (
         savedProviders.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {savedProviders.map(p => <ProviderCard key={p.id} p={p} saved={true} onToggleSave={toggleSave} />)}
           </div>
         ) : (
-          <div className="text-center py-20 rounded-2xl border-2 bg-white shadow-sm" style={{ borderColor: "#E8A020" }}>
-            <Star className="w-12 h-12 mx-auto mb-4 text-black/30" />
-            <p className="font-black text-black text-2xl">No saved providers yet</p>
-            <p className="text-xl text-black mt-2">Click the ★ on any card to save it here.</p>
+          <div className="text-center py-16 rounded-2xl border-2 bg-white" style={{ borderColor: GOLD }}>
+            <Star className="w-10 h-10 mx-auto mb-3 text-black/30" />
+            <p className="font-black text-black text-xl">No saved providers yet</p>
+            <p className="text-base text-black/60 mt-1">Tap ★ on any card to save it here.</p>
           </div>
         )
       )}
@@ -502,17 +552,16 @@ export default function Directories() {
       {/* ══ TAB: MY ORGANISATIONS ═════════════════════════════════════════ */}
       {activeTab === "my-orgs" && <MyOrganisations />}
 
-      {/* ── Footer disclaimer ─────────────────────────────────────────────── */}
-      <div
-        className="rounded-xl bg-white p-6 mt-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 border-2 shadow-sm"
-        style={{ borderColor: "#E8A020" }}>
-        <p className="text-lg text-black italic flex-1">
-          <strong className="not-italic font-black">Disclaimer:</strong> Chaos Controller provides educational and document management assistance only — not legal advice. Always verify contact details on the provider's official website.
+      {/* ── Footer ────────────────────────────────────────────────────────── */}
+      <div className="rounded-xl bg-white p-5 mt-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-2 shadow-sm"
+        style={{ borderColor: GOLD }}>
+        <p className="text-sm text-black/70 italic flex-1">
+          <strong className="not-italic font-black text-black">Disclaimer:</strong> Chaos Controller provides educational and document management assistance only — not legal advice. Always verify contact details on the provider's official website.
         </p>
-        <div className="flex items-center gap-6 shrink-0">
-          <Link to="/terms"   className="text-lg text-black font-black hover:underline flex items-center gap-1.5"><Scale className="w-5 h-5" style={{ color: "#E8A020" }} /> Terms</Link>
-          <Link to="/privacy" className="text-lg text-black font-black hover:underline flex items-center gap-1.5"><Shield className="w-5 h-5" style={{ color: "#E8A020" }} /> Privacy</Link>
-          <Link to="/help"    className="text-lg text-black font-black hover:underline flex items-center gap-1.5"><BookOpen className="w-5 h-5" style={{ color: "#E8A020" }} /> Help</Link>
+        <div className="flex items-center gap-5 shrink-0">
+          <Link to="/terms"   className="text-sm text-black font-black hover:underline flex items-center gap-1"><Scale className="w-4 h-4" style={{ color: GOLD }} /> Terms</Link>
+          <Link to="/privacy" className="text-sm text-black font-black hover:underline flex items-center gap-1"><Shield className="w-4 h-4" style={{ color: GOLD }} /> Privacy</Link>
+          <Link to="/help"    className="text-sm text-black font-black hover:underline flex items-center gap-1"><BookOpen className="w-4 h-4" style={{ color: GOLD }} /> Help</Link>
         </div>
       </div>
     </div>
