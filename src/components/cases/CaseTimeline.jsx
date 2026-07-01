@@ -25,7 +25,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/reports/ReportDocument";
+import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { toast } from "sonner";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 
@@ -141,17 +143,19 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
 
   const buildTimelineBlob = async () => {
     if (!sorted || sorted.length === 0) throw new Error('No timeline events to export.');
-    const body = sorted.map(ev => {
+    const bullets = sorted.map(ev => {
       const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMM yyyy") : 'Undated';
-      return `${dateStr} — ${ev.title || 'Event'}\nType: ${(ev.event_type || '').replace(/_/g, ' ')}\n${ev.description || ''}`;
-    }).join("\n\n");
-    const blob = await generateChaosDocumentPDF({
-      documentType: 'general',
-      title: 'Case Timeline',
-      body: `CASE TIMELINE (${sorted.length} events)\n\n${body}`,
-      includeHeader: true,
-      includeFooter: true,
+      return `${dateStr} — ${ev.title || 'Event'} (${(ev.event_type || '').replace(/_/g, ' ')})${ev.description ? ': ' + ev.description : ''}`;
     });
+    const blob = await renderDocToBlob(
+      <ReportDocument
+        title="Case Timeline"
+        subtitle={caseItem?.title}
+        generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
+        sections={[{ heading: `Timeline (${sorted.length} events)`, bullets }]}
+      />,
+      { caseId }
+    );
     if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
     return blob;
   };

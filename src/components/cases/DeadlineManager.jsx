@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { differenceInDays, format } from "date-fns";
 import { Sparkles, Plus, Loader2, Clock, AlertTriangle, CheckCircle2, Trash2, Download, Printer } from "lucide-react";
 import { toast } from "sonner";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/reports/ReportDocument";
+import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 
 export default function DeadlineManager({ caseItem, evidence = [] }) {
@@ -141,20 +143,20 @@ Return as JSON array only. Each deadline must have:
   const buildDeadlinesBlob = async () => {
     if (!deadlines.length) throw new Error('No deadlines to export.');
     const sortedDl = [...deadlines].sort((a, b) => new Date(a.deadline_date || 0) - new Date(b.deadline_date || 0));
-    const body = sortedDl.map(d => {
+    const bullets = sortedDl.map(d => {
       const daysLeft = d.deadline_date ? differenceInDays(new Date(d.deadline_date), new Date()) : null;
       const urgency = daysLeft === null ? 'No date' : daysLeft < 0 ? `OVERDUE by ${Math.abs(daysLeft)} days` : daysLeft === 0 ? 'DUE TODAY' : `${daysLeft} days remaining`;
-      return `${d.title}\nDue: ${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : 'No date'} | ${urgency}\nType: ${(d.deadline_type || '').replace(/_/g, ' ')} | Responsibility: ${d.responsibility || 'user'}\n${d.notes || ''}`;
-    }).join('\n\n');
-    const blob = await generateChaosDocumentPDF({
-      documentType: 'general',
-      title: 'Deadline War Room',
-      matter: caseItem.title,
-      date: format(new Date(), 'd MMMM yyyy'),
-      body: `DEADLINES (${sortedDl.length} items)\n\n${body}`,
-      includeHeader: true,
-      includeFooter: true,
+      return `${d.title} — Due ${d.deadline_date ? format(new Date(d.deadline_date), 'd MMM yyyy') : 'No date'} (${urgency}) — ${(d.deadline_type || '').replace(/_/g, ' ')} — ${d.responsibility || 'user'}${d.notes ? ' — ' + d.notes : ''}`;
     });
+    const blob = await renderDocToBlob(
+      <ReportDocument
+        title="Deadline War Room"
+        subtitle={caseItem.title}
+        generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
+        sections={[{ heading: `Deadlines (${sortedDl.length} items)`, bullets }]}
+      />,
+      { caseId: caseItem?.id }
+    );
     if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
     return blob;
   };

@@ -7,7 +7,9 @@ import {
   Clock, Mail, Download, ShieldAlert, AlertTriangle, Sparkles, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/reports/ReportDocument";
+import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { toast } from "sonner";
 import { useToast } from "@/components/ui/use-toast";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail } from "@/lib/pdfDiagnostics";
@@ -266,11 +268,16 @@ function buildDashboardPDFBody(caseItem, executiveSummary, evidence, events, dea
 
 // ── Shared PDF action helper ──────────────────────────────────────────────────
 
-async function runPDFAction({ action, tab, title, body, filename, onBlob }) {
+async function runPDFAction({ action, tab, title, body, caseId, onBlob }) {
   pdfDiagStart({ tab, action, hasData: !!body });
-  const blob = await generateChaosDocumentPDF({
-    documentType: 'general', title, body, includeHeader: true, includeFooter: true,
-  });
+  const blob = await renderDocToBlob(
+    <ReportDocument
+      title={title}
+      generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
+      sections={[{ heading: title, paragraphs: [body] }]}
+    />,
+    { caseId }
+  );
   if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
   pdfDiagBlobCreated({ tab, action, blob });
   if (onBlob) await onBlob(blob);
@@ -342,7 +349,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
       await runPDFAction({
         action: 'Download', tab: 'Dashboard PDF',
         title: `Case Dashboard Report — ${caseItem.title}`,
-        body, filename: `Dashboard_${today}.pdf`,
+        body, caseId: caseItem?.id,
         onBlob: (blob) => downloadPDFBlob(blob, `Dashboard_${today}.pdf`),
       });
     } catch (err) {
@@ -359,7 +366,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
       const blob = await runPDFAction({
         action: 'Print', tab: 'Dashboard PDF',
         title: `Case Dashboard Report — ${caseItem.title}`,
-        body,
+        body, caseId: caseItem?.id,
       });
       const opened = await openPDFForPrint(blob, `Dashboard_${today}.pdf`);
       if (!opened) {
@@ -383,7 +390,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
       await runPDFAction({
         action: 'Download', tab: 'AI Summary PDF',
         title: `AI Case Summary — ${caseItem.title}`,
-        body,
+        body, caseId: caseItem?.id,
         onBlob: (blob) => downloadPDFBlob(blob, `AI_Summary_${today}.pdf`),
       });
     } catch (err) {
@@ -401,7 +408,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
       const blob = await runPDFAction({
         action: 'Print', tab: 'AI Summary PDF',
         title: `AI Case Summary — ${caseItem.title}`,
-        body,
+        body, caseId: caseItem?.id,
       });
       const opened = await openPDFForPrint(blob, `AI_Summary_${today}.pdf`);
       if (!opened) {

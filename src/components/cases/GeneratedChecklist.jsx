@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { CheckCircle2, AlertTriangle, XCircle, Lock, Upload, Trash2, Calendar, Target, FileText, Download, Printer, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/reports/ReportDocument";
+import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { toast } from "sonner";
 
 const statusConfig = {
@@ -30,18 +32,20 @@ export default function GeneratedChecklist({ caseId, caseItem }) {
   const [pdfLoading, setPdfLoading] = useState(null);
 
   const buildChecklistBlob = async (items) => {
-    const body = items.map(item => {
+    const bullets = items.map(item => {
       const tick = item.status === 'complete' ? '[x]' : '[ ]';
       const pri = (item.priority || 'medium').toUpperCase();
-      return `${tick} [${pri}] ${item.label}\nCategory: ${(item.category || '').replace(/_/g, ' ')} | Status: ${(item.status || '').toUpperCase()}${item.notes ? '\n' + item.notes : ''}`;
-    }).join('\n\n');
-    const blob = await generateChaosDocumentPDF({
-      documentType: 'general',
-      title: 'Smart Checklist',
-      body: `SMART CHECKLIST (${items.length} items)\n\n${body}`,
-      includeHeader: true,
-      includeFooter: true,
+      return `${tick} [${pri}] ${item.label} — ${(item.category || '').replace(/_/g, ' ')} — ${(item.status || '').toUpperCase()}${item.notes ? ' — ' + item.notes : ''}`;
     });
+    const blob = await renderDocToBlob(
+      <ReportDocument
+        title="Smart Checklist"
+        subtitle={caseItem?.title}
+        generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
+        sections={[{ heading: `Checklist (${items.length} items)`, bullets }]}
+      />,
+      { caseId }
+    );
     if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
     return blob;
   };
