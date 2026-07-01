@@ -155,13 +155,24 @@ export function buildSections(caseItem, evidence, events, deadlines, checklistIt
 export default function CaseDashboardReport({ caseItem, evidence, events }) {
   const [checklistItems, setChecklistItems] = useState([]);
   const [deadlines, setDeadlines] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [busy, setBusy] = useState(null);
   const reportRef = useRef(null);
 
+  // Load checklist + deadlines BEFORE allowing Download/Print — guarantees the
+  // exported PDF always matches what's shown in the on-page preview below,
+  // instead of racing ahead and capturing an incomplete report.
   useEffect(() => {
     if (!caseItem?.id) return;
-    base44.entities.ChecklistItem.filter({ case_id: caseItem.id }).then(setChecklistItems).catch(() => {});
-    base44.entities.Deadline.filter({ case_id: caseItem.id }).then(setDeadlines).catch(() => {});
+    setDataLoaded(false);
+    Promise.all([
+      base44.entities.ChecklistItem.filter({ case_id: caseItem.id }).catch(() => []),
+      base44.entities.Deadline.filter({ case_id: caseItem.id }).catch(() => []),
+    ]).then(([checklist, dl]) => {
+      setChecklistItems(checklist);
+      setDeadlines(dl);
+      setDataLoaded(true);
+    });
   }, [caseItem?.id]);
 
   const sections = buildSections(caseItem, evidence, events, deadlines, checklistItems);
@@ -215,13 +226,13 @@ export default function CaseDashboardReport({ caseItem, evidence, events }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleDownload} disabled={!!busy} className="flex-1 gap-2 h-10 font-bold" size="lg">
+          <Button onClick={handleDownload} disabled={!!busy || !dataLoaded} className="flex-1 gap-2 h-10 font-bold" size="lg">
             {busy === 'download' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            {busy === 'download' ? 'Generating…' : 'Download Case Report PDF'}
+            {busy === 'download' ? 'Generating…' : !dataLoaded ? 'Loading case data…' : 'Download Case Report PDF'}
           </Button>
-          <Button variant="outline" onClick={handlePrint} disabled={!!busy} className="flex-1 gap-2 h-10 font-bold" size="lg">
+          <Button variant="outline" onClick={handlePrint} disabled={!!busy || !dataLoaded} className="flex-1 gap-2 h-10 font-bold" size="lg">
             {busy === 'print' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
-            {busy === 'print' ? 'Generating…' : 'Print Case Report PDF'}
+            {busy === 'print' ? 'Generating…' : !dataLoaded ? 'Loading case data…' : 'Print Case Report PDF'}
           </Button>
         </div>
       </div>

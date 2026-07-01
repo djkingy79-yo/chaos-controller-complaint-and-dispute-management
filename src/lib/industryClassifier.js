@@ -237,6 +237,21 @@ export function getEscalationBody(industry) {
   return ESCALATION_BODIES[industry] || ESCALATION_BODIES.other;
 }
 
+// Single source of truth for each category's external escalation body URL —
+// used anywhere the app needs to send the user to lodge an external complaint.
+// Never hardcode a separate category→body mapping elsewhere.
+const ESCALATION_URLS = {
+  banking: "https://www.afca.org.au/make-a-complaint/",
+  insurance: "https://www.afca.org.au/make-a-complaint/",
+  telco: "https://www.tio.com.au/complaints",
+  utilities: "https://www.ewon.com.au/page/making-a-complaint/complaint-forms",
+  tenancy: "https://www.ncat.nsw.gov.au/ncat/how-to-apply.html",
+};
+
+export function getEscalationUrl(industry) {
+  return ESCALATION_URLS[industry] || null;
+}
+
 /**
  * Detect industry from a case object + optional evidence list (legacy support).
  */

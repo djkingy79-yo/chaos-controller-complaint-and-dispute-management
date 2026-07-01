@@ -61,8 +61,10 @@ function buildPaginatedPages(pageEl) {
   const headerH = headerEl.getBoundingClientRect().height || 0;
   const footerH = footerEl.getBoundingClientRect().height || 0;
   const vPad = verticalPadding(contentEl);
-  const availableHeightPage1 = A4_PX_HEIGHT - headerH - footerH - vPad - SAFETY_PX;
-  const availableHeightNextPages = A4_PX_HEIGHT - footerH - vPad - SAFETY_PX;
+  // Floor of 250px guards against a bad measurement ever collapsing the
+  // printable area to near-zero and cascading into a run of near-blank pages.
+  const availableHeightPage1 = Math.max(A4_PX_HEIGHT - headerH - footerH - vPad - SAFETY_PX, 250);
+  const availableHeightNextPages = Math.max(A4_PX_HEIGHT - footerH - vPad - SAFETY_PX, 250);
 
   const allChildren = Array.from(contentEl.children);
   const bodyIdx = allChildren.findIndex((c) => c.getAttribute && c.getAttribute('data-paginate-body') === 'true');
@@ -73,38 +75,45 @@ function buildPaginatedPages(pageEl) {
 
   const headHeight = headBlocks.reduce((sum, b) => sum + b.getBoundingClientRect().height, 0);
 
+  // Group each heading together with the unit immediately following it so a
+  // heading can NEVER be split from its first line of content — this removes
+  // the old "orphan heading" heuristic (the source of near-blank pages) and
+  // replaces it with a hard guarantee: a group is placed as a whole or moved
+  // to the next page as a whole.
+  const groups = [];
+  for (let i = 0; i < atomicUnits.length; i++) {
+    const unit = atomicUnits[i];
+    const isHeading = unit.getAttribute && unit.getAttribute('data-heading') === 'true';
+    if (isHeading && atomicUnits[i + 1]) {
+      groups.push([unit, atomicUnits[i + 1]]);
+      i++; // consumed the next unit as part of this group
+    } else {
+      groups.push([unit]);
+    }
+  }
+
   const pageGroups = [];
   let current = [];
   let currentHeight = headHeight;
   let isFirstPage = true;
 
-  atomicUnits.forEach((unit, idx) => {
-    const h = unit.getBoundingClientRect().height;
-    const isHeading = unit.getAttribute && unit.getAttribute('data-heading') === 'true';
-    const isLastUnit = idx === atomicUnits.length - 1;
+  groups.forEach((group) => {
+    const groupHeight = group.reduce((sum, u) => sum + u.getBoundingClientRect().height, 0);
     const availableHeight = isFirstPage ? availableHeightPage1 : availableHeightNextPages;
 
-    if (currentHeight + h > availableHeight && current.length > 0) {
+    if (currentHeight + groupHeight > availableHeight && current.length > 0) {
       pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current, isFirstPage });
       current = [];
       currentHeight = 0;
       isFirstPage = false;
     }
 
-    // Never leave a heading alone at the bottom of a page with its content
-    // pushed to the next page — move the heading itself down instead.
-    const remaining = (isFirstPage ? availableHeightPage1 : availableHeightNextPages) - currentHeight - h;
-    if (isHeading && !isLastUnit && current.length > 0 && remaining < 40) {
-      pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current, isFirstPage });
-      current = [];
-      currentHeight = 0;
-      isFirstPage = false;
-    }
-
-    current.push(unit);
-    currentHeight += h;
+    current.push(...group);
+    currentHeight += groupHeight;
   });
-  pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current, isFirstPage });
+  if (current.length > 0) {
+    pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current, isFirstPage });
+  }
 
   return pageGroups.map(({ head, body, isFirstPage: isFirst }) => {
     const clonedPage = pageEl.cloneNode(false);

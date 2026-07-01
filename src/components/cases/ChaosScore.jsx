@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertTriangle, XCircle, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { computeNoResponse } from "@/lib/disputeStageLogic";
+import { getEscalationUrl } from "@/lib/industryClassifier";
 
 /**
  * Matter Strength scoring (total: 100%)
@@ -165,14 +166,12 @@ export default function ChaosScore({ caseItem, evidence, events }) {
   const { score, items, readyToEscalate, noResponseAfterFirst, escalationCriteriaMet } = scoreFromCase(caseItem, evidence, events);
 
   const handleEscalate = () => {
-    if (caseItem.category === "banking" || caseItem.category === "insurance") {
-      window.open("https://www.afca.org.au/make-a-complaint/", "_blank");
-    } else if (caseItem.category === "telco") {
-      window.open("https://www.tio.com.au/complaints", "_blank");
-    } else if (caseItem.category === "utilities") {
-      window.open("https://www.ewon.com.au/page/making-a-complaint/complaint-forms", "_blank");
-    } else if (caseItem.category === "tenancy") {
-      window.open("https://www.ncat.nsw.gov.au/ncat/how-to-apply.html", "_blank");
+    // Single source of truth — the industry classifier — decides the
+    // escalation body/URL for this case's category. No separate/hardcoded
+    // category mapping lives here.
+    const url = getEscalationUrl(caseItem.category);
+    if (url) {
+      window.open(url, "_blank");
     } else {
       navigate(`/case/${caseItem.id}?tab=print`);
     }
