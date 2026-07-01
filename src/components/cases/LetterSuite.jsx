@@ -24,6 +24,7 @@ import LetterDocument, { LetterPreviewWrapper } from "@/components/letters/Lette
 import MarkSentDialog from "@/components/cases/MarkSentDialog.jsx";
 import { markLetterSent } from "@/lib/letterTracking";
 import { LETTER_SENT_FIELD_MAP, getLetterReSubject } from "@/lib/disputeStageLogic";
+import { getEscalationBody } from "@/lib/industryClassifier";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -65,6 +66,11 @@ const LETTER_TYPES = [
 ];
 
 function buildPrompt(type, caseItem, client, today, evidenceList) {
+  // Single source of truth for the escalation body — the case's own
+  // classifier-assigned value, falling back to the classifier's own
+  // category lookup (never an ad hoc "AFCA/TIO/NCAT" style generic string).
+  const escalationBody = caseItem.escalation_body || getEscalationBody(caseItem.category);
+
   // Build evidence summary for injection into prompts
   const evidenceSummary = (evidenceList || []).length > 0
     ? (evidenceList || []).map(ev => {
@@ -115,7 +121,7 @@ CASE DETAILS:
 - Issue Type Summary: ${caseItem.issue_summary}
 - Full Complaint Details: ${caseItem.issue_details}
 - Desired Outcome: ${caseItem.desired_outcome}
-- Escalation Body: ${caseItem.escalation_body || "the relevant ombudsman"}
+- Escalation Body: ${escalationBody}
 - Today's Date: ${today}
 
 EVIDENCE ON FILE (${(evidenceList || []).length} documents):
@@ -149,7 +155,7 @@ ${letterHistory}`;
   [Specific resolution you are seeking. Firm deadline.]
 
   NEXT STEPS
-  [State you will escalate to ${caseItem.escalation_body || "the relevant ombudsman"} if not resolved within the deadline]
+  [State you will escalate to ${escalationBody} if not resolved within the deadline]
 
   LEGAL TONE RULES — MANDATORY:
   - Do NOT use "scam operation", "deliberately sabotaging", "fraudulent conduct", "designed to extract money through deception" unless user evidence clearly confirms fraud.
@@ -216,7 +222,7 @@ ${letterHistory}`;
   - SECTION 4: Evidence — reference each document on file by name. State what it proves.
   - SECTION 5: Legal/regulatory obligations — reference the relevant Australian consumer laws, industry codes, and the organisation's own obligations.
   - SECTION 6: Demand — state the specific desired outcome. Give a firm 21-day response deadline.
-  - SECTION 7: Escalation warning — state that if unresolved, you will escalate to ${caseItem.escalation_body || "the relevant ombudsman"}.
+  - SECTION 7: Escalation warning — state that if unresolved, you will escalate to ${escalationBody}.
   ${formats}
 
   FORMAT EXAMPLE (plain text - NO HTML):
@@ -254,7 +260,7 @@ ${letterHistory}`;
   - SECTION 3: Catalogue the organisation's failures — delayed response, inadequate investigation, breach of their own complaints policy, breach of industry codes.
   - SECTION 4: Updated impact — state how the ongoing failure to resolve has compounded the original harm.
   - SECTION 5: Reference each document on file as evidence. State what it proves about the organisation's conduct.
-  - SECTION 6: Final 14-day ultimatum — specific resolution required. State you are preparing to escalate to ${caseItem.escalation_body || "the relevant ombudsman"} and have all documentation ready.
+  - SECTION 6: Final 14-day ultimatum — specific resolution required. State you are preparing to escalate to ${escalationBody} and have all documentation ready.
   ${formats}
 
   FORMAT EXAMPLE (plain text - NO HTML):
@@ -285,14 +291,14 @@ ${letterHistory}`;
     return `${base}
 
   LETTER TYPE: Third and Final Complaint Letter (Final Demand)
-  - This is the LAST internal letter before escalating to ${caseItem.escalation_body || "the external ombudsman/tribunal"}.
+  - This is the LAST internal letter before escalating to ${escalationBody}.
   - Write a DETAILED, SUBSTANTIVE letter — minimum 5 substantial paragraphs.
   - SECTION 1: State that this is the third and final letter. Reference the first and second complaints, their dates, and the organisation's failure to resolve.
   - SECTION 2: Comprehensive summary of the entire dispute — timeline, all key facts, all amounts, all interactions.
   - SECTION 3: Complete evidence index — list every document on file and what it proves. Make clear the evidence is overwhelming.
   - SECTION 4: Legal analysis — cite Australian Consumer Law, the relevant industry Code of Practice, and any specific regulations the organisation has breached.
   - SECTION 5: Harm suffered — full account of financial loss, practical impact, and distress caused by the organisation's conduct.
-  - SECTION 6: Final 7-day ultimatum. If not resolved, you will immediately lodge with ${caseItem.escalation_body || "the relevant external body"}, pursue all available legal remedies, and consider media disclosure where permitted.
+  - SECTION 6: Final 7-day ultimatum. If not resolved, you will immediately lodge with ${escalationBody}, pursue all available legal remedies, and consider media disclosure where permitted.
   - Very firm, authoritative, evidence-focused tone. The organisation should understand this is their final opportunity.
   ${formats}
 
@@ -372,7 +378,7 @@ ${letterHistory}`;
     - Does not meet the desired outcome: "${caseItem.desired_outcome}"
   - SECTION 3: Evidence — reference each document on file and how it supports the higher valuation of your claim.
   - SECTION 4: Counter-proposal — state specifically what resolution you require. Be precise about amounts, timelines, and conditions.
-  - SECTION 5: Ultimatum — give the organisation 14 days to provide an improved and acceptable offer. State that if they fail to do so, you will immediately escalate to ${caseItem.escalation_body || "the relevant ombudsman"}.
+  - SECTION 5: Ultimatum — give the organisation 14 days to provide an improved and acceptable offer. State that if they fail to do so, you will immediately escalate to ${escalationBody}.
   - Firm, reasoned, professional tone.
   ${formats}
 
@@ -404,10 +410,10 @@ ${letterHistory}`;
     return `${base}
 
   LETTER TYPE: External Escalation Complaint Letter
-  - This letter is addressed TO ${caseItem.escalation_body || "the external ombudsman/tribunal"} — NOT the organisation.
+  - This letter is addressed TO ${escalationBody} — NOT the organisation.
   - Write a COMPREHENSIVE, DETAILED letter — minimum 6 substantial paragraphs. This is the most important letter.
   - SECTION 1: Introduction — who you are, who the dispute is with (${caseItem.organisation_name}), the nature of the complaint, and why you are contacting the external body.
-  - SECTION 2: Why this body has jurisdiction — explain why ${caseItem.escalation_body || "this body"} is the correct escalation path for this type of dispute (industry category: ${caseItem.category}).
+  - SECTION 2: Why this body has jurisdiction — explain why ${escalationBody} is the correct escalation path for this type of dispute (industry category: ${caseItem.category}).
   - SECTION 3: Full chronological complaint history:
     - Date and details of the original incident
     - Date the First Complaint Letter was sent and the response (or lack thereof)
@@ -419,7 +425,7 @@ ${letterHistory}`;
   - SECTION 6: Evidence index — list each document on file with a brief description of what it proves.
   - SECTION 7: Harm and loss — complete account of financial loss, practical impact, distress.
   - SECTION 8: Remedy requested — specific, clear request for what you need the external body to investigate and order: "${caseItem.desired_outcome}".
-  - Professional, factual, comprehensive tone. Address to: The Complaints Officer, ${caseItem.escalation_body || "External Dispute Resolution Body"}.
+  - Professional, factual, comprehensive tone. Address to: The Complaints Officer, ${escalationBody}.
   ${formats}
 
   FORMAT EXAMPLE (plain text - NO HTML):
@@ -971,7 +977,7 @@ export default function LetterSuite({ caseItem }) {
         <p className="text-xs text-muted-foreground">
           <span className="font-bold text-foreground">Letter Suite</span> — Generate each letter as your dispute progresses.
           Start with the 1st Complaint. Move to 2nd/3rd if unresolved. Use Accept/Deny Offer letters when a settlement is proposed.
-          Use the Escalation Letter to lodge with {caseItem.escalation_body || "AFCA / TIO / NCAT"}.
+          Use the Escalation Letter to lodge with {caseItem.escalation_body || getEscalationBody(caseItem.category)}.
         </p>
       </div>
 

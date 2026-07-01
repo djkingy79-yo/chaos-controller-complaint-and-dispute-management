@@ -29,6 +29,8 @@ Deno.serve(async (req) => {
 
     if (!caseItem) return Response.json({ error: 'Case not found' }, { status: 404 });
 
+    const escalationBody = caseItem.escalation_body || 'the relevant external dispute resolution body for this case type';
+
     const prompt = `You are an expert Australian consumer advocacy case manager. Generate a comprehensive checklist of required steps for resolving a ${caseItem.category} dispute.
 
 CASE DETAILS:
@@ -37,12 +39,13 @@ CASE DETAILS:
 - Issue: ${caseItem.issue_summary || caseItem.issue_details || 'Not specified'}
 - Incident Date: ${caseItem.incident_date || 'Not specified'}
 - Current Status: ${caseItem.status}
+- Assigned External Escalation Body: ${escalationBody}
 
 Based on Australian consumer law and the specific industry (${caseItem.category}), generate a detailed checklist of 10-15 essential steps. Include:
 1. Evidence gathering specific to ${caseItem.category}
 2. Mandatory waiting periods (21 days for response, 45 days for escalation)
 3. Internal complaint steps (initial, follow-up, final letter)
-4. External escalation steps (AFCA, TIO, NCAT, etc. as appropriate)
+4. External escalation step — MUST name the exact Assigned External Escalation Body above. Do NOT list alternative bodies (e.g. do not mention AFCA, TIO or NCAT unless it is the Assigned External Escalation Body given above).
 5. Deadline tracking and documentation requirements
 
 For each item specify:

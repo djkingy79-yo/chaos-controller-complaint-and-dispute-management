@@ -58,8 +58,11 @@ export default function NewCase() {
     setIsCreating(true);
 
     try {
-      const detectedCategory = detectIndustry(formData) !== 'other' ? detectIndustry(formData) : category;
-      const finalCategory = detectedCategory || category || 'other';
+      // Trust the category already confirmed for this case (auto-detected at
+      // upload or manually chosen in CategorySelector) as the source of truth.
+      // Only fall back to text-based detection if no category was set at all —
+      // never silently override a confirmed category with a re-run guess.
+      const finalCategory = category || detectIndustry(formData) || 'other';
       const deadline = new Date();
       deadline.setDate(deadline.getDate() + 21);
 

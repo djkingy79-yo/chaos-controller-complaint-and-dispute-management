@@ -119,7 +119,7 @@ Generate a structured report with these exact sections. Use Australian English. 
           weaknesses: { type: 'array', items: { type: 'string' }, description: '2-4 weaknesses or risks' },
           missing_evidence: { type: 'array', items: { type: 'string' }, description: 'Evidence gaps that should be addressed' },
           next_actions: { type: 'array', items: { type: 'string' }, description: '4-6 recommended immediate next actions' },
-          escalation_path: { type: 'string', description: 'Recommended escalation route if unresolved (e.g. ombudsman, tribunal, court)' },
+          escalation_path: { type: 'string', description: `The escalation route if unresolved. MUST be exactly "${caseItem.escalation_body || 'the appropriate ombudsman or tribunal for this case type'}" — do not substitute a different ombudsman/tribunal.` },
         },
         required: ['case_overview', 'facts', 'issues_identified', 'strengths', 'next_actions', 'escalation_path'],
       },
