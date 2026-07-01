@@ -29,23 +29,35 @@ Deno.serve(async (req) => {
 
     if (!caseItem) return Response.json({ error: 'Case not found' }, { status: 404 });
 
+    const pathway = caseItem.complaint_pathway || {};
     const escalationBody = caseItem.escalation_body || 'the relevant external dispute resolution body for this case type';
 
     const prompt = `You are an expert Australian consumer advocacy case manager. Generate a comprehensive checklist of required steps for resolving a ${caseItem.category} dispute.
 
 CASE DETAILS:
 - Category: ${caseItem.category}
+- State/Territory: ${caseItem.state || 'not confirmed'}
 - Organisation: ${caseItem.organisation_name || 'Unknown'}
 - Issue: ${caseItem.issue_summary || caseItem.issue_details || 'Not specified'}
 - Incident Date: ${caseItem.incident_date || 'Not specified'}
 - Current Status: ${caseItem.status}
-- Assigned External Escalation Body: ${escalationBody}
+
+ASSIGNED COMPLAINT PATHWAY (use ONLY these bodies — never substitute or invent another):
+- Internal Complaint: ${pathway.internalComplaint || 'not applicable'}
+- Regulator: ${pathway.regulator || 'not applicable'}
+- Ombudsman: ${pathway.ombudsman || 'not applicable'}
+- Tribunal: ${pathway.tribunal || 'not applicable'}
+- Court: ${pathway.court || 'not applicable'}
+- Support Services: ${(pathway.supportServices || []).join(', ') || 'none'}
+- Combined Escalation Body (for display text): ${escalationBody}
+
+Use ONLY the assigned complaint pathway above for this case. Do not invent or substitute AFCA, TIO, NCAT, Fair Trading, an ombudsman, tribunal or regulator unless it appears in the assigned complaint pathway. Never write generic placeholders like "relevant ombudsman", "external dispute resolution body", "tribunal or regulator" or "complaint authority" — always name the actual assigned body.
 
 Based on Australian consumer law and the specific industry (${caseItem.category}), generate a detailed checklist of 10-15 essential steps. Include:
 1. Evidence gathering specific to ${caseItem.category}
 2. Mandatory waiting periods (21 days for response, 45 days for escalation)
 3. Internal complaint steps (initial, follow-up, final letter)
-4. External escalation step — MUST name the exact Assigned External Escalation Body above. Do NOT list alternative bodies (e.g. do not mention AFCA, TIO or NCAT unless it is the Assigned External Escalation Body given above).
+4. External escalation step — MUST name the exact bodies from the assigned complaint pathway above. Do NOT list alternative bodies.
 5. Deadline tracking and documentation requirements
 
 For each item specify:

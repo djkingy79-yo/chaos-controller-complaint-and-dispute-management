@@ -169,7 +169,7 @@ export default function ChaosScore({ caseItem, evidence, events }) {
     // Single source of truth — the industry classifier — decides the
     // escalation body/URL for this case's category. No separate/hardcoded
     // category mapping lives here.
-    const url = getEscalationUrl(caseItem.category);
+    const url = getEscalationUrl(caseItem.category, caseItem.state);
     if (url) {
       window.open(url, "_blank");
     } else {

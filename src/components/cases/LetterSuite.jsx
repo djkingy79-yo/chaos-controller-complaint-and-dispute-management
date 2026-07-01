@@ -24,7 +24,7 @@ import LetterDocument, { LetterPreviewWrapper } from "@/components/letters/Lette
 import MarkSentDialog from "@/components/cases/MarkSentDialog.jsx";
 import { markLetterSent } from "@/lib/letterTracking";
 import { LETTER_SENT_FIELD_MAP, getLetterReSubject } from "@/lib/disputeStageLogic";
-import { getEscalationBody } from "@/lib/industryClassifier";
+import { getComplaintPathway, getEscalationBodyLabel } from "@/lib/authorityRouting";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -66,13 +66,18 @@ const LETTER_TYPES = [
 ];
 
 function buildPrompt(type, caseItem, client, today, evidenceList) {
-  // Single source of truth for the escalation body — the case's own
-  // classifier-assigned value, falling back to the classifier's own
-  // category lookup (never an ad hoc "AFCA/TIO/NCAT" style generic string).
-  const escalationBody = caseItem.escalation_body || getEscalationBody(caseItem.category, {
-    text: `${caseItem.issue_summary || ""} ${caseItem.issue_details || ""}`,
-    hasCivilClaimPathway: !!caseItem.has_civil_claim_pathway,
+  // Single source of truth for the complaint pathway — the case's own
+  // stored structured pathway, falling back to the routing engine's own
+  // category+state lookup (never an ad hoc "AFCA/TIO/NCAT" style generic string).
+  const complaintPathway = caseItem.complaint_pathway || getComplaintPathway({
+    category: caseItem.category,
+    state: caseItem.state,
+    context: {
+      text: `${caseItem.issue_summary || ""} ${caseItem.issue_details || ""}`,
+      hasCivilClaimPathway: !!caseItem.has_civil_claim_pathway,
+    },
   });
+  const escalationBody = caseItem.escalation_body || getEscalationBodyLabel(complaintPathway);
 
   // Build evidence summary for injection into prompts
   const evidenceSummary = (evidenceList || []).length > 0
@@ -93,6 +98,7 @@ function buildPrompt(type, caseItem, client, today, evidenceList) {
   const base = `You are a professional consumer advocacy solicitor in Australia. Generate a detailed, substantive formal letter for a consumer dispute. This letter must be comprehensive and professional — NOT generic. Use the specific facts, evidence, and details provided below.
 
   CRITICAL RULES:
+  0. Use ONLY the assigned complaint pathway for this case, given below as ASSIGNED COMPLAINT PATHWAY. Do not invent or substitute AFCA, TIO, NCAT, Fair Trading, an ombudsman, tribunal or regulator unless it appears in the assigned complaint pathway. Never say "relevant ombudsman", "external dispute resolution body", "tribunal or regulator" or "complaint authority" as a generic placeholder — always name the actual assigned body.
   1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
   2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
   3. ALWAYS use AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence).
@@ -121,11 +127,21 @@ ORGANISATION DETAILS:
 
 CASE DETAILS:
 - Industry Category: ${caseItem.category}
+- State/Territory: ${caseItem.state || "not confirmed"}
 - Issue Type Summary: ${caseItem.issue_summary}
 - Full Complaint Details: ${caseItem.issue_details}
 - Desired Outcome: ${caseItem.desired_outcome}
-- Escalation Body: ${escalationBody}
 - Today's Date: ${today}
+
+ASSIGNED COMPLAINT PATHWAY (use ONLY these bodies — never substitute or invent another):
+- Internal Complaint: ${complaintPathway.internalComplaint || "not applicable"}
+- Regulator: ${complaintPathway.regulator || "not applicable"}
+- Ombudsman: ${complaintPathway.ombudsman || "not applicable"}
+- Tribunal: ${complaintPathway.tribunal || "not applicable"}
+- Court: ${complaintPathway.court || "not applicable"}
+- Support Services: ${(complaintPathway.supportServices || []).join(", ") || "none"}
+- Notes: ${complaintPathway.notes || "none"}
+- Escalation Body (combined, for use in letter text): ${escalationBody}
 
 EVIDENCE ON FILE (${(evidenceList || []).length} documents):
 ${evidenceSummary}
@@ -980,7 +996,7 @@ export default function LetterSuite({ caseItem }) {
         <p className="text-xs text-muted-foreground">
           <span className="font-bold text-foreground">Letter Suite</span> — Generate each letter as your dispute progresses.
           Start with the 1st Complaint. Move to 2nd/3rd if unresolved. Use Accept/Deny Offer letters when a settlement is proposed.
-          Use the Escalation Letter to lodge with {caseItem.escalation_body || getEscalationBody(caseItem.category, { text: `${caseItem.issue_summary || ""} ${caseItem.issue_details || ""}`, hasCivilClaimPathway: !!caseItem.has_civil_claim_pathway })}.
+          Use the Escalation Letter to lodge with {caseItem.escalation_body || getEscalationBodyLabel(getComplaintPathway({ category: caseItem.category, state: caseItem.state, context: { text: `${caseItem.issue_summary || ""} ${caseItem.issue_details || ""}`, hasCivilClaimPathway: !!caseItem.has_civil_claim_pathway } }))}.
         </p>
       </div>
 

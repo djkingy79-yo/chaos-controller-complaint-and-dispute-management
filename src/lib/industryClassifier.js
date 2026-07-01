@@ -146,39 +146,9 @@ const RULES = [
 ];
 
 // ─── ESCALATION BODIES ────────────────────────────────────────────────────────
-
-const ESCALATION_BODIES = {
-  banking:    "Australian Financial Complaints Authority (AFCA)",
-  insurance:  "Australian Financial Complaints Authority (AFCA)",
-  telco:      "Telecommunications Industry Ombudsman (TIO)",
-  utilities:  "Energy & Water Ombudsman (EWON / relevant state ombudsman)",
-  tenancy:    "NSW Civil and Administrative Tribunal (NCAT)",
-  government: "Relevant agency complaints team / Commonwealth Ombudsman",
-  education:  "School principal / Department of Education complaints",
-  legal_profession: "Office of the Legal Services Commissioner (OLSC) / relevant state or territory Legal Services Commissioner",
-  other:      "Relevant ombudsman or tribunal",
-};
-
-// Legal Profession Complaint is its own beast — never routes through the
-// general consumer tribunal by default. Conduct complaints go to the
-// Legal Services Commissioner / Law Society or Bar Association; costs
-// disputes get the costs assessment pathway; NCAT is only ever added when
-// the case has an explicitly confirmed genuine civil/consumer claim.
-const COSTS_DISPUTE_PATTERN = /costs? dispute|itemised bill|overcharg(ed|ing)|legal fees|invoice|retainer|costs assessment|fee dispute/i;
-
-function buildLegalProfessionEscalationBody({ text = "", hasCivilClaimPathway = false } = {}) {
-  const parts = [
-    "Office of the Legal Services Commissioner (OLSC) / relevant state or territory Legal Services Commissioner",
-    "Law Society or Bar Association (where the complaint involves professional conduct)",
-  ];
-  if (COSTS_DISPUTE_PATTERN.test(text)) {
-    parts.push("Costs Assessment / itemised bill review pathway (where the dispute is about legal fees)");
-  }
-  if (hasCivilClaimPathway) {
-    parts.push("NCAT (Consumer and Commercial Division) — only because this matter has a confirmed genuine civil/consumer claim, not as a default for lawyer conduct complaints");
-  }
-  return parts.join("; ");
-}
+// Delegates to the Australia-wide authority routing engine (single source of
+// truth for every category × state/territory). Never hardcode a body here.
+import { getComplaintPathway, getEscalationBodyLabel, getEscalationUrl as routeEscalationUrl } from "@/lib/authorityRouting";
 
 // ─── CORE SCORING ENGINE ──────────────────────────────────────────────────────
 
@@ -240,7 +210,7 @@ export function detectIndustryDebug(input = {}) {
       matchedProvider: null,
       matchedKeywords: [],
       confidence: "none",
-      escalationBody: ESCALATION_BODIES.other,
+      escalationBody: getEscalationBodyLabel(getComplaintPathway({ category: "other" })),
     };
   }
 
@@ -254,7 +224,7 @@ export function detectIndustryDebug(input = {}) {
     matchedProvider: best.matchedProviders[0] || null,
     matchedKeywords: best.matchedKeywords,
     confidence,
-    escalationBody: ESCALATION_BODIES[best.rule.category],
+    escalationBody: getEscalationBodyLabel(getComplaintPathway({ category: best.rule.category })),
   };
 }
 
@@ -266,29 +236,22 @@ export function detectIndustry(input = {}) {
 }
 
 /**
- * Escalation body for a given category string.
- * For legal_profession, pass context { text, hasCivilClaimPathway } to get the
- * correct compound routing (OLSC/Law Society, + costs assessment/NCAT only when relevant).
+ * Escalation body for a given category + state. Context: { text, hasCivilClaimPathway }
+ * for legal_profession's compound routing (professional body + costs pathway,
+ * civil tribunal only when explicitly confirmed).
+ * Always prefer passing `state` — without it, jurisdiction-dependent
+ * categories default to NSW and flag that the state wasn't confirmed.
  */
 export function getEscalationBody(industry, context = {}) {
-  if (industry === "legal_profession") return buildLegalProfessionEscalationBody(context);
-  return ESCALATION_BODIES[industry] || ESCALATION_BODIES.other;
+  const pathway = getComplaintPathway({ category: industry, state: context.state, context });
+  return getEscalationBodyLabel(pathway);
 }
 
 // Single source of truth for each category's external escalation body URL —
 // used anywhere the app needs to send the user to lodge an external complaint.
 // Never hardcode a separate category→body mapping elsewhere.
-const ESCALATION_URLS = {
-  banking: "https://www.afca.org.au/make-a-complaint/",
-  insurance: "https://www.afca.org.au/make-a-complaint/",
-  telco: "https://www.tio.com.au/complaints",
-  utilities: "https://www.ewon.com.au/page/making-a-complaint/complaint-forms",
-  tenancy: "https://www.ncat.nsw.gov.au/ncat/how-to-apply.html",
-  legal_profession: "https://www.olsc.nsw.gov.au/how-to-complain.html",
-};
-
-export function getEscalationUrl(industry) {
-  return ESCALATION_URLS[industry] || null;
+export function getEscalationUrl(industry, state) {
+  return routeEscalationUrl(industry, state);
 }
 
 /**

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 const categories = [
   { value: "banking", label: "Banking", description: "Transactions, chargebacks, fraud, hardship", icon: Landmark },
   { value: "insurance", label: "Insurance", description: "Claims, denials, delays, assessments", icon: Shield },
-  { value: "tenancy", label: "Tenancy / NCAT", description: "Repairs, bonds, notices, rent disputes", icon: Home },
+  { value: "tenancy", label: "Tenancy", description: "Repairs, bonds, notices — routed to your state tribunal", icon: Home },
   { value: "telco", label: "Telecommunications", description: "Optus, Telstra, billing, contracts", icon: Phone },
   { value: "utilities", label: "Utilities", description: "Electricity, gas, billing, disconnection", icon: Zap },
   { value: "government", label: "Government Departments", description: "Centrelink, ATO, Services Australia", icon: Building2 },

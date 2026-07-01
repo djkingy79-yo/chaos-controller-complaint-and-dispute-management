@@ -223,7 +223,14 @@ export function buildContactsSections(caseItem, organisation) {
     },
     {
       heading: "Escalation / Regulator",
-      rows: [{ label: "Assigned Regulator / Ombudsman", value: caseItem.escalation_body }],
+      rows: caseItem.complaint_pathway ? [
+        { label: "State/Territory", value: caseItem.state },
+        { label: "Internal Complaint", value: caseItem.complaint_pathway.internalComplaint },
+        { label: "Regulator", value: caseItem.complaint_pathway.regulator },
+        { label: "Ombudsman", value: caseItem.complaint_pathway.ombudsman },
+        { label: "Tribunal", value: caseItem.complaint_pathway.tribunal },
+        { label: "Support Services", value: (caseItem.complaint_pathway.supportServices || []).join(", ") },
+      ] : [{ label: "Assigned Regulator / Ombudsman", value: caseItem.escalation_body }],
       empty: "No regulator identified yet.",
     },
     {

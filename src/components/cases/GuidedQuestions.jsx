@@ -15,6 +15,13 @@ const complainantFields = [
   { key: "complainant_phone", label: "Your mobile number", type: "text", placeholder: "e.g. 0412 345 678", required: true },
 ];
 
+// Jurisdiction — collected for every category. Drives which tribunal,
+// ombudsman, regulator and consumer body apply (see authorityRouting.js).
+// Never guessed — the user must confirm it.
+const jurisdictionFields = [
+  { key: "state", label: "Which state or territory is this dispute in?", type: "select", options: ["NSW", "VIC", "QLD", "SA", "WA", "TAS", "ACT", "NT", "Federal / National"], required: true },
+];
+
 const caseFields = {
   banking: [
     { key: "organisation_name", label: "Which bank is this about?", type: "text", placeholder: "e.g. Commonwealth Bank, ANZ, Westpac", required: true },
@@ -116,7 +123,7 @@ const caseFields = {
 
 export default function GuidedQuestions({ category, data, onChange, onNext, onBack, onCategoryDetected, isSubmitting = false }) {
   const specificFields = caseFields[category] || caseFields.other;
-  const allQuestions = [...complainantFields, ...specificFields];
+  const allQuestions = [...complainantFields, ...jurisdictionFields, ...specificFields];
   const [step, setStep] = useState(0);
   const [showOrgPicker, setShowOrgPicker] = useState(false);
   const current = allQuestions[step];

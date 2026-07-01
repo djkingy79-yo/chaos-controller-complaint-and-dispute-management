@@ -21,6 +21,58 @@
       ],
       "description": "Industry category of the dispute"
     },
+    "state": {
+      "type": "string",
+      "enum": [
+        "federal",
+        "NSW",
+        "VIC",
+        "QLD",
+        "SA",
+        "WA",
+        "TAS",
+        "ACT",
+        "NT"
+      ],
+      "description": "Australian state/territory (or federal/national) jurisdiction this dispute falls under. Drives which tribunal, ombudsman, regulator and consumer body apply \u2014 never guess this, it must be user-confirmed."
+    },
+    "complaint_pathway": {
+      "type": "object",
+      "description": "Structured, single-source-of-truth escalation pathway for this case, assigned by the authority routing engine based on category + state. All prompts, letters, checklists, and reports must use ONLY this object \u2014 never invent or substitute a different ombudsman/tribunal/regulator.",
+      "properties": {
+        "internalComplaint": {
+          "type": "string",
+          "description": "Who to complain to first, internally (e.g. bank's IDR team, landlord/agent)"
+        },
+        "regulator": {
+          "type": "string",
+          "description": "Government regulator overseeing this industry/jurisdiction (e.g. ASIC, ACMA, NSW Fair Trading)"
+        },
+        "ombudsman": {
+          "type": "string",
+          "description": "Relevant ombudsman scheme (e.g. AFCA, TIO, EWON, NSW Ombudsman) \u2014 blank if not applicable"
+        },
+        "tribunal": {
+          "type": "string",
+          "description": "Relevant state/territory tribunal (e.g. NCAT, VCAT, QCAT) \u2014 blank if not applicable"
+        },
+        "court": {
+          "type": "string",
+          "description": "Relevant court pathway \u2014 blank if not applicable"
+        },
+        "supportServices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Free advocacy/support services relevant to this dispute (e.g. Tenants' Union, Legal Aid)"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any qualifying notes about the pathway (e.g. costs assessment applies, state not yet confirmed)"
+        }
+      }
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -153,7 +205,8 @@
       "format": "date"
     },
     "escalation_body": {
-      "type": "string"
+      "type": "string",
+      "description": "Human-readable summary composed from complaint_pathway \u2014 display only, never the source of truth"
     },
     "priority": {
       "type": "string",
@@ -243,7 +296,7 @@
     "has_civil_claim_pathway": {
       "type": "boolean",
       "default": false,
-      "description": "Legal Profession Complaint only: user has confirmed there is a genuine civil/consumer claim (e.g. costs dispute suitable for NCAT), not just a conduct/misconduct complaint. Controls whether NCAT is offered as an escalation pathway."
+      "description": "Legal Profession Complaint only: user has confirmed there is a genuine civil/consumer claim (e.g. costs dispute suitable for the state tribunal), not just a conduct/misconduct complaint. Controls whether the state's civil tribunal is offered as an escalation pathway."
     }
   },
   "required": [

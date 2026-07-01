@@ -10,7 +10,8 @@ import GuidedQuestions from "@/components/cases/GuidedQuestions";
 import DocumentUploadStep from "@/components/cases/DocumentUploadStep";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
-import { detectIndustry, getEscalationBody } from "@/lib/industryClassifier";
+import { detectIndustry } from "@/lib/industryClassifier";
+import { getComplaintPathway, getEscalationBodyLabel } from "@/lib/authorityRouting";
 import { toast } from "sonner";
 
 const PAYID_EMAIL = "djkingy79@gmail.com";
@@ -64,6 +65,15 @@ export default function NewCase() {
       // never silently override a confirmed category with a re-run guess.
       const finalCategory = category || detectIndustry(formData) || 'other';
       const hasCivilClaimPathway = formData.has_civil_claim_pathway === "Yes — there is a separate civil/consumer claim";
+      const finalState = formData.state === "Federal / National" ? "federal" : (formData.state || "");
+      const complaintPathway = getComplaintPathway({
+        category: finalCategory,
+        state: finalState,
+        context: {
+          text: `${formData.issue_summary || ""} ${formData.issue_details || ""}`,
+          hasCivilClaimPathway,
+        },
+      });
       const deadline = new Date();
       deadline.setDate(deadline.getDate() + 21);
 
@@ -104,10 +114,9 @@ export default function NewCase() {
         issue_details: formData.issue_details || "",
         desired_outcome: formData.desired_outcome || "",
         response_deadline: deadline.toISOString().split("T")[0],
-        escalation_body: getEscalationBody(finalCategory, {
-          text: `${formData.issue_summary || ""} ${formData.issue_details || ""}`,
-          hasCivilClaimPathway,
-        }),
+        state: finalState || undefined,
+        complaint_pathway: complaintPathway,
+        escalation_body: getEscalationBodyLabel(complaintPathway),
         has_civil_claim_pathway: hasCivilClaimPathway,
         priority: "medium",
         notes: `${uploadedFiles.length} document${uploadedFiles.length !== 1 ? "s" : ""} uploaded`,

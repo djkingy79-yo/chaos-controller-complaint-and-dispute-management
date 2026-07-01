@@ -42,10 +42,27 @@ export function buildSections(caseItem, evidence, events, deadlines, checklistIt
       { label: 'Priority', value: (caseItem.priority || '').toUpperCase() },
       { label: 'Incident Date', value: caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : null },
       { label: 'Response Deadline', value: caseItem.response_deadline ? format(new Date(caseItem.response_deadline), 'd MMMM yyyy') : null },
+      { label: 'State/Territory', value: caseItem.state },
       { label: 'Escalation Body', value: caseItem.escalation_body },
       { label: 'Account/Reference', value: caseItem.account_number },
     ],
   });
+
+  if (caseItem.complaint_pathway) {
+    const cp = caseItem.complaint_pathway;
+    sections.push({
+      heading: 'Complaint Pathway',
+      rows: [
+        { label: 'Internal Complaint', value: cp.internalComplaint },
+        { label: 'Regulator', value: cp.regulator },
+        { label: 'Ombudsman', value: cp.ombudsman },
+        { label: 'Tribunal', value: cp.tribunal },
+        { label: 'Court', value: cp.court },
+        { label: 'Support Services', value: (cp.supportServices || []).join(', ') },
+        { label: 'Notes', value: cp.notes },
+      ],
+    });
+  }
 
   sections.push({
     heading: 'Complainant Details',

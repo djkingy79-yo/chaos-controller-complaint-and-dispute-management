@@ -65,13 +65,18 @@ Deno.serve(async (req) => {
 CASE DETAILS:
 Title: ${caseItem.title}
 Category: ${caseItem.category}
+State/Territory: ${caseItem.state || 'not confirmed'}
 Status: ${caseItem.status}
 Priority: ${caseItem.priority}
 Incident Date: ${caseItem.incident_date || 'not specified'}
 Organisation: ${caseItem.organisation_name || 'not specified'}
-Escalation Body: ${caseItem.escalation_body || 'not specified'}
 Account #: ${caseItem.account_number || 'not specified'}
 Notes: ${(caseItem.notes || '').slice(0, 500)}
+
+ASSIGNED COMPLAINT PATHWAY (use ONLY these bodies — never substitute or invent another):
+${JSON.stringify(caseItem.complaint_pathway || { note: 'not yet assigned — use escalation_body text only' })}
+
+Use ONLY the assigned complaint pathway above for this case. Do not invent or substitute AFCA, TIO, NCAT, Fair Trading, an ombudsman, tribunal or regulator unless it appears in the assigned complaint pathway. Never write generic placeholders like "relevant ombudsman", "external dispute resolution body", "tribunal or regulator" or "complaint authority" — always name the actual assigned body.
 
 COMPLAINANT:
 Name: ${caseItem.complainant_name || 'not specified'}
@@ -119,7 +124,7 @@ Generate a structured report with these exact sections. Use Australian English. 
           weaknesses: { type: 'array', items: { type: 'string' }, description: '2-4 weaknesses or risks' },
           missing_evidence: { type: 'array', items: { type: 'string' }, description: 'Evidence gaps that should be addressed' },
           next_actions: { type: 'array', items: { type: 'string' }, description: '4-6 recommended immediate next actions' },
-          escalation_path: { type: 'string', description: `The escalation route if unresolved. MUST be exactly "${caseItem.escalation_body || 'the appropriate ombudsman or tribunal for this case type'}" — do not substitute a different ombudsman/tribunal.` },
+          escalation_path: { type: 'string', description: `The escalation route if unresolved. MUST use ONLY the bodies named in the assigned complaint pathway above (rendered as: "${caseItem.escalation_body || 'the appropriate ombudsman or tribunal for this case type'}") — do not substitute a different ombudsman/tribunal/regulator.` },
         },
         required: ['case_overview', 'facts', 'issues_identified', 'strengths', 'next_actions', 'escalation_path'],
       },
