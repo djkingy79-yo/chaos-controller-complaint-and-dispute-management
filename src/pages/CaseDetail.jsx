@@ -16,7 +16,7 @@ import EvidenceVault from "@/components/cases/EvidenceVault";
 import CaseTimeline from "@/components/cases/CaseTimeline";
 import LetterSuite from "@/components/cases/LetterSuite";
 import ChaosScore from "@/components/cases/ChaosScore";
-import PrintBundle from "@/components/cases/PrintBundle";
+import CaseDashboardReport from "@/components/cases/CaseDashboardReport";
 import EscalationBundle from "@/components/cases/EscalationBundle";
 import CaseSummary from "@/components/cases/CaseSummary";
 import DisputeProgressTracker from "@/components/cases/DisputeProgressTracker";
@@ -265,7 +265,7 @@ export default function CaseDetail() {
               <OutlookDeadlineSync caseItem={caseItem} />
             </TabsContent>
             <TabsContent value="print" className="mt-4">
-              <PrintBundle caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+              <CaseDashboardReport caseItem={caseItem} evidence={evidence} events={timelineEvents} />
             </TabsContent>
             <TabsContent value="weekly" className="mt-4">
               <WeeklySnapshot caseItem={caseItem} evidence={evidence} events={timelineEvents} />

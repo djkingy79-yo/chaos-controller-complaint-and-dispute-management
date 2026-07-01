@@ -192,12 +192,12 @@ export default function LetterDocument({
         overflow: 'hidden',
       }}
     >
-      {/* ── LETTERHEAD BANNER ── */}
-      <div style={{ width: '100%', flexShrink: 0, lineHeight: 0, boxSizing: 'border-box' }}>
+      {/* ── LETTERHEAD BANNER (thin band, no bleed) ── */}
+      <div style={{ width: '100%', height: '52px', overflow: 'hidden', flexShrink: 0, lineHeight: 0, boxSizing: 'border-box' }}>
         <img
           src={LETTERHEAD_URL}
           alt="Chaos Controller"
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
@@ -285,12 +285,12 @@ export default function LetterDocument({
         </div>
       </div>
 
-      {/* ── FOOTER IMAGE ── */}
-      <div style={{ width: '100%', flexShrink: 0, marginTop: 'auto', lineHeight: 0, boxSizing: 'border-box' }}>
+      {/* ── FOOTER (thin band, no bleed) ── */}
+      <div style={{ width: '100%', height: '32px', overflow: 'hidden', flexShrink: 0, marginTop: 'auto', lineHeight: 0, boxSizing: 'border-box' }}>
         <img
           src={LETTER_FOOTER_URL}
           alt=""
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>

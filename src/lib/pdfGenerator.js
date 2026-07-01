@@ -88,8 +88,8 @@ export function cleanForPDF(content) {
 // Usage:
 //   const blob = await captureLetterDocumentPDF(ref.current);
 // ─────────────────────────────────────────────────────────────────────────────
-export async function captureLetterDocumentPDF(domNode) {
-  if (!domNode) throw new Error('captureLetterDocumentPDF: domNode is null');
+export async function captureDocumentPDF(domNode) {
+  if (!domNode) throw new Error('captureDocumentPDF: domNode is null');
 
   // Remove shadow temporarily so it doesn't bleed into capture
   const el = domNode.querySelector ? domNode.querySelector('.letter-page') || domNode : domNode;
@@ -140,9 +140,14 @@ export async function captureLetterDocumentPDF(domNode) {
     }
   }
 
-  console.log('[PDF] captureLetterDocumentPDF done', { pages: totalPages, imgPxW, imgPxH });
+  console.log('[PDF] captureDocumentPDF done', { pages: totalPages, imgPxW, imgPxH });
   return pdf.output('blob');
 }
+
+// Backward-compatible alias — captureLetterDocumentPDF is the original name used by
+// existing letter rendering call sites. captureDocumentPDF is the generic name used
+// by the unified dashboard/AI-analysis report pathway. Both point to the same function.
+export const captureLetterDocumentPDF = captureDocumentPDF;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERAL DOCUMENT PDF — for executive summaries, reports (non-letter jsPDF text mode)

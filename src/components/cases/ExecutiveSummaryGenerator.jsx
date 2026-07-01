@@ -1,46 +1,33 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { FileText, Sparkles, Loader2, CheckCircle2, AlertCircle, Clock, TrendingUp, ShieldAlert, Download, Printer, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { captureDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/letters/ReportDocument";
 import { format } from "date-fns";
 
-function buildSummaryBody(summary, caseItem) {
+// Same section shape used by CaseDashboardReport.jsx — keeps the AI analysis
+// report on the identical unified rendering + capture pathway as everything else.
+function buildSummarySections(summary) {
   const s = summary;
-  const lines = [
-    'CASE OVERVIEW',
-    s.case_overview || '—',
-    '',
-    'ESTABLISHED FACTS',
-    ...(s.facts || []).map(f => `• ${f}`),
-    '',
-    'TIMELINE SUMMARY',
-    s.timeline_summary || '—',
-    '',
-    'EVIDENCE SUMMARY',
-    ...(s.evidence_summary || []).map(e => `• ${e}`),
-    '',
-    'ISSUES IDENTIFIED',
-    ...(s.issues_identified || []).map(i => `• ${i}`),
-    '',
-    'CASE STRENGTHS',
-    ...(s.strengths || []).map(x => `• ${x}`),
-    '',
-    'WEAKNESSES / RISKS',
-    ...(s.weaknesses || []).map(x => `• ${x}`),
-    '',
-    'MISSING EVIDENCE',
-    ...(s.missing_evidence?.length ? s.missing_evidence.map(x => `• ${x}`) : ['• None identified']),
-    '',
-    'RECOMMENDED NEXT ACTIONS',
-    ...(s.next_actions || []).map(x => `• ${x}`),
-    '',
-    'ESCALATION PATH',
-    s.escalation_path || '—',
+  const sections = [
+    { heading: 'Case Overview', paragraphs: [s.case_overview] },
+    { heading: 'Established Facts', bullets: s.facts },
+    { heading: 'Timeline Summary', paragraphs: [s.timeline_summary] },
+    { heading: 'Evidence Summary', bullets: s.evidence_summary },
+    { heading: 'Issues Identified', bullets: s.issues_identified },
+    { heading: 'Case Strengths', bullets: s.strengths },
+    { heading: 'Weaknesses / Risks', bullets: s.weaknesses },
+    { heading: 'Missing Evidence', bullets: s.missing_evidence?.length ? s.missing_evidence : ['None identified'] },
+    { heading: 'Recommended Next Actions', bullets: s.next_actions },
+    { heading: 'Escalation Path', paragraphs: [s.escalation_path] },
   ];
-  return lines.join('\n');
+  return sections.filter(sec =>
+    (sec.paragraphs && sec.paragraphs.some(p => p && String(p).trim())) ||
+    (sec.bullets && sec.bullets.length)
+  );
 }
 
 export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated }) {
@@ -51,6 +38,7 @@ export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated
   const [elapsedTime, setElapsedTime] = useState(0);
   const [errorDetail, setErrorDetail] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const reportRef = useRef(null);
 
   if (!caseItem) return null;
 
@@ -121,17 +109,10 @@ export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated
   };
 
   const handleDownloadPDF = async () => {
-    if (!summary) return;
+    if (!summary || !reportRef.current) return;
     setPdfLoading(true);
     try {
-      const body = buildSummaryBody(summary, caseItem);
-      const blob = await generateChaosDocumentPDF({
-        documentType: 'general',
-        title: `Case Summary — ${caseItem.title}`,
-        body,
-        includeHeader: true,
-        includeFooter: true,
-      });
+      const blob = await captureDocumentPDF(reportRef.current);
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       downloadPDFBlob(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       toast({ title: "PDF Downloaded" });
@@ -144,17 +125,10 @@ export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated
   };
 
   const handlePrintPDF = async () => {
-    if (!summary) return;
+    if (!summary || !reportRef.current) return;
     setPdfLoading(true);
     try {
-      const body = buildSummaryBody(summary, caseItem);
-      const blob = await generateChaosDocumentPDF({
-        documentType: 'general',
-        title: `Case Summary — ${caseItem.title}`,
-        body,
-        includeHeader: true,
-        includeFooter: true,
-      });
+      const blob = await captureDocumentPDF(reportRef.current);
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       const opened = await openPDFForPrint(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       if (!opened) {
@@ -173,6 +147,20 @@ export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated
 
   return (
     <>
+      {/* Hidden off-screen report — same ReportDocument + captureDocumentPDF pathway as the
+          dashboard's Complete Case Report, so the AI analysis PDF is visually identical. */}
+      {summary && (
+        <div style={{ position: 'fixed', top: '-10000px', left: 0, zIndex: -1, pointerEvents: 'none' }}>
+          <div ref={reportRef}>
+            <ReportDocument
+              title={`Case Summary — ${caseItem.title}`}
+              generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy, h:mm a')}`}
+              sections={buildSummarySections(summary)}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 flex-wrap">
         <Button
           onClick={handleGenerateSummary}
