@@ -191,13 +191,13 @@ export default function LetterDocument({
         position: 'relative',
       }}
     >
-      {/* ── LETTERHEAD BANNER — full width, height follows the image's own
-            aspect ratio so the artwork is never cropped, stretched or zoomed ── */}
+      {/* ── LETTERHEAD BANNER — capped at 22mm so it never dominates the page;
+            object-fit: contain guarantees the artwork is never cropped/stretched ── */}
       <div style={{ width: '100%', flexShrink: 0, lineHeight: 0, boxSizing: 'border-box' }}>
         <img
           src={LETTERHEAD_URL}
           alt="Chaos Controller"
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', height: 'auto', maxHeight: '22mm', objectFit: 'contain', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
@@ -285,12 +285,12 @@ export default function LetterDocument({
         </div>
       </div>
 
-      {/* ── FOOTER — full width, height follows the image's own aspect ratio ── */}
+      {/* ── FOOTER — capped at 12mm so it never overlaps content ── */}
       <div style={{ width: '100%', flexShrink: 0, marginTop: 'auto', lineHeight: 0, boxSizing: 'border-box' }}>
         <img
           src={LETTER_FOOTER_URL}
           alt=""
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', height: 'auto', maxHeight: '12mm', objectFit: 'contain', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>

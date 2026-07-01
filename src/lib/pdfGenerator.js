@@ -45,10 +45,14 @@ function verticalPadding(el) {
 
 /**
  * Pre-capture pagination — splits a document's content into multiple full
- * page DOM trees (each with its own header + footer) BEFORE any image is
- * captured, so paragraphs/headings/bullets/rows are never sliced mid-element.
- * The block marked data-paginate-body="true" is the only splittable region;
- * everything before it (date/address/title/subject/rule) stays on page 1 only.
+ * page DOM trees BEFORE any image is captured, so paragraphs/headings/
+ * bullets/rows are never sliced mid-element. The block marked
+ * data-paginate-body="true" is the only splittable region; everything before
+ * it (date/address/title/subject/rule) stays on page 1 only.
+ *
+ * The large image header banner is rendered ONLY on page 1 — continuation
+ * pages get no header band at all, which frees up extra body height and
+ * matches the "header only on first page" requirement.
  */
 function buildPaginatedPages(pageEl) {
   const [headerEl, contentEl, footerEl] = Array.from(pageEl.children);
@@ -57,7 +61,8 @@ function buildPaginatedPages(pageEl) {
   const headerH = headerEl.getBoundingClientRect().height || 0;
   const footerH = footerEl.getBoundingClientRect().height || 0;
   const vPad = verticalPadding(contentEl);
-  const availableHeight = A4_PX_HEIGHT - headerH - footerH - vPad - SAFETY_PX;
+  const availableHeightPage1 = A4_PX_HEIGHT - headerH - footerH - vPad - SAFETY_PX;
+  const availableHeightNextPages = A4_PX_HEIGHT - footerH - vPad - SAFETY_PX;
 
   const allChildren = Array.from(contentEl.children);
   const bodyIdx = allChildren.findIndex((c) => c.getAttribute && c.getAttribute('data-paginate-body') === 'true');
@@ -77,9 +82,10 @@ function buildPaginatedPages(pageEl) {
     const h = unit.getBoundingClientRect().height;
     const isHeading = unit.getAttribute && unit.getAttribute('data-heading') === 'true';
     const isLastUnit = idx === atomicUnits.length - 1;
+    const availableHeight = isFirstPage ? availableHeightPage1 : availableHeightNextPages;
 
     if (currentHeight + h > availableHeight && current.length > 0) {
-      pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current });
+      pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current, isFirstPage });
       current = [];
       currentHeight = 0;
       isFirstPage = false;
@@ -87,8 +93,9 @@ function buildPaginatedPages(pageEl) {
 
     // Never leave a heading alone at the bottom of a page with its content
     // pushed to the next page — move the heading itself down instead.
-    if (isHeading && !isLastUnit && current.length > 0 && (availableHeight - currentHeight - h) < 40) {
-      pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current });
+    const remaining = (isFirstPage ? availableHeightPage1 : availableHeightNextPages) - currentHeight - h;
+    if (isHeading && !isLastUnit && current.length > 0 && remaining < 40) {
+      pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current, isFirstPage });
       current = [];
       currentHeight = 0;
       isFirstPage = false;
@@ -97,11 +104,10 @@ function buildPaginatedPages(pageEl) {
     current.push(unit);
     currentHeight += h;
   });
-  pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current });
+  pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current, isFirstPage });
 
-  return pageGroups.map(({ head, body }) => {
+  return pageGroups.map(({ head, body, isFirstPage: isFirst }) => {
     const clonedPage = pageEl.cloneNode(false);
-    const clonedHeader = headerEl.cloneNode(true);
     const clonedContent = contentEl.cloneNode(false);
     const clonedFooter = footerEl.cloneNode(true);
 
@@ -114,7 +120,10 @@ function buildPaginatedPages(pageEl) {
       body.forEach((n) => clonedContent.appendChild(n.cloneNode(true)));
     }
 
-    clonedPage.appendChild(clonedHeader);
+    // Header banner only on page 1 — continuation pages carry no header band.
+    if (isFirst) {
+      clonedPage.appendChild(headerEl.cloneNode(true));
+    }
     clonedPage.appendChild(clonedContent);
     clonedPage.appendChild(clonedFooter);
     return clonedPage;

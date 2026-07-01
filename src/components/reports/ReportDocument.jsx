@@ -84,13 +84,13 @@ export default function ReportDocument({ title, subtitle, generatedLabel, sectio
         position: 'relative',
       }}
     >
-      {/* Header — full width, height follows the image's own aspect ratio so
-          the artwork is never cropped, stretched or zoomed */}
+      {/* Header — capped at 18mm so it never dominates the page; object-fit:
+          contain guarantees the artwork is never cropped/stretched */}
       <div style={{ width: '100%', flexShrink: 0, lineHeight: 0 }}>
         <img
           src={REPORT_HEADER_URL}
           alt="Chaos Controller"
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', height: 'auto', maxHeight: '18mm', objectFit: 'contain', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
@@ -105,12 +105,12 @@ export default function ReportDocument({ title, subtitle, generatedLabel, sectio
         </div>
       </div>
 
-      {/* Footer — full width, height follows the image's own aspect ratio */}
+      {/* Footer — capped at 12mm so it never overlaps content */}
       <div style={{ width: '100%', flexShrink: 0, marginTop: 'auto', lineHeight: 0 }}>
         <img
           src={REPORT_FOOTER_URL}
           alt=""
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', height: 'auto', maxHeight: '12mm', objectFit: 'contain', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
