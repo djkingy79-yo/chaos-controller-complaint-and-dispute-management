@@ -73,14 +73,27 @@ function buildPaginatedPages(pageEl) {
   let currentHeight = headHeight;
   let isFirstPage = true;
 
-  atomicUnits.forEach((unit) => {
+  atomicUnits.forEach((unit, idx) => {
     const h = unit.getBoundingClientRect().height;
+    const isHeading = unit.getAttribute && unit.getAttribute('data-heading') === 'true';
+    const isLastUnit = idx === atomicUnits.length - 1;
+
     if (currentHeight + h > availableHeight && current.length > 0) {
       pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current });
       current = [];
       currentHeight = 0;
       isFirstPage = false;
     }
+
+    // Never leave a heading alone at the bottom of a page with its content
+    // pushed to the next page — move the heading itself down instead.
+    if (isHeading && !isLastUnit && current.length > 0 && (availableHeight - currentHeight - h) < 40) {
+      pageGroups.push({ head: isFirstPage ? headBlocks : [], body: current });
+      current = [];
+      currentHeight = 0;
+      isFirstPage = false;
+    }
+
     current.push(unit);
     currentHeight += h;
   });

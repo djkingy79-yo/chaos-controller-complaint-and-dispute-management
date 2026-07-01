@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import ReportDocument from "@/components/reports/ReportDocument";
 import { renderDocToBlob } from "@/lib/renderDocToBlob";
+import { buildSections } from "@/components/cases/CaseDashboardReport";
+import { buildSummarySections } from "@/components/cases/ExecutiveSummaryGenerator";
 import { toast } from "sonner";
 import { useToast } from "@/components/ui/use-toast";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail } from "@/lib/pdfDiagnostics";
@@ -32,16 +34,6 @@ const PRIORITY_LABELS = {
   urgent: "URGENT",
 };
 
-const STAGES = [
-  "Draft", "Complaint Sent", "Awaiting Response",
-  "Response Received", "Escalation Ready", "Escalated", "Resolved"
-];
-
-const STATUS_INDEX = {
-  draft: 0, complaint_sent: 1, awaiting_response: 2,
-  response_received: 3, escalation_ready: 4, escalated: 5, resolved: 6, closed: 6
-};
-
 // ── Schema helpers ────────────────────────────────────────────────────────────
 
 function parseExecutiveSummary(raw) {
@@ -59,228 +51,22 @@ function isNewSchema(s) {
   return !!(s?.case_overview || s?.facts || s?.issues_identified || s?.next_actions);
 }
 
-// ── Matter Strength score (mirrors ChaosScore.jsx) ───────────────────────────
+// ── Shared PDF action helper — same ReportDocument + renderDocToBlob pathway
+// used everywhere else, fed with properly structured (granular) sections so
+// pagination splits between rows/bullets/paragraphs, never mid-sentence. ──────
 
-function calcScore(caseItem, evidence, events) {
-  let score = 0;
-  const items = [];
-  if (caseItem.issue_summary && caseItem.issue_details) {
-    score += 20; items.push({ label: "Issue documented", ok: true });
-  } else {
-    items.push({ label: "Issue not fully documented", ok: false });
-  }
-  if (caseItem.complaint_letter) {
-    score += 20; items.push({ label: "Complaint letter drafted", ok: true });
-  } else {
-    items.push({ label: "No complaint letter", ok: false });
-  }
-  if (evidence.length > 0) {
-    score += 20; items.push({ label: `${evidence.length} evidence file(s) uploaded`, ok: true });
-  } else {
-    items.push({ label: "No evidence uploaded", ok: false });
-  }
-  if (events.length > 0) {
-    score += 20; items.push({ label: "Timeline recorded", ok: true });
-  } else {
-    items.push({ label: "No timeline events", ok: null });
-  }
-  const hasResponse = ["response_received", "escalation_ready", "escalated", "resolved"].includes(caseItem.status);
-  if (hasResponse) {
-    score += 20; items.push({ label: "Response received / escalated", ok: true });
-  } else {
-    items.push({ label: "Awaiting / no response yet", ok: null });
-  }
-  return { score, items };
-}
-
-// ── PDF body builders ─────────────────────────────────────────────────────────
-
-function buildAISummaryPDFBody(s) {
-  if (!s) return 'No AI summary generated yet.';
-  if (isNewSchema(s)) {
-    return [
-      'CASE OVERVIEW', s.case_overview || '—', '',
-      'ESTABLISHED FACTS', ...(s.facts || []).map(f => `• ${f}`), '',
-      'TIMELINE SUMMARY', s.timeline_summary || '—', '',
-      'EVIDENCE SUMMARY', ...(s.evidence_summary || []).map(e => `• ${e}`), '',
-      'ISSUES IDENTIFIED', ...(s.issues_identified || []).map(i => `• ${i}`), '',
-      'CASE STRENGTHS', ...(s.strengths || []).map(x => `• ${x}`), '',
-      'WEAKNESSES / RISKS', ...(s.weaknesses || []).map(x => `• ${x}`), '',
-      'MISSING EVIDENCE', ...(s.missing_evidence?.length ? s.missing_evidence.map(x => `• ${x}`) : ['• None identified']), '',
-      'RECOMMENDED NEXT ACTIONS', ...(s.next_actions || []).map(x => `• ${x}`), '',
-      'ESCALATION PATH', s.escalation_path || '—',
-    ].join('\n');
-  }
-  // Legacy fallback
-  return [
-    'CASE OVERVIEW', s.summary || '—', '',
-    'KEY ISSUES', ...(s.key_issues || []).map(x => `• ${x}`), '',
-    'EVIDENCE ANALYSIS', ...(s.evidence_analysis || []).map(x => `• ${x}`), '',
-    'CORRESPONDENCE SUMMARY', s.correspondence_summary || '—', '',
-    'RECOMMENDED NEXT STEPS', ...(s.next_steps || []).map(x => `• ${x}`), '',
-    'CASE STRENGTH ASSESSMENT', s.case_strength_assessment || '—',
-  ].join('\n');
-}
-
-function buildDashboardPDFBody(caseItem, executiveSummary, evidence, events, deadlines) {
-  const dateStr = format(new Date(), 'd MMMM yyyy');
-  const currentStageIndex = STATUS_INDEX[caseItem.status] ?? 0;
-  const { score, items: scoreItems } = calcScore(caseItem, evidence, events);
-
-  const upcomingDeadlines = deadlines
-    .filter(d => d.status === 'pending' && d.deadline_date)
-    .sort((a, b) => new Date(a.deadline_date) - new Date(b.deadline_date))
-    .slice(0, 10);
-
-  const lines = [
-    `CASE DASHBOARD REPORT`,
-    `Generated: ${dateStr}`,
-    `Case: ${caseItem.title || '-'}`,
-    '',
-    '----------------------------------------',
-    'SECTION 1 - DASHBOARD SNAPSHOT',
-    '----------------------------------------',
-    `Status:            ${STATUS_LABELS[caseItem.status] || caseItem.status || '—'}`,
-    `Priority:          ${PRIORITY_LABELS[caseItem.priority] || caseItem.priority || '—'}`,
-    `Organisation:      ${caseItem.organisation_name || '-'}`,
-    `Complainant:       ${caseItem.complainant_name || '-'}`,
-    `Account #:         ${caseItem.account_number || '-'}`,
-    `Incident Date:     ${caseItem.incident_date ? format(new Date(caseItem.incident_date), 'd MMMM yyyy') : '-'}`,
-    `Category:          ${caseItem.category || '-'}`,
-    `Escalation Body:   ${caseItem.escalation_body || '-'}`,
-    `Evidence Files:    ${evidence.length}`,
-    `Timeline Events:   ${events.length}`,
-    `Upcoming Deadlines: ${upcomingDeadlines.length}`,
-    '',
-    '----------------------------------------',
-    'SECTION 2 - DISPUTE PROGRESS TRACKER',
-    '----------------------------------------',
-    ...STAGES.map((stage, i) => {
-      const mark = i < currentStageIndex ? '[COMPLETE]' : i === currentStageIndex ? '[CURRENT] ' : '[PENDING] ';
-      return `  ${mark} ${stage}`;
-    }),
-    '',
-    '----------------------------------------',
-    'SECTION 3 - MATTER STRENGTH',
-    '----------------------------------------',
-    `Overall Score: ${score}%`,
-    '',
-    ...scoreItems.map(item => `  ${item.ok === true ? 'YES -' : item.ok === false ? 'NO  -' : 'N/A -'} ${item.label}`),
-    '',
-  ];
-
-  if (upcomingDeadlines.length > 0) {
-    lines.push('----------------------------------------');
-    lines.push('SECTION 4 - UPCOMING DEADLINES');
-    lines.push('----------------------------------------');
-    upcomingDeadlines.forEach(d => {
-      const daysLeft = differenceInDays(new Date(d.deadline_date), new Date());
-      const tag = daysLeft < 0 ? `OVERDUE ${Math.abs(daysLeft)}d` : daysLeft === 0 ? 'TODAY' : `${daysLeft}d remaining`;
-      lines.push(`  ${d.title}`);
-      lines.push(`    Due: ${format(new Date(d.deadline_date), 'd MMM yyyy')} | ${tag}`);
-    });
-    lines.push('');
-  }
-
-  lines.push('----------------------------------------');
-  lines.push('SECTION 5 - ISSUE SUMMARY');
-  lines.push('----------------------------------------');
-  lines.push(caseItem.issue_summary || 'Not provided');
-  lines.push('');
-
-  if (caseItem.desired_outcome) {
-    lines.push('----------------------------------------');
-    lines.push('SECTION 6 - DESIRED OUTCOME');
-    lines.push('----------------------------------------');
-    lines.push(caseItem.desired_outcome);
-    lines.push('');
-  }
-
-  if (executiveSummary) {
-    lines.push('----------------------------------------');
-    lines.push('SECTION 7 - AI CASE ASSESSMENT');
-    lines.push('----------------------------------------');
-    lines.push('');
-
-    if (isNewSchema(executiveSummary)) {
-      if (executiveSummary.case_overview) {
-        lines.push('CASE OVERVIEW'); lines.push(executiveSummary.case_overview); lines.push('');
-      }
-      if (executiveSummary.facts?.length) {
-        lines.push('ESTABLISHED FACTS');
-        executiveSummary.facts.forEach(f => lines.push(`  • ${f}`));
-        lines.push('');
-      }
-      if (executiveSummary.timeline_summary) {
-        lines.push('TIMELINE SUMMARY'); lines.push(executiveSummary.timeline_summary); lines.push('');
-      }
-      if (executiveSummary.evidence_summary?.length) {
-        lines.push('EVIDENCE SUMMARY');
-        executiveSummary.evidence_summary.forEach(e => lines.push(`  • ${e}`));
-        lines.push('');
-      }
-      if (executiveSummary.issues_identified?.length) {
-        lines.push('ISSUES IDENTIFIED');
-        executiveSummary.issues_identified.forEach(i => lines.push(`  • ${i}`));
-        lines.push('');
-      }
-      if (executiveSummary.strengths?.length) {
-        lines.push('CASE STRENGTHS');
-        executiveSummary.strengths.forEach(x => lines.push(`  • ${x}`));
-        lines.push('');
-      }
-      if (executiveSummary.weaknesses?.length) {
-        lines.push('WEAKNESSES / RISKS');
-        executiveSummary.weaknesses.forEach(x => lines.push(`  • ${x}`));
-        lines.push('');
-      }
-      if (executiveSummary.missing_evidence?.length) {
-        lines.push('MISSING EVIDENCE');
-        executiveSummary.missing_evidence.forEach(x => lines.push(`  • ${x}`));
-        lines.push('');
-      }
-      if (executiveSummary.next_actions?.length) {
-        lines.push('RECOMMENDED NEXT ACTIONS');
-        executiveSummary.next_actions.forEach(x => lines.push(`  • ${x}`));
-        lines.push('');
-      }
-      if (executiveSummary.escalation_path) {
-        lines.push('ESCALATION PATH'); lines.push(executiveSummary.escalation_path); lines.push('');
-      }
-    } else {
-      // Legacy schema
-      if (executiveSummary.summary) { lines.push('CASE OVERVIEW'); lines.push(executiveSummary.summary); lines.push(''); }
-      if (executiveSummary.key_issues?.length) {
-        lines.push('KEY ISSUES');
-        executiveSummary.key_issues.forEach(x => lines.push(`  • ${x}`));
-        lines.push('');
-      }
-      if (executiveSummary.next_steps?.length) {
-        lines.push('RECOMMENDED NEXT STEPS');
-        executiveSummary.next_steps.forEach(x => lines.push(`  • ${x}`));
-        lines.push('');
-      }
-    }
-  }
-
-  return lines.join('\n');
-}
-
-// ── Shared PDF action helper ──────────────────────────────────────────────────
-
-async function runPDFAction({ action, tab, title, body, caseId, onBlob }) {
-  pdfDiagStart({ tab, action, hasData: !!body });
+async function runPDFAction({ action, tab, title, subtitle, sections }) {
+  pdfDiagStart({ tab, action, hasData: sections?.length > 0 });
   const blob = await renderDocToBlob(
     <ReportDocument
       title={title}
+      subtitle={subtitle}
       generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
-      sections={[{ heading: title, paragraphs: [body] }]}
-    />,
-    { caseId }
+      sections={sections}
+    />
   );
   if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
   pdfDiagBlobCreated({ tab, action, blob });
-  if (onBlob) await onBlob(blob);
   pdfDiagSuccess({ tab, action });
   return blob;
 }
@@ -293,6 +79,12 @@ export default function CaseSummary({ caseItem, evidence, events }) {
   const { data: deadlines = [] } = useQuery({
     queryKey: ["deadlines", caseItem?.id],
     queryFn: () => base44.entities.Deadline.filter({ case_id: caseItem.id }),
+    enabled: !!caseItem?.id,
+  });
+
+  const { data: checklistItems = [] } = useQuery({
+    queryKey: ["checklist", caseItem?.id],
+    queryFn: () => base44.entities.ChecklistItem.filter({ case_id: caseItem.id }),
     enabled: !!caseItem?.id,
   });
 
@@ -345,13 +137,13 @@ export default function CaseSummary({ caseItem, evidence, events }) {
   const handleDashboardDownload = async () => {
     setPdfLoading('dashboard-dl');
     try {
-      const body = buildDashboardPDFBody(caseItem, executiveSummary, evidence, events, deadlines);
-      await runPDFAction({
+      const sections = buildSections(caseItem, evidence, events, deadlines, checklistItems);
+      const blob = await runPDFAction({
         action: 'Download', tab: 'Dashboard PDF',
-        title: `Case Dashboard Report — ${caseItem.title}`,
-        body, caseId: caseItem?.id,
-        onBlob: (blob) => downloadPDFBlob(blob, `Dashboard_${today}.pdf`),
+        title: 'Complete Case Report', subtitle: caseItem.title,
+        sections,
       });
+      downloadPDFBlob(blob, `Dashboard_${today}.pdf`);
     } catch (err) {
       pdfDiagFail({ tab: 'Dashboard PDF', action: 'Download', error: err });
     } finally {
@@ -362,11 +154,11 @@ export default function CaseSummary({ caseItem, evidence, events }) {
   const handleDashboardPrint = async () => {
     setPdfLoading('dashboard-print');
     try {
-      const body = buildDashboardPDFBody(caseItem, executiveSummary, evidence, events, deadlines);
+      const sections = buildSections(caseItem, evidence, events, deadlines, checklistItems);
       const blob = await runPDFAction({
         action: 'Print', tab: 'Dashboard PDF',
-        title: `Case Dashboard Report — ${caseItem.title}`,
-        body, caseId: caseItem?.id,
+        title: 'Complete Case Report', subtitle: caseItem.title,
+        sections,
       });
       const opened = await openPDFForPrint(blob, `Dashboard_${today}.pdf`);
       if (!opened) {
@@ -386,13 +178,13 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     if (!executiveSummary) { toast.warning('Generate the AI Summary first.'); return; }
     setPdfLoading('summary-dl');
     try {
-      const body = buildAISummaryPDFBody(executiveSummary);
-      await runPDFAction({
+      const sections = buildSummarySections(executiveSummary);
+      const blob = await runPDFAction({
         action: 'Download', tab: 'AI Summary PDF',
-        title: `AI Case Summary — ${caseItem.title}`,
-        body, caseId: caseItem?.id,
-        onBlob: (blob) => downloadPDFBlob(blob, `AI_Summary_${today}.pdf`),
+        title: 'AI Case Summary', subtitle: caseItem.title,
+        sections,
       });
+      downloadPDFBlob(blob, `AI_Summary_${today}.pdf`);
     } catch (err) {
       pdfDiagFail({ tab: 'AI Summary PDF', action: 'Download', error: err });
     } finally {
@@ -404,11 +196,11 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     if (!executiveSummary) { toast.warning('Generate the AI Summary first.'); return; }
     setPdfLoading('summary-print');
     try {
-      const body = buildAISummaryPDFBody(executiveSummary);
+      const sections = buildSummarySections(executiveSummary);
       const blob = await runPDFAction({
         action: 'Print', tab: 'AI Summary PDF',
-        title: `AI Case Summary — ${caseItem.title}`,
-        body, caseId: caseItem?.id,
+        title: 'AI Case Summary', subtitle: caseItem.title,
+        sections,
       });
       const opened = await openPDFForPrint(blob, `AI_Summary_${today}.pdf`);
       if (!opened) {

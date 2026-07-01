@@ -35,30 +35,39 @@ const styles = {
   divider: { border: 'none', borderTop: '1px solid #ccc', margin: '2px 0 10px 0' },
 };
 
-function Section({ heading, rows, paragraphs, bullets, empty }) {
+// Renders one section as a FLAT array of individual block elements (heading,
+// each row, each paragraph, each bullet) — never one big wrapping div. This is
+// what lets the PDF paginator split BETWEEN rows/bullets/paragraphs instead of
+// treating a whole multi-line section as one unsplittable block.
+function renderSectionBlocks(section, idx) {
+  const { heading, rows, paragraphs, bullets, empty } = section;
   const cleanParas = (paragraphs || []).filter(p => p !== null && p !== undefined && String(p).trim() !== '');
   const hasContent = (rows && rows.length) || cleanParas.length || (bullets && bullets.length);
-  return (
-    <div style={{ breakInside: 'avoid' }}>
-      <div style={styles.heading}>{heading}</div>
-      {rows?.map((r, i) => (
-        <div key={i} style={styles.row}>
-          <span style={styles.rowLabel}>{r.label}:</span>
-          <span style={{ overflowWrap: 'break-word' }}>{r.value || '—'}</span>
-        </div>
-      ))}
-      {cleanParas.map((p, i) => <p key={i} style={styles.para}>{p}</p>)}
-      {bullets?.map((b, i) => (
-        <div key={i} style={styles.bullet}>
-          <span style={{ marginRight: 6, flexShrink: 0 }}>•</span>
-          <span style={{ overflowWrap: 'break-word' }}>{b}</span>
-        </div>
-      ))}
-      {!hasContent && (
-        <p style={{ ...styles.para, color: '#888', fontStyle: 'italic' }}>{empty || 'No data recorded.'}</p>
-      )}
+  const blocks = [];
+
+  blocks.push(<div key={`h-${idx}`} data-heading="true" style={styles.heading}>{heading}</div>);
+
+  rows?.forEach((r, i) => blocks.push(
+    <div key={`r-${idx}-${i}`} style={styles.row}>
+      <span style={styles.rowLabel}>{r.label}:</span>
+      <span style={{ overflowWrap: 'break-word' }}>{r.value || '—'}</span>
     </div>
+  ));
+
+  cleanParas.forEach((p, i) => blocks.push(<p key={`p-${idx}-${i}`} style={styles.para}>{p}</p>));
+
+  bullets?.forEach((b, i) => blocks.push(
+    <div key={`b-${idx}-${i}`} style={styles.bullet}>
+      <span style={{ marginRight: 6, flexShrink: 0 }}>•</span>
+      <span style={{ overflowWrap: 'break-word' }}>{b}</span>
+    </div>
+  ));
+
+  if (!hasContent) blocks.push(
+    <p key={`e-${idx}`} style={{ ...styles.para, color: '#888', fontStyle: 'italic' }}>{empty || 'No data recorded.'}</p>
   );
+
+  return blocks;
 }
 
 export default function ReportDocument({ title, subtitle, generatedLabel, sections = [] }) {
@@ -75,12 +84,13 @@ export default function ReportDocument({ title, subtitle, generatedLabel, sectio
         position: 'relative',
       }}
     >
-      {/* Thin header band — no bleed */}
-      <div style={{ width: '100%', height: '52px', overflow: 'hidden', flexShrink: 0, lineHeight: 0 }}>
+      {/* Header — full width, height follows the image's own aspect ratio so
+          the artwork is never cropped, stretched or zoomed */}
+      <div style={{ width: '100%', flexShrink: 0, lineHeight: 0 }}>
         <img
           src={REPORT_HEADER_URL}
           alt="Chaos Controller"
-          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block' }}
+          style={{ width: '100%', height: 'auto', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
@@ -91,16 +101,16 @@ export default function ReportDocument({ title, subtitle, generatedLabel, sectio
         {generatedLabel && <div style={styles.meta}>{generatedLabel}</div>}
         <hr style={styles.divider} />
         <div data-paginate-body="true">
-          {sections.map((s, i) => <Section key={i} {...s} />)}
+          {sections.flatMap((s, i) => renderSectionBlocks(s, i))}
         </div>
       </div>
 
-      {/* Thin footer band — no bleed */}
-      <div style={{ width: '100%', height: '32px', overflow: 'hidden', flexShrink: 0, marginTop: 'auto', lineHeight: 0 }}>
+      {/* Footer — full width, height follows the image's own aspect ratio */}
+      <div style={{ width: '100%', flexShrink: 0, marginTop: 'auto', lineHeight: 0 }}>
         <img
           src={REPORT_FOOTER_URL}
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block' }}
+          style={{ width: '100%', height: 'auto', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
