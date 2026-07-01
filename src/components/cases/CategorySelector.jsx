@@ -1,5 +1,5 @@
 import React from "react";
-import { Landmark, Shield, Home, Phone, Zap, HelpCircle, Building2 } from "lucide-react";
+import { Landmark, Shield, Home, Phone, Zap, HelpCircle, Building2, Scale } from "lucide-react";
 import { motion } from "framer-motion";
 
 const categories = [
@@ -9,6 +9,7 @@ const categories = [
   { value: "telco", label: "Telecommunications", description: "Optus, Telstra, billing, contracts", icon: Phone },
   { value: "utilities", label: "Utilities", description: "Electricity, gas, billing, disconnection", icon: Zap },
   { value: "government", label: "Government Departments", description: "Centrelink, ATO, Services Australia", icon: Building2 },
+  { value: "legal_profession", label: "Legal Profession Complaint", description: "Solicitor conduct, costs disputes, law firm complaints", icon: Scale },
   { value: "other", label: "Other", description: "General consumer dispute", icon: HelpCircle },
 ];
 

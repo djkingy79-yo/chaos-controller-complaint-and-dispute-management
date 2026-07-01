@@ -39,6 +39,11 @@ const BY_CATEGORY = {
   education: [
     { law: "Education Services for Overseas Students (ESOS) Act 2000", why: "Applies where the dispute involves an international student education provider." },
   ],
+  legal_profession: [
+    { law: "Legal Profession Uniform Law", why: "Governs solicitor and barrister conduct, costs disclosure obligations, and complaint-handling by the Legal Services Commissioner." },
+    { law: "Legal Profession Uniform Law Australian Solicitors' Conduct Rules", why: "Sets the professional conduct standards a solicitor must meet — relevant to conduct-based complaints." },
+    { law: "Legal Profession Uniform Legal Costs (Legal Practice) Rules", why: "Applies where the dispute concerns costs disclosure, billing or an itemised costs assessment." },
+  ],
 };
 
 export function getRelevantLegislation(caseItem) {

@@ -63,6 +63,7 @@ export default function NewCase() {
       // Only fall back to text-based detection if no category was set at all —
       // never silently override a confirmed category with a re-run guess.
       const finalCategory = category || detectIndustry(formData) || 'other';
+      const hasCivilClaimPathway = formData.has_civil_claim_pathway === "Yes — there is a separate civil/consumer claim";
       const deadline = new Date();
       deadline.setDate(deadline.getDate() + 21);
 
@@ -103,7 +104,11 @@ export default function NewCase() {
         issue_details: formData.issue_details || "",
         desired_outcome: formData.desired_outcome || "",
         response_deadline: deadline.toISOString().split("T")[0],
-        escalation_body: getEscalationBody(finalCategory),
+        escalation_body: getEscalationBody(finalCategory, {
+          text: `${formData.issue_summary || ""} ${formData.issue_details || ""}`,
+          hasCivilClaimPathway,
+        }),
+        has_civil_claim_pathway: hasCivilClaimPathway,
         priority: "medium",
         notes: `${uploadedFiles.length} document${uploadedFiles.length !== 1 ? "s" : ""} uploaded`,
         creation_request_id: creationRequestId,

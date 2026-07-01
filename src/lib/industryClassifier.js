@@ -15,6 +15,19 @@
 
 const RULES = [
   {
+    category: "legal_profession",
+    providers: [
+      "law society", "bar association", "legal services commissioner",
+      "olsc", "office of the legal services commissioner",
+    ],
+    keywords: [
+      "solicitor", "barrister", "law firm", "lawyer", "conveyancer",
+      "legal fees", "costs dispute", "costs assessment", "itemised bill",
+      "overcharged legal fees", "legal representation", "retainer agreement",
+      "professional misconduct", "solicitor misconduct", "unsatisfactory professional conduct",
+    ],
+  },
+  {
     category: "government",
     providers: [
       "centrelink", "services australia", "medicare", "child support agency",
@@ -142,8 +155,30 @@ const ESCALATION_BODIES = {
   tenancy:    "NSW Civil and Administrative Tribunal (NCAT)",
   government: "Relevant agency complaints team / Commonwealth Ombudsman",
   education:  "School principal / Department of Education complaints",
+  legal_profession: "Office of the Legal Services Commissioner (OLSC) / relevant state or territory Legal Services Commissioner",
   other:      "Relevant ombudsman or tribunal",
 };
+
+// Legal Profession Complaint is its own beast — never routes through the
+// general consumer tribunal by default. Conduct complaints go to the
+// Legal Services Commissioner / Law Society or Bar Association; costs
+// disputes get the costs assessment pathway; NCAT is only ever added when
+// the case has an explicitly confirmed genuine civil/consumer claim.
+const COSTS_DISPUTE_PATTERN = /costs? dispute|itemised bill|overcharg(ed|ing)|legal fees|invoice|retainer|costs assessment|fee dispute/i;
+
+function buildLegalProfessionEscalationBody({ text = "", hasCivilClaimPathway = false } = {}) {
+  const parts = [
+    "Office of the Legal Services Commissioner (OLSC) / relevant state or territory Legal Services Commissioner",
+    "Law Society or Bar Association (where the complaint involves professional conduct)",
+  ];
+  if (COSTS_DISPUTE_PATTERN.test(text)) {
+    parts.push("Costs Assessment / itemised bill review pathway (where the dispute is about legal fees)");
+  }
+  if (hasCivilClaimPathway) {
+    parts.push("NCAT (Consumer and Commercial Division) — only because this matter has a confirmed genuine civil/consumer claim, not as a default for lawyer conduct complaints");
+  }
+  return parts.join("; ");
+}
 
 // ─── CORE SCORING ENGINE ──────────────────────────────────────────────────────
 
@@ -232,8 +267,11 @@ export function detectIndustry(input = {}) {
 
 /**
  * Escalation body for a given category string.
+ * For legal_profession, pass context { text, hasCivilClaimPathway } to get the
+ * correct compound routing (OLSC/Law Society, + costs assessment/NCAT only when relevant).
  */
-export function getEscalationBody(industry) {
+export function getEscalationBody(industry, context = {}) {
+  if (industry === "legal_profession") return buildLegalProfessionEscalationBody(context);
   return ESCALATION_BODIES[industry] || ESCALATION_BODIES.other;
 }
 
@@ -246,6 +284,7 @@ const ESCALATION_URLS = {
   telco: "https://www.tio.com.au/complaints",
   utilities: "https://www.ewon.com.au/page/making-a-complaint/complaint-forms",
   tenancy: "https://www.ncat.nsw.gov.au/ncat/how-to-apply.html",
+  legal_profession: "https://www.olsc.nsw.gov.au/how-to-complain.html",
 };
 
 export function getEscalationUrl(industry) {

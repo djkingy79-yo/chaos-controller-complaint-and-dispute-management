@@ -69,7 +69,10 @@ function buildPrompt(type, caseItem, client, today, evidenceList) {
   // Single source of truth for the escalation body — the case's own
   // classifier-assigned value, falling back to the classifier's own
   // category lookup (never an ad hoc "AFCA/TIO/NCAT" style generic string).
-  const escalationBody = caseItem.escalation_body || getEscalationBody(caseItem.category);
+  const escalationBody = caseItem.escalation_body || getEscalationBody(caseItem.category, {
+    text: `${caseItem.issue_summary || ""} ${caseItem.issue_details || ""}`,
+    hasCivilClaimPathway: !!caseItem.has_civil_claim_pathway,
+  });
 
   // Build evidence summary for injection into prompts
   const evidenceSummary = (evidenceList || []).length > 0
@@ -977,7 +980,7 @@ export default function LetterSuite({ caseItem }) {
         <p className="text-xs text-muted-foreground">
           <span className="font-bold text-foreground">Letter Suite</span> — Generate each letter as your dispute progresses.
           Start with the 1st Complaint. Move to 2nd/3rd if unresolved. Use Accept/Deny Offer letters when a settlement is proposed.
-          Use the Escalation Letter to lodge with {caseItem.escalation_body || getEscalationBody(caseItem.category)}.
+          Use the Escalation Letter to lodge with {caseItem.escalation_body || getEscalationBody(caseItem.category, { text: `${caseItem.issue_summary || ""} ${caseItem.issue_details || ""}`, hasCivilClaimPathway: !!caseItem.has_civil_claim_pathway })}.
         </p>
       </div>
 

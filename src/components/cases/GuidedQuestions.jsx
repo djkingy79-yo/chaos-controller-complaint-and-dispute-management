@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, ArrowLeft, Building2, Loader2 } from "lucide-react";
 import OrgPicker from "@/components/directories/OrgPicker";
-import { detectIndustry } from "@/lib/industryClassifier";
 
 // Complainant personal details — collected for every category
 const complainantFields = [
@@ -89,6 +88,19 @@ const caseFields = {
     { key: "issue_details", label: "Full details", type: "textarea", placeholder: "Include reference numbers, dates, decisions made, conversations with the department...", required: true },
     { key: "desired_outcome", label: "What outcome do you want?", type: "textarea", placeholder: "e.g. Payment released, decision reviewed, apology", required: true },
   ],
+  legal_profession: [
+    { key: "organisation_name", label: "Which law firm / solicitor / barrister?", type: "text", placeholder: "e.g. Smith & Associates Lawyers", required: true },
+    { key: "organisation_complaints_address", label: "Their postal address (if known)", type: "text", placeholder: "e.g. Level 5, 100 King Street, Sydney NSW 2000", required: false },
+    { key: "organisation_complaints_email", label: "Their email address (if known)", type: "text", placeholder: "e.g. complaints@lawfirm.com.au", required: false },
+    { key: "complaint_handler_name", label: "Name of the solicitor or complaint handler", type: "text", placeholder: "e.g. Jane Doe — Principal Solicitor", required: false },
+    { key: "account_number", label: "File / matter reference number (if applicable)", type: "text", placeholder: "e.g. MAT-2024-001", required: false },
+    { key: "incident_date", label: "Date the issue started", type: "date", placeholder: "", required: false },
+    { key: "issue_type", label: "What type of legal profession issue?", type: "select", options: ["Professional misconduct / conduct complaint", "Costs dispute / overcharged fees", "Poor service / communication failure", "Conflict of interest", "Negligence", "Other"], required: true },
+    { key: "issue_summary", label: "Briefly describe the issue", type: "text", placeholder: "e.g. Solicitor billed far above the costs agreement without disclosure", required: true },
+    { key: "issue_details", label: "Full details", type: "textarea", placeholder: "Include the matter type, dates, costs agreement details, communications, and what was agreed vs delivered...", required: true },
+    { key: "desired_outcome", label: "What outcome do you want?", type: "textarea", placeholder: "e.g. Costs reassessment and refund of overcharged fees", required: true },
+    { key: "has_civil_claim_pathway", label: "Separate from the conduct/costs complaint, is there also a genuine civil or consumer claim (e.g. a claim NCAT could hear)?", type: "select", options: ["No — conduct/costs complaint only", "Yes — there is a separate civil/consumer claim"], required: true },
+  ],
   other: [
     { key: "organisation_name", label: "Which organisation?", type: "text", placeholder: "Company or organisation name", required: true },
     { key: "organisation_complaints_address", label: "Their complaints postal address (if known)", type: "text", placeholder: "e.g. 100 Main Street, Sydney NSW 2000", required: false },
@@ -111,11 +123,9 @@ export default function GuidedQuestions({ category, data, onChange, onNext, onBa
 
   const handleChange = (value) => {
     onChange({ ...data, [current.key]: value });
-    // Auto-classify industry when organisation name is entered
-    if (current.key === 'organisation_name' && value && onCategoryDetected) {
-      const detected = detectIndustry({ organisation_name: value });
-      if (detected && detected !== 'other') onCategoryDetected(detected);
-    }
+    // Category is already confirmed by this step (via upload auto-detect or
+    // manual CategorySelector choice) — never re-run classification here and
+    // silently overwrite it. onCategoryDetected is intentionally unused now.
   };
 
   const handleOrgSelect = (org) => {
