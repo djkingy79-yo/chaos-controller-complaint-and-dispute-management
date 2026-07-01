@@ -189,7 +189,6 @@ export default function LetterDocument({
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        overflow: 'hidden',
       }}
     >
       {/* ── LETTERHEAD BANNER (thin band, no bleed) ── */}
@@ -197,7 +196,7 @@ export default function LetterDocument({
         <img
           src={LETTERHEAD_URL}
           alt="Chaos Controller"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
@@ -210,7 +209,6 @@ export default function LetterDocument({
           padding: `20px ${H_PAD}px 24px ${H_PAD}px`,
           boxSizing: 'border-box',
           width: '100%',
-          overflow: 'hidden',
           overflowWrap: 'break-word',
         }}
       >
@@ -271,8 +269,9 @@ export default function LetterDocument({
           margin: '0 0 16px 0',
         }} />
 
-        {/* Letter body */}
-        <div style={{
+        {/* Letter body — marked so the PDF paginator knows this is the splittable
+            block; everything before it (date/address/subject/rule) stays on page 1 only */}
+        <div data-paginate-body="true" style={{
           fontFamily: BASE_FONT,
           fontSize: BASE_SIZE,
           color: '#000',
@@ -290,7 +289,7 @@ export default function LetterDocument({
         <img
           src={LETTER_FOOTER_URL}
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>

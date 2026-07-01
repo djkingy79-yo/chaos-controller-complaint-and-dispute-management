@@ -107,7 +107,6 @@ Generate a structured report with these exact sections. Use Australian English. 
 
     const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
-      model: 'gemini_3_1_pro',
       response_json_schema: {
         type: 'object',
         properties: {

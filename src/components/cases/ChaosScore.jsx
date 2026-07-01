@@ -116,11 +116,16 @@ export function scoreFromCase(caseItem, evidence, events) {
     items.push({ label: "Escalation body not yet identified", status: "yellow" });
   }
 
-  // Escalation pathway complete — 3rd sent (or no-response after 2nd allows skipping to escalation)
-  // AND either 3rd sent, or no response recorded after the 3rd was sent
+  // Escalation pathway complete once the 3rd/final complaint has run its course —
+  // either no response was received (auto-detected or recorded), OR a response
+  // WAS received and the case has since progressed to an offer/escalation letter.
+  // (Previously this only unlocked on no-response, so cases where the organisation
+  // actually replied to the final complaint could never unlock Escalation.)
   const escalationCriteriaMet =
-    (!!c.third_complaint_sent_at && noResponseAfterThird) ||
+    (!!c.third_complaint_sent_at && (noResponseAfterThird || !!c.third_response_received_at)) ||
     (!c.third_complaint_sent_at && noResponseAfterSecond) ||
+    !!c.accept_offer_sent_at ||
+    !!c.deny_offer_sent_at ||
     !!c.escalated_at ||
     c.status === "escalation_ready" ||
     c.status === "escalated" ||

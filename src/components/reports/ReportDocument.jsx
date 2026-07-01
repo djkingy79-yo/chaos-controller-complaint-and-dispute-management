@@ -80,7 +80,7 @@ export default function ReportDocument({ title, subtitle, generatedLabel, sectio
         <img
           src={REPORT_HEADER_URL}
           alt="Chaos Controller"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
@@ -90,7 +90,9 @@ export default function ReportDocument({ title, subtitle, generatedLabel, sectio
         {subtitle && <div style={styles.subtitle}>{subtitle}</div>}
         {generatedLabel && <div style={styles.meta}>{generatedLabel}</div>}
         <hr style={styles.divider} />
-        {sections.map((s, i) => <Section key={i} {...s} />)}
+        <div data-paginate-body="true">
+          {sections.map((s, i) => <Section key={i} {...s} />)}
+        </div>
       </div>
 
       {/* Thin footer band — no bleed */}
@@ -98,7 +100,7 @@ export default function ReportDocument({ title, subtitle, generatedLabel, sectio
         <img
           src={REPORT_FOOTER_URL}
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block' }}
           crossOrigin="anonymous"
         />
       </div>
