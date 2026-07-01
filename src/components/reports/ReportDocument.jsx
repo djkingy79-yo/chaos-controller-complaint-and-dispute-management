@@ -1,9 +1,10 @@
 /**
  * CHAOS CONTROLLER — UNIFIED REPORT DOCUMENT
  *
- * Shared A4 report renderer used by BOTH:
+ * Single source of truth for every multi-section report in the app:
  *   - Dashboard "Complete Case Report" (CaseDashboardReport.jsx)
  *   - AI Analysis report (ExecutiveSummaryGenerator.jsx)
+ *   - Every section of the Case Transfer Package (CaseTransferPackage.jsx)
  *
  * Same capture pathway as letters: html2canvas → jsPDF (see captureDocumentPDF
  * in src/lib/pdfGenerator.js). Thin header/footer bands — no page bleed.

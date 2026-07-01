@@ -5,12 +5,12 @@ import { FileText, Sparkles, Loader2, CheckCircle2, AlertCircle, Clock, Trending
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { captureDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
-import ReportDocument from "@/components/letters/ReportDocument";
+import ReportDocument from "@/components/reports/ReportDocument";
 import { format } from "date-fns";
 
 // Same section shape used by CaseDashboardReport.jsx — keeps the AI analysis
 // report on the identical unified rendering + capture pathway as everything else.
-function buildSummarySections(summary) {
+export function buildSummarySections(summary) {
   const s = summary;
   const sections = [
     { heading: 'Case Overview', paragraphs: [s.case_overview] },
@@ -112,7 +112,7 @@ export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated
     if (!summary || !reportRef.current) return;
     setPdfLoading(true);
     try {
-      const blob = await captureDocumentPDF(reportRef.current);
+      const blob = await captureDocumentPDF(reportRef.current, { caseId: caseItem?.id });
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       downloadPDFBlob(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       toast({ title: "PDF Downloaded" });
@@ -128,7 +128,7 @@ export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated
     if (!summary || !reportRef.current) return;
     setPdfLoading(true);
     try {
-      const blob = await captureDocumentPDF(reportRef.current);
+      const blob = await captureDocumentPDF(reportRef.current, { caseId: caseItem?.id });
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       const opened = await openPDFForPrint(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       if (!opened) {

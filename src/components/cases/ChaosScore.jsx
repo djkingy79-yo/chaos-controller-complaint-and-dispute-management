@@ -21,7 +21,7 @@ import { computeNoResponse } from "@/lib/disputeStageLogic";
  * passed with nothing recorded — see computeNoResponse() — so retrospective
  * (past) sent dates unlock the pathway without extra manual steps.
  */
-function scoreFromCase(caseItem, evidence, events) {
+export function scoreFromCase(caseItem, evidence, events) {
   let score = 0;
   const items = [];
   const c = caseItem;
@@ -169,7 +169,7 @@ export default function ChaosScore({ caseItem, evidence, events }) {
     } else if (caseItem.category === "tenancy") {
       window.open("https://www.ncat.nsw.gov.au/ncat/how-to-apply.html", "_blank");
     } else {
-      navigate(`/case/${caseItem.id}?tab=bundle`);
+      navigate(`/case/${caseItem.id}?tab=print`);
     }
   };
 

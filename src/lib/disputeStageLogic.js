@@ -51,3 +51,38 @@ export const SEND_METHODS = [
   { value: "phone_confirmed", label: "Phone confirmed" },
   { value: "other", label: "Other" },
 ];
+
+// Letter key -> Case field storing that letter's generated content.
+// This is the ONLY letter field map used anywhere in the app — never the
+// legacy complaint_letter / complaint_letter_2 / letter_escalation fields.
+export const LETTER_FIELD_MAP = {
+  letter1: "first_complaint_letter",
+  letter2: "second_complaint_letter",
+  letter3: "third_complaint_letter",
+  accept_offer: "accept_offer_letter",
+  deny_offer: "deny_offer_letter",
+  escalation: "escalation_letter",
+};
+
+export const LETTER_LABELS = {
+  letter1: "1st Complaint",
+  letter2: "2nd Complaint",
+  letter3: "3rd Complaint",
+  accept_offer: "Accept Offer",
+  deny_offer: "Deny Offer",
+  escalation: "Escalation Letter",
+};
+
+// Single source of truth for each letter type's "Re:" subject line.
+export function getLetterReSubject(letterKey, organisationName) {
+  const org = organisationName || "Organisation";
+  const map = {
+    letter1: `FORMAL COMPLAINT — ${org}`,
+    letter2: `SECOND FORMAL COMPLAINT — ${org}`,
+    letter3: `THIRD AND FINAL COMPLAINT — ${org}`,
+    accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${org}`,
+    deny_offer: `REJECTION OF SETTLEMENT OFFER — ${org}`,
+    escalation: `EXTERNAL DISPUTE SUBMISSION — ${org}`,
+  };
+  return map[letterKey] || `FORMAL COMPLAINT — ${org}`;
+}

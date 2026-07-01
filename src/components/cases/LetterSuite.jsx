@@ -14,7 +14,7 @@ import LetterTemplateManager from "./LetterTemplateManager";
 import LetterEmailDialog from "./LetterEmailDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { captureLetterDocumentPDF, generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint, LETTERHEAD_URL, stripToLetterBody } from "@/lib/pdfGenerator";
+import { captureLetterDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
@@ -23,7 +23,7 @@ import LetterHeader, { buildLetterHeaderData } from "@/components/cases/LetterHe
 import LetterDocument, { LetterPreviewWrapper } from "@/components/letters/LetterDocument.jsx";
 import MarkSentDialog from "@/components/cases/MarkSentDialog.jsx";
 import { markLetterSent } from "@/lib/letterTracking";
-import { LETTER_SENT_FIELD_MAP } from "@/lib/disputeStageLogic";
+import { LETTER_SENT_FIELD_MAP, getLetterReSubject } from "@/lib/disputeStageLogic";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -663,7 +663,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     if (!text || !text.trim()) { pdfDiagMissingData({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', dataName: 'letter content (generate letter first)' }); return; }
     if (!letterDocRef.current) { pdfDiagFail({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', error: new Error('Letter preview not mounted') }); return; }
     try {
-      const blob = await captureLetterDocumentPDF(letterDocRef.current);
+      const blob = await captureLetterDocumentPDF(letterDocRef.current, { caseId: caseItem?.id });
       pdfDiagBlobCreated({ tab: `Letter: ${letterType.label}`, action: 'Download PDF', blob });
       downloadPDFBlob(blob, letterFilename);
       pdfDiagSuccess({ tab: `Letter: ${letterType.label}`, action: 'Download PDF' });
@@ -677,7 +677,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
     if (!text || !text.trim()) { pdfDiagMissingData({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', dataName: 'letter content (generate letter first)' }); return; }
     if (!letterDocRef.current) { pdfDiagFail({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', error: new Error('Letter preview not mounted') }); return; }
     try {
-      const blob = await captureLetterDocumentPDF(letterDocRef.current);
+      const blob = await captureLetterDocumentPDF(letterDocRef.current, { caseId: caseItem?.id });
       pdfDiagBlobCreated({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', blob });
       const opened = await openPDFForPrint(blob, letterFilename);
       if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, letterFilename); }
@@ -858,14 +858,6 @@ function LetterEditor({ letterType, caseItem, evidence }) {
           ) : (() => {
             const client = buildClientContext(caseItem, evidence);
             const { receiverLines, senderLines, today } = buildLetterHeaderData(caseItem, client);
-            const reLabels = {
-              letter1: `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-              letter2: `SECOND FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-              letter3: `THIRD AND FINAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`,
-              accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
-              deny_offer: `REJECTION OF SETTLEMENT OFFER — ${caseItem.organisation_name || "Organisation"}`,
-              escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem.organisation_name || "Organisation"}`,
-            };
             return (
               <LetterPreviewWrapper>
                 <div ref={letterDocRef}>
@@ -873,7 +865,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
                     receiverLines={receiverLines}
                     senderLines={senderLines}
                     today={today}
-                    reSubject={reLabels[letterType.key] || `FORMAL COMPLAINT — ${caseItem.organisation_name || "Organisation"}`}
+                    reSubject={getLetterReSubject(letterType.key, caseItem.organisation_name)}
                     bodyText={text}
                   />
                 </div>

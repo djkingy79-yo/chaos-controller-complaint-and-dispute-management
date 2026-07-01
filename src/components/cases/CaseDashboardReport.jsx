@@ -5,7 +5,7 @@ import { Download, Printer, Loader2, Package } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import { captureDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
-import ReportDocument, { ReportPreviewWrapper } from "@/components/letters/ReportDocument";
+import ReportDocument, { ReportPreviewWrapper } from "@/components/reports/ReportDocument";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail } from "@/lib/pdfDiagnostics";
 
 const LETTER_DEFS = [
@@ -17,7 +17,7 @@ const LETTER_DEFS = [
   { field: "escalation_letter", label: "Escalation Letter" },
 ];
 
-function buildSections(caseItem, evidence, events, deadlines, checklistItems) {
+export function buildSections(caseItem, evidence, events, deadlines, checklistItems) {
   const now = new Date();
   const sortedEvidence = [...(evidence || [])].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
   const sortedEvents = [...(events || [])].sort((a, b) => new Date(a.event_date || a.created_date) - new Date(b.event_date || b.created_date));
@@ -172,7 +172,7 @@ export default function CaseDashboardReport({ caseItem, evidence, events }) {
     if (!reportRef.current) return;
     setBusy('download');
     try {
-      const blob = await captureDocumentPDF(reportRef.current);
+      const blob = await captureDocumentPDF(reportRef.current, { caseId: caseItem?.id });
       pdfDiagBlobCreated({ tab: 'Dashboard Report', action: 'Download PDF', blob });
       downloadPDFBlob(blob, filename);
       pdfDiagSuccess({ tab: 'Dashboard Report', action: 'Download PDF' });
@@ -189,7 +189,7 @@ export default function CaseDashboardReport({ caseItem, evidence, events }) {
     if (!reportRef.current) return;
     setBusy('print');
     try {
-      const blob = await captureDocumentPDF(reportRef.current);
+      const blob = await captureDocumentPDF(reportRef.current, { caseId: caseItem?.id });
       pdfDiagBlobCreated({ tab: 'Dashboard Report', action: 'Print PDF', blob });
       const opened = await openPDFForPrint(blob, filename);
       if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, filename); }

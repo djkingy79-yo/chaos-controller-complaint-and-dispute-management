@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Download, Printer, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from '@/lib/pdfGenerator';
+import { downloadPDFBlob, openPDFForPrint } from '@/lib/pdfGenerator';
+import ReportDocument from '@/components/reports/ReportDocument';
+import { renderDocToBlob } from '@/lib/renderDocToBlob';
 import { toast } from "sonner";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 
@@ -164,20 +166,20 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
 
   const buildSnapshotBlob = async () => {
     if (!snapshot) throw new Error('Generate the snapshot first before downloading.');
-    const { sections } = cleanSnapshotContent(snapshot);
-    const validatedSections = sections
-      .map(s => ({ title: String(s.title || ''), content: String(s.content || '') }))
-      .filter(s => s.title || s.content);
-    if (validatedSections.length === 0) throw new Error('No content found in snapshot.');
-    const blob = await generateChaosDocumentPDF({
-      documentType: 'snapshot',
-      title: 'Weekly Case Snapshot',
-      matter: String(caseItem.title || 'Case'),
-      date: format(new Date(), "d MMMM yyyy"),
-      sections: validatedSections,
-      includeHeader: true,
-      includeFooter: true,
-    });
+    const { sections: rawSections } = cleanSnapshotContent(snapshot);
+    const sections = rawSections
+      .map(s => ({ heading: String(s.title || 'Summary'), paragraphs: [String(s.content || '')] }))
+      .filter(s => s.paragraphs[0]);
+    if (sections.length === 0) throw new Error('No content found in snapshot.');
+    const blob = await renderDocToBlob(
+      <ReportDocument
+        title="Weekly Case Snapshot"
+        subtitle={caseItem.title}
+        generatedLabel={`Generated ${generatedAt || format(new Date(), 'd MMMM yyyy')}`}
+        sections={sections}
+      />,
+      { caseId: caseItem?.id }
+    );
     if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
     return blob;
   };

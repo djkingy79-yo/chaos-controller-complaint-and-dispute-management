@@ -17,10 +17,9 @@ import CaseTimeline from "@/components/cases/CaseTimeline";
 import LetterSuite from "@/components/cases/LetterSuite";
 import ChaosScore from "@/components/cases/ChaosScore";
 import CaseDashboardReport from "@/components/cases/CaseDashboardReport";
-import EscalationBundle from "@/components/cases/EscalationBundle";
 import CaseSummary from "@/components/cases/CaseSummary";
 import DisputeProgressTracker from "@/components/cases/DisputeProgressTracker";
-import ExportCaseZip from "@/components/cases/ExportCaseZip";
+import CaseTransferPackage from "@/components/cases/CaseTransferPackage";
 import MerchantInvite from "@/components/cases/MerchantInvite";
 import WeeklySnapshot from "@/components/cases/WeeklySnapshot";
 import ExecutiveSummaryGenerator from "@/components/cases/ExecutiveSummaryGenerator";
@@ -195,7 +194,7 @@ export default function CaseDetail() {
       {/* Action Buttons - Moved below case details */}
       <div className="flex flex-wrap gap-3 justify-end border-t border-border pt-4 mb-4">
         <ExecutiveSummaryGenerator caseItem={caseItem} />
-        <ExportCaseZip caseItem={caseItem} evidence={evidence} events={timelineEvents} />
+        <CaseTransferPackage caseItem={caseItem} evidence={evidence} events={timelineEvents} />
         <Link to={`/calendar-sync?caseId=${caseId}`}>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs border-primary/40 text-primary hover:bg-primary/10">
             <RefreshCw className="w-3.5 h-3.5" /> Sync to Google / Outlook Calendar

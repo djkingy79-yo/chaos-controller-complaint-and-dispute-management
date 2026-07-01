@@ -19,7 +19,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription } from "@/lib/subscription";
 import { useQuery } from "@tanstack/react-query";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/reports/ReportDocument";
+import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 import { detectIndustry, detectIndustryDebug } from "@/lib/industryClassifier";
 
@@ -430,19 +432,21 @@ export default function EvidenceVault({ caseId, evidence, caseItem }) {
 
   const buildEvidenceBlob = async () => {
     if (!sorted || sorted.length === 0) throw new Error('No evidence files to export.');
-    const body = sorted.map((ev, i) => {
+    const bullets = sorted.map((ev) => {
       const cfg = typeConfig[ev.file_type] || typeConfig.other;
-      const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMMM yyyy") : "—";
-      const desc = ev.description || ev.extracted_data?.document_summary || "—";
-      return `${i + 1}. ${ev.file_name || 'Unknown'}\nType: ${cfg.label} | Date: ${dateStr}\n${desc}`;
-    }).join("\n\n");
-    const blob = await generateChaosDocumentPDF({
-      documentType: 'general',
-      title: 'Evidence Index',
-      body: `EVIDENCE VAULT (${sorted.length} files)\n\n${body}`,
-      includeHeader: true,
-      includeFooter: true,
+      const dateStr = ev.event_date ? format(new Date(ev.event_date), "d MMMM yyyy") : "no date";
+      const desc = ev.description || ev.extracted_data?.document_summary || "";
+      return `${ev.file_name || 'Unknown'} — ${cfg.label} — ${dateStr}${desc ? ' — ' + desc : ''}`;
     });
+    const blob = await renderDocToBlob(
+      <ReportDocument
+        title="Evidence Index"
+        subtitle={caseItem?.title}
+        generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
+        sections={[{ heading: `Evidence Vault (${sorted.length} files)`, bullets }]}
+      />,
+      { caseId }
+    );
     if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
     return blob;
   };

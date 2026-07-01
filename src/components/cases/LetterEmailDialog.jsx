@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Loader2, CheckCircle2, XCircle, RefreshCw, Paperclip } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { generateChaosDocumentPDF, captureDocumentPDF } from "@/lib/pdfGenerator";
+import { captureDocumentPDF } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/reports/ReportDocument";
+import { renderDocToBlob } from "@/lib/renderDocToBlob";
 
 // Convert a Blob to a standard base64 string (not URL-safe)
 async function blobToBase64(blob) {
@@ -86,25 +88,27 @@ export default function LetterEmailDialog({
       // pixel-identical to the preview (one rendering source of truth).
       if (attachLetter) {
         if (!letterDocRef?.current) throw new Error('Letter preview not ready — please wait a moment and try again.');
-        const blob = await captureDocumentPDF(letterDocRef.current);
+        const blob = await captureDocumentPDF(letterDocRef.current, { caseId: caseItem?.id });
         if (!blob || blob.size === 0) throw new Error('Letter PDF could not be generated.');
         const b64 = await blobToBase64(blob);
         const filename = `${String(letterType.label).replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
         attachments.push({ filename, base64: b64 });
       }
 
-      // Evidence index PDF
+      // Evidence index PDF — same ReportDocument + captureDocumentPDF pipeline
       if (attachEvidenceIndex && evidence.length > 0) {
-        const evidenceLines = evidence.map((ev, i) =>
-          `${i + 1}. ${ev.file_name} (${ev.file_type || 'document'}) — ${ev.event_date || 'date unknown'}\n   ${ev.description || (ev.extracted_data?.document_summary || 'No description')}`
-        ).join('\n\n');
-        const evidenceBlob = await generateChaosDocumentPDF({
-          documentType: 'general',
-          title: 'Evidence Index',
-          body: `EVIDENCE INDEX\n\nCase: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nGenerated: ${format(new Date(), 'd MMMM yyyy')}\n\n----------------------------------------\n\n${evidenceLines}`,
-          includeHeader: true,
-          includeFooter: true,
-        });
+        const bullets = evidence.map((ev) =>
+          `${ev.file_name} (${ev.file_type || 'document'}) — ${ev.event_date || 'date unknown'}${ev.description ? ': ' + ev.description : (ev.extracted_data?.document_summary ? ': ' + ev.extracted_data.document_summary : '')}`
+        );
+        const evidenceBlob = await renderDocToBlob(
+          <ReportDocument
+            title="Evidence Index"
+            subtitle={caseItem.title}
+            generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
+            sections={[{ heading: `Evidence Files (${evidence.length})`, bullets }]}
+          />,
+          { caseId: caseItem?.id }
+        );
         if (evidenceBlob && evidenceBlob.size > 0) {
           const b64 = await blobToBase64(evidenceBlob);
           attachments.push({ filename: `Evidence_Index_${format(new Date(), 'yyyy-MM-dd')}.pdf`, base64: b64 });
