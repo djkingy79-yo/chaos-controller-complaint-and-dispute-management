@@ -942,6 +942,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         caseItem={caseItem}
         letterType={letterType}
         letterText={text}
+        letterDocRef={letterDocRef}
         evidence={evidence}
       />
 

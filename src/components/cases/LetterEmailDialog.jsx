@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Loader2, CheckCircle2, XCircle, RefreshCw, Paperclip } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { generateChaosDocumentPDF, stripToLetterBody } from "@/lib/pdfGenerator";
-import { buildLetterHeaderData } from "@/components/cases/LetterHeader.jsx";
+import { generateChaosDocumentPDF, captureDocumentPDF } from "@/lib/pdfGenerator";
 
 // Convert a Blob to a standard base64 string (not URL-safe)
 async function blobToBase64(blob) {
@@ -33,6 +32,7 @@ export default function LetterEmailDialog({
   caseItem,
   letterType,    // { key, label, field }
   letterText,    // raw text content of the letter
+  letterDocRef,  // ref to the already-rendered, on-page LetterDocument (same node used for download/print)
   evidence = [],
 }) {
   const queryClient = useQueryClient();
@@ -81,38 +81,12 @@ export default function LetterEmailDialog({
     try {
       const attachments = [];
 
-      // Always attach the letter PDF if checked
+      // Always attach the letter PDF if checked — captures the SAME on-page
+      // LetterDocument node used for Download/Print, so the attachment is
+      // pixel-identical to the preview (one rendering source of truth).
       if (attachLetter) {
-        const cleanContent = stripToLetterBody(letterText);
-        // Build structured header from case data (same as preview)
-        const client = {
-          name: caseItem?.complainant_name || "",
-          address: caseItem?.complainant_address || "",
-          email: caseItem?.complainant_email || "",
-          phone: caseItem?.complainant_phone || "",
-          accounts: caseItem?.account_number ? [caseItem.account_number] : [],
-          policies: [],
-          amounts: [],
-          dates: [],
-        };
-        const headerData = buildLetterHeaderData(caseItem, client);
-        const labelMap = {
-          letter1: `FORMAL COMPLAINT — ${caseItem?.organisation_name || "Organisation"}`,
-          letter2: `SECOND FORMAL COMPLAINT — ${caseItem?.organisation_name || "Organisation"}`,
-          letter3: `THIRD AND FINAL COMPLAINT — ${caseItem?.organisation_name || "Organisation"}`,
-          accept_offer: `ACCEPTANCE OF SETTLEMENT OFFER — ${caseItem?.organisation_name || "Organisation"}`,
-          deny_offer: `REJECTION OF SETTLEMENT OFFER — ${caseItem?.organisation_name || "Organisation"}`,
-          escalation: `EXTERNAL DISPUTE SUBMISSION — ${caseItem?.organisation_name || "Organisation"}`,
-        };
-        const reSubject = labelMap[letterType?.key] || `FORMAL COMPLAINT — ${caseItem?.organisation_name || "Organisation"}`;
-        const blob = await generateChaosDocumentPDF({
-          documentType: 'letter',
-          title: letterType.label,
-          body: cleanContent,
-          includeHeader: false,
-          includeFooter: true,
-          letterHeader: { ...headerData, reSubject },
-        });
+        if (!letterDocRef?.current) throw new Error('Letter preview not ready — please wait a moment and try again.');
+        const blob = await captureDocumentPDF(letterDocRef.current);
         if (!blob || blob.size === 0) throw new Error('Letter PDF could not be generated.');
         const b64 = await blobToBase64(blob);
         const filename = `${String(letterType.label).replace(/[^a-z0-9]/gi, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
