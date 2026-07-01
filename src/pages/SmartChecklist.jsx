@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, AlertTriangle, XCircle, Lock, Plus, Upload, Trash2, ClipboardList, Download, Printer } from "lucide-react";
-import { generateChaosDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/reports/ReportDocument";
+import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -35,25 +37,19 @@ const defaultItems = [
 ];
 
 async function buildChecklistBlob(items, caseName) {
-  const body = [
-    `SMART CHECKLIST — ${caseName}`,
-    `Generated: ${format(new Date(), 'd MMMM yyyy')}`,
-    '',
-    ...items.map((item, i) => {
-      const tick = item.status === 'complete' ? '[✓]' : '[ ]';
-      return `${tick} ${item.label}\n    Category: ${item.category} | Status: ${item.status.replace('_', ' ').toUpperCase()}`;
-    }),
-  ].join('\n');
-
-  const blob = await generateChaosDocumentPDF({
-    documentType: 'general',
-    title: 'Smart Checklist',
-    matter: caseName,
-    date: format(new Date(), 'd MMMM yyyy'),
-    body,
-    includeHeader: true,
-    includeFooter: true,
+  const bullets = items.map((item) => {
+    const tick = item.status === 'complete' ? '[x]' : '[ ]';
+    return `${tick} ${item.label} — ${item.category} — ${item.status.replace('_', ' ').toUpperCase()}`;
   });
+
+  const blob = await renderDocToBlob(
+    <ReportDocument
+      title="Smart Checklist"
+      subtitle={caseName}
+      generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
+      sections={[{ heading: `Checklist (${items.length} items)`, bullets }]}
+    />
+  );
   if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
   return blob;
 }

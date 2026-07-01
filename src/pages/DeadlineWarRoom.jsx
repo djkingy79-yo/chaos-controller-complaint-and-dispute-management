@@ -11,7 +11,9 @@ import { Label } from "@/components/ui/label";
 import { differenceInDays, format, isPast, isToday } from "date-fns";
 import { Siren, Clock, Plus, CheckCircle2, XCircle, AlertTriangle, Calendar, User2, Trash2, Download } from "lucide-react";
 import { motion } from "framer-motion";
-import { generateChaosDocumentPDF } from "@/lib/pdfGenerator";
+import { downloadPDFBlob } from "@/lib/pdfGenerator";
+import ReportDocument from "@/components/reports/ReportDocument";
+import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { toast } from "sonner";
 
 const urgencyConfig = (daysLeft) => {
@@ -29,28 +31,22 @@ const responsibilityLabel = { user: "You", provider: "Provider", tribunal: "Trib
 async function printDeadlinesPDF(deadlines, cases) {
   const getCaseName = (id) => cases.find(c => c.id === id)?.title || '';
   const sorted = [...deadlines].sort((a,b) => new Date(a.deadline_date) - new Date(b.deadline_date));
-  
-  const body = sorted.map(d => {
+
+  const bullets = sorted.map(d => {
     const daysLeft = Math.round((new Date(d.deadline_date) - new Date()) / 86400000);
     const urgency = daysLeft < 0 ? `OVERDUE (${Math.abs(daysLeft)}d)` : daysLeft === 0 ? 'TODAY' : daysLeft <= 7 ? `${daysLeft} DAYS` : format(new Date(d.deadline_date), 'd MMM yyyy');
-    return `${d.title}\n   Due: ${format(new Date(d.deadline_date), 'd MMM yyyy')} | ${urgency}\n   Type: ${(d.deadline_type||'').replace(/_/g,' ')} | Case: ${getCaseName(d.case_id)} | Status: ${(d.status||'PENDING').toUpperCase()}`;
-  }).join("\n\n");
+    return `${d.title} — Due ${format(new Date(d.deadline_date), 'd MMM yyyy')} (${urgency}) — ${(d.deadline_type||'').replace(/_/g,' ')} — ${getCaseName(d.case_id)} — ${(d.status||'PENDING').toUpperCase()}`;
+  });
 
   try {
-    const pdfBlob = await generateChaosDocumentPDF({
-      documentType: 'general',
-      title: 'Deadline War Room',
-      body: `DEADLINE WAR ROOM (${sorted.length} deadlines)\n\n${body}`,
-      includeHeader: true,
-      includeFooter: true,
-    });
-    
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const pdfBlob = await renderDocToBlob(
+      <ReportDocument
+        title="Deadline War Room"
+        generatedLabel={`Generated ${format(new Date(), 'd MMMM yyyy')}`}
+        sections={[{ heading: `Deadlines (${sorted.length})`, bullets }]}
+      />
+    );
+    downloadPDFBlob(pdfBlob, `Deadlines_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
     toast.success('Deadlines PDF downloaded');
   } catch (error) {
     toast.error('PDF generation failed: ' + error.message);
