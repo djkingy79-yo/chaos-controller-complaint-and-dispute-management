@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, RefreshCw, Pencil, Check, Loader2, Download, Printer, FileText, Lock, Mail, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Copy, RefreshCw, Pencil, Check, Loader2, Download, Printer, FileText, Lock, Mail, CheckCircle2, XCircle, Trash2, CalendarClock } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -21,6 +21,9 @@ import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
 import { Link } from "react-router-dom";
 import LetterHeader, { buildLetterHeaderData } from "@/components/cases/LetterHeader.jsx";
 import LetterDocument, { LetterPreviewWrapper } from "@/components/letters/LetterDocument.jsx";
+import MarkSentDialog from "@/components/cases/MarkSentDialog.jsx";
+import { markLetterSent } from "@/lib/letterTracking";
+import { LETTER_SENT_FIELD_MAP } from "@/lib/disputeStageLogic";
 
 function buildClientContext(caseItem, evidenceList) {
   const merged = {
@@ -446,22 +449,6 @@ ${letterHistory}`;
   return base;
 }
 
-// Map letter key -> the timestamp field to stamp when the letter is sent/emailed
-const SENT_TIMESTAMP_MAP = {
-  letter1: "first_complaint_sent_at",
-  letter2: "second_complaint_sent_at",
-  letter3: "third_complaint_sent_at",
-  escalation: "escalated_at",
-};
-
-// Map letter key -> progress_stage to set after send
-const SENT_STAGE_MAP = {
-  letter1: "awaiting_first_response",
-  letter2: "awaiting_second_response",
-  letter3: "awaiting_final_response",
-  escalation: "escalated",
-};
-
 const GENERATE_PHASES = [
   "Preparing case facts…",
   "Reviewing evidence…",
@@ -482,6 +469,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   const [generateError, setGenerateError] = useState(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [markSentOpen, setMarkSentOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [regenConfirmOpen, setRegenConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -515,24 +503,16 @@ function LetterEditor({ letterType, caseItem, evidence }) {
   });
   const lastLog = emailLogs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
 
-  // Stamp complaint sent timestamp and progress stage when a letter is emailed for the first time
+  // Stamp complaint sent timestamp and progress stage when a letter is emailed
   const handleLetterSent = async () => {
-    const tsField = SENT_TIMESTAMP_MAP[letterType.key];
-    const stageField = SENT_STAGE_MAP[letterType.key];
-    if (!tsField || caseItem[tsField]) return; // only stamp once
-    const updates = { [tsField]: new Date().toISOString() };
-    if (stageField) updates.progress_stage = stageField;
-    await base44.entities.Case.update(caseItem.id, updates);
-    // Create timeline event for the send
-    await base44.entities.TimelineEvent.create({
-      case_id: caseItem.id,
-      event_date: format(new Date(), "yyyy-MM-dd"),
-      title: `${letterType.label} sent to ${caseItem.organisation_name || "organisation"}`,
-      description: `${letterType.label} formally submitted via email.`,
-      event_type: "complaint",
-      is_action_required: false,
+    await markLetterSent(caseItem, letterType.key, {
+      sentDate: new Date().toISOString(),
+      method: "email",
+      recipientEmail: caseItem.organisation_complaints_email || "",
+      manuallyMarkedSent: false,
     });
     queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
+    queryClient.invalidateQueries({ queryKey: ["timeline", caseItem.id] });
   };
 
   const handleApplyTemplate = async (content) => {
@@ -736,6 +716,12 @@ function LetterEditor({ letterType, caseItem, evidence }) {
           {!lastLog && text && (
             <Badge variant="outline" className="text-muted-foreground text-[10px]">Not Sent</Badge>
           )}
+          {caseItem[LETTER_SENT_FIELD_MAP[letterType.key]] && caseItem.letter_tracking?.[letterType.key]?.manuallyMarkedSent && (
+            <Badge variant="outline" className="border-primary/40 text-primary text-[10px] gap-1">
+              <CalendarClock className="w-3 h-3" />
+              Marked sent {format(new Date(caseItem[LETTER_SENT_FIELD_MAP[letterType.key]]), "d MMM yyyy")}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <LetterTemplateManager
@@ -743,6 +729,14 @@ function LetterEditor({ letterType, caseItem, evidence }) {
             currentText={text}
             onApplyTemplate={handleApplyTemplate}
           />
+          <Button
+            variant="outline" size="sm"
+            onClick={() => setMarkSentOpen(true)}
+            className="gap-1.5 text-xs border-primary/40 text-primary hover:bg-primary/10"
+          >
+            <CalendarClock className="w-3.5 h-3.5" />
+            {caseItem[LETTER_SENT_FIELD_MAP[letterType.key]] ? "Change Sent Date" : "Mark as Sent"}
+          </Button>
           {text && (
             <>
               <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(text); toast.success("Copied"); }} className="gap-1.5 text-xs">
@@ -949,6 +943,14 @@ function LetterEditor({ letterType, caseItem, evidence }) {
         letterType={letterType}
         letterText={text}
         evidence={evidence}
+      />
+
+      {/* Mark as sent / retrospective sent date dialog */}
+      <MarkSentDialog
+        open={markSentOpen}
+        onClose={() => setMarkSentOpen(false)}
+        caseItem={caseItem}
+        letterType={letterType}
       />
     </div>
   );

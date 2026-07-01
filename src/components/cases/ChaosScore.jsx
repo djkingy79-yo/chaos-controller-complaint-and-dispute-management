@@ -1,29 +1,44 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertTriangle, XCircle, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { computeNoResponse } from "@/lib/disputeStageLogic";
 
 /**
- * Scoring breakdown (total possible: 100)
- * +10  Issue documented (summary + details)
+ * Matter Strength scoring (total: 100%)
+ * +15  Issue documented
  * +20  Evidence uploaded
- * +15  Timeline recorded
- * +20  First complaint drafted  ← case cannot pass 50% without this
- * +10  First complaint sent (first_complaint_sent_at stamped)
- * +10  Response/no-response recorded
- * +15  Escalation pathway complete
+ * +15  Timeline has events
+ * +5   1st complaint generated
+ * +10  1st complaint sent
+ * +5   2nd complaint generated OR no response recorded after 1st
+ * +10  2nd complaint sent OR no response recorded after 1st
+ * +5   3rd/final complaint generated OR no response recorded after 2nd
+ * +10  3rd/final complaint sent OR no response recorded after 2nd
+ * +5   Escalation body identified
  *
- * Max without a drafted complaint = 10 + 20 + 15 = 45 (hard cap below 50%)
- * Ready to Escalate requires: score >= 85 AND hard escalation criteria satisfied
+ * "No response recorded" is auto-detected once the response deadline has
+ * passed with nothing recorded — see computeNoResponse() — so retrospective
+ * (past) sent dates unlock the pathway without extra manual steps.
  */
 function scoreFromCase(caseItem, evidence, events) {
   let score = 0;
   const items = [];
+  const c = caseItem;
 
-  // 1. Issue documented (+10)
-  if (caseItem.issue_summary && caseItem.issue_details) {
-    score += 10;
+  // A letter counts as "generated" if drafted in-app OR it was actually sent
+  // (a letter clearly existed if it was sent, even if drafted outside the app)
+  const firstGenerated = !!(c.first_complaint_letter || c.complaint_letter || c.first_complaint_sent_at);
+  const secondGenerated = !!(c.second_complaint_letter || c.complaint_letter_2 || c.second_complaint_sent_at);
+  const thirdGenerated = !!(c.third_complaint_letter || c.complaint_letter_3 || c.third_complaint_sent_at);
+
+  const noResponseAfterFirst = computeNoResponse(c.first_complaint_sent_at, c.first_response_received_at, c.first_no_response_at);
+  const noResponseAfterSecond = computeNoResponse(c.second_complaint_sent_at, c.second_response_received_at, c.second_no_response_at);
+  const noResponseAfterThird = computeNoResponse(c.third_complaint_sent_at, c.third_response_received_at, c.third_no_response_at);
+
+  // 1. Issue documented (+15)
+  if (c.issue_summary && c.issue_details) {
+    score += 15;
     items.push({ label: "Issue documented", status: "green" });
   } else {
     items.push({ label: "Issue not fully documented", status: "red" });
@@ -37,7 +52,7 @@ function scoreFromCase(caseItem, evidence, events) {
     items.push({ label: "No evidence uploaded", status: "red" });
   }
 
-  // 3. Timeline recorded (+15)
+  // 3. Timeline has events (+15)
   if (events.length > 0) {
     score += 15;
     items.push({ label: "Timeline recorded", status: "green" });
@@ -45,81 +60,81 @@ function scoreFromCase(caseItem, evidence, events) {
     items.push({ label: "No timeline events recorded", status: "yellow" });
   }
 
-  // 4. First complaint drafted (+20) — crossing 50% requires this
-  if (caseItem.complaint_letter) {
-    score += 20;
-    items.push({ label: "First complaint letter drafted", status: "green" });
-  } else {
-    items.push({ label: "First complaint letter not drafted", status: "red" });
-  }
-
-  // 5. First complaint actually sent (+10) — requires the timestamp to be stamped
-  if (caseItem.first_complaint_sent_at) {
-    score += 10;
-    items.push({ label: "First complaint sent to organisation", status: "green" });
-  } else {
-    items.push({ label: "First complaint not yet sent", status: "yellow" });
-  }
-
-  // 6. Response/no-response recorded (+10)
-  const noResponseRecorded =
-    !!caseItem.first_no_response_at ||
-    !!caseItem.second_no_response_at ||
-    !!caseItem.third_no_response_at ||
-    !!caseItem.second_complaint_sent_at ||
-    !!caseItem.third_complaint_sent_at ||
-    caseItem.status === "escalation_ready" ||
-    caseItem.status === "escalated";
-
-  const responseActuallyReceived =
-    !!caseItem.first_response_received_at ||
-    !!caseItem.second_response_received_at ||
-    !!caseItem.third_response_received_at ||
-    caseItem.status === "response_received";
-
-  if (noResponseRecorded) {
-    score += 10;
-    items.push({ label: "No adequate response — dispute escalatable", status: "green" });
-  } else if (responseActuallyReceived) {
+  // 4. 1st complaint generated (+5)
+  if (firstGenerated) {
     score += 5;
-    items.push({ label: "Response received — outcome pending", status: "yellow" });
-  } else if (caseItem.status === "complaint_sent" || caseItem.status === "awaiting_response") {
-    items.push({ label: "Awaiting response from organisation", status: "yellow" });
+    items.push({ label: "1st complaint letter generated", status: "green" });
   } else {
-    items.push({ label: "No response outcome recorded", status: "yellow" });
+    items.push({ label: "1st complaint letter not yet generated", status: "yellow" });
   }
 
-  // 7. Escalation pathway complete (+15)
+  // 5. 1st complaint sent (+10)
+  if (c.first_complaint_sent_at) {
+    score += 10;
+    items.push({ label: "1st complaint sent to organisation", status: "green" });
+  } else {
+    items.push({ label: "1st complaint not yet sent", status: "yellow" });
+  }
+
+  // 6. 2nd complaint generated OR no response after 1st (+5)
+  if (secondGenerated || noResponseAfterFirst) {
+    score += 5;
+    items.push({ label: secondGenerated ? "2nd complaint letter generated" : "No response after 1st complaint", status: "green" });
+  } else {
+    items.push({ label: "2nd complaint not generated — awaiting response", status: "yellow" });
+  }
+
+  // 7. 2nd complaint sent OR no response after 1st (+10)
+  if (c.second_complaint_sent_at || noResponseAfterFirst) {
+    score += 10;
+    items.push({ label: c.second_complaint_sent_at ? "2nd complaint sent" : "No response after 1st — pathway continues", status: "green" });
+  } else {
+    items.push({ label: "2nd complaint not yet sent", status: "yellow" });
+  }
+
+  // 8. 3rd/final complaint generated OR no response after 2nd (+5)
+  if (thirdGenerated || noResponseAfterSecond) {
+    score += 5;
+    items.push({ label: thirdGenerated ? "3rd/final complaint letter generated" : "No response after 2nd complaint", status: "green" });
+  } else {
+    items.push({ label: "3rd/final complaint not generated — awaiting response", status: "yellow" });
+  }
+
+  // 9. 3rd/final complaint sent OR no response after 2nd (+10)
+  if (c.third_complaint_sent_at || noResponseAfterSecond) {
+    score += 10;
+    items.push({ label: c.third_complaint_sent_at ? "3rd/final complaint sent" : "No response after 2nd — pathway continues", status: "green" });
+  } else {
+    items.push({ label: "3rd/final complaint not yet sent", status: "yellow" });
+  }
+
+  // 10. Escalation body identified (+5)
+  if (c.escalation_body) {
+    score += 5;
+    items.push({ label: `Escalation body identified — ${c.escalation_body}`, status: "green" });
+  } else {
+    items.push({ label: "Escalation body not yet identified", status: "yellow" });
+  }
+
+  // Escalation pathway complete — 3rd sent (or no-response after 2nd allows skipping to escalation)
+  // AND either 3rd sent, or no response recorded after the 3rd was sent
   const escalationCriteriaMet =
-    !!caseItem.third_complaint_sent_at ||
-    !!caseItem.letter_escalation ||
-    caseItem.status === "escalation_ready" ||
-    caseItem.status === "escalated" ||
-    caseItem.progress_stage === "escalation_ready" ||
-    caseItem.progress_stage === "escalated";
+    (!!c.third_complaint_sent_at && noResponseAfterThird) ||
+    (!c.third_complaint_sent_at && noResponseAfterSecond) ||
+    !!c.escalated_at ||
+    c.status === "escalation_ready" ||
+    c.status === "escalated" ||
+    c.progress_stage === "escalation_ready" ||
+    c.progress_stage === "escalated";
 
-  if (escalationCriteriaMet) {
-    score += 15;
-    items.push({ label: "Escalation pathway completed", status: "green" });
-  } else if (caseItem.second_complaint_sent_at) {
-    score += 7;
-    items.push({ label: "Second complaint sent — final stage pending", status: "yellow" });
-  } else {
-    items.push({ label: "Escalation pathway not yet complete", status: "yellow" });
-  }
-
-  // Hard gate for "Ready to Escalate":
-  // Score >= 85 AND complaint sent AND no-response recorded AND escalation pathway actually completed
   const readyToEscalate =
-    score >= 85 &&
-    !!caseItem.first_complaint_sent_at &&
-    noResponseRecorded &&
     escalationCriteriaMet &&
-    caseItem.status !== "escalated" &&
-    caseItem.status !== "resolved" &&
-    caseItem.status !== "closed";
+    !!c.escalation_body &&
+    c.status !== "escalated" &&
+    c.status !== "resolved" &&
+    c.status !== "closed";
 
-  return { score, items, readyToEscalate, noResponseRecorded, escalationCriteriaMet };
+  return { score, items, readyToEscalate, noResponseAfterFirst, noResponseAfterSecond, noResponseAfterThird, escalationCriteriaMet };
 }
 
 const statusIcon = {
@@ -142,7 +157,7 @@ const barColor = (score) => {
 
 export default function ChaosScore({ caseItem, evidence, events }) {
   const navigate = useNavigate();
-  const { score, items, readyToEscalate, noResponseRecorded, escalationCriteriaMet } = scoreFromCase(caseItem, evidence, events);
+  const { score, items, readyToEscalate, noResponseAfterFirst, escalationCriteriaMet } = scoreFromCase(caseItem, evidence, events);
 
   const handleEscalate = () => {
     if (caseItem.category === "banking" || caseItem.category === "insurance") {
@@ -203,20 +218,19 @@ export default function ChaosScore({ caseItem, evidence, events }) {
           <div className="bg-secondary/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground">
               {(() => {
-                // Derive the most accurate stage label from actual case fields
-                if (!caseItem.first_complaint_sent_at && !caseItem.complaint_letter) {
-                  return "Build your case — document the issue, upload evidence, and draft the first complaint.";
-                }
                 if (!caseItem.first_complaint_sent_at) {
-                  return "Case in progress — send the first complaint letter to the organisation.";
+                  return "Build your case — document the issue, upload evidence, and send the first complaint.";
                 }
-                if (caseItem.first_complaint_sent_at && !noResponseRecorded) {
-                  return "Awaiting response — response deadline has not yet passed or outcome not recorded.";
+                if (!noResponseAfterFirst) {
+                  return "Awaiting response — response deadline has not yet passed.";
                 }
-                if (noResponseRecorded && !escalationCriteriaMet) {
-                  return "Next complaint stage required — send the 2nd/final complaint before escalating.";
+                if (!escalationCriteriaMet) {
+                  return "Send (or mark as sent) the next complaint stage before escalating.";
                 }
-                return `${85 - score}% more needed — complete the complaint pathway to unlock escalation.`;
+                if (!caseItem.escalation_body) {
+                  return "Identify the escalation body (e.g. AFCA, TIO, NCAT) to unlock escalation.";
+                }
+                return `${100 - score}% more needed to complete the pathway.`;
               })()}
             </p>
           </div>

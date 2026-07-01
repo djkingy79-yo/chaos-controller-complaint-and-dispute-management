@@ -3,6 +3,7 @@ import { Check, Clock, AlertTriangle, XCircle, ChevronRight } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import ResponseCheckpointDialog from "./ResponseCheckpointDialog";
+import { computeNoResponse } from "@/lib/disputeStageLogic";
 
 function ts(dt) {
   if (!dt) return null;
@@ -42,6 +43,12 @@ export default function DisputeProgressTracker({ caseItem }) {
 
   const c = caseItem || {};
 
+  // Auto-detect "no response" once the deadline has passed, even if the user
+  // never clicked the explicit checkpoint dialog (supports retrospective dates)
+  const autoFirstNoResponse = computeNoResponse(c.first_complaint_sent_at, c.first_response_received_at, c.first_no_response_at);
+  const autoSecondNoResponse = computeNoResponse(c.second_complaint_sent_at, c.second_response_received_at, c.second_no_response_at);
+  const autoThirdNoResponse = computeNoResponse(c.third_complaint_sent_at, c.third_response_received_at, c.third_no_response_at);
+
   // ---- derive each step's state ----
 
   // 1. Case Created — always complete if case exists
@@ -62,10 +69,10 @@ export default function DisputeProgressTracker({ caseItem }) {
     firstResponseState = "complete";
     firstResponseLabel = "Response Received";
     firstResponseSub = `Received ${ts(c.first_response_received_at)}`;
-  } else if (c.first_no_response_at) {
+  } else if (autoFirstNoResponse) {
     firstResponseState = "error";
     firstResponseLabel = "No Response";
-    firstResponseSub = `No response by deadline — 2nd complaint unlocked`;
+    firstResponseSub = c.first_no_response_at ? `No response by deadline — 2nd complaint unlocked` : "Deadline passed with no response — 2nd complaint unlocked";
   } else {
     firstResponseState = "warning";
     firstResponseLabel = "Merchant / Respondent Response";
@@ -73,10 +80,10 @@ export default function DisputeProgressTracker({ caseItem }) {
   }
 
   // show response checkpoint buttons after 1st sent if no outcome yet
-  const showFirstCheckpoint = firstSent && !c.first_response_received_at && !c.first_no_response_at;
+  const showFirstCheckpoint = firstSent && !c.first_response_received_at && !autoFirstNoResponse;
 
-  // 4. 2nd Complaint Sent — unlocked after first no-response OR first response received (user continues)
-  const secondUnlocked = !!c.first_no_response_at || (!!c.first_response_received_at && ["second_complaint_sent", "awaiting_second_response", "second_no_response", "third_complaint_sent", "awaiting_final_response", "final_no_response", "escalation_ready", "escalated", "offer_received", "offer_accepted", "offer_denied", "resolved", "closed"].includes(c.progress_stage));
+  // 4. 2nd Complaint Sent — unlocked after first no-response (explicit or auto-detected) OR first response received (user continues)
+  const secondUnlocked = autoFirstNoResponse || (!!c.first_response_received_at && ["second_complaint_sent", "awaiting_second_response", "second_no_response", "third_complaint_sent", "awaiting_final_response", "final_no_response", "escalation_ready", "escalated", "offer_received", "offer_accepted", "offer_denied", "resolved", "closed"].includes(c.progress_stage));
   const secondSent = !!c.second_complaint_sent_at;
   let secondSentState, secondSentSub;
   if (secondSent) { secondSentState = "complete"; secondSentSub = `Sent ${ts(c.second_complaint_sent_at)}`; }
@@ -93,19 +100,19 @@ export default function DisputeProgressTracker({ caseItem }) {
     secondResponseState = "complete";
     secondResponseLabel = "Response Received";
     secondResponseSub = `Received ${ts(c.second_response_received_at)}`;
-  } else if (c.second_no_response_at) {
+  } else if (autoSecondNoResponse) {
     secondResponseState = "error";
     secondResponseLabel = "No Response";
-    secondResponseSub = "No response by deadline — 3rd complaint unlocked";
+    secondResponseSub = c.second_no_response_at ? "No response by deadline — 3rd complaint unlocked" : "Deadline passed with no response — 3rd complaint unlocked";
   } else {
     secondResponseState = "warning";
     secondResponseLabel = "Merchant / Respondent Response";
     secondResponseSub = "Awaiting response — record outcome below";
   }
-  const showSecondCheckpoint = secondSent && !c.second_response_received_at && !c.second_no_response_at;
+  const showSecondCheckpoint = secondSent && !c.second_response_received_at && !autoSecondNoResponse;
 
   // 6. 3rd Final Complaint Sent
-  const thirdUnlocked = !!c.second_no_response_at || (!!c.second_response_received_at && ["third_complaint_sent", "awaiting_final_response", "final_no_response", "escalation_ready", "escalated"].includes(c.progress_stage));
+  const thirdUnlocked = autoSecondNoResponse || (!!c.second_response_received_at && ["third_complaint_sent", "awaiting_final_response", "final_no_response", "escalation_ready", "escalated"].includes(c.progress_stage));
   const thirdSent = !!c.third_complaint_sent_at;
   let thirdSentState, thirdSentSub;
   if (thirdSent) { thirdSentState = "complete"; thirdSentSub = `Sent ${ts(c.third_complaint_sent_at)}`; }
@@ -122,7 +129,7 @@ export default function DisputeProgressTracker({ caseItem }) {
     finalResponseState = "complete";
     finalResponseLabel = "Response Received";
     finalResponseSub = `Received ${ts(c.third_response_received_at)}`;
-  } else if (c.third_no_response_at) {
+  } else if (autoThirdNoResponse) {
     finalResponseState = "error";
     finalResponseLabel = "Organisation Failed To Respond";
     finalResponseSub = "Escalation unlocked — proceed to external body";
@@ -131,11 +138,11 @@ export default function DisputeProgressTracker({ caseItem }) {
     finalResponseLabel = "Final Response Checkpoint";
     finalResponseSub = "Awaiting response — record outcome below";
   }
-  const showThirdCheckpoint = thirdSent && !c.third_response_received_at && !c.third_no_response_at;
+  const showThirdCheckpoint = thirdSent && !c.third_response_received_at && !autoThirdNoResponse;
 
   // 8. Escalated
   const escalated = !!c.escalated_at;
-  const escalationUnlocked = !!c.third_no_response_at || !!c.third_response_received_at || c.progress_stage === "escalation_ready" || c.progress_stage === "escalated";
+  const escalationUnlocked = autoThirdNoResponse || !!c.third_response_received_at || c.progress_stage === "escalation_ready" || c.progress_stage === "escalated";
   let escalatedState, escalatedSub;
   if (escalated) { escalatedState = "complete"; escalatedSub = `Escalated ${ts(c.escalated_at)}${c.escalation_reference ? ` · Ref: ${c.escalation_reference}` : ""}`; }
   else if (escalationUnlocked) { escalatedState = "active"; escalatedSub = "Ready to escalate to external body"; }

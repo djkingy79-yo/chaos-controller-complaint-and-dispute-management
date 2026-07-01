@@ -211,6 +211,16 @@
       "type": "string",
       "format": "date-time"
     },
+    "accept_offer_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the Accept Offer letter was sent (supports retrospective/past dates)"
+    },
+    "deny_offer_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the Deny Offer letter was sent (supports retrospective/past dates)"
+    },
     "escalated_at": {
       "type": "string",
       "format": "date-time"
@@ -224,6 +234,10 @@
     "final_outcome_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "letter_tracking": {
+      "type": "object",
+      "description": "Per-letter-type send metadata keyed by letter type (letter1, letter2, letter3, accept_offer, deny_offer, escalation). Each entry: { sentDate, generatedDate, manuallyMarkedSent, status, sentMethod, sentTo, sentNotes, proofOfSendingFileId }. Supports retrospective/past sent dates entered by the user."
     }
   },
   "required": [
