@@ -21,7 +21,8 @@ const RULES = [
       "olsc", "office of the legal services commissioner",
     ],
     keywords: [
-      "solicitor", "barrister", "law firm", "lawyer", "conveyancer",
+      "solicitor", "solicitors", "barrister", "barristers", "law firm", "legal firm",
+      "lawyer", "lawyers", "attorney", "attorneys", "conveyancer", "conveyancers",
       "legal fees", "costs dispute", "costs assessment", "itemised bill",
       "overcharged legal fees", "legal representation", "retainer agreement",
       "professional misconduct", "solicitor misconduct", "unsatisfactory professional conduct",
