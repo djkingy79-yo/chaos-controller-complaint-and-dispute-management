@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Download, Printer, CalendarDays, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, subDays, isAfter, isBefore, addDays } from "date-fns";
-import { downloadPDFBlob, openPDFForPrint } from '@/lib/pdfGenerator';
+import { downloadPDFBlob, openPDFForPrint, PRINT_BLOCKED_MESSAGE } from '@/lib/pdfGenerator';
 import ReportDocument from '@/components/reports/ReportDocument';
 import { renderDocToBlob } from '@/lib/renderDocToBlob';
 import { toast } from "sonner";
@@ -208,7 +208,7 @@ Remember: PLAIN TEXT ONLY. No markdown. No timestamps.`;
       const blob = await buildSnapshotBlob();
       pdfDiagBlobCreated({ tab: 'Weekly Snapshot', action: 'Print PDF', blob });
       const opened = await openPDFForPrint(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
+      if (!opened) { toast.error(PRINT_BLOCKED_MESSAGE); downloadPDFBlob(blob, `Weekly_Snapshot_${format(new Date(), 'yyyy-MM-dd')}.pdf`); }
       pdfDiagSuccess({ tab: 'Weekly Snapshot', action: 'Print PDF' });
     } catch (error) {
       pdfDiagFail({ tab: 'Weekly Snapshot', action: 'Print PDF', error });

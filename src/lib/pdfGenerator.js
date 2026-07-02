@@ -246,9 +246,8 @@ export async function openPDFForPrint(blob, filename = 'document.pdf') {
     const printWindow = window.open(url, '_blank');
 
     if (!printWindow) {
-      // Popup blocked — fall back to a plain download so the user still gets the PDF.
+      // Popup blocked — caller shows a clear message and downloads the PDF instead.
       URL.revokeObjectURL(url);
-      downloadPDFBlob(blob, filename);
       return false;
     }
 
@@ -269,8 +268,12 @@ export async function openPDFForPrint(blob, filename = 'document.pdf') {
     setTimeout(() => URL.revokeObjectURL(url), 60000);
     return true;
   } catch (error) {
-    console.error('[PDF] openPDFForPrint failed, falling back to download:', error);
-    downloadPDFBlob(blob, filename);
+    console.error('[PDF] openPDFForPrint failed:', error);
     return false;
   }
 }
+
+// Standard user-facing message shown whenever the print window was blocked or
+// failed to open — every call site must show this and then download the PDF,
+// never fail silently.
+export const PRINT_BLOCKED_MESSAGE = 'Print window was blocked. Download the PDF and print it from your device.';

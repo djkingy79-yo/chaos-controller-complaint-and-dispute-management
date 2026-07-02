@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Sparkles, Loader2, CheckCircle2, AlertCircle, Clock, TrendingUp, ShieldAlert, Download, Printer, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { captureDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { captureDocumentPDF, downloadPDFBlob, openPDFForPrint, PRINT_BLOCKED_MESSAGE } from "@/lib/pdfGenerator";
 import ReportDocument from "@/components/reports/ReportDocument";
 import { format } from "date-fns";
 
@@ -132,7 +132,7 @@ export default function ExecutiveSummaryGenerator({ caseItem, onSummaryGenerated
       if (!blob || blob.size === 0) throw new Error('Generated PDF is empty');
       const opened = await openPDFForPrint(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       if (!opened) {
-        toast({ title: "Print blocked", description: "Downloading instead (Safari/popup blocker)." });
+        toast({ title: "Print Blocked", description: PRINT_BLOCKED_MESSAGE, variant: "destructive" });
         downloadPDFBlob(blob, `Case_Summary_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
       } else {
         toast({ title: "PDF opened — use browser Share/Print" });

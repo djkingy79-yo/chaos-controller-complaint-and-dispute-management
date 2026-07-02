@@ -14,7 +14,7 @@ import LetterTemplateManager from "./LetterTemplateManager";
 import LetterEmailDialog from "./LetterEmailDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { captureLetterDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { captureLetterDocumentPDF, downloadPDFBlob, openPDFForPrint, PRINT_BLOCKED_MESSAGE } from "@/lib/pdfGenerator";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
 import { useAuth } from "@/lib/AuthContext";
 import { getActiveSubscription, hasPlanAccess } from "@/lib/subscription";
@@ -648,6 +648,12 @@ function LetterEditor({ letterType, caseItem, evidence }) {
 
       // Backend already saved to DB — update local state and invalidate
       setText(result);
+      // Regenerated content is fresh against the current pathway — clear any stale flag for this letter
+      if (caseItem.stale_letters?.includes(letterType.key)) {
+        await base44.entities.Case.update(caseItem.id, {
+          stale_letters: caseItem.stale_letters.filter((k) => k !== letterType.key),
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["case", caseItem.id] });
       setGenerateError(null);
       toast.success(`${letterType.label} generated`);
@@ -705,7 +711,7 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       const blob = await captureLetterDocumentPDF(letterDocRef.current, { caseId: caseItem?.id });
       pdfDiagBlobCreated({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', blob });
       const opened = await openPDFForPrint(blob, letterFilename);
-      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, letterFilename); }
+      if (!opened) { toast.error(PRINT_BLOCKED_MESSAGE); downloadPDFBlob(blob, letterFilename); }
       pdfDiagSuccess({ tab: `Letter: ${letterType.label}`, action: 'Print PDF' });
     } catch (error) {
       pdfDiagFail({ tab: `Letter: ${letterType.label}`, action: 'Print PDF', error });
@@ -855,6 +861,15 @@ function LetterEditor({ letterType, caseItem, evidence }) {
       {hasPlaceholders && !generating && (
         <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3 text-xs text-destructive font-medium">
           ⚠️ Placeholder text detected. Click Regenerate to fill with your real case details.
+        </div>
+      )}
+
+      {caseItem.stale_letters?.includes(letterType.key) && !generating && (
+        <div className="bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 text-xs text-warning-foreground font-medium flex items-center justify-between gap-3">
+          <span>⚠️ This letter may reference an outdated escalation authority. Click Regenerate to update it to {caseItem.escalation_body || "the current assigned authority"}.</span>
+          <Button size="sm" variant="outline" className="h-7 text-xs px-3 shrink-0" onClick={() => setRegenConfirmOpen(true)}>
+            Regenerate
+          </Button>
         </div>
       )}
 

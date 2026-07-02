@@ -7,7 +7,7 @@ import {
   Clock, Mail, Download, ShieldAlert, AlertTriangle, Sparkles, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { downloadPDFBlob, openPDFForPrint, PRINT_BLOCKED_MESSAGE } from "@/lib/pdfGenerator";
 import ReportDocument from "@/components/reports/ReportDocument";
 import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { buildSections } from "@/components/cases/CaseDashboardReport";
@@ -162,7 +162,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
       });
       const opened = await openPDFForPrint(blob, `Dashboard_${today}.pdf`);
       if (!opened) {
-        toast.warning('Print blocked — downloading instead (Safari/popup blocker).');
+        toast.error(PRINT_BLOCKED_MESSAGE);
         downloadPDFBlob(blob, `Dashboard_${today}.pdf`);
       }
     } catch (err) {
@@ -204,7 +204,7 @@ export default function CaseSummary({ caseItem, evidence, events }) {
       });
       const opened = await openPDFForPrint(blob, `AI_Summary_${today}.pdf`);
       if (!opened) {
-        toast.warning('Print blocked — downloading instead (Safari/popup blocker).');
+        toast.error(PRINT_BLOCKED_MESSAGE);
         downloadPDFBlob(blob, `AI_Summary_${today}.pdf`);
       }
     } catch (err) {

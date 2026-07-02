@@ -297,6 +297,27 @@
       "type": "boolean",
       "default": false,
       "description": "Legal Profession Complaint only: user has confirmed there is a genuine civil/consumer claim (e.g. costs dispute suitable for the state tribunal), not just a conduct/misconduct complaint. Controls whether the state's civil tribunal is offered as an escalation pathway."
+    },
+    "stale_letters": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "letter1",
+          "letter2",
+          "letter3",
+          "accept_offer",
+          "deny_offer",
+          "escalation"
+        ]
+      },
+      "default": [],
+      "description": "Letter types whose already-generated content references an escalation authority that no longer matches this case's current complaint_pathway/escalation_body (e.g. pathway changed after a category correction). Populated by the flagStaleAuthorityLetters function. Cleared automatically when the affected letter is regenerated."
+    },
+    "stale_letters_checked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When flagStaleAuthorityLetters last checked this case's letters against its current complaint_pathway."
     }
   },
   "required": [

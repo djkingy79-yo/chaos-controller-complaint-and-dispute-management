@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Printer, Loader2, Package } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { toast } from "sonner";
-import { captureDocumentPDF, downloadPDFBlob, openPDFForPrint } from "@/lib/pdfGenerator";
+import { captureDocumentPDF, downloadPDFBlob, openPDFForPrint, PRINT_BLOCKED_MESSAGE } from "@/lib/pdfGenerator";
 import ReportDocument, { ReportPreviewWrapper } from "@/components/reports/ReportDocument";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail } from "@/lib/pdfDiagnostics";
 
@@ -220,7 +220,7 @@ export default function CaseDashboardReport({ caseItem, evidence, events }) {
       const blob = await captureDocumentPDF(reportRef.current, { caseId: caseItem?.id });
       pdfDiagBlobCreated({ tab: 'Dashboard Report', action: 'Print PDF', blob });
       const opened = await openPDFForPrint(blob, filename);
-      if (!opened) { toast.warning('Print blocked — downloading instead.'); downloadPDFBlob(blob, filename); }
+      if (!opened) { toast.error(PRINT_BLOCKED_MESSAGE); downloadPDFBlob(blob, filename); }
       pdfDiagSuccess({ tab: 'Dashboard Report', action: 'Print PDF' });
     } catch (error) {
       pdfDiagFail({ tab: 'Dashboard Report', action: 'Print PDF', error });
