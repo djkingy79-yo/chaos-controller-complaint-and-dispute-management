@@ -221,54 +221,52 @@ export function downloadPDFBlob(blob, filename) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PRINT — renders PDF in a hidden iframe to suppress browser URL/header/footer.
-// Falls back to download if iframe fails.
+// PRINT — opens the generated PDF blob as the top-level document of a new tab
+// and prints THAT window.
+//
+// WHY NOT A HIDDEN IFRAME: Safari has a long-standing bug where calling
+// `iframe.contentWindow.print()` on an iframe whose content is a native PDF
+// (rendered via the browser's built-in PDF plugin, not HTML) does NOT print
+// the PDF — it prints the PARENT page instead. That parent page is the app's
+// own webpage, which is why the print preview showed the browser's page
+// title/URL/date footer and only "1 of 1" (the on-screen app page), even
+// though the downloaded blob had multiple pages. Chrome happens to handle
+// this case correctly, which is why the bug only showed up in Safari.
+//
+// FIX: open the blob URL with window.open() so the PDF becomes the actual
+// top-level document being printed. Printing a native PDF document never
+// adds browser page-title/URL/date headers (those are only injected by the
+// browser when printing an HTML page) — so the print output is the PDF
+// itself, correctly multi-paged, exactly like the Download PDF button
+// produces from the SAME blob.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function openPDFForPrint(blob, filename = 'document.pdf') {
   try {
     const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
 
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none;';
-    document.body.appendChild(iframe);
+    if (!printWindow) {
+      // Popup blocked — fall back to a plain download so the user still gets the PDF.
+      URL.revokeObjectURL(url);
+      downloadPDFBlob(blob, filename);
+      return false;
+    }
 
-    await new Promise((resolve, reject) => {
-      const cleanup = () => {
-        setTimeout(() => {
-          try { document.body.removeChild(iframe); } catch (e) {}
-          URL.revokeObjectURL(url);
-        }, 60000);
-      };
+    const triggerPrint = () => {
+      try {
+        printWindow.focus();
+        printWindow.print();
+      } catch (e) {
+        // Window may already be closed by the user — nothing to do.
+      }
+    };
 
-      iframe.onload = () => {
-        try {
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
-          cleanup();
-          resolve(true);
-        } catch (e) {
-          cleanup();
-          reject(e);
-        }
-      };
+    // The native PDF viewer's 'load' event isn't reliable across browsers for
+    // blob URLs, so we fire on load AND on a fallback timer (whichever first).
+    printWindow.addEventListener?.('load', triggerPrint, { once: true });
+    setTimeout(triggerPrint, 800);
 
-      iframe.onerror = () => { cleanup(); reject(new Error('iframe load failed')); };
-      iframe.src = url;
-
-      // Safari fallback — onload may not fire for blob URLs
-      setTimeout(() => {
-        try {
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
-          cleanup();
-          resolve(true);
-        } catch (e) {
-          cleanup();
-          reject(e);
-        }
-      }, 2000);
-    });
-
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
     return true;
   } catch (error) {
     console.error('[PDF] openPDFForPrint failed, falling back to download:', error);
