@@ -92,10 +92,25 @@ For each item specify:
     });
 
     const checklistItems = result.checklist || [];
+
+    // ─── DEDUPLICATION: purge all existing checklist items + AI-generated
+    // deadlines for this case BEFORE creating the new set. Without this,
+    // every re-generation stacks a second full set on top of the old one,
+    // producing duplicated steps that reference stale authorities. ───
+    await base44.asServiceRole.entities.ChecklistItem.deleteMany({ case_id: caseId });
+    await base44.asServiceRole.entities.Deadline.deleteMany({ case_id: caseId, notes: { $regex: "AI-generated", $options: "i" } });
+
     const createdItems = [];
     const caseCreatedDate = new Date(caseItem.created_date);
+    const seenLabels = new Set();
 
     for (const item of checklistItems) {
+      // Skip duplicate labels within the same generation batch (defensive —
+      // the LLM occasionally emits two near-identical steps with slight
+      // wording changes)
+      const normalisedLabel = String(item.label || '').trim().toLowerCase();
+      if (seenLabels.has(normalisedLabel)) continue;
+      seenLabels.add(normalisedLabel);
       const deadlineDate = new Date(caseCreatedDate);
       deadlineDate.setDate(deadlineDate.getDate() + (item.estimated_days || 0));
 

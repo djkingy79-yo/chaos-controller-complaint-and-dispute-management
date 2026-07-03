@@ -232,7 +232,7 @@ export default function ChaosScore({ caseItem, evidence, events }) {
                   return "Send (or mark as sent) the next complaint stage before escalating.";
                 }
                 if (!caseItem.escalation_body) {
-                  return "Identify the escalation body (e.g. AFCA, TIO, NCAT) to unlock escalation.";
+                  return "Identify the escalation body for this case type to unlock escalation.";
                 }
                 return `${100 - score}% more needed to complete the pathway.`;
               })()}
