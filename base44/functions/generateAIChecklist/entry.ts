@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     if (!caseItem) return Response.json({ error: 'Case not found' }, { status: 404 });
 
     const pathway = caseItem.complaint_pathway || {};
-    const escalationBody = caseItem.escalation_body || 'the relevant external dispute resolution body for this case type';
+    const escalationBody = caseItem.escalation_body || 'the assigned escalation body for this case';
 
     const prompt = `You are an expert Australian consumer advocacy case manager. Generate a comprehensive checklist of required steps for resolving a ${caseItem.category} dispute.
 

@@ -9,6 +9,9 @@ const CATEGORY_COLORS = {
   tenancy: "#f59e0b",
   telco: "#10b981",
   utilities: "#f97316",
+  government: "#0ea5e9",
+  education: "#a855f7",
+  legal_profession: "#D4AF37",
   other: "#6b7280",
 };
 
@@ -18,6 +21,9 @@ const CATEGORY_LABELS = {
   tenancy: "Tenancy",
   telco: "Telco",
   utilities: "Utilities",
+  government: "Government",
+  education: "Education",
+  legal_profession: "Legal Profession",
   other: "Other",
 };
 
@@ -36,7 +42,7 @@ export default function CategoryMetrics({ cases }) {
   const [expanded, setExpanded] = useState(false);
 
   // Build per-category stats
-  const categories = ["banking", "insurance", "tenancy", "telco", "utilities", "other"];
+  const categories = ["banking", "insurance", "tenancy", "telco", "utilities", "government", "education", "legal_profession", "other"];
   const stats = categories
     .map((cat) => {
       const inCat = cases.filter((c) => c.category === cat);

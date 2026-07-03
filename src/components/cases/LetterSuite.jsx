@@ -62,7 +62,7 @@ const LETTER_TYPES = [
   { key: "letter3", label: "3rd Complaint", field: "third_complaint_letter", description: "Final demand before external escalation", minPlan: "Pro" },
   { key: "accept_offer", label: "Accept Offer", field: "accept_offer_letter", description: "Formally accept a settlement offer", minPlan: "Pro" },
   { key: "deny_offer", label: "Deny Offer", field: "deny_offer_letter", description: "Reject an unsatisfactory offer and state reasons", minPlan: "Pro" },
-  { key: "escalation", label: "Escalation Letter", field: "escalation_letter", description: "Formal complaint to external body (AFCA, TIO, NCAT, etc.)", minPlan: "Command" },
+  { key: "escalation", label: "Escalation Letter", field: "escalation_letter", description: "Formal complaint to the assigned external escalation body", minPlan: "Command" },
 ];
 
 function buildPrompt(type, caseItem, client, today, evidenceList) {

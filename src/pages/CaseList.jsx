@@ -115,6 +115,9 @@ export default function CaseList() {
               <SelectItem value="tenancy">Tenancy</SelectItem>
               <SelectItem value="telco">Telco</SelectItem>
               <SelectItem value="utilities">Utilities</SelectItem>
+              <SelectItem value="government">Government</SelectItem>
+              <SelectItem value="education">Education</SelectItem>
+              <SelectItem value="legal_profession">Legal Profession</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>

@@ -49,12 +49,12 @@ Deno.serve(async (req) => {
       .join('\n');
 
     const letters = [
-      caseItem.complaint_letter ? '1st Complaint Letter: exists' : null,
-      caseItem.complaint_letter_2 ? '2nd Complaint Letter: exists' : null,
-      caseItem.complaint_letter_3 ? '3rd Complaint Letter: exists' : null,
-      caseItem.letter_accept_offer ? 'Accept Offer Letter: exists' : null,
-      caseItem.letter_deny_offer ? 'Deny Offer Letter: exists' : null,
-      caseItem.letter_escalation ? 'Escalation Letter: exists' : null,
+      caseItem.first_complaint_letter ? '1st Complaint Letter: exists' : null,
+      caseItem.second_complaint_letter ? '2nd Complaint Letter: exists' : null,
+      caseItem.third_complaint_letter ? '3rd Complaint Letter: exists' : null,
+      caseItem.accept_offer_letter ? 'Accept Offer Letter: exists' : null,
+      caseItem.deny_offer_letter ? 'Deny Offer Letter: exists' : null,
+      caseItem.escalation_letter ? 'Escalation Letter: exists' : null,
     ].filter(Boolean).join('\n') || 'No letters generated yet';
 
     const contextSize = evidenceList.length + timelineSummary.length + deadlineLines.length;
@@ -124,7 +124,7 @@ Generate a structured report with these exact sections. Use Australian English. 
           weaknesses: { type: 'array', items: { type: 'string' }, description: '2-4 weaknesses or risks' },
           missing_evidence: { type: 'array', items: { type: 'string' }, description: 'Evidence gaps that should be addressed' },
           next_actions: { type: 'array', items: { type: 'string' }, description: '4-6 recommended immediate next actions' },
-          escalation_path: { type: 'string', description: `The escalation route if unresolved. MUST use ONLY the bodies named in the assigned complaint pathway above (rendered as: "${caseItem.escalation_body || 'the appropriate ombudsman or tribunal for this case type'}") — do not substitute a different ombudsman/tribunal/regulator.` },
+          escalation_path: { type: 'string', description: `The escalation route if unresolved. MUST use ONLY the bodies named in the assigned complaint pathway above (rendered as: "${caseItem.escalation_body || 'the assigned escalation body for this case'}") — do not substitute a different ombudsman/tribunal/regulator.` },
         },
         required: ['case_overview', 'facts', 'issues_identified', 'strengths', 'next_actions', 'escalation_path'],
       },

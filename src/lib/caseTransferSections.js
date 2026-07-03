@@ -74,7 +74,7 @@ export function buildTimelineSections(caseItem, events) {
   push(caseItem.third_no_response_at, "No response recorded after 3rd Complaint");
   push(caseItem.accept_offer_sent_at, "Acceptance of Offer letter sent");
   push(caseItem.deny_offer_sent_at, "Rejection of Offer letter sent");
-  push(caseItem.escalated_at, `Escalated to ${caseItem.escalation_body || "external body"}`);
+  push(caseItem.escalated_at, `Escalated to ${caseItem.escalation_body || "the assigned escalation body"}`);
   push(caseItem.final_outcome_at, "Final outcome recorded");
 
   const fromEvents = (events || []).map(ev => ({
@@ -230,7 +230,7 @@ export function buildContactsSections(caseItem, organisation) {
         { label: "Ombudsman", value: caseItem.complaint_pathway.ombudsman },
         { label: "Tribunal", value: caseItem.complaint_pathway.tribunal },
         { label: "Support Services", value: (caseItem.complaint_pathway.supportServices || []).join(", ") },
-      ] : [{ label: "Assigned Regulator / Ombudsman", value: caseItem.escalation_body }],
+      ] : [{ label: "Assigned Escalation Body", value: caseItem.escalation_body }],
       empty: "No regulator identified yet.",
     },
     {

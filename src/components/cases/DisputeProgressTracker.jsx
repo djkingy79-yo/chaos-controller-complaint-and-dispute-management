@@ -146,7 +146,7 @@ export default function DisputeProgressTracker({ caseItem }) {
   let escalatedState, escalatedSub;
   if (escalated) { escalatedState = "complete"; escalatedSub = `Escalated ${ts(c.escalated_at)}${c.escalation_reference ? ` · Ref: ${c.escalation_reference}` : ""}`; }
   else if (escalationUnlocked) { escalatedState = "active"; escalatedSub = "Ready to escalate to external body"; }
-  else { escalatedState = "future"; escalatedSub = `Escalate to ${c.escalation_body || "AFCA / NCAT / Ombudsman"}`; }
+  else { escalatedState = "future"; escalatedSub = `Escalate to ${c.escalation_body || "the assigned escalation body"}`; }
 
   // 9. Final Outcome
   const hasFinalOutcome = !!c.final_outcome;

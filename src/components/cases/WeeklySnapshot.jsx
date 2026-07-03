@@ -93,6 +93,7 @@ export default function WeeklySnapshot({ caseItem, evidence = [], events = [] })
       d.deadline_date && isBefore(new Date(d.deadline_date), now) && d.status === "pending"
     );
 
+    const pathway = caseItem.complaint_pathway || {};
     const prompt = `You are a consumer advocacy case manager for Chaos Controller™, an Australian dispute resolution platform.
 
 Generate a concise WEEKLY CASE SNAPSHOT report in Australian English for the following case. Use PLAIN TEXT ONLY — NO markdown symbols.
@@ -104,6 +105,7 @@ CRITICAL RULES:
 - Use UPPERCASE section titles on their own line
 - Use normal paragraphs for content
 - Australian English spelling
+- Use ONLY the assigned complaint pathway for this case. Do not invent or substitute AFCA, TIO, NCAT, Fair Trading, an ombudsman, tribunal or regulator unless it appears in the assigned complaint pathway. Never write generic placeholders like "relevant ombudsman", "external dispute resolution body", "tribunal or regulator" or "complaint authority" — always name the actual assigned body.
 
 STRUCTURE:
 WEEKLY STATUS SUMMARY
@@ -133,6 +135,14 @@ CASE DETAILS:
 - Issue Summary: ${caseItem.issue_summary || "N/A"}
 - Desired Outcome: ${caseItem.desired_outcome || "N/A"}
 - Escalation Body: ${caseItem.escalation_body || "N/A"}
+
+ASSIGNED COMPLAINT PATHWAY (use ONLY these bodies — never substitute or invent another):
+- Internal Complaint: ${pathway.internalComplaint || "not applicable"}
+- Regulator: ${pathway.regulator || "not applicable"}
+- Ombudsman: ${pathway.ombudsman || "not applicable"}
+- Tribunal: ${pathway.tribunal || "not applicable"}
+- Court: ${pathway.court || "not applicable"}
+- Support Services: ${(pathway.supportServices || []).join(", ") || "none"}
 
 RECENT ACTIVITY (last 7 days — ${recentEvents.length} events):
 ${recentEvents.length > 0

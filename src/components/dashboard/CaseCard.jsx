@@ -22,6 +22,9 @@ const categoryLabels = {
   tenancy: "Tenancy",
   telco: "Telco",
   utilities: "Utilities",
+  government: "Government",
+  education: "Education",
+  legal_profession: "Legal Profession",
   other: "Other",
 };
 
