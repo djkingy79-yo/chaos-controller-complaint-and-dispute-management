@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertTriangle, XCircle, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { computeNoResponse } from "@/lib/disputeStageLogic";
-import { getEscalationUrl } from "@/lib/industryClassifier";
+import { getEscalationUrl } from "@/lib/authorityRouting";
 
 /**
  * Matter Strength scoring (total: 100%)
@@ -166,14 +166,17 @@ export default function ChaosScore({ caseItem, evidence, events }) {
   const { score, items, readyToEscalate, noResponseAfterFirst, escalationCriteriaMet } = scoreFromCase(caseItem, evidence, events);
 
   const handleEscalate = () => {
-    // Single source of truth — the industry classifier — decides the
-    // escalation body/URL for this case's category. No separate/hardcoded
-    // category mapping lives here.
+    // Routing engine (authorityRouting.js) is the single source of truth for
+    // the escalation URL — driven by case.category + case.state. The body
+    // name comes from case.complaint_pathway.regulator / case.escalation_body.
     const url = getEscalationUrl(caseItem.category, caseItem.state);
+    const regulator = caseItem.complaint_pathway?.regulator || caseItem.escalation_body;
     if (url) {
       window.open(url, "_blank");
-    } else {
-      navigate(`/case/${caseItem.id}?tab=print`);
+    } else if (regulator) {
+      // No confirmed URL for this jurisdiction — search for the body's
+      // official complaint page so the user still lands on the right body.
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(regulator + ' how to complain lodge')}`, "_blank");
     }
   };
 
@@ -213,9 +216,9 @@ export default function ChaosScore({ caseItem, evidence, events }) {
             )}
             <Button
               onClick={handleEscalate}
-              className="bg-success text-success-foreground hover:bg-success/90 text-xs px-4 py-2 h-auto gap-1.5"
+              className="bg-success text-success-foreground hover:bg-success/90 text-xs px-4 py-2 h-auto gap-1.5 w-full"
             >
-              <ArrowUpRight className="w-3 h-3" /> Green Light — Escalate Now
+              <ArrowUpRight className="w-3 h-3 shrink-0" /> Escalate to {caseItem.complaint_pathway?.regulator || caseItem.escalation_body || 'Assigned Body'}
             </Button>
           </div>
         ) : (

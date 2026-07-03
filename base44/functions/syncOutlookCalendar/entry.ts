@@ -61,7 +61,7 @@ async function syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItem
       subject: `⚖️ [Chaos Controller] Deadline: ${dl.title}`,
       body: {
         contentType: 'text',
-        content: `Case: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nDeadline Type: ${dl.deadline_type || 'other'}\n${dl.notes ? 'Notes: ' + dl.notes : ''}\n\nView case: https://chaoscontroller.com.au/case/${caseId}`
+        content: `Case: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nEscalation Body: ${caseItem.escalation_body || caseItem.complaint_pathway?.regulator || 'N/A'}\nDeadline Type: ${dl.deadline_type || 'other'}\n${dl.notes ? 'Notes: ' + dl.notes : ''}\n\nView case: https://chaoscontroller.com.au/case/${caseId}`
       },
       start: { dateTime: startDate.toISOString(), timeZone: 'Australia/Sydney' },
       end: { dateTime: endDate.toISOString(), timeZone: 'Australia/Sydney' },

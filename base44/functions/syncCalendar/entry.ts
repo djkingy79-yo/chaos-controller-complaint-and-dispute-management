@@ -9,9 +9,10 @@ async function getToken(base44) {
 
 function buildEventPayload(deadline, caseInfo) {
   const statusLabel = caseInfo.status ? ` [${caseInfo.status.replace(/_/g, ' ').toUpperCase()}]` : '';
+  const escBody = caseInfo.escalation_body || (caseInfo.complaint_pathway?.regulator) || '';
   return {
     summary: `⚖️ ${deadline.title} — ${caseInfo.title}${statusLabel}`,
-    description: `Case: ${caseInfo.title}\nOrganisation: ${caseInfo.organisation_name || 'N/A'}\nStatus: ${caseInfo.status || 'N/A'}\nDeadline Type: ${deadline.deadline_type || 'N/A'}\nResponsibility: ${deadline.responsibility || 'user'}\n\nManage at: https://chaoscontroller.com.au/case/${caseInfo.id}`,
+    description: `Case: ${caseInfo.title}\nOrganisation: ${caseInfo.organisation_name || 'N/A'}\nEscalation Body: ${escBody || 'N/A'}\nStatus: ${caseInfo.status || 'N/A'}\nDeadline Type: ${deadline.deadline_type || 'N/A'}\nResponsibility: ${deadline.responsibility || 'user'}\n\nManage at: https://chaoscontroller.com.au/case/${caseInfo.id}`,
     start: { date: deadline.deadline_date, timeZone: 'Australia/Sydney' },
     end: { date: deadline.deadline_date, timeZone: 'Australia/Sydney' },
     extendedProperties: {
