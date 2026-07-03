@@ -39,14 +39,23 @@ Deno.serve(async (req) => {
     const escalationBody = caseItem.escalation_body || pathway.regulator || 'the assigned escalation body';
     const orgName = caseItem.organisation_name || 'the organisation';
 
-    // ─── CLEAN 9-STEP PATHWAY ───────────────────────────────────────────
-    // Single linear sequence: evidence → internal → prepare → lodge →
-    // confirm → track → upload → outcome. No duplicate waiting/follow-up
-    // loops, no multiple internal complaint rounds.
+    // ─── STATE-AWARE PATHWAY ───────────────────────────────────────────
+    // Adapts to the case's actual completed milestones. If all three
+    // internal complaints (first, second, third/final) have already been
+    // sent, the "send final internal complaint" step is skipped and the
+    // checklist progresses directly to preparing the external escalation.
+    const allInternalComplaintsSent = !!(
+      caseItem.first_complaint_sent_at &&
+      caseItem.second_complaint_sent_at &&
+      caseItem.third_complaint_sent_at
+    );
+
     const STEPS = [
       { label: `Gather evidence related to the dispute with ${orgName}.`, category: 'evidence', priority: 'critical', requires_proof: true, days: 0 },
       { label: `Confirm all correspondence with ${orgName} is saved and documented.`, category: 'complaint', priority: 'high', requires_proof: true, days: 7 },
-      { label: `Generate and send the final internal complaint to ${orgName} if required.`, category: 'complaint', priority: 'high', requires_proof: true, days: 14 },
+      ...(allInternalComplaintsSent ? [] : [
+        { label: `Generate and send the final internal complaint to ${orgName} if required.`, category: 'complaint', priority: 'high', requires_proof: true, days: 14 },
+      ]),
       { label: `Prepare the complaint for ${escalationBody}.`, category: 'escalation', priority: 'critical', requires_proof: true, days: 21 },
       { label: `Lodge the complaint with ${escalationBody}.`, category: 'escalation', priority: 'critical', requires_proof: true, days: 30 },
       { label: `Save the lodgement confirmation from ${escalationBody}.`, category: 'document', priority: 'high', requires_proof: true, days: 31 },
