@@ -318,6 +318,10 @@
       "type": "string",
       "format": "date-time",
       "description": "When flagStaleAuthorityLetters last checked this case's letters against its current complaint_pathway."
+    },
+    "letter_metadata": {
+      "type": "object",
+      "description": "Per-letter-type generation metadata keyed by letter type (letter1, letter2, letter3, accept_offer, deny_offer, escalation). Produced by the generateLetter validation engine. Each entry: { persona, purpose, word_count, documents_requested, new_allegations, repeated_points, escalation_ready, validation_passed, validation_failures, generated_at }. Internal only \u2014 user never sees it. Used for repetition detection, escalation tracking, executive summary generation, and regulator-ready timeline construction."
     }
   },
   "required": [
