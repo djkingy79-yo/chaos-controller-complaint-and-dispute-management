@@ -12,12 +12,12 @@ const LETTER_FIELD_MAP = {
 
 // Per-type word limits injected into the prompt
 const WORD_LIMITS = {
-  letter1: '700–1,000 words',
-  letter2: '600–900 words',
-  letter3: '600–900 words',
-  accept_offer: '350–600 words',
-  deny_offer: '500–800 words',
-  escalation: '900–1,200 words',
+  letter1: '500–700 words',
+  letter2: '400–600 words',
+  letter3: '300–450 words',
+  accept_offer: '300–500 words',
+  deny_offer: '400–600 words',
+  escalation: '800–1,200 words',
 };
 
 // Stale lock threshold — if a lock is older than this, treat it as abandoned and allow retry

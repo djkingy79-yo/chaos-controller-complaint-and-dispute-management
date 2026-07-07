@@ -79,7 +79,6 @@ function buildPrompt(type, caseItem, client, today, evidenceList) {
   });
   const escalationBody = caseItem.escalation_body || getEscalationBodyLabel(complaintPathway);
 
-  // Build evidence summary for injection into prompts
   const evidenceSummary = (evidenceList || []).length > 0
     ? (evidenceList || []).map(ev => {
         const summary = ev.extracted_data?.document_summary || ev.description || '';
@@ -89,27 +88,16 @@ function buildPrompt(type, caseItem, client, today, evidenceList) {
       }).join('\n')
     : 'No documents uploaded.';
 
-  const letterHistory = [
-    caseItem.complaint_letter ? '- First Complaint Letter: Generated and on file' : null,
-    caseItem.complaint_letter_2 ? '- Second Complaint Letter: Generated and on file' : null,
-    caseItem.complaint_letter_3 ? '- Third Complaint Letter: Generated and on file' : null,
-  ].filter(Boolean).join('\n') || 'No prior letters generated.';
+  const fmtDate = (dt) => dt ? format(new Date(dt), "d MMMM yyyy") : null;
+  const priorCorrespondence = [
+    caseItem.first_complaint_sent_at ? `- First Complaint: sent ${fmtDate(caseItem.first_complaint_sent_at)}` : '- First Complaint: not yet sent',
+    caseItem.second_complaint_sent_at ? `- Second Complaint: sent ${fmtDate(caseItem.second_complaint_sent_at)}` : '- Second Complaint: not yet sent',
+    caseItem.third_complaint_sent_at ? `- Third/Final Complaint: sent ${fmtDate(caseItem.third_complaint_sent_at)}` : '- Third/Final Complaint: not yet sent',
+  ].join('\n');
 
-  const base = `You are a professional consumer advocacy solicitor in Australia. Generate a detailed, substantive formal letter for a consumer dispute. This letter must be comprehensive and professional — NOT generic. Use the specific facts, evidence, and details provided below.
-
-  CRITICAL RULES:
-  0. Use ONLY the assigned complaint pathway for this case, given below as ASSIGNED COMPLAINT PATHWAY. Do not invent or substitute AFCA, TIO, NCAT, Fair Trading, an ombudsman, tribunal or regulator unless it appears in the assigned complaint pathway. Never say "relevant ombudsman", "external dispute resolution body", "tribunal or regulator" or "complaint authority" as a generic placeholder — always name the actual assigned body.
-  1. NEVER use placeholder brackets like [Name] or [Address]. If a detail is not provided, omit that line entirely.
-  2. Use STANDARD AUSTRALIAN BUSINESS LETTER FORMAT.
-  3. ALWAYS use AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, programme, centre, licence, defence, offence).
-  4. Address lines must be TIGHT single-spaced with NO gaps.
-  5. ABSOLUTELY NO HTML TAGS - no <div>, no <br>, no <p>, no <strong>, no angle brackets of any kind.
-  6. PLAIN TEXT ONLY - just normal text with line breaks.
-  7. Write at length — use ALL provided facts. Do not summarise or truncate.
-  8. Include specific dates, amounts, account numbers, and document references from the evidence provided.
-  9. Each letter must be substantive — minimum 3-4 solid paragraphs of specific content.
-
-COMPLAINANT DETAILS:
+  // ─── SHARED FACTUAL CONTEXT (no legal lecture, no mandatory section structure) ───
+  const contextBlock = `
+COMPLAINANT:
 - Name: ${client.name || "not provided — omit name line"}
 - Address: ${client.address || "not provided — omit address block"}
 - Email: ${client.email || "not provided"}
@@ -117,361 +105,306 @@ COMPLAINANT DETAILS:
 - Account/Reference: ${client.accounts?.join(", ") || caseItem.account_number || "not provided"}
 - Incident Date: ${caseItem.incident_date ? format(new Date(caseItem.incident_date), "d MMMM yyyy") : client.dates?.join(", ") || "not provided"}
 ${client.policies?.length ? `- Policy Numbers: ${client.policies.join(", ")}` : ""}
-${client.amounts?.length ? `- Key Financial Amounts in Dispute: ${client.amounts.join(", ")}` : ""}
+${client.amounts?.length ? `- Key Amounts in Dispute: ${client.amounts.join(", ")}` : ""}
 
-ORGANISATION DETAILS:
+ORGANISATION:
 - Organisation: ${caseItem.organisation_name || "not provided"}
 - Complaints Address: ${caseItem.organisation_complaints_address || "Complaints Department, " + (caseItem.organisation_name || "the organisation")}
 - Complaints Email: ${caseItem.organisation_complaints_email || "not provided"}
 - Complaint Handler: ${caseItem.complaint_handler_name || "The Complaints Manager"}
 
-CASE DETAILS:
-- Industry Category: ${caseItem.category}
+CASE:
+- Category: ${caseItem.category}
 - State/Territory: ${caseItem.state || "not confirmed"}
-- Issue Type Summary: ${caseItem.issue_summary}
-- Full Complaint Details: ${caseItem.issue_details}
+- Issue Summary: ${caseItem.issue_summary}
+- Full Details: ${caseItem.issue_details}
 - Desired Outcome: ${caseItem.desired_outcome}
 - Today's Date: ${today}
 
-ASSIGNED COMPLAINT PATHWAY (use ONLY these bodies — never substitute or invent another):
-- Internal Complaint: ${complaintPathway.internalComplaint || "not applicable"}
-- Regulator: ${complaintPathway.regulator || "not applicable"}
-- Ombudsman: ${complaintPathway.ombudsman || "not applicable"}
-- Tribunal: ${complaintPathway.tribunal || "not applicable"}
-- Court: ${complaintPathway.court || "not applicable"}
-- Support Services: ${(complaintPathway.supportServices || []).join(", ") || "none"}
-- Notes: ${complaintPathway.notes || "none"}
-- Escalation Body (combined, for use in letter text): ${escalationBody}
+ASSIGNED ESCALATION BODY (from the routing engine — use ONLY this name, never invent or substitute):
+${escalationBody}
 
-EVIDENCE ON FILE (${(evidenceList || []).length} documents):
-${evidenceSummary}
+ASSIGNED COMPLAINT PATHWAY (for reference — never substitute any body listed here):
+- Internal: ${complaintPathway.internalComplaint || "n/a"}
+- Regulator: ${complaintPathway.regulator || "n/a"}
+- Ombudsman: ${complaintPathway.ombudsman || "n/a"}
+- Tribunal: ${complaintPathway.tribunal || "n/a"}
 
 PRIOR CORRESPONDENCE:
-${letterHistory}`;
+${priorCorrespondence}
 
-  const formats = `
-  CRITICAL: PLAIN TEXT ONLY - ABSOLUTELY NO HTML TAGS:
-  - NO <div>, NO </div>, NO <br>, NO <strong>, NO <p>
-  - NO angle brackets of any kind
-  - Just plain text with normal line breaks
+EVIDENCE ON FILE (${(evidenceList || []).length} documents):
+${evidenceSummary}`;
 
-  MANDATORY BODY STRUCTURE — use these exact headings on their own line (no colon, uppercase):
+  // ─── SHARED FORMAT RULES (no mandatory section headings — each letter defines its own) ───
+  const formatRules = `
+UNIVERSAL FORMAT RULES:
+1. PLAIN TEXT ONLY — no HTML tags, no angle brackets, no <div>, <br>, <p>, <strong>.
+2. AUSTRALIAN ENGLISH spelling (organise, recognise, behaviour, colour, centre, licence, defence).
+3. Standard Australian business letter format.
+4. NEVER use placeholder brackets like [Name] — if a detail is missing, omit that line entirely.
+5. Address lines must be tight single-spaced with no gaps.
+6. BANNED PHRASES — never use any of these or similar filler:
+   "I trust this finds you well", "I respectfully request", "I wish to advise",
+   "As previously stated", "I appreciate your attention", "I am writing to",
+   "I hope this letter finds you", "Please be advised that".
+7. No emotional language, no personal opinions, no sarcasm, no hyperbole.
+8. Every sentence must move the complaint forward. Maximum impact, minimum words.
+9. Do not repeat facts from previous letters unless directly necessary for context.
 
-  BACKGROUND
-  [1–2 paragraphs: who you are, account details, relationship with the organisation]
+LETTER SKELETON (plain text — headings vary per letter type as specified):
+${today}
 
-  WHAT HAPPENED
-  [Chronological detail: specific dates, amounts, interactions, what went wrong]
+[Sender Name]
+[Sender Street Address]
+[Sender City Postcode]
+[Sender Email]
+[Sender Phone]
 
-  EVIDENCE RELIED UPON
-  - [bullet: document name and what it proves]
-  - [bullet: document name and what it proves]
+[Recipient Name/Title]
+[Organisation Name]
+[Organisation Address]
 
-  IMPACT
-  [How this has affected you financially, practically, emotionally]
+Re: [Subject]
 
-  OUTCOME REQUESTED
-  [Specific resolution you are seeking. Firm deadline.]
+Dear [Name/Sir/Madam],
 
-  NEXT STEPS
-  [State you will escalate to ${escalationBody} if not resolved within the deadline]
+[Body — use the headings and structure specified for this letter type]
 
-  LEGAL TONE RULES — MANDATORY:
-  - Do NOT use "scam operation", "deliberately sabotaging", "fraudulent conduct", "designed to extract money through deception" unless user evidence clearly confirms fraud.
-  - Instead use: "conduct raising serious concerns", "apparent non-delivery of services", "misleading or deceptive conduct", "failure to supply services with due care and skill".
-  - For Australian Consumer Law: reference s18 (misleading or deceptive conduct), s60 (due care and skill), s61 (fitness for purpose) only where applicable.
-  - For Banking Code of Practice: reference fair, transparent and timely complaint handling only where applicable.
-  - For ePayments Code: only mention where applicable to the specific transaction type. Do not overstate refund obligations.
+Yours faithfully,
 
-  FORMAT (plain text lines only):
-  ${today}
-  
-  [Sender Name]
-  [Sender Street Address]
-  [Sender City Postcode]
-  [Sender Email]
-  [Sender Phone]
-  
-  [Recipient Name/Title]
-  [Organisation Name]
-  [Organisation Address]
-  [Organisation Email]
-  
-  Re: [Subject]
-  
-  Dear [Name/Sir/Madam],
+[Sender Name]`;
 
-  BACKGROUND
-
-  [paragraph]
-
-  WHAT HAPPENED
-
-  [paragraph]
-
-  EVIDENCE RELIED UPON
-
-  - [bullet]
-
-  IMPACT
-
-  [paragraph]
-
-  OUTCOME REQUESTED
-
-  [paragraph]
-
-  NEXT STEPS
-
-  [paragraph]
-  
-  Yours faithfully,
-  
-  [Sender Name]`;
-
+  // ═══════════════════════════════════════════════════════════════════════
+  //  LETTER 1 — FIRST COMPLAINT
+  //  Pressure: 2/10 | Tone: Professional, firm, calm
+  //  Purpose: Identify the issue, state what happened, state outcome, give deadline
+  // ═══════════════════════════════════════════════════════════════════════
   if (type === "letter1") {
-    return `${base}
+    return `You are a professional consumer dispute strategist with 30 years of experience. Write the FIRST formal complaint letter from the complainant to the organisation.
 
-  LETTER TYPE: First Formal Complaint Letter
-  - This is the INITIAL formal complaint to the organisation.
-  - Write a DETAILED, SUBSTANTIVE letter — minimum 4 substantial paragraphs.
-  - SECTION 1: Introduction — who you are, your account details, the relationship with the organisation.
-  - SECTION 2: Background and chronology — detailed account of what happened, specific dates, amounts, interactions.
-  - SECTION 3: Impact — how this has affected you financially, practically, and emotionally.
-  - SECTION 4: Evidence — reference each document on file by name. State what it proves.
-  - SECTION 5: Legal/regulatory obligations — reference the relevant Australian consumer laws, industry codes, and the organisation's own obligations.
-  - SECTION 6: Demand — state the specific desired outcome. Give a firm 21-day response deadline.
-  - SECTION 7: Escalation warning — state that if unresolved, you will escalate to ${escalationBody}.
-  ${formats}
+TONE: Professional, firm, calm. Pressure: 2/10.
+This letter gives the organisation the opportunity to resolve the matter internally. Do NOT lecture. Do NOT threaten. Do NOT discuss legislation in detail. Do NOT cite section numbers of any Act.
 
-  FORMAT EXAMPLE (plain text - NO HTML):
-  21 June 2026
+OBJECTIVE: Identify the issue. Explain what happened. State the outcome required. Give a 21-day deadline. Briefly note — one sentence only — that external options including ${escalationBody} will be considered if unresolved.
 
-  Mick Gallagher
-  14 The Road
-  Penrith 2750
-  Djkingy79@gmail.com
-  0413572850
+MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
 
-  The Complaints Manager
-  NRMA Insurance
-  GPO Box 438
-  Sydney NSW 2001
+THE ISSUE
+[2–3 sentences: what the problem is. Direct. No preamble. No "I am writing to...". Open with the issue itself.]
 
-  Re: Formal Complaint
+WHAT HAPPENED
+[Chronological facts only: dates, amounts, what occurred. No commentary, no accusations, no legal analysis. Just what happened. Be specific — use actual dates, amounts, and account numbers from the case details.]
 
-  Dear Sir/Madam,
+WHAT I WANT
+[State the specific outcome: ${caseItem.desired_outcome}. Be precise about amounts, actions, or corrections required. One paragraph.]
 
-  [Body text]
+RESPONSE REQUIRED
+[State: 21 calendar days from today. State the exact deadline date. Then one sentence: if the matter is not resolved by that date, the complainant may refer it to ${escalationBody}.]
 
-  Yours faithfully,
-  Mick Gallagher`;
+RULES:
+- Do NOT restate evidence in detail — evidence is on file and available on request.
+- Do NOT explain consumer law or cite legislation sections.
+- Do NOT use any banned filler phrases.
+- Open with the issue, not with pleasantries.
+- Close with the deadline, not with threats.
+- Be direct: "I require" not "I would appreciate if you could perhaps".
+${contextBlock}
+${formatRules}`;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
+  //  LETTER 2 — SECOND COMPLAINT
+  //  Pressure: 5/10 | Tone: Noticeably firmer
+  //  Purpose: They failed to resolve. Reference prior correspondence.
+  //  Explain why response is inadequate. Introduce the external authority.
+  // ═══════════════════════════════════════════════════════════════════════
   if (type === "letter2") {
-    return `${base}
+    return `You are a professional consumer dispute strategist with 30 years of experience. Write the SECOND formal complaint letter from the complainant to the organisation.
 
-  LETTER TYPE: Second Formal Complaint Letter (Follow-Up)
-  - The organisation has either NOT responded within 21 days, or gave an unsatisfactory response.
-  - Write a DETAILED, SUBSTANTIVE letter — minimum 4 substantial paragraphs.
-  - SECTION 1: Reference your first complaint letter — the date it was sent, what was asked for, that the deadline has passed or the response was inadequate.
-  - SECTION 2: Restate the full complaint with additional detail. Include all evidence. Be specific about each failure.
-  - SECTION 3: Catalogue the organisation's failures — delayed response, inadequate investigation, breach of their own complaints policy, breach of industry codes.
-  - SECTION 4: Updated impact — state how the ongoing failure to resolve has compounded the original harm.
-  - SECTION 5: Reference each document on file as evidence. State what it proves about the organisation's conduct.
-  - SECTION 6: Final 14-day ultimatum — specific resolution required. State you are preparing to escalate to ${escalationBody} and have all documentation ready.
-  ${formats}
+TONE: Noticeably firmer. Pressure: 5/10.
+The organisation has either not responded within 21 days or gave an inadequate response. This letter raises the pressure and introduces the external authority by name.
 
-  FORMAT EXAMPLE (plain text - NO HTML):
-  21 June 2026
+OBJECTIVE: State that they have failed to resolve the complaint. Reference the first letter by date. Explain why their response (or silence) is inadequate. Advise that failure to resolve WILL result in escalation to ${escalationBody}. Give a 14-day deadline.
 
-  Mick Gallagher
-  14 The Road
-  Penrith 2750
-  Djkingy79@gmail.com
-  0413572850
+MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
 
-  The Complaints Manager
-  NRMA Insurance
-  GPO Box 438
-  Sydney NSW 2001
+YOUR FAILURE TO RESPOND
+[Reference the first complaint letter and its send date. State plainly what happened: no response received, or the response received does not address the issue. Direct: "You have failed to resolve this complaint" not "I am disappointed that..."]
 
-  Re: Formal Complaint
+WHY THIS REMAINS UNRESOLVED
+[State the specific outstanding issues. Do NOT restate the full complaint — reference it. Focus on what is still wrong, still missing, still unresolved. 2–3 tight paragraphs.]
 
-  Dear Sir/Madam,
+WHAT I STILL REQUIRE
+[State the specific outcome still required: ${caseItem.desired_outcome}. If their response partially addressed the matter, acknowledge what was done and state what remains.]
 
-  [Body text]
+FINAL INTERNAL DEADLINE
+[14 calendar days from today. State the exact deadline date. Then: "If this matter is not resolved by that date, I will lodge a formal complaint with ${escalationBody}."]
 
-  Yours faithfully,
-  Mick Gallagher`;
+RULES:
+- Do NOT repeat the full complaint history from the first letter — reference it by date.
+- Do NOT cite legislation in detail.
+- The regulator/ombudsman name must be exactly: ${escalationBody}. Never a generic placeholder. Never invented.
+- No banned filler phrases. No hedging.
+- Be direct: "You have failed to resolve this" not "I regret that the matter remains outstanding."
+${contextBlock}
+${formatRules}`;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
+  //  LETTER 3 — FINAL COMPLAINT
+  //  Pressure: 9/10 | Tone: Very firm, final
+  //  Purpose: Final opportunity. No polite requests. Escalation is imminent.
+  // ═══════════════════════════════════════════════════════════════════════
   if (type === "letter3") {
-    return `${base}
+    return `You are a professional consumer dispute strategist with 30 years of experience. Write the THIRD AND FINAL formal complaint letter from the complainant to the organisation.
 
-  LETTER TYPE: Third and Final Complaint Letter (Final Demand)
-  - This is the LAST internal letter before escalating to ${escalationBody}.
-  - Write a DETAILED, SUBSTANTIVE letter — minimum 5 substantial paragraphs.
-  - SECTION 1: State that this is the third and final letter. Reference the first and second complaints, their dates, and the organisation's failure to resolve.
-  - SECTION 2: Comprehensive summary of the entire dispute — timeline, all key facts, all amounts, all interactions.
-  - SECTION 3: Complete evidence index — list every document on file and what it proves. Make clear the evidence is overwhelming.
-  - SECTION 4: Legal analysis — cite Australian Consumer Law, the relevant industry Code of Practice, and any specific regulations the organisation has breached.
-  - SECTION 5: Harm suffered — full account of financial loss, practical impact, and distress caused by the organisation's conduct.
-  - SECTION 6: Final 7-day ultimatum. If not resolved, you will immediately lodge with ${escalationBody}, pursue all available legal remedies, and consider media disclosure where permitted.
-  - Very firm, authoritative, evidence-focused tone. The organisation should understand this is their final opportunity.
-  ${formats}
+TONE: Very firm. Final. Pressure: 9/10.
+No more polite requests. No "I may". No "I am considering". This is the last internal communication before external escalation. The internal complaint process ends with this letter.
 
-  FORMAT EXAMPLE (plain text - NO HTML):
-  21 June 2026
+OBJECTIVE: State that the organisation has failed despite multiple opportunities. This is their final chance. Provide one final 7-day deadline. State that once it expires, the complaint WILL be lodged with ${escalationBody} — not "may", not "considering" — WILL.
 
-  Mick Gallagher
-  14 The Road
-  Penrith 2750
-  Djkingy79@gmail.com
-  0413572850
+MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
 
-  The Complaints Manager
-  NRMA Insurance
-  GPO Box 438
-  Sydney NSW 2001
+FINAL NOTICE
+[State this is the third and final complaint. Reference the first and second letters by date. State plainly: despite multiple opportunities, the organisation has failed to resolve the matter. 2–3 sentences maximum.]
 
-  Re: Formal Complaint
+UNRESOLVED ISSUES
+[Bullet-point list of what remains outstanding. Each bullet: one issue, one sentence. No repetition of full history — just what is still wrong. Be specific: amounts still owed, questions still unanswered, failures still unaddressed.]
 
-  Dear Sir/Madam,
+FINAL DEADLINE
+[7 calendar days from today. State the exact deadline date. Then state unequivocally: "If I have not received a satisfactory response by that date, I will immediately lodge my complaint with ${escalationBody} without further notice."]
 
-  [Body text]
-
-  Yours faithfully,
-  Mick Gallagher`;
+RULES:
+- Use "WILL" not "may". Use "will lodge" not "may consider lodging".
+- Do NOT restate the full dispute — this letter is about the organisation's failure to resolve, not the original issue.
+- Do NOT cite legislation.
+- Do NOT use any banned filler phrases. No "I respectfully". No "I appreciate". No "I trust".
+- Keep it short and definitive. This letter should make it obvious the internal process has ended.
+- The escalation body must be exactly: ${escalationBody}. Never invented. Never generic.
+${contextBlock}
+${formatRules}`;
   }
 
-  if (type === "accept_offer") {
-    return `${base}
-
-  LETTER TYPE: Acceptance of Settlement Offer
-  - The organisation has made a settlement offer in response to the complaint.
-  - Write a DETAILED, SUBSTANTIVE letter.
-  - SECTION 1: Reference the complaint history and the offer received. Be specific about what was offered and when.
-  - SECTION 2: Formal acceptance — state you accept the offer. Specify the exact terms being accepted. Include any conditions of acceptance.
-  - SECTION 3: Binding requirements — request written confirmation of the offer terms. Specify the method and timeline for payment/fulfilment.
-  - SECTION 4: Conditions — state this acceptance is conditional on the offer being fulfilled by a specific date (14 days is standard). State any requirements before the matter is considered closed.
-  - SECTION 5: Closure terms — upon full performance, this matter will be considered fully resolved and you will not pursue further action. If the offer is not fulfilled, you will escalate.
-  - Professional, clear, binding language. This letter creates a contract.
-  ${formats}
-
-  FORMAT EXAMPLE (plain text - NO HTML):
-  21 June 2026
-
-  Mick Gallagher
-  14 The Road
-  Penrith 2750
-  Djkingy79@gmail.com
-  0413572850
-
-  The Complaints Manager
-  NRMA Insurance
-  GPO Box 438
-  Sydney NSW 2001
-
-  Re: Formal Complaint
-
-  Dear Sir/Madam,
-
-  [Body text]
-
-  Yours faithfully,
-  Mick Gallagher`;
-  }
-
-  if (type === "deny_offer") {
-    return `${base}
-
-  LETTER TYPE: Rejection of Settlement Offer
-  - The organisation has made an offer but it is UNSATISFACTORY.
-  - Write a DETAILED, SUBSTANTIVE letter.
-  - SECTION 1: Acknowledge receipt of the offer. Reference the complaint history and the offer details.
-  - SECTION 2: Formal rejection — clearly state you reject the offer. List each specific reason why the offer is inadequate:
-    - Does not fully compensate for the loss
-    - Does not address all aspects of the complaint
-    - Does not reflect the evidence on file
-    - Does not meet the desired outcome: "${caseItem.desired_outcome}"
-  - SECTION 3: Evidence — reference each document on file and how it supports the higher valuation of your claim.
-  - SECTION 4: Counter-proposal — state specifically what resolution you require. Be precise about amounts, timelines, and conditions.
-  - SECTION 5: Ultimatum — give the organisation 14 days to provide an improved and acceptable offer. State that if they fail to do so, you will immediately escalate to ${escalationBody}.
-  - Firm, reasoned, professional tone.
-  ${formats}
-
-  FORMAT EXAMPLE (plain text - NO HTML):
-  21 June 2026
-
-  Mick Gallagher
-  14 The Road
-  Penrith 2750
-  Djkingy79@gmail.com
-  0413572850
-
-  The Complaints Manager
-  NRMA Insurance
-  GPO Box 438
-  Sydney NSW 2001
-
-  Re: Formal Complaint
-
-  Dear Sir/Madam,
-
-  [Body text]
-
-  Yours faithfully,
-  Mick Gallagher`;
-  }
-
+  // ═══════════════════════════════════════════════════════════════════════
+  //  ESCALATION LETTER
+  //  Pressure: 10/10 | Emotion: 0/10 | Audience: The external regulator
+  //  Purpose: Professional submission — facts, evidence, chronology
+  // ═══════════════════════════════════════════════════════════════════════
   if (type === "escalation") {
-    return `${base}
+    return `You are a professional consumer dispute strategist with 30 years of experience. Write a formal ESCALATION submission from the complainant to ${escalationBody}.
 
-  LETTER TYPE: External Escalation Complaint Letter
-  - This letter is addressed TO ${escalationBody} — NOT the organisation.
-  - Write a COMPREHENSIVE, DETAILED letter — minimum 6 substantial paragraphs. This is the most important letter.
-  - SECTION 1: Introduction — who you are, who the dispute is with (${caseItem.organisation_name}), the nature of the complaint, and why you are contacting the external body.
-  - SECTION 2: Why this body has jurisdiction — explain why ${escalationBody} is the correct escalation path for this type of dispute (industry category: ${caseItem.category}).
-  - SECTION 3: Full chronological complaint history:
-    - Date and details of the original incident
-    - Date the First Complaint Letter was sent and the response (or lack thereof)
-    - Date the Second Complaint Letter was sent (if applicable) and the response
-    - Date the Third/Final Complaint Letter was sent (if applicable) and the response
-    - Summary of all direct communications with the organisation
-  - SECTION 4: Detailed account of the dispute — full facts, specific dates, amounts, account/policy numbers. Reference each piece of evidence on file.
-  - SECTION 5: The organisation's failures — how they breached their obligations under Australian Consumer Law, their industry Code of Practice, their own complaints process, and their duty of care.
-  - SECTION 6: Evidence index — list each document on file with a brief description of what it proves.
-  - SECTION 7: Harm and loss — complete account of financial loss, practical impact, distress.
-  - SECTION 8: Remedy requested — specific, clear request for what you need the external body to investigate and order: "${caseItem.desired_outcome}".
-  - Professional, factual, comprehensive tone. Address to: The Complaints Officer, ${escalationBody}.
-  ${formats}
+AUDIENCE CHANGE: The recipient is now the external regulator — ${escalationBody} — NOT the organisation. The tone changes completely from the prior complaint letters.
 
-  FORMAT EXAMPLE (plain text - NO HTML):
-  21 June 2026
+TONE: Professional submission. Factual. Pressure: 10/10. Emotion: 0/10.
+Do NOT attack the organisation. Do NOT use sarcasm. Do NOT use threats. Present facts. Present evidence. Present chronology. Nothing else. This should read like a professional submission to a regulator, not a complaint letter.
 
-  Mick Gallagher
-  14 The Road
-  Penrith 2750
-  Djkingy79@gmail.com
-  0413572850
+OBJECTIVE: Provide ${escalationBody} with a complete submission covering: background, chronology, internal complaint history, evidence, outstanding issues, and the remedy sought.
 
-  The Complaints Manager
-  NRMA Insurance
-  GPO Box 438
-  Sydney NSW 2001
+MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
 
-  Re: Formal Complaint
+BACKGROUND
+[Who the complainant is, who the dispute is with (${caseItem.organisation_name}), the nature of the dispute, and why the complainant is contacting ${escalationBody}. 1–2 paragraphs.]
 
-  Dear Sir/Madam,
+CHRONOLOGY
+[Bullet-point timeline of key events: incident date, first complaint sent and response (or lack thereof), second complaint, third/final complaint, current status. Use actual dates from the prior correspondence section. No commentary — just dates and events.]
 
-  [Body text]
+INTERNAL COMPLAINT HISTORY
+[Summary of the internal complaint process: how many complaints were sent, when, and the organisation's response or failure to respond at each stage. Factual — no characterisation of conduct as "bad faith" or "deliberate".]
 
-  Yours faithfully,
-  Mick Gallagher`;
+EVIDENCE PROVIDED
+[Bullet list of each document on file and what it demonstrates. Factual descriptions only — "Bank statement dated [date] showing [amount]" not "Damning proof of their deception".]
+
+OUTSTANDING ISSUES
+[What remains unresolved. What the organisation has failed to address. Factual statements only — "The organisation has not responded to the question of..." not "They are clearly hiding something."]
+
+OUTCOME REQUESTED
+[Specific remedy sought from ${escalationBody}: ${caseItem.desired_outcome}. State clearly what the complainant is asking the regulator to investigate or order.]
+
+RULES:
+- Address the letter to: The Complaints Officer, ${escalationBody}.
+- Do NOT characterise the organisation's conduct emotionally — state facts and let the evidence speak.
+- Do NOT cite legislation unless directly relevant and accurately referenced.
+- Present as a professional submission, not a complaint letter.
+- Every paragraph must be factual. No opinions. No "I believe they deliberately..." — instead: "The organisation did not respond to the complaint dated [date]."
+- The recipient must be exactly: ${escalationBody}. Never invented. Never substituted.
+${contextBlock}
+${formatRules}`;
   }
 
-  return base;
+  // ═══════════════════════════════════════════════════════════════════════
+  //  ACCEPT OFFER LETTER
+  //  Tone: Professional, appreciative | Purpose: Record agreement, close dispute
+  // ═══════════════════════════════════════════════════════════════════════
+  if (type === "accept_offer") {
+    return `You are a professional consumer dispute strategist with 30 years of experience. Write a letter from the complainant FORMALLY ACCEPTING a settlement offer from the organisation.
+
+TONE: Professional, appreciative. The dispute is being resolved. This letter formally records the agreement and closes the matter. Not effusive — genuine and precise.
+
+OBJECTIVE: Thank the organisation for resolving the matter. Clearly record: what has been agreed, payment amount, settlement terms, completion date, and any remaining obligations. Formally close the dispute upon completion.
+
+MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
+
+ACKNOWLEDGMENT
+[Acknowledge the offer received. Reference the offer details — date, amount, terms. Thank the organisation for resolving the matter. One paragraph. Professional and genuine, not effusive.]
+
+TERMS ACCEPTED
+[State the exact terms being accepted: payment amount, method, timeline, any non-financial obligations. Be precise — this letter creates a binding record. Use the desired outcome as the basis: ${caseItem.desired_outcome}.]
+
+COMPLETION
+[State the completion date by which the terms must be fulfilled. State that upon full performance, the dispute is considered fully resolved and no further action will be taken. State that if the terms are not fulfilled by the completion date, the complainant reserves the right to reopen the matter and escalate to ${escalationBody}.]
+
+RULES:
+- Professional and appreciative — but still precise and binding.
+- Do NOT restate the complaint history. This is about the resolution, not the dispute.
+- Do NOT cite legislation.
+- No banned filler phrases.
+- Keep it concise — this is a closure letter, not a complaint.
+${contextBlock}
+${formatRules}`;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  //  DENY OFFER LETTER
+  //  Tone: Extremely firm, confident, assertive | This is a REJECTION, not a complaint
+  // ═══════════════════════════════════════════════════════════════════════
+  if (type === "deny_offer") {
+    return `You are a professional consumer dispute strategist with 30 years of experience. Write a letter from the complainant REJECTING an unsatisfactory settlement offer from the organisation.
+
+TONE: Extremely firm. Confident. Highly assertive. This is NOT another complaint letter — this is a rejection. No hesitation. No uncertainty. No begging. No repeated complaint paragraphs.
+
+OBJECTIVE: Acknowledge the offer. Reject it. Explain precisely WHY it is unacceptable — referencing evidence, missing issues, unresolved losses, unanswered questions. Then state that the complainant will now proceed with escalation to ${escalationBody}.
+
+MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
+
+OFFER RECEIVED
+[Acknowledge receipt of the offer. State the offer amount and date. One paragraph only — do not restate the complaint.]
+
+REJECTION
+[State clearly: "I do not accept this offer." Then explain precisely why. Use these exact statements where applicable, followed by specific evidence:
+- "The offer does not adequately resolve the issues raised."
+- "The evidence provided has not been properly addressed."
+- "The proposed resolution fails to compensate the losses incurred."
+Reference specific evidence on file, specific unresolved losses, specific unanswered questions. Be precise about each deficiency.]
+
+UNRESOLVED ISSUES
+[Bullet-point list of what the offer fails to address: missing compensation, unanswered questions, unaddressed evidence. Each bullet: one issue, one sentence. Factual.]
+
+ESCALATION
+[State: "As this matter remains unresolved, I will now proceed with escalation to ${escalationBody}." No "may". No "considering". Proceeding.]
+
+RULES:
+- This is a REJECTION, not a complaint. Do not re-complain about the original issue.
+- Do NOT cite legislation.
+- Reference evidence specifically — "The statement dated [date] shows [amount] was incorrectly charged. The offer does not address this."
+- Do NOT use filler, hedging, or polite deferral.
+- The escalation body must be exactly: ${escalationBody}. Never invented.
+- Conclude with the escalation statement. No counter-offer unless the desired outcome implies one.
+${contextBlock}
+${formatRules}`;
+  }
+
+  return `${contextBlock}\n${formatRules}`;
 }
 
 const GENERATE_PHASES = [
