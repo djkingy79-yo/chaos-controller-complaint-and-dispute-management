@@ -153,8 +153,11 @@ UNIVERSAL FORMAT RULES:
 7. No emotional language, no personal opinions, no sarcasm, no hyperbole.
 8. Every sentence must move the complaint forward. Maximum impact, minimum words.
 9. Do not repeat facts from previous letters unless directly necessary for context.
-10. PROGRESSIVE ESCALATION: Each letter progressively increases pressure while progressively decreasing explanation. Each new letter contains less background and more accountability. The reader should immediately know which letter they are reading without looking at the title.
+10. PROGRESSIVE ESCALATION: Each letter progressively increases pressure while progressively decreasing explanation. Each new letter contains less history, more accountability, more evidence, and clearer consequences. The reader should immediately know which letter they are reading without looking at the title.
 11. Each letter achieves ONE objective only — never combine objectives across letters.
+12. NO PARAGRAPH REUSE: Never reproduce the same paragraph across multiple letters. Every paragraph must be unique. If you detect you are repeating previous wording, rewrite the section entirely.
+13. STRATEGIC ANALYSIS: Before writing each letter, determine: (a) what changed since the previous letter, (b) what the organisation failed to do, (c) what new evidence exists, (d) what pressure should now be applied, (e) what outcome this letter is trying to achieve. If nothing has changed, focus on the organisation's failure to respond — do not repeat the same paragraphs.
+14. NO EMPTY THREATS: Every consequence stated in one letter must occur in the next stage if the deadline expires. Do not re-threaten what was already threatened — state that the deadline has expired and the consequence is now being enacted.
 
 LETTER SKELETON (plain text — headings vary per letter type as specified):
 ${today}
@@ -215,6 +218,7 @@ RULES:
 - Close with the deadline, not with threats.
 - Be direct: "I require" not "I would appreciate if you could perhaps".
 - Maximum length: 1 page.
+- EVIDENCE EVOLUTION: This is the first letter — include only evidence available at this time. Do not reference future evidence or anticipate the organisation's response.
 ${contextBlock}
 ${formatRules}`;
   }
@@ -231,15 +235,26 @@ ${formatRules}`;
 TONE: Noticeably firmer. Pressure: 5/10.
 The organisation has either not responded within 21 days or gave an inadequate response. This letter raises the pressure and introduces the external authority by name.
 
+STRATEGIC ANALYSIS (determine before writing):
+- What changed since the first letter? (Has the organisation responded? Has the deadline expired? Has new evidence emerged?)
+- What has the organisation failed to do? (Did they ignore the complaint? Did they respond inadequately? Did they avoid specific questions?)
+- What new evidence exists? (Proof the complaint was ignored, proof of inadequate response, proof of continued non-compliance)
+- What pressure should now be applied? (Accountability for their failure, introduction of the regulator, shortened deadline)
+- What outcome is this letter trying to achieve? (Force a proper response or create the record needed for escalation)
+
+ACCOUNTABILITY RULE: This letter MUST begin by acknowledging the organisation's conduct since the previous letter. Do NOT restart the complaint from the beginning. Open with their failure — e.g. "You have not responded to my previous complaint dated..." or "Your response failed to address the following issues..." or "You provided a response, however it did not answer the questions raised."
+
+RESPONSE ANALYSIS: If a response was received from the organisation, analyse it before writing. Identify: what they answered, what they avoided, what they denied, what documents remain outstanding, what questions remain unanswered. Target those failures instead of repeating the original complaint.
+
 OBJECTIVE: Hold the organisation accountable. Do NOT retell the complaint. State they were given an opportunity and failed. Explain why their response is inadequate. Introduce the regulator by name. Give a 14-day deadline. Maximum length: 1 page.
 
 MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
 
 FAILURE TO RESPOND
-[Reference the first complaint letter and its send date. State plainly: "You were given an opportunity to resolve this matter." Then: "You failed to respond adequately." Direct — no hedging, no "I am disappointed that..."]
+[Open by acknowledging the organisation's conduct: "You have not responded to my previous complaint dated [date]." or "Your response dated [date] failed to address the following issues..." Then state plainly: "You were given an opportunity to resolve this matter. You failed to respond adequately." Direct — no hedging.]
 
 WHY YOUR RESPONSE IS INADEQUATE
-[State the specific reasons their response (or silence) falls short. Do NOT retell the complaint — reference it. Focus on what is still wrong, still missing, still unresolved. 2–3 tight paragraphs.]
+[State the specific reasons their response (or silence) falls short. If they responded, identify what they answered, what they avoided, what they denied, what remains outstanding. Do NOT retell the complaint — reference it. Focus on their failures. 2–3 tight paragraphs.]
 
 WHAT REMAINS OUTSTANDING
 [State the specific outcome still required: ${caseItem.desired_outcome}. If their response partially addressed the matter, acknowledge what was done and state what remains.]
@@ -254,6 +269,8 @@ RULES:
 - No banned filler phrases. No hedging.
 - Be direct: "You have failed to resolve this" not "I regret that the matter remains outstanding."
 - Maximum length: 1 page.
+- EVIDENCE EVOLUTION: Include the original evidence PLUS proof the complaint was ignored or inadequately answered (no response by the deadline, response that avoids key questions, response that denies without evidence).
+- NO EMPTY THREATS: The escalation threat made in this letter WILL be enacted in the next letter if the deadline expires. Do not make threats you will not honour.
 ${contextBlock}
 ${formatRules}`;
   }
@@ -269,12 +286,23 @@ ${formatRules}`;
 TONE: Very firm. Final. Pressure: 9/10.
 No more polite requests. No "I may". No "I am considering". This is the last internal communication before external escalation. The internal complaint process ends with this letter.
 
+STRATEGIC ANALYSIS (determine before writing):
+- What changed since the second letter? (Did the 14-day deadline expire? Did they respond again? Did they continue to avoid the issues?)
+- What has the organisation failed to do? (Failed to meet the deadline, failed to address the issues, failed to comply with their own complaints process)
+- What new evidence exists? (Evidence the internal complaint process has failed — expired deadlines, inadequate responses, continued non-compliance)
+- What pressure should now be applied? (Maximum — this is the final demand, no more negotiation)
+- What outcome is this letter trying to achieve? (Force compliance or create the definitive record that internal resolution has been exhausted)
+
+ACCOUNTABILITY RULE: This letter MUST begin by acknowledging that the organisation failed to meet the deadline set in the previous letter. Do NOT re-threaten — state what has already happened. Open with: "As you failed to resolve this matter within the deadline provided in my letter dated [date], this is your final notice before my complaint is lodged."
+
+HONOUR YOUR DEADLINES: The second letter threatened escalation to ${escalationBody} if the 14-day deadline expired. That deadline has now expired. Do NOT repeat the threat — state that the consequence is now imminent. The reader should feel that every letter closes another escape route. By the time they receive this letter, it should be obvious they had multiple genuine opportunities to resolve the matter and chose not to.
+
 OBJECTIVE: Final internal demand. No more discussion. No more negotiation. The internal complaint process ends here. Provide one final 7-day deadline. State that once it expires, the complaint WILL be lodged with ${escalationBody}. Maximum length: 1 page.
 
 MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
 
 FINAL NOTICE
-[State this is the third and final complaint. Reference the first and second letters by date. State plainly: "You have failed to resolve this matter despite multiple opportunities." "This is your final opportunity." 2–3 sentences maximum.]
+[Open by stating the organisation failed to meet the previous deadline: "As you failed to resolve this matter within the deadline provided in my letter dated [date], this is your final notice before my complaint is lodged." Then: "You have failed to resolve this matter despite multiple opportunities." "This is your final opportunity." 2–3 sentences maximum.]
 
 OUTSTANDING FAILURES
 [Bullet-point list of what remains outstanding. Each bullet: one issue, one sentence. No repetition of full history — just what is still wrong. Be specific: amounts still owed, questions still unanswered, failures still unaddressed.]
@@ -290,6 +318,8 @@ RULES:
 - Keep it short and definitive. This letter should make it obvious the internal process has ended.
 - The escalation body must be exactly: ${escalationBody}. Never invented. Never generic.
 - Maximum length: 1 page.
+- EVIDENCE EVOLUTION: Include everything from previous letters PLUS evidence demonstrating the internal complaint process has failed — expired deadlines, ignored correspondence, inadequate responses, continued non-compliance.
+- NO EMPTY THREATS: The escalation threatened in the second letter has now become imminent. Do not re-threaten — state that the deadline has expired and escalation is the next step.
 ${contextBlock}
 ${formatRules}`;
   }
@@ -307,7 +337,14 @@ AUDIENCE CHANGE: The recipient is now the external regulator — ${escalationBod
 TONE: Professional submission. Factual. Pressure: 10/10. Emotion: 0/10.
 This is an investigation brief — not a complaint letter. Do NOT attack the organisation. Do NOT use sarcasm. Do NOT use threats. No accusations beyond what the evidence supports. Present facts. Present evidence. Present chronology. Nothing else.
 
-OBJECTIVE: Present the evidence. Provide ${escalationBody} with a complete investigation brief covering: background, chronology, internal complaint history, evidence, issues requiring investigation, and the outcome sought.
+STRATEGIC ANALYSIS (determine before writing):
+- What is the complete chronology of the dispute from incident to escalation?
+- What did the organisation do or fail to do at each stage of the internal complaint process?
+- What evidence demonstrates a clear pattern of conduct?
+- What issues remain unresolved that require investigation by the regulator?
+- What outcome is the complainant seeking from the regulator?
+
+OBJECTIVE: Present the evidence. Provide ${escalationBody} with a complete investigation brief covering: background, chronology, internal complaint history, evidence, issues requiring investigation, and the outcome sought. The chronology must demonstrate a clear pattern of conduct supported by evidence, without exaggeration or repetition.
 
 MANDATORY STRUCTURE (use these exact headings on their own line, uppercase, no colon):
 
@@ -336,6 +373,8 @@ RULES:
 - Present as a professional submission, not a complaint letter.
 - Every paragraph must be factual. No opinions. No "I believe they deliberately..." — instead: "The organisation did not respond to the complaint dated [date]."
 - The recipient must be exactly: ${escalationBody}. Never invented. Never substituted.
+- EVIDENCE EVOLUTION: Include the complete evidence package in chronological order — every document on file, each with a factual description of what it demonstrates. This is the full record for the regulator.
+- PATTERN OF CONDUCT: The chronology and evidence must demonstrate a clear pattern of conduct — multiple missed deadlines, ignored correspondence, inadequate responses — without exaggeration or repetition. Let the facts establish the pattern.
 ${contextBlock}
 ${formatRules}`;
   }
