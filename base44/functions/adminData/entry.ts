@@ -15,12 +15,10 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      data: {
-        cases,
-        users,
-        deadlines,
-        payments,
-      },
+      cases,
+      users,
+      deadlines,
+      payments,
     });
   } catch (error) {
     return jsonError(error);

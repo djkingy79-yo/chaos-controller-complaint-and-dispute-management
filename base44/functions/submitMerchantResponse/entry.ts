@@ -11,15 +11,12 @@ Deno.serve(async (req) => {
     }
 
     const session = await verifyMerchantSession(session_token);
-    const shares = await Promise.all(
-      session.shareIds.map(async (id) => {
-        const results = await base44.asServiceRole.entities.CaseShare.filter({ id });
-        return results[0] || null;
-      })
-    );
+    const shareIds = new Set(session.shareIds);
+    const shares = await base44.asServiceRole.entities.CaseShare.filter({ recipient_email: session.email });
 
     const share = shares.find((candidate) =>
       candidate &&
+      shareIds.has(candidate.id) &&
       candidate.case_id === case_id &&
       candidate.is_active &&
       candidate.recipient_email?.toLowerCase() === session.email &&

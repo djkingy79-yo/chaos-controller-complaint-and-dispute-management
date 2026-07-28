@@ -10,8 +10,7 @@ export function useAdminSnapshot() {
   return useQuery({
     queryKey: ["admin-snapshot"],
     queryFn: async () => {
-      const result = await invokeBase44Function("adminData", {}, { requireSuccess: true });
-      return result.data;
+      return invokeBase44Function("adminData", {}, { requireSuccess: true });
     },
     enabled,
     staleTime: 30000,

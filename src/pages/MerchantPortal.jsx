@@ -558,12 +558,7 @@ export default function MerchantPortal() {
         sessionToken: data.session_token || sess.sessionToken,
         expiresAt: data.session_expires_at || sess.expiresAt,
       });
-      setSession((current) => ({
-        ...(current || sess),
-        name: data.merchant_name || current?.name || sess.name,
-        sessionToken: data.session_token || current?.sessionToken || sess.sessionToken,
-        expiresAt: data.session_expires_at || current?.expiresAt || sess.expiresAt,
-      }));
+      setSession(readMerchantSession());
       setCases(data.cases || []);
     } catch (err) {
       const message = err.message || "Could not load your cases.";

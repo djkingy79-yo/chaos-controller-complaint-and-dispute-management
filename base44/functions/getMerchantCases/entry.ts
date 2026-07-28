@@ -16,15 +16,12 @@ Deno.serve(async (req) => {
       merchantEmail = session.email;
       sessionExpiresAt = session.expiresAt;
 
-      const shares = await Promise.all(
-        session.shareIds.map(async (shareId) => {
-          const results = await base44.asServiceRole.entities.CaseShare.filter({ id: shareId });
-          return results[0] || null;
-        })
-      );
+      const shareIds = new Set(session.shareIds);
+      const shares = await base44.asServiceRole.entities.CaseShare.filter({ recipient_email: merchantEmail });
 
       activeShares = shares.filter((share) =>
         share &&
+        shareIds.has(share.id) &&
         share.is_active &&
         share.recipient_email?.toLowerCase() === merchantEmail &&
         !isShareExpired(share)
