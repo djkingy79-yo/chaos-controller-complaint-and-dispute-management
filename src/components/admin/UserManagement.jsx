@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, User, Mail, ShieldCheck, Clock, CreditCard } from "lucide-react";
+import { Search, Mail, ShieldCheck } from "lucide-react";
 import { ADMIN_EMAIL } from "@/lib/subscription";
 import { useAdminSnapshot } from "@/lib/adminApi";
 

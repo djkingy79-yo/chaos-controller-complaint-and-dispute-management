@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { Navigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import {
   Users, FolderOpen, CheckCircle2, AlertTriangle, TrendingUp,
-  Activity, Wallet, ShieldCheck, Clock, Scale
+  Activity, Wallet, ShieldCheck
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";

@@ -9,7 +9,6 @@ import {
   ChevronUp, Flag, MessageSquare, AlertCircle, Shield,
   FileText, Scale, Building2, Loader2, Bell, RefreshCw, Send
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { invokeBase44Function } from "@/lib/invoke";
 import { clearMerchantSession, readMerchantSession, writeMerchantSession } from "@/lib/merchantSession";
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Calendar, RefreshCw, CheckCircle2, Loader2, Link as LinkIcon, X } from "lucide-react";
+import { Calendar, RefreshCw, Loader2, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { invokeBase44Function } from "@/lib/invoke";

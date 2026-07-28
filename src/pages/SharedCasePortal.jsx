@@ -6,7 +6,7 @@ import {
   AlertCircle, Clock, CheckCircle2, FolderOpen, Calendar,
   ArrowUpRight, MessageSquare, FileText, Zap, Shield, Flag,
   Loader2, XCircle, Scale, ChevronDown, ChevronUp, AlertTriangle,
-  TrendingUp, Eye, Users, Building2, Target, Bell
+  TrendingUp, Eye, Building2, Bell
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { invokeBase44Function } from "@/lib/invoke";
