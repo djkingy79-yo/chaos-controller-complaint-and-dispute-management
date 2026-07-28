@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -8,6 +7,7 @@ import {
   CheckCircle2, XCircle, Clock, Wallet, Mail, User, 
   CreditCard, RefreshCw, ExternalLink, Copy, Check
 } from "lucide-react";
+import { useAdminPaymentMutation, useAdminSnapshot } from "@/lib/adminApi";
 
 const planColors = {
   Starter: "#27AE60",
@@ -27,30 +27,9 @@ export default function PaymentVerification() {
   const [filterStatus, setFilterStatus] = useState("pending");
   const payidEmail = "djkingy79@gmail.com";
 
-  const { data: payments = [], isLoading } = useQuery({
-    queryKey: ["payment-requests"],
-    queryFn: () => base44.entities.PaymentRequest.list("-created_date", 100),
-    refetchInterval: 30000 // auto-refresh every 30s
-  });
-
-  const verifyMutation = useMutation({
-    mutationFn: async ({ id, planName }) => {
-      const expiry = new Date();
-      expiry.setMonth(expiry.getMonth() + 1);
-      return base44.entities.PaymentRequest.update(id, {
-        status: "verified",
-        subscription_active: true,
-        verified_date: new Date().toISOString(),
-        subscription_expiry: expiry.toISOString().split("T")[0]
-      });
-    },
-    onSuccess: () => qc.invalidateQueries(["payment-requests"])
-  });
-
-  const rejectMutation = useMutation({
-    mutationFn: (id) => base44.entities.PaymentRequest.update(id, { status: "rejected", subscription_active: false }),
-    onSuccess: () => qc.invalidateQueries(["payment-requests"])
-  });
+  const { data, isLoading } = useAdminSnapshot();
+  const payments = data?.payments || [];
+  const paymentMutation = useAdminPaymentMutation();
 
   const copyPayID = () => {
     navigator.clipboard.writeText(payidEmail);
@@ -110,7 +89,7 @@ export default function PaymentVerification() {
         <Button
           size="sm"
           variant="outline"
-          onClick={() => qc.invalidateQueries(["payment-requests"])}
+          onClick={() => qc.invalidateQueries({ queryKey: ["admin-snapshot"] })}
           className="gap-1.5 text-xs"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
@@ -198,8 +177,8 @@ export default function PaymentVerification() {
                 {payment.status === "pending" && (
                   <div className="flex flex-col gap-2 shrink-0">
                     <Button
-                      onClick={() => verifyMutation.mutate({ id: payment.id, planName: payment.plan_name })}
-                      disabled={verifyMutation.isPending}
+                      onClick={() => paymentMutation.mutate({ paymentId: payment.id, action: "verify" })}
+                      disabled={paymentMutation.isPending}
                       className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-bold gap-2 text-sm"
                       size="sm"
                     >
@@ -207,8 +186,8 @@ export default function PaymentVerification() {
                       Verify Payment
                     </Button>
                     <Button
-                      onClick={() => rejectMutation.mutate(payment.id)}
-                      disabled={rejectMutation.isPending}
+                      onClick={() => paymentMutation.mutate({ paymentId: payment.id, action: "reject" })}
+                      disabled={paymentMutation.isPending}
                       variant="outline"
                       size="sm"
                       className="border-red-500/30 text-red-500 hover:bg-red-500/10 gap-2 text-sm"

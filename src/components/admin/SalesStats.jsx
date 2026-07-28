@@ -1,8 +1,7 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { DollarSign, TrendingUp, Users, Star } from "lucide-react";
+import { useAdminSnapshot } from "@/lib/adminApi";
 
 const PLAN_COLORS = { Starter: "#27AE60", Pro: "#FFD700", Command: "#CC0000" };
 const PLAN_PRICES = { Starter: 9.99, Pro: 15.99, Command: 19.99 };
@@ -18,16 +17,9 @@ function StatBox({ label, value, sub, color }) {
 }
 
 export default function SalesStats() {
-  const { data: payments = [], isLoading } = useQuery({
-    queryKey: ["all-payments-stats"],
-    queryFn: () => base44.entities.PaymentRequest.list("-created_date", 500),
-    refetchInterval: 60000
-  });
-
-  const { data: users = [] } = useQuery({
-    queryKey: ["admin-users-stats"],
-    queryFn: () => base44.entities.User.list(),
-  });
+  const { data, isLoading } = useAdminSnapshot();
+  const payments = data?.payments || [];
+  const users = data?.users || [];
 
   const verified = payments.filter(p => p.status === "verified");
   const totalRevenue = verified.reduce((sum, p) => sum + (PLAN_PRICES[p.plan_name] || 0), 0);

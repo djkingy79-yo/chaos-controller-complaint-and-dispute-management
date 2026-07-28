@@ -1,26 +1,41 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { verifyMerchantSession } from '../_shared/merchantSession.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { case_id, share_id, merchant_email, merchant_name, response_text, response_type, offer_amount } = await req.json();
+    const { case_id, share_id, session_token, merchant_name, response_text, response_type, offer_amount } = await req.json();
 
-    if (!case_id || !merchant_email || !response_text) {
-      return Response.json({ error: 'case_id, merchant_email, and response_text are required' }, { status: 400 });
+    if (!case_id || !session_token || !response_text) {
+      return Response.json({ error: 'case_id, session_token, and response_text are required' }, { status: 400 });
     }
 
-    // Verify this merchant has an active share for this case
-    const shares = await base44.asServiceRole.entities.CaseShare.filter({ case_id, recipient_email: merchant_email, is_active: true });
-    if (shares.length === 0) {
+    const session = await verifyMerchantSession(session_token);
+    const shares = await Promise.all(
+      session.shareIds.map(async (id) => {
+        const results = await base44.asServiceRole.entities.CaseShare.filter({ id });
+        return results[0] || null;
+      })
+    );
+
+    const share = shares.find((candidate) =>
+      candidate &&
+      candidate.case_id === case_id &&
+      candidate.is_active &&
+      candidate.recipient_email?.toLowerCase() === session.email &&
+      (!share_id || candidate.id === share_id)
+    );
+
+    if (!share) {
       return Response.json({ error: 'No active case share found for this merchant' }, { status: 403 });
     }
 
     // Create the response record
     const response = await base44.asServiceRole.entities.MerchantResponse.create({
       case_id,
-      share_id: share_id || shares[0].id,
-      merchant_email,
-      merchant_name: merchant_name || merchant_email,
+      share_id: share.id,
+      merchant_email: session.email,
+      merchant_name: merchant_name || share.recipient_name || session.email,
       response_text,
       response_type: response_type || 'general_response',
       offer_amount: offer_amount || undefined,
@@ -51,7 +66,7 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: ownerEmail,
           subject: `New Response to Your Case: ${caseItem.title}`,
-          body: `${merchant_name || merchant_email} has submitted a response to your case: ${caseItem.title}\n\nResponse Type: ${(response_type || 'general_response').replace(/_/g, ' ')}\n${offer_amount ? `Settlement Offer: ${offer_amount}\n` : ''}\nResponse:\n${response_text}\n\nView your case: https://chaoscontroller.com.au/case/${case_id}`,
+          body: `${merchant_name || share.recipient_name || session.email} has submitted a response to your case: ${caseItem.title}\n\nResponse Type: ${(response_type || 'general_response').replace(/_/g, ' ')}\n${offer_amount ? `Settlement Offer: ${offer_amount}\n` : ''}\nResponse:\n${response_text}\n\nView your case: https://chaoscontroller.com.au/case/${case_id}`,
           from_name: "Chaos Controller™"
         });
       }

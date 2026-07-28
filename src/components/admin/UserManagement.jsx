@@ -1,25 +1,18 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, User, Mail, ShieldCheck, Clock, CreditCard } from "lucide-react";
 import { ADMIN_EMAIL } from "@/lib/subscription";
+import { useAdminSnapshot } from "@/lib/adminApi";
 
 const PLAN_COLORS = { Starter: "#27AE60", Pro: "#FFD700", Command: "#CC0000" };
 
 export default function UserManagement() {
   const [search, setSearch] = useState("");
 
-  const { data: users = [], isLoading: loadingUsers } = useQuery({
-    queryKey: ["admin-all-users"],
-    queryFn: () => base44.entities.User.list(),
-  });
-
-  const { data: payments = [] } = useQuery({
-    queryKey: ["admin-all-payments-mgmt"],
-    queryFn: () => base44.entities.PaymentRequest.list("-created_date", 500),
-  });
+  const { data, isLoading: loadingUsers } = useAdminSnapshot();
+  const users = data?.users || [];
+  const payments = data?.payments || [];
 
   // Build a map: userId -> their latest active payment
   const subMap = {};

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { base44 } from "@/api/base44Client";
 import { format, isBefore, isAfter, differenceInDays } from "date-fns";
 import {
   AlertCircle, Clock, CheckCircle2, FolderOpen, Calendar,
@@ -10,6 +9,7 @@ import {
   TrendingUp, Eye, Users, Building2, Target, Bell
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { invokeBase44Function } from "@/lib/invoke";
 
 const statusSteps = [
   { key: "draft",              label: "Case Filed",          desc: "Complaint prepared" },
@@ -85,20 +85,13 @@ export default function SharedCasePortal() {
     if (!token) { setError("No share token found. Please check your email link."); setLoading(false); return; }
     
     // Call the backend function with the token
-    base44.functions.invoke("getSharedCase", { token })
-      .then(res => {
-        if (res.data?.error) {
-          console.error("Backend error:", res.data.error);
-          setError(res.data.error || "Invalid share link");
-        } else if (res.data?.success) {
-          setData(res.data);
-        } else {
-          setError("Invalid response from server");
-        }
+    invokeBase44Function("getSharedCase", { token }, { requireSuccess: true })
+      .then((responseData) => {
+        setData(responseData);
       })
       .catch(err => {
         console.error("Network error loading shared case:", err);
-        setError("This share link is invalid or has expired. Please contact the sender.");
+        setError(err.message || "This share link is invalid or has expired. Please contact the sender.");
       })
       .finally(() => setLoading(false));
   }, [token]);

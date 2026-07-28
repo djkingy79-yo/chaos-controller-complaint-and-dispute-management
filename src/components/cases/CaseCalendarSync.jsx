@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, RefreshCw, CheckCircle2, Loader2, Link as LinkIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { invokeBase44Function } from "@/lib/invoke";
 
 const GOOGLE_CONNECTOR_ID = "6a2f842ded0843ad5cb9ecb7";
 
@@ -23,8 +24,8 @@ export default function CaseCalendarSync({ caseItem }) {
   });
 
   useEffect(() => {
-    base44.functions.invoke("syncCalendar", { action: "check" })
-      .then(res => setGoogleConnected(res.data?.connected || false))
+    invokeBase44Function("syncCalendar", { action: "check" })
+      .then(data => setGoogleConnected(data.connected || false))
       .catch(() => setGoogleConnected(false))
       .finally(() => setChecking(false));
   }, []);
@@ -36,8 +37,8 @@ export default function CaseCalendarSync({ caseItem }) {
       const timer = setInterval(async () => {
         if (!popup || popup.closed) {
           clearInterval(timer);
-          const res = await base44.functions.invoke("syncCalendar", { action: "check" });
-          setGoogleConnected(res.data?.connected || false);
+          const data = await invokeBase44Function("syncCalendar", { action: "check" });
+          setGoogleConnected(data.connected || false);
         }
       }, 500);
     } catch (e) {
@@ -48,9 +49,9 @@ export default function CaseCalendarSync({ caseItem }) {
   const handleGoogleSync = async () => {
     setGoogleSyncing(true);
     try {
-      const res = await base44.functions.invoke("syncCalendar", { action: "sync", caseId: caseItem.id });
-      const newCount = res.data?.syncedCount || 0;
-      const updatedCount = res.data?.updatedCount || 0;
+      const data = await invokeBase44Function("syncCalendar", { action: "sync", caseId: caseItem.id }, { requireSuccess: true });
+      const newCount = data.syncedCount || 0;
+      const updatedCount = data.updatedCount || 0;
       const total = newCount + updatedCount;
       setGoogleSyncedCount(total);
       setGoogleConnected(true);
@@ -68,8 +69,8 @@ export default function CaseCalendarSync({ caseItem }) {
   const handleOutlookSync = async () => {
     setOutlookSyncing(true);
     try {
-      const res = await base44.functions.invoke("syncOutlookCalendar", { caseId: caseItem.id });
-      const count = res.data?.synced || res.data?.syncedCount || 0;
+      const data = await invokeBase44Function("syncOutlookCalendar", { caseId: caseItem.id }, { requireSuccess: true });
+      const count = data.synced || data.syncedCount || 0;
       setOutlookSyncedCount(count);
       toast.success(`${count} deadline${count !== 1 ? "s" : ""} synced to Outlook Calendar`);
     } catch (e) {

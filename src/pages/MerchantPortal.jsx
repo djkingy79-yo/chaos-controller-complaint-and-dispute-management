@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, differenceInDays, isBefore } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { base44 } from "@/api/base44Client";
 import {
   AlertTriangle, Clock, CheckCircle2, Zap, Calendar,
   ArrowUpRight, FolderOpen, LogOut, ChevronDown,
@@ -11,6 +10,8 @@ import {
   FileText, Scale, Building2, Loader2, Bell, RefreshCw, Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { invokeBase44Function } from "@/lib/invoke";
+import { clearMerchantSession, readMerchantSession, writeMerchantSession } from "@/lib/merchantSession";
 
 const statusConfig = {
   draft:              { label: "Draft",                color: "#888",    bg: "#88888820" },
@@ -133,20 +134,25 @@ function MerchantResponsePanel({ caseData, session, onResponseSent }) {
   const handleSubmit = async () => {
     if (!responseText.trim()) return;
     setSubmitting(true);
-    await base44.functions.invoke("submitMerchantResponse", {
-      case_id: caseData.case.id,
-      share_id: caseData.share.id,
-      merchant_email: session.email,
-      merchant_name: session.name || session.email,
-      response_text: responseText.trim(),
-      response_type: responseType,
-      offer_amount: offerAmount.trim() || undefined,
-    });
-    setSubmitting(false);
-    setSubmitted(true);
-    setResponseText("");
-    setOfferAmount("");
-    onResponseSent();
+    try {
+      await invokeBase44Function("submitMerchantResponse", {
+        case_id: caseData.case.id,
+        share_id: caseData.share.id,
+        session_token: session.sessionToken,
+        merchant_name: session.name || session.email,
+        response_text: responseText.trim(),
+        response_type: responseType,
+        offer_amount: offerAmount.trim() || undefined,
+      }, { requireSuccess: true });
+      setSubmitted(true);
+      setResponseText("");
+      setOfferAmount("");
+      onResponseSent();
+    } catch (error) {
+      alert(error.message || "Could not send your response. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -535,23 +541,39 @@ export default function MerchantPortal() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("merchant_session");
-    if (!stored) { navigate("/merchant-login", { replace: true }); return; }
-    const sess = JSON.parse(stored);
+    const sess = readMerchantSession();
+    if (!sess) { navigate("/merchant-login", { replace: true }); return; }
     setSession(sess);
     loadCases(sess);
-  }, []);
+  }, [navigate]);
 
   async function loadCases(sess, isRefresh = false) {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     setError(null);
     try {
-      const res = await base44.functions.invoke("getMerchantCases", { email: sess.email });
-      if (!res.data?.success) throw new Error(res.data?.error || "Failed to load cases");
-      setCases(res.data.cases || []);
+      const data = await invokeBase44Function("getMerchantCases", { sessionToken: sess.sessionToken }, { requireSuccess: true });
+      writeMerchantSession({
+        ...sess,
+        name: data.merchant_name || sess.name,
+        sessionToken: data.session_token || sess.sessionToken,
+        expiresAt: data.session_expires_at || sess.expiresAt,
+      });
+      setSession((current) => ({
+        ...(current || sess),
+        name: data.merchant_name || current?.name || sess.name,
+        sessionToken: data.session_token || current?.sessionToken || sess.sessionToken,
+        expiresAt: data.session_expires_at || current?.expiresAt || sess.expiresAt,
+      }));
+      setCases(data.cases || []);
     } catch (err) {
-      setError(err.message || "Could not load your cases.");
+      const message = err.message || "Could not load your cases.";
+      if (/session/i.test(message) || /Unauthorized/i.test(message)) {
+        clearMerchantSession();
+        navigate("/merchant-login", { replace: true });
+        return;
+      }
+      setError(message);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -559,7 +581,7 @@ export default function MerchantPortal() {
   }
 
   function handleLogout() {
-    sessionStorage.removeItem("merchant_session");
+    clearMerchantSession();
     navigate("/merchant-login", { replace: true });
   }
 

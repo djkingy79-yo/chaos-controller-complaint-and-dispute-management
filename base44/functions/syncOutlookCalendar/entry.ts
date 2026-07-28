@@ -157,16 +157,21 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, synced: synced.length, items: synced });
     }
 
+    const user = await base44.auth.me().catch(() => null);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const activeStatuses = ['draft', 'complaint_sent', 'awaiting_response', 'response_received', 'escalation_ready', 'escalated'];
 
     let casesToSync = [];
     if (caseId) {
       // Single case (from UI)
-      const cases = await base44.asServiceRole.entities.Case.filter({ id: caseId });
+      const cases = await base44.entities.Case.filter({ id: caseId, created_by_id: user.id });
       casesToSync = cases.slice(0, 1);
     } else {
-      // Batch: sync all active cases (scheduled run)
-      const allCases = await base44.asServiceRole.entities.Case.list();
+      // Full sync for the signed-in user
+      const allCases = await base44.entities.Case.filter({ created_by_id: user.id });
       casesToSync = allCases.filter(c => activeStatuses.includes(c.status));
     }
 
@@ -176,17 +181,19 @@ Deno.serve(async (req) => {
     const existingEventIds = await getExistingOutlookEventIds(accessToken);
 
     const allSynced = [];
+    let totalDeadlines = 0;
     for (const caseItem of casesToSync) {
       const [deadlines, checklistItems, timelineEvents] = await Promise.all([
         base44.asServiceRole.entities.Deadline.filter({ case_id: caseItem.id }),
         base44.asServiceRole.entities.ChecklistItem.filter({ case_id: caseItem.id }),
         base44.asServiceRole.entities.TimelineEvent.filter({ case_id: caseItem.id }),
       ]);
+      totalDeadlines += deadlines.filter((deadline) => deadline.deadline_date && deadline.status !== 'completed').length;
       const synced = await syncCaseToOutlook(accessToken, caseItem, deadlines, checklistItems, timelineEvents, existingEventIds);
       allSynced.push(...synced);
     }
 
-    return Response.json({ success: true, synced: allSynced.length, items: allSynced });
+    return Response.json({ success: true, synced: allSynced.length, items: allSynced, totalDeadlines });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

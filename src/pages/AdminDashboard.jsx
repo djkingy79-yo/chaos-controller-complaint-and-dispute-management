@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { Navigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -14,7 +12,8 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import PaymentVerification from "@/components/admin/PaymentVerification";
 import SalesStats from "@/components/admin/SalesStats";
 import UserManagement from "@/components/admin/UserManagement";
-import { ADMIN_EMAIL } from "@/lib/subscription";
+import { ADMIN_EMAIL, isAdminUser } from "@/lib/subscription";
+import { useAdminSnapshot } from "@/lib/adminApi";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))"];
 
@@ -38,33 +37,15 @@ const PRIORITY_COLORS = {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const isAdmin = isAdminUser(user);
+  const { data, isLoading } = useAdminSnapshot();
+  const cases = data?.cases || [];
+  const users = data?.users || [];
+  const deadlines = data?.deadlines || [];
+  const allPayments = data?.payments || [];
+  const pendingPayments = allPayments.filter((payment) => payment.status === "pending");
 
-  const { data: cases = [] } = useQuery({
-    queryKey: ["admin-cases"],
-    queryFn: () => base44.entities.Case.list("-created_date", 200),
-  });
-
-  const { data: users = [] } = useQuery({
-    queryKey: ["admin-users"],
-    queryFn: () => base44.entities.User.list(),
-  });
-
-  const { data: deadlines = [] } = useQuery({
-    queryKey: ["admin-deadlines"],
-    queryFn: () => base44.entities.Deadline.list("-deadline_date", 200),
-  });
-
-  const { data: pendingPayments = [] } = useQuery({
-    queryKey: ["admin-pending-payments"],
-    queryFn: () => base44.entities.PaymentRequest.filter({ status: "pending" }),
-  });
-
-  const { data: allPayments = [] } = useQuery({
-    queryKey: ["admin-all-payments"],
-    queryFn: () => base44.entities.PaymentRequest.list("-created_date", 500),
-  });
-
-  if (user?.role !== "admin" && user?.email !== ADMIN_EMAIL) return <Navigate to="/dashboard" replace />;
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   const active = cases.filter(c => !["resolved", "closed"].includes(c.status));
   const resolved = cases.filter(c => c.status === "resolved");
@@ -126,6 +107,12 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
+          {isLoading ? (
+            <div className="bg-card rounded-xl border border-border p-8 text-center text-sm text-muted-foreground">
+              Loading admin data...
+            </div>
+          ) : (
+            <>
           {/* Charts */}
           <div className="grid lg:grid-cols-2 gap-6">
             <div className="bg-card rounded-xl border border-border p-5">
@@ -223,6 +210,8 @@ export default function AdminDashboard() {
               </p>
             )}
           </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="sales" className="mt-6">

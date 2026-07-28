@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Calendar, Check, X, ArrowLeft, RefreshCw, Link as LinkIcon, Zap, FolderOpen } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { invokeBase44Function } from "@/lib/invoke";
 
 const GOOGLE_CONNECTOR_ID = "6a2f842ded0843ad5cb9ecb7";
 
@@ -111,11 +112,11 @@ export default function CalendarSync() {
   const checkGoogle = async () => {
     try {
       const payload = scopedCaseId ? { action: "check", caseId: scopedCaseId } : { action: "check" };
-      const res = await base44.functions.invoke("syncCalendar", payload);
-      setGoogleConnected(res.data?.connected || false);
-      setGoogleEvents(res.data?.events || []);
-      setGoogleSyncedCount(res.data?.syncedCount || 0);
-      setGoogleTotal(res.data?.totalDeadlines || 0);
+      const data = await invokeBase44Function("syncCalendar", payload);
+      setGoogleConnected(data.connected || false);
+      setGoogleEvents(data.events || []);
+      setGoogleSyncedCount(data.syncedCount || 0);
+      setGoogleTotal(data.totalDeadlines || 0);
       setGoogleError(null);
     } catch {
       setGoogleConnected(false);
@@ -125,10 +126,10 @@ export default function CalendarSync() {
   const syncGoogle = async () => {
     try {
       const payload = scopedCaseId ? { action: "sync", caseId: scopedCaseId } : { action: "sync" };
-      const res = await base44.functions.invoke("syncCalendar", payload);
-      setGoogleEvents(res.data?.events || []);
-      setGoogleSyncedCount(res.data?.syncedCount || 0);
-      setGoogleTotal(res.data?.totalDeadlines || 0);
+      const data = await invokeBase44Function("syncCalendar", payload, { requireSuccess: true });
+      setGoogleEvents(data.events || []);
+      setGoogleSyncedCount(data.syncedCount || 0);
+      setGoogleTotal(data.totalDeadlines || 0);
       setGoogleConnected(true);
       setGoogleError(null);
     } catch (err) {
@@ -140,11 +141,11 @@ export default function CalendarSync() {
   const checkOutlook = async () => {
     try {
       const payload = scopedCaseId ? { caseId: scopedCaseId } : {};
-      const res = await base44.functions.invoke("syncOutlookCalendar", payload);
+      const data = await invokeBase44Function("syncOutlookCalendar", payload, { requireSuccess: true });
       setOutlookConnected(true);
-      setOutlookItems(res.data?.items || []);
-      setOutlookSyncedCount(res.data?.synced || 0);
-      setOutlookTotal(res.data?.totalDeadlines || 0);
+      setOutlookItems(data.items || []);
+      setOutlookSyncedCount(data.synced || 0);
+      setOutlookTotal(data.totalDeadlines || 0);
       setOutlookError(null);
     } catch {
       setOutlookConnected(false);
@@ -168,8 +169,8 @@ export default function CalendarSync() {
         const tasks = [checkGoogle(), checkOutlook()];
         if (scopedCaseId) {
           tasks.push(
-            base44.entities.Case.get(scopedCaseId)
-              .then(c => setScopedCase(c))
+            base44.entities.Case.filter({ id: scopedCaseId, created_by_id: me.id })
+              .then((cases) => setScopedCase(cases[0] || null))
               .catch(() => {})
           );
         }

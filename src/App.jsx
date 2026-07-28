@@ -31,6 +31,7 @@ import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import SharedCasePortal from '@/pages/SharedCasePortal';
 import SamplePreviews from '@/pages/SamplePreviews';
+import SampleReports from '@/pages/SampleReports';
 import MerchantLogin from '@/pages/MerchantLogin';
 import MerchantPortal from '@/pages/MerchantPortal';
 import MerchantResponsesDashboard from '@/pages/MerchantResponsesDashboard';
@@ -70,14 +71,15 @@ const AuthenticatedApp = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/help" element={<HelpGuide />} />
           <Route path="/templates" element={<TemplateLibrary />} />
+          <Route path="/case-templates" element={<CaseTemplates />} />
           <Route path="/qna" element={<QnA />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/sample-reports" element={<SampleReports />} />
           <Route path="/sample-previews" element={<SamplePreviews />} />
           <Route path="/merchant-responses" element={<MerchantResponsesDashboard />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<UserSettings />} />
-          <Route path="/templates" element={<CaseTemplates />} />
           <Route path="/calendar" element={<CalendarView />} />
           <Route path="/calendar-sync" element={<CalendarSync />} />
         </Route>

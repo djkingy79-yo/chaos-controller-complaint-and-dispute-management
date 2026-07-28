@@ -69,12 +69,12 @@ export default function CaseDetail() {
   };
 
   const { data: caseItem, isLoading: caseLoading } = useQuery({
-    queryKey: ["case", caseId],
+    queryKey: ["case", caseId, user?.id],
     queryFn: async () => {
-      const cases = await base44.entities.Case.filter({ id: caseId });
+      const cases = await base44.entities.Case.filter({ id: caseId, created_by_id: user?.id });
       return cases[0];
     },
-    enabled: !!caseId,
+    enabled: !!caseId && !!user?.id,
   });
 
   const { data: evidence = [] } = useQuery({

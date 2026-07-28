@@ -1,25 +1,61 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createMerchantSession, isShareExpired, verifyMerchantSession } from '../_shared/merchantSession.ts';
 
-// Simple merchant session: validate email matches a share, return all cases shared with that email
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { email, token } = await req.json();
+    const { email, token, sessionToken } = await req.json();
 
-    if (!email) return Response.json({ error: 'Email required' }, { status: 400 });
+    let merchantEmail = email?.trim().toLowerCase();
+    let activeShares = [];
+    let resolvedSessionToken = sessionToken || null;
+    let sessionExpiresAt = null;
 
-    // Find all active shares for this merchant email
-    const allShares = await base44.asServiceRole.entities.CaseShare.filter({ recipient_email: email });
-    const activeShares = allShares.filter(s => s.is_active);
+    if (sessionToken) {
+      const session = await verifyMerchantSession(sessionToken);
+      merchantEmail = session.email;
+      sessionExpiresAt = session.expiresAt;
 
-    // If a token was provided (initial login), verify it belongs to this email
-    if (token) {
-      const tokenShare = activeShares.find(s => s.share_token === token);
-      if (!tokenShare) {
-        return Response.json({ error: 'Token does not match this email address' }, { status: 403 });
+      const shares = await Promise.all(
+        session.shareIds.map(async (shareId) => {
+          const results = await base44.asServiceRole.entities.CaseShare.filter({ id: shareId });
+          return results[0] || null;
+        })
+      );
+
+      activeShares = shares.filter((share) =>
+        share &&
+        share.is_active &&
+        share.recipient_email?.toLowerCase() === merchantEmail &&
+        !isShareExpired(share)
+      );
+    } else {
+      if (!merchantEmail) {
+        return Response.json({ error: 'Email required' }, { status: 400 });
       }
-    } else if (activeShares.length === 0) {
-      return Response.json({ error: 'No active cases shared with this email address' }, { status: 404 });
+      if (!token) {
+        return Response.json({ error: 'A valid share link is required to start a merchant session' }, { status: 400 });
+      }
+
+      const shares = await base44.asServiceRole.entities.CaseShare.filter({
+        recipient_email: merchantEmail,
+        share_token: token,
+      });
+
+      const tokenShare = shares.find((share) => share.is_active && !isShareExpired(share));
+      if (!tokenShare) {
+        return Response.json({ error: 'Token does not match this email address or has expired' }, { status: 403 });
+      }
+
+      const allShares = await base44.asServiceRole.entities.CaseShare.filter({ recipient_email: merchantEmail });
+      activeShares = allShares.filter((share) => share.is_active && !isShareExpired(share));
+      const session = await createMerchantSession(merchantEmail, activeShares.map((share) => share.id));
+      resolvedSessionToken = session.token;
+      sessionExpiresAt = session.expiresAt;
+    }
+
+    if (activeShares.length === 0) {
+      return Response.json({ error: 'No active cases shared with this session' }, { status: 404 });
     }
 
     // Update last_viewed for all shares
@@ -38,7 +74,7 @@ Deno.serve(async (req) => {
         const timelineEvents = await base44.asServiceRole.entities.TimelineEvent.filter({ case_id: share.case_id });
         const checklistItems = await base44.asServiceRole.entities.ChecklistItem.filter({ case_id: share.case_id });
         const evidence = await base44.asServiceRole.entities.Evidence.filter({ case_id: share.case_id });
-        const responses = await base44.asServiceRole.entities.MerchantResponse.filter({ case_id: share.case_id, merchant_email: email });
+        const responses = await base44.asServiceRole.entities.MerchantResponse.filter({ case_id: share.case_id, merchant_email: merchantEmail });
 
         const today = new Date();
         const overdueDeadlines = deadlines.filter(d =>
@@ -103,8 +139,10 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      merchant_email: email,
+      merchant_email: merchantEmail,
       merchant_name: activeShares[0]?.recipient_name || null,
+      session_token: resolvedSessionToken,
+      session_expires_at: sessionExpiresAt,
       cases: validCases
     });
   } catch (error) {

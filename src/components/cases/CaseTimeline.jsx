@@ -30,6 +30,7 @@ import ReportDocument from "@/components/reports/ReportDocument";
 import { renderDocToBlob } from "@/lib/renderDocToBlob";
 import { toast } from "sonner";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail, pdfDiagMissingData } from "@/lib/pdfDiagnostics";
+import { invokeBase44Function } from "@/lib/invoke";
 
 const eventTypeConfig = {
   incident: { icon: AlertCircle, color: "text-destructive", bg: "bg-destructive/10" },
@@ -89,20 +90,19 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
   };
 
   const handleAddToCalendar = async (event) => {
-    if (!event.event_date) return;
+    if (!event.event_date || !caseItem) return;
     
     setAddingToCalendar(event.id);
     try {
-      const caseData = await base44.entities.Case.get(caseId);
       const eventDate = new Date(event.event_date);
       const endDate = new Date(eventDate);
       endDate.setHours(eventDate.getHours() + 1);
 
-      const result = await base44.functions.invoke('syncCalendar', {
+      await invokeBase44Function('syncCalendar', {
         action: 'create',
         event: {
-          summary: `[${caseData.title}] ${event.title}`,
-          description: `${event.description || ''}\n\nCase: ${caseData.title}\nOrganisation: ${caseData.organisation_name || 'N/A'}\nStatus: ${caseData.status}`,
+          summary: `[${caseItem.title}] ${event.title}`,
+          description: `${event.description || ''}\n\nCase: ${caseItem.title}\nOrganisation: ${caseItem.organisation_name || 'N/A'}\nStatus: ${caseItem.status}`,
           start: {
             dateTime: eventDate.toISOString(),
             timeZone: 'Australia/Sydney'
@@ -114,11 +114,7 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
         }
       });
 
-      if (result.success) {
-        alert('✓ Event added to your Google Calendar!');
-      } else {
-        alert('Failed to add event. Please ensure Google Calendar is connected.');
-      }
+      alert('✓ Event added to your Google Calendar!');
     } catch (error) {
       console.error('Calendar error:', error);
       alert('Error adding to calendar: ' + error.message);
@@ -130,7 +126,7 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
   const handleAIGenerate = async () => {
     setGenerating(true);
     try {
-      const response = await base44.functions.invoke('autoGenerateTimelineFromEvidence', { caseId });
+      await invokeBase44Function('autoGenerateTimelineFromEvidence', { caseId }, { requireSuccess: true });
       queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
       toast.success('Timeline auto-generated from case data');
     } catch (error) {

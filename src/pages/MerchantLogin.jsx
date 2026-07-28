@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, ArrowRight, Loader2, AlertCircle, Shield } from "lucide-react";
+import { invokeBase44Function } from "@/lib/invoke";
+import { readMerchantSession, writeMerchantSession } from "@/lib/merchantSession";
 
 export default function MerchantLogin() {
   const [searchParams] = useSearchParams();
@@ -15,25 +17,27 @@ export default function MerchantLogin() {
 
   // If already logged in, redirect
   useEffect(() => {
-    const session = sessionStorage.getItem("merchant_session");
+    const session = readMerchantSession();
     if (session) navigate("/merchant-portal", { replace: true });
-  }, []);
+  }, [navigate]);
 
   async function handleLogin(e) {
     e.preventDefault();
     if (!email.trim()) return;
+    if (!token) {
+      setError("Please use the secure merchant link from your invitation email.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const { base44 } = await import("@/api/base44Client");
-      const res = await base44.functions.invoke("getMerchantCases", { email: email.trim().toLowerCase(), token });
-      if (!res.data?.success) throw new Error(res.data?.error || "Login failed");
-      // Store session in sessionStorage (clears on tab close)
-      sessionStorage.setItem("merchant_session", JSON.stringify({
+      const data = await invokeBase44Function("getMerchantCases", { email: email.trim().toLowerCase(), token }, { requireSuccess: true });
+      writeMerchantSession({
         email: email.trim().toLowerCase(),
-        name: res.data.merchant_name,
-        token
-      }));
+        name: data.merchant_name,
+        sessionToken: data.session_token,
+        expiresAt: data.session_expires_at,
+      });
       navigate("/merchant-portal", { replace: true });
     } catch (err) {
       setError(err.message || "Could not verify your access. Check your email and try again.");

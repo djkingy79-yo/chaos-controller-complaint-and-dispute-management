@@ -14,6 +14,7 @@ import { buildSections } from "@/components/cases/CaseDashboardReport";
 import { buildSummarySections } from "@/components/cases/ExecutiveSummaryGenerator";
 import { toast } from "sonner";
 import { useToast } from "@/components/ui/use-toast";
+import { invokeBase44Function } from "@/lib/invoke";
 import { pdfDiagStart, pdfDiagBlobCreated, pdfDiagSuccess, pdfDiagFail } from "@/lib/pdfDiagnostics";
 
 const STATUS_LABELS = {
@@ -114,12 +115,12 @@ export default function CaseSummary({ caseItem, evidence, events }) {
     setGenError(null);
     const timer = setInterval(() => setGenElapsed(p => p + 1), 1000);
     try {
-      const response = await base44.functions.invoke('generateExecutiveSummary', { caseId: caseItem.id });
+      const response = await invokeBase44Function('generateExecutiveSummary', { caseId: caseItem.id }, { requireSuccess: true });
       clearInterval(timer);
-      if (!response.data?.success || !response.data?.summary) {
-        throw new Error(response.data?.error || 'Server returned no summary');
+      if (!response.summary) {
+        throw new Error('Server returned no summary');
       }
-      const summaryData = response.data.summary;
+      const summaryData = response.summary;
       setExecutiveSummary(summaryData);
       shadToast({ title: "✓ Case Summary Generated", description: `Analysis complete in ${genElapsed + 1}s.` });
     } catch (err) {
