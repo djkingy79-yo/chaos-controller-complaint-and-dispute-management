@@ -90,7 +90,11 @@ export default function CaseTimeline({ caseId, events, caseItem }) {
   };
 
   const handleAddToCalendar = async (event) => {
-    if (!event.event_date || !caseItem) return;
+    if (!event.event_date) return;
+    if (!caseItem) {
+      alert('Case details are not available yet. Please try again once the case has loaded.');
+      return;
+    }
     
     setAddingToCalendar(event.id);
     try {

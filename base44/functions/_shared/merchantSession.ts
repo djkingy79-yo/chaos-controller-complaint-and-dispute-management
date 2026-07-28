@@ -23,7 +23,7 @@ function base64UrlDecode(value: string) {
 }
 
 async function getSigningKey() {
-  const secret = Deno.env.get('BASE44_SERVICE_ROLE_KEY');
+  const secret = Deno.env.get('MERCHANT_SESSION_SECRET') || Deno.env.get('BASE44_SERVICE_ROLE_KEY');
   if (!secret) {
     throw new Error('Merchant session signing secret is not configured');
   }

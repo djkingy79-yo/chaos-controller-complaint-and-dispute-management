@@ -1,5 +1,11 @@
 export const ADMIN_EMAIL = 'djkingy79@gmail.com';
 
+type AdminBase44Client = {
+  auth: {
+    me: () => Promise<{ email?: string; role?: string } | null>;
+  };
+};
+
 export class HttpError extends Error {
   status: number;
 
@@ -13,7 +19,7 @@ export function isAdminUser(user: { email?: string; role?: string } | null | und
   return !!user && (user.role === 'admin' || user.email === ADMIN_EMAIL);
 }
 
-export async function requireAdmin(base44: any) {
+export async function requireAdmin(base44: AdminBase44Client) {
   const user = await base44.auth.me();
   if (!isAdminUser(user)) {
     throw new HttpError(403, 'Unauthorized - admin access required');

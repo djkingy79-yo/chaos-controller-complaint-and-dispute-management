@@ -12,7 +12,7 @@ export async function invokeBase44Function(name, payload = {}, { requireSuccess 
     throw new Error(data.error);
   }
 
-  if (requireSuccess && data.success === false) {
+  if (requireSuccess && data.success !== true) {
     throw new Error(data.error || `${name} failed`);
   }
 

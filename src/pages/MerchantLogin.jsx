@@ -19,7 +19,7 @@ export default function MerchantLogin() {
   useEffect(() => {
     const session = readMerchantSession();
     if (session) navigate("/merchant-portal", { replace: true });
-  }, [navigate]);
+  }, []);
 
   async function handleLogin(e) {
     e.preventDefault();

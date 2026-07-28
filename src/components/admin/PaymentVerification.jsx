@@ -22,7 +22,7 @@ const statusConfig = {
 };
 
 export default function PaymentVerification() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [filterStatus, setFilterStatus] = useState("pending");
   const payidEmail = "djkingy79@gmail.com";
@@ -89,7 +89,7 @@ export default function PaymentVerification() {
         <Button
           size="sm"
           variant="outline"
-          onClick={() => qc.invalidateQueries({ queryKey: ["admin-snapshot"] })}
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["admin-snapshot"] })}
           className="gap-1.5 text-xs"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Refresh

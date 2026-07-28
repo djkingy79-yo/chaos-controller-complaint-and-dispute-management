@@ -71,6 +71,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/help" element={<HelpGuide />} />
           <Route path="/templates" element={<TemplateLibrary />} />
+          {/* Admin-editable saved case templates live separately from the public template library. */}
           <Route path="/case-templates" element={<CaseTemplates />} />
           <Route path="/qna" element={<QnA />} />
           <Route path="/terms" element={<Terms />} />

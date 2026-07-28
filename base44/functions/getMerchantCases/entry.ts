@@ -12,7 +12,12 @@ Deno.serve(async (req) => {
     let sessionExpiresAt = null;
 
     if (sessionToken) {
-      const session = await verifyMerchantSession(sessionToken);
+      let session;
+      try {
+        session = await verifyMerchantSession(sessionToken);
+      } catch {
+        return Response.json({ error: 'Your merchant session has expired. Please log in again.' }, { status: 401 });
+      }
       merchantEmail = session.email;
       sessionExpiresAt = session.expiresAt;
 
